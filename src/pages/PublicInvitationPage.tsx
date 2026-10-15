@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useInvitationRealtime } from '../hooks/useInvitationRealtime';
 import { Template1Modern } from '../components/templates/Template1Modern';
@@ -30,6 +30,19 @@ export const PublicInvitationPage: React.FC = () => {
   });
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Dynamic Browser Tab Title
+  useEffect(() => {
+    const groomName = invitationData.groom?.name || '';
+    const brideName = invitationData.bride?.name || '';
+    if (groomName && brideName) {
+      const isBrideFirst = Boolean(invitationData.is_bride_first);
+      const title = isBrideFirst
+        ? `The Wedding of ${brideName} & ${groomName} | mbell invitations`
+        : `The Wedding of ${groomName} & ${brideName} | mbell invitations`;
+      document.title = title;
+    }
+  }, [invitationData.groom?.name, invitationData.bride?.name, invitationData.is_bride_first]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
