@@ -59,19 +59,18 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     <header className="h-16 shrink-0 z-40 bg-[#F5F2EB]/95 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.03)] px-3 sm:px-6 flex items-center justify-between border-b border-stone-200/80">
       {/* Left: Brand Logo & Public Link Pill */}
       <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
-        <Link to="/dashboard" className="flex items-center gap-2 shrink-0">
-          <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-xs">
-            <span className="material-symbols-outlined text-[19px]">favorite</span>
-          </div>
-          <span className="font-headline-sm text-headline-sm text-primary tracking-tight font-bold">
-            mbell<span className="text-secondary">.id</span>
-          </span>
+        <Link to="/dashboard" className="flex items-center shrink-0 group">
+          <img
+            src="/mbell-logo-1-noBG.png"
+            alt="mbell invitations logo"
+            className="h-9 sm:h-10 w-auto object-contain transition-transform group-hover:scale-105"
+          />
         </Link>
 
         {/* Public Slug URL Pill */}
         <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface transition-colors min-w-0">
-          <span className="font-label-md text-label-md select-all text-on-surface-variant truncate max-w-[200px]">
-            mbell.id/{slug}
+          <span className="font-label-md text-label-md select-all text-on-surface-variant truncate max-w-[220px]">
+            {typeof window !== 'undefined' ? `${window.location.host}/${slug}` : `mbell.id/${slug}`}
           </span>
           <button
             onClick={handleCopyLink}

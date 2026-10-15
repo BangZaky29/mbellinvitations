@@ -9,24 +9,25 @@ export function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Default route redirects to raditya-jessica live public invitation */}
-        <Route path="/" element={<Navigate to="/raditya-jessica" replace />} />
+        {/* Default route: langsung mengarah ke Dashboard Editor */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+        {/* SaaS Dashboard Editor routes */}
+        <Route path="/dashboard" element={<DashboardEditorPage />} />
+        <Route path="/dashboard/*" element={<DashboardEditorPage />} />
 
         {/* 5-Template Demo Simulator (Switcher toolbar) */}
         <Route path="/demo" element={<DemoSimulatorPage />} />
 
-        {/* Auth routes (Phase 2 & 3) */}
+        {/* Auth routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
-        {/* SaaS Dashboard Editor routes */}
-        <Route path="/dashboard/*" element={<DashboardEditorPage />} />
-
-        {/* Dynamic Public Invitation by Slug */}
+        {/* Dynamic Public Invitation by Slug (e.g. /raditya-jessica) */}
         <Route path="/:slug" element={<PublicInvitationPage />} />
 
         {/* 404 Fallback */}
-        <Route path="*" element={<Navigate to="/raditya-jessica" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
   );
