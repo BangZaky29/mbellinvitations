@@ -17,6 +17,7 @@ export interface DashboardHeaderProps {
   onRegisterClick?: () => void;
   onOpenSettings?: () => void;
   onLogout?: () => void;
+  onReplayOpening?: () => void;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -34,6 +35,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onRegisterClick,
   onOpenSettings,
   onLogout,
+  onReplayOpening,
 }) => {
   const [copied, setCopied] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -59,11 +61,21 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     <header className="h-16 shrink-0 z-40 bg-[#F5F2EB]/95 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.03)] px-3 sm:px-6 flex items-center justify-between border-b border-stone-200/80">
       {/* Left: Brand Logo & Public Link Pill */}
       <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
-        <Link to="/dashboard" className="flex items-center shrink-0 group">
+        <Link
+          to="/dashboard"
+          onClick={(e) => {
+            if (onReplayOpening) {
+              e.preventDefault();
+              onReplayOpening();
+            }
+          }}
+          title="Klik untuk memutar ulang Animasi Opening"
+          className="flex items-center shrink-0 group cursor-pointer"
+        >
           <img
             src="/mbell-logo-1-noBG.png"
             alt="mbell invitations logo"
-            className="h-9 sm:h-10 w-auto object-contain transition-transform group-hover:scale-105"
+            className="h-9 sm:h-10 w-auto object-contain transition-transform group-hover:scale-105 active:scale-95"
           />
         </Link>
 

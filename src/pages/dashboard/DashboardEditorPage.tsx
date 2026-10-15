@@ -30,6 +30,7 @@ import { MyTemplatesPanel } from '../../components/dashboard/MyTemplatesPanel';
 import { GuestListPanel } from '../../components/dashboard/GuestListPanel';
 import { WishesListPanel } from '../../components/dashboard/WishesListPanel';
 import { SettingsAccountPanel } from '../../components/dashboard/SettingsAccountPanel';
+import { OpeningSplashScreen } from '../../components/common/OpeningSplashScreen';
 
 // Template ID Normalization (PostgreSQL FK constraint to public.templates)
 const THEME_TO_TEMPLATE_ID: Record<string, string> = {
@@ -97,6 +98,7 @@ export const DashboardEditorPage: React.FC = () => {
   const [showAuthGateModal, setShowAuthGateModal] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [saveToast, setSaveToast] = useState<{ show: boolean; message: string; isError?: boolean } | null>(null);
+  const [showOpeningSplash, setShowOpeningSplash] = useState(true);
 
   // Listener Real-time status autentikasi Google Supabase
   useEffect(() => {
@@ -610,30 +612,34 @@ export const DashboardEditorPage: React.FC = () => {
     handleThemeChange(themeId, true);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F2EB] text-stone-800">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-stone-900 border-t-transparent rounded-full animate-spin" />
-          <p className="font-label-md text-label-md text-stone-600">Memuat Editor Undangan...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="h-screen overflow-hidden flex flex-col bg-[#F5F2EB] text-stone-800 font-sans selection:bg-stone-900/10 selection:text-stone-900">
-      {/* 1. TOP HEADER (SOLID / BACKDROP BLUR - TIDAK TERTABRAK SAAT SCROLL) */}
-      <DashboardHeader
-        slug={formData.slug || 'raditya-jessica'}
-        isSaving={isSaving}
-        lastSaved={lastSaved}
-        userEmail={user?.email || null}
-        userAvatar={user?.avatar_url || null}
-        userName={user?.full_name || null}
-        onLoginClick={() => setShowAuthGateModal(true)}
-        onRegisterClick={() => setShowAuthGateModal(true)}
-        onOpenSettings={() => setActiveTab('pengaturan')}
+    <>
+      {/* 0. OPENING ANIMATION LOADING SCREEN (10 Detik Video Intro) */}
+      {showOpeningSplash && (
+        <OpeningSplashScreen onFinish={() => setShowOpeningSplash(false)} />
+      )}
+
+      {loading ? (
+        <div className="min-h-screen flex items-center justify-center bg-[#F5F2EB] text-stone-800">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 border-4 border-stone-900 border-t-transparent rounded-full animate-spin" />
+            <p className="font-label-md text-label-md text-stone-600">Memuat Editor Undangan...</p>
+          </div>
+        </div>
+      ) : (
+        <div className="h-screen overflow-hidden flex flex-col bg-[#F5F2EB] text-stone-800 font-sans selection:bg-stone-900/10 selection:text-stone-900">
+          {/* 1. TOP HEADER (SOLID / BACKDROP BLUR - TIDAK TERTABRAK SAAT SCROLL) */}
+          <DashboardHeader
+            slug={formData.slug || 'raditya-jessica'}
+            isSaving={isSaving}
+            lastSaved={lastSaved}
+            userEmail={user?.email || null}
+            userAvatar={user?.avatar_url || null}
+            userName={user?.full_name || null}
+            onLoginClick={() => setShowAuthGateModal(true)}
+            onRegisterClick={() => setShowAuthGateModal(true)}
+            onOpenSettings={() => setActiveTab('pengaturan')}
+            onReplayOpening={() => setShowOpeningSplash(true)}
         onLogout={async () => {
           await supabase.auth.signOut();
           setUser(null);
@@ -970,6 +976,8 @@ export const DashboardEditorPage: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+        </div>
+      )}
+    </>
   );
 };
