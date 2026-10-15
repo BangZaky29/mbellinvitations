@@ -2,6 +2,10 @@ export const config = {
   runtime: 'edge',
 };
 
+declare const process: {
+  env: Record<string, string | undefined>;
+};
+
 // Map fallback banner per tema (1200 x 630 px)
 const THEME_BANNER_MAP: Record<string, string> = {
   modern: '/og-banners/og-modern.jpg',
