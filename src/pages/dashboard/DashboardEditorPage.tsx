@@ -105,7 +105,7 @@ export const DashboardEditorPage: React.FC = () => {
   const [formData, setFormData] = useState<InvitationData>(MOCK_MODERN_DATA);
   const [themeConfig, setThemeConfig] = useState<ThemeConfig>(MOCK_MODERN_THEME);
   const [wishes] = useState<WishItem[]>(MOCK_MODERN_WISHES);
-  const [isCustomSlug, setIsCustomSlug] = useState(false);
+  // const [setIsCustomSlug] = useState(false);
 
   // Editor UI State
   const [activeTab, setActiveTab] = useState<DashboardTab>('edit-undangan');
@@ -856,7 +856,6 @@ export const DashboardEditorPage: React.FC = () => {
       .replace(/-+/g, '-');
     if (!cleanSlug) return;
 
-    setIsCustomSlug(true);
     const oldSlug = formData.slug || 'raditya-jessica';
     const updatedFormData = { ...formData, slug: cleanSlug };
     setFormData(updatedFormData);

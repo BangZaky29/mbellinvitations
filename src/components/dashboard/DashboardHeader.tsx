@@ -28,12 +28,10 @@ export interface DashboardHeaderProps {
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   slug,
-  onSlugChange,
   saveStatus,
   isSaving,
   isPublished = true,
   status = 'published',
-  suggestedSlug,
   onSaveDraft,
   onPublishToggle,
   onPublish,

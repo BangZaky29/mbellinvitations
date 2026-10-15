@@ -100,7 +100,6 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
   onImplementActiveTemplate,
   onOpenAuthGate,
   onAddNewTemplate,
-  onSlugChange,
 }) => {
   const [templates, setTemplates] = useState<UserTemplateRecord[]>([]);
   const [loading, setLoading] = useState(false);

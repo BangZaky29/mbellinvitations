@@ -20,7 +20,6 @@ export const CoupleFormCard: React.FC<CoupleFormCardProps> = ({
   isBrideFirst,
   coverImage,
   slug = 'raditya-jessica',
-  onSlugChange,
   onGroomChange,
   onBrideChange,
   onToggleBrideFirst,
