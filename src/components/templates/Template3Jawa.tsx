@@ -578,7 +578,7 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
                   </p>
                 </div>
 
-                {data.events.map((event, idx) => {
+                {data.events.map((event: any, idx: number) => {
                   const badgeIcon = idx === 0 ? 'verified' : 'celebration';
                   const badgeText = event.badge || (idx === 0 ? 'Ijab Qobul' : 'Panggih & Pahargyan');
                   const headerSub = idx === 0 ? 'Sasana Ageng' : 'Resepsi Ageng';

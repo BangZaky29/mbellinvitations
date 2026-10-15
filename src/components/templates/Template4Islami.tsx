@@ -112,17 +112,6 @@ export const Template4Islami: React.FC<InvitationProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [lightboxImg]);
 
-  // 8. Active Nav State
-  const [activeNav, setActiveNav] = useState('sampul');
-
-  const scrollToSection = (id: string) => {
-    setActiveNav(id);
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   // 9. Calendar Handler
   const handleAddToCalendar = () => {
     const title = encodeURIComponent(`Walimatul Ursy: ${data.groom.name} & ${data.bride.name}`);
@@ -1184,8 +1173,8 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                       Kami Yang Berbahagia:
                     </p>
                     <p className="font-headline-sm text-headline-sm text-primary font-semibold mt-1">
-                      Keluarga Besar {data.groom.parent_father.replace('Bpk. ', '').replace('Ir. ', '')}{' '}
-                      <br />&amp; Keluarga Besar {data.bride.parent_father.replace('Bpk. ', '').replace('Dr. H. ', '')}
+                      Keluarga Besar {(data.groom.parent_father || '').replace('Bpk. ', '').replace('Ir. ', '')}{' '}
+                      <br />&amp; Keluarga Besar {(data.bride.parent_father || '').replace('Bpk. ', '').replace('Dr. H. ', '')}
                     </p>
                   </div>
                 </section>

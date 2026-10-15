@@ -15,7 +15,6 @@ export const StepSelectorNav: React.FC<StepSelectorNavProps> = ({
   activeStep,
   onStepSelect,
   onSelectStep,
-  completedSteps = 5,
 }) => {
   const effectiveStep = (activeStep || currentStep || 1) as EditorStep;
 

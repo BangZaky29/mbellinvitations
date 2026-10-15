@@ -574,7 +574,7 @@ export const Template1Modern: React.FC<InvitationProps> = ({
               </div>
 
               <div className="space-y-6">
-                {data.events.map((event, idx) => (
+                {data.events.map((event: any, idx: number) => (
                   <div
                     key={idx}
                     className="bg-white border border-border-subtle rounded-2xl p-6 shadow-sm relative overflow-hidden reveal-scale delay-150"
@@ -934,7 +934,7 @@ export const Template1Modern: React.FC<InvitationProps> = ({
                       </p>
                       <button
                         type="button"
-                        onClick={() => handleCopyAddress(data.gift_address)}
+                        onClick={() => handleCopyAddress(data.gift_address || '')}
                         className="px-4 py-2 rounded-full border border-border-subtle hover:border-gold-champagne text-xs text-charcoal-dark hover:text-gold-champagne transition-colors flex items-center space-x-2 cursor-pointer"
                       >
                         <i className={`text-xs ${copiedAddress ? 'fa-solid fa-check text-emerald-600' : 'fa-regular fa-copy'}`}></i>

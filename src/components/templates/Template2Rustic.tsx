@@ -581,7 +581,7 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                   </h3>
                 </div>
 
-                {data.events.map((event, idx) => {
+                {data.events.map((event: any, idx: number) => {
                   const icon =
                     event.icon === 'ring' || event.icon === 'church'
                       ? 'church'

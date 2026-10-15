@@ -116,17 +116,6 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [lightboxImg]);
 
-  // 8. Active Nav State
-  const [activeNav, setActiveNav] = useState('cover-gate');
-
-  const scrollToSection = (id: string) => {
-    setActiveNav(id);
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   // 9. Calendar Handler
   const handleAddToCalendar = () => {
     const title = encodeURIComponent(`The Wedding of ${data.groom.name} & ${data.bride.name}`);
@@ -913,7 +902,7 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
                           </p>
                           <button
                             className="self-start py-1 px-3 rounded-full bg-primary-container/20 text-primary text-[11px] font-label-md uppercase tracking-wider transition-colors cursor-pointer hover:bg-primary-container/30"
-                            onClick={() => handleCopy(data.gift_address, 'gift-address')}
+                            onClick={() => handleCopy(data.gift_address || '', 'gift-address')}
                             type="button"
                           >
                             {copiedKey === 'gift-address' ? 'Tersalin ✓' : 'Salin Alamat Lengkap'}
