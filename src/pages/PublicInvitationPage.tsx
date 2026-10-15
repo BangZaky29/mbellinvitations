@@ -1,0 +1,152 @@
+import React, { useState } from 'react';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { useInvitationRealtime } from '../hooks/useInvitationRealtime';
+import { Template1Modern } from '../components/templates/Template1Modern';
+import { Template2Rustic } from '../components/templates/Template2Rustic';
+import { Template3Jawa } from '../components/templates/Template3Jawa';
+import { Template4Islami } from '../components/templates/Template4Islami';
+import { Template5Luxury } from '../components/templates/Template5Luxury';
+
+export const PublicInvitationPage: React.FC = () => {
+  const { slug = 'raditya-jessica' } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
+
+  const guestParam = searchParams.get('to') || searchParams.get('guest');
+  const codeParam = searchParams.get('g') || searchParams.get('code');
+
+  const {
+    loading,
+    templateId,
+    invitationData,
+    themeConfig,
+    wishes,
+    activeGuestCode,
+    handleSendWish,
+    handleSendRsvp,
+  } = useInvitationRealtime({
+    slug,
+    guestParam,
+    codeParam,
+  });
+
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const onSubmitWish = async (name: string, message: string) => {
+    const res = await handleSendWish(name, message);
+    if (res.success) {
+      showToast('✨ Doa & ucapan Anda berhasil terkirim dan tayang secara live!');
+    }
+  };
+
+  const onSubmitRsvp = async (name: string, status: string, pax: number) => {
+    const res = await handleSendRsvp(name, status, pax);
+    if (res.success) {
+      showToast(`✅ Konfirmasi kehadiran berhasil disimpan! ${res.message || ''}`);
+    } else {
+      showToast('⚠️ Gagal menyimpan RSVP: ' + (res.message || 'Silakan coba lagi.'));
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#121212] text-white">
+        <div className="w-12 h-12 rounded-full border-3 border-amber-500/30 border-t-amber-400 animate-spin mb-4"></div>
+        <p className="font-serif tracking-widest text-sm text-neutral-400 uppercase animate-pulse">
+          Memuat Undangan Pernikahan...
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative w-full min-h-screen">
+      {/* Floating Demo & Info Pill Bar (Subtle Top Overlay) */}
+      <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-black/65 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-xl text-[11px] text-neutral-300 pointer-events-auto">
+        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span className="font-mono text-neutral-300">
+          /{slug}
+          {activeGuestCode ? ` • [Code: ${activeGuestCode}]` : ''}
+        </span>
+        <span className="text-white/20">|</span>
+        <Link
+          to="/demo"
+          className="text-amber-300 hover:text-amber-200 font-semibold transition-colors flex items-center gap-1"
+        >
+          <span>5-Template Demo</span>
+          <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+        </Link>
+      </div>
+
+      {/* Floating Global Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 max-w-sm w-[90%] bg-neutral-900/95 text-white text-xs px-4 py-3 rounded-2xl shadow-2xl border border-amber-500/40 backdrop-blur-xl flex items-center gap-2 animate-page-enter">
+          <span className="material-symbols-outlined text-amber-400 text-base">check_circle</span>
+          <span className="leading-snug">{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Render Template Sesuai template_id dari Supabase */}
+      {templateId === 'template1' && (
+        <Template1Modern
+          invitationId={slug}
+          data={invitationData}
+          theme={themeConfig}
+          wishes={wishes}
+          onSubmitWish={onSubmitWish}
+          onSubmitRsvp={onSubmitRsvp}
+        />
+      )}
+
+      {templateId === 'template2' && (
+        <Template2Rustic
+          invitationId={slug}
+          data={invitationData}
+          theme={themeConfig}
+          wishes={wishes}
+          onSubmitWish={onSubmitWish}
+          onSubmitRsvp={onSubmitRsvp}
+        />
+      )}
+
+      {templateId === 'template3' && (
+        <Template3Jawa
+          invitationId={slug}
+          data={invitationData}
+          theme={themeConfig}
+          wishes={wishes}
+          onSubmitWish={onSubmitWish}
+          onSubmitRsvp={onSubmitRsvp}
+        />
+      )}
+
+      {templateId === 'template4' && (
+        <Template4Islami
+          invitationId={slug}
+          data={invitationData}
+          theme={themeConfig}
+          wishes={wishes}
+          onSubmitWish={onSubmitWish}
+          onSubmitRsvp={onSubmitRsvp}
+        />
+      )}
+
+      {templateId === 'template5' && (
+        <Template5Luxury
+          invitationId={slug}
+          data={invitationData}
+          theme={themeConfig}
+          wishes={wishes}
+          onSubmitWish={onSubmitWish}
+          onSubmitRsvp={onSubmitRsvp}
+        />
+      )}
+    </div>
+  );
+};
+
+export default PublicInvitationPage;

@@ -1,0 +1,517 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #ECE8E1;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: #1C1C1C;
+    -webkit-font-smoothing: antialiased;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Custom subtle scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #FAF8F5;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #D9D3C7;
+    border-radius: 4px;
+  }
+}
+
+/* Hide scrollbar utility & Phone Preview strict suppression */
+.no-scrollbar::-webkit-scrollbar,
+[data-phone-preview]::-webkit-scrollbar,
+[data-phone-preview] *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+.no-scrollbar::-webkit-scrollbar-track,
+.no-scrollbar::-webkit-scrollbar-thumb,
+[data-phone-preview]::-webkit-scrollbar-track,
+[data-phone-preview] *::-webkit-scrollbar-track,
+[data-phone-preview]::-webkit-scrollbar-thumb,
+[data-phone-preview] *::-webkit-scrollbar-thumb {
+  display: none !important;
+  background: transparent !important;
+}
+
+.no-scrollbar,
+[data-phone-preview],
+[data-phone-preview] * {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+
+/* ============================================================
+   THEME SCOPED VARIABLES FOR MATERIAL 3 TEMPLATES
+   Menjamin pergantian template 100% harmonis tanpa bentrok warna
+   ============================================================ */
+
+/* Template 2: Rustic Casual (Earthy Sage & Terracotta) */
+.theme-rustic {
+  --color-primary: 22 42 31;
+  --color-primary-container: 44 64 52;
+  --color-primary-fixed: 209 232 215;
+  --color-primary-fixed-dim: 181 204 188;
+  --color-on-primary: 255 255 255;
+  --color-on-primary-container: 149 171 156;
+  --color-on-primary-fixed: 12 31 21;
+  --color-on-primary-fixed-variant: 55 75 63;
+  --color-inverse-primary: 181 204 188;
+
+  --color-secondary: 133 82 51;
+  --color-secondary-container: 254 186 148;
+  --color-secondary-fixed: 255 219 201;
+  --color-secondary-fixed-dim: 251 184 146;
+  --color-on-secondary: 255 255 255;
+  --color-on-secondary-container: 121 72 42;
+  --color-on-secondary-fixed: 51 18 0;
+  --color-on-secondary-fixed-variant: 105 59 30;
+
+  --color-tertiary: 34 39 37;
+  --color-tertiary-container: 55 61 58;
+  --color-tertiary-fixed: 223 228 224;
+  --color-tertiary-fixed-dim: 194 200 196;
+  --color-on-tertiary: 255 255 255;
+  --color-on-tertiary-container: 162 167 164;
+  --color-on-tertiary-fixed: 23 29 27;
+  --color-on-tertiary-fixed-variant: 66 72 69;
+
+  --color-surface: 251 249 245;
+  --color-surface-bright: 251 249 245;
+  --color-surface-dim: 219 218 214;
+  --color-surface-container: 239 238 234;
+  --color-surface-container-low: 245 243 239;
+  --color-surface-container-high: 234 232 228;
+  --color-surface-container-highest: 228 226 222;
+  --color-surface-container-lowest: 255 255 255;
+  --color-surface-variant: 228 226 222;
+  --color-surface-tint: 78 99 86;
+  --color-inverse-surface: 48 49 46;
+  --color-inverse-on-surface: 242 240 237;
+  --color-on-surface: 27 28 26;
+  --color-on-surface-variant: 66 72 68;
+
+  --color-outline: 115 120 115;
+  --color-outline-variant: 194 200 194;
+
+  --color-error: 186 26 26;
+  --color-error-container: 255 218 214;
+  --color-on-error: 255 255 255;
+  --color-on-error-container: 147 0 10;
+
+  --color-background: 251 249 245;
+  --color-on-background: 27 28 26;
+}
+
+/* Template 3: Adat Jawa (Royal Dark Kraton & Golden Amber) */
+.theme-jawa {
+  --color-primary: 242 202 80;
+  --color-primary-container: 212 175 55;
+  --color-primary-fixed: 255 224 136;
+  --color-primary-fixed-dim: 233 195 73;
+  --color-on-primary: 60 47 0;
+  --color-on-primary-container: 85 67 0;
+  --color-on-primary-fixed: 36 26 0;
+  --color-on-primary-fixed-variant: 87 69 0;
+  --color-inverse-primary: 115 92 0;
+
+  --color-secondary: 237 193 85;
+  --color-secondary-container: 179 139 35;
+  --color-secondary-fixed: 255 223 155;
+  --color-secondary-fixed-dim: 237 193 85;
+  --color-on-secondary: 63 46 0;
+  --color-on-secondary-container: 55 39 0;
+  --color-on-secondary-fixed: 37 26 0;
+  --color-on-secondary-fixed-variant: 90 67 0;
+
+  --color-tertiary: 220 207 150;
+  --color-tertiary-container: 192 179 125;
+  --color-tertiary-fixed: 241 227 169;
+  --color-tertiary-fixed-dim: 212 199 143;
+  --color-on-tertiary: 56 48 6;
+  --color-on-tertiary-container: 78 69 26;
+  --color-on-tertiary-fixed: 33 27 0;
+  --color-on-tertiary-fixed-variant: 79 71 27;
+
+  --color-surface: 26 17 13;
+  --color-surface-bright: 66 55 49;
+  --color-surface-dim: 26 17 13;
+  --color-surface-container: 39 30 24;
+  --color-surface-container-low: 35 26 20;
+  --color-surface-container-high: 50 40 34;
+  --color-surface-container-highest: 62 50 45;
+  --color-surface-container-lowest: 21 12 8;
+  --color-surface-variant: 62 50 45;
+  --color-surface-tint: 233 195 73;
+  --color-inverse-surface: 241 223 214;
+  --color-inverse-on-surface: 57 46 40;
+  --color-on-surface: 241 223 214;
+  --color-on-surface-variant: 208 197 175;
+
+  --color-background: 26 17 13;
+  --color-on-background: 241 223 214;
+
+  --color-outline: 153 144 124;
+  --color-outline-variant: 77 70 53;
+
+  --color-error: 255 180 171;
+  --color-error-container: 147 0 10;
+  --color-on-error: 105 0 5;
+  --color-on-error-container: 255 218 214;
+}
+
+/* Template 4: Nuansa Islami (Sacred Mauve & Warm Flora) */
+.theme-islami {
+  --color-on-primary: 255 255 255;
+  --color-tertiary-fixed-dim: 233 195 73;
+  --color-surface-dim: 221 217 217;
+  --color-on-secondary-container: 122 84 104;
+  --color-on-surface: 28 27 28;
+  --color-on-tertiary-fixed-variant: 87 69 0;
+  --color-on-tertiary-fixed: 36 26 0;
+  --color-primary: 94 40 50;
+  --color-outline: 132 115 116;
+  --color-secondary: 122 83 103;
+  --color-surface-container-high: 235 231 231;
+  --color-surface-container: 241 237 237;
+  --color-on-primary-fixed: 57 10 21;
+  --color-on-error: 255 255 255;
+  --color-surface: 252 248 248;
+  --color-on-primary-fixed-variant: 111 53 63;
+  --color-surface-variant: 229 226 226;
+  --color-inverse-on-surface: 244 240 240;
+  --color-surface-container-low: 247 243 243;
+  --color-on-surface-variant: 82 67 69;
+  --color-inverse-primary: 255 178 188;
+  --color-error-container: 255 218 214;
+  --color-secondary-container: 254 204 228;
+  --color-surface-container-highest: 229 226 226;
+  --color-primary-fixed-dim: 255 178 188;
+  --color-on-background: 28 27 28;
+  --color-primary-fixed: 255 217 221;
+  --color-on-secondary: 255 255 255;
+  --color-surface-container-lowest: 255 255 255;
+  --color-on-secondary-fixed-variant: 96 60 79;
+  --color-on-secondary-fixed: 47 17 35;
+  --color-error: 186 26 26;
+  --color-tertiary: 115 92 0;
+  --color-tertiary-container: 204 168 48;
+  --color-on-tertiary-container: 79 62 0;
+  --color-secondary-fixed-dim: 234 185 208;
+  --color-tertiary-fixed: 255 224 136;
+  --color-background: 252 248 248;
+  --color-on-primary-container: 253 173 184;
+  --color-secondary-fixed: 255 216 234;
+  --color-on-error-container: 147 0 10;
+  --color-surface-bright: 252 248 248;
+  --color-outline-variant: 215 193 195;
+  --color-on-tertiary: 255 255 255;
+  --color-inverse-surface: 49 48 48;
+  --color-primary-container: 122 62 72;
+  --color-surface-tint: 139 76 86;
+}
+
+/* Template 5: Luxury Glamour (Midnight Noir & Warm Golden Accent) */
+.theme-luxury {
+  --color-tertiary-fixed: 212 228 250;
+  --color-secondary-fixed-dim: 195 199 205;
+  --color-surface-container-high: 41 42 46;
+  --color-secondary-fixed: 223 226 233;
+  --color-surface-container-low: 26 27 32;
+  --color-outline: 152 144 130;
+  --color-on-tertiary-fixed: 13 28 45;
+  --color-on-secondary-container: 178 181 188;
+  --color-surface-tint: 222 195 143;
+  --color-surface-dim: 18 19 23;
+  --color-on-secondary-fixed: 24 28 33;
+  --color-tertiary: 216 231 254;
+  --color-on-error: 105 0 5;
+  --color-primary-fixed: 251 223 168;
+  --color-primary-container: 226 199 146;
+  --color-inverse-primary: 112 92 48;
+  --color-surface-container-highest: 52 52 57;
+  --color-error: 255 180 171;
+  --color-surface: 18 19 23;
+  --color-on-surface-variant: 207 197 182;
+  --color-surface-container: 31 31 36;
+  --color-background: 18 19 23;
+  --color-surface-bright: 56 57 62;
+  --color-surface-variant: 52 52 57;
+  --color-surface-container-lowest: 13 14 18;
+  --color-inverse-surface: 227 226 232;
+  --color-on-surface: 227 226 232;
+  --color-on-secondary-fixed-variant: 67 71 77;
+  --color-primary: 255 227 173;
+  --color-primary-fixed-dim: 222 195 143;
+  --color-inverse-on-surface: 47 48 53;
+  --color-on-tertiary-container: 71 86 104;
+  --color-tertiary-fixed-dim: 185 200 222;
+  --color-outline-variant: 76 70 59;
+  --color-on-primary-fixed: 38 26 0;
+  --color-secondary: 195 199 205;
+  --color-on-tertiary: 35 49 67;
+  --color-secondary-container: 67 71 77;
+  --color-on-error-container: 255 218 214;
+  --color-on-primary-container: 102 82 40;
+  --color-on-primary-fixed-variant: 86 68 27;
+  --color-error-container: 147 0 10;
+  --color-on-background: 227 226 232;
+  --color-on-primary: 62 46 6;
+  --color-on-secondary: 45 49 54;
+  --color-tertiary-container: 188 203 225;
+  --color-on-tertiary-fixed-variant: 57 72 90;
+}
+
+/* ============================================================
+   ENFORCED SCOPED UTILITY OVERRIDES UNTUK KE-5 TEMPLATE
+   Mencegah browser fallback atau penurunan kontras warna
+   ============================================================ */
+
+/* TEMPLATE 2: RUSTIC SAGE & TERRACOTTA */
+.theme-rustic {
+  background-color: #EBF0EC;
+  color: #1b1c1a;
+}
+.theme-rustic .text-primary { color: #162a1f !important; }
+.theme-rustic .text-secondary { color: #855233 !important; }
+.theme-rustic .bg-primary { background-color: #162a1f !important; color: #ffffff !important; }
+.theme-rustic .bg-secondary { background-color: #855233 !important; color: #ffffff !important; }
+.theme-rustic .bg-primary-container { background-color: #2c4034 !important; color: #ffffff !important; }
+.theme-rustic .bg-secondary-container { background-color: #feba94 !important; }
+.theme-rustic .bg-surface { background-color: #fbf9f5 !important; }
+.theme-rustic .bg-surface-bright { background-color: #fbf9f5 !important; }
+.theme-rustic .bg-surface-container-low { background-color: #f5f3ef !important; }
+.theme-rustic .bg-surface-container { background-color: #efeeea !important; }
+.theme-rustic .bg-surface-container-high { background-color: #eae8e4 !important; }
+.theme-rustic .bg-surface-container-lowest { background-color: #ffffff !important; }
+.theme-rustic .text-on-primary { color: #ffffff !important; }
+.theme-rustic .text-on-secondary { color: #ffffff !important; }
+.theme-rustic .text-on-surface { color: #1b1c1a !important; }
+.theme-rustic .text-on-surface-variant { color: #424844 !important; }
+
+/* TEMPLATE 3: TRADISI JAWA (KRATON ROYAL GOLD & NOIR) */
+.theme-jawa {
+  background-color: #1a110d !important;
+  color: #f1dfd6 !important;
+}
+.theme-jawa .text-primary { color: #f2ca50 !important; }
+.theme-jawa .text-secondary { color: #edc155 !important; }
+.theme-jawa .text-tertiary { color: #dccf96 !important; }
+.theme-jawa .text-primary-fixed { color: #ffe088 !important; }
+.theme-jawa .text-primary-fixed-dim { color: #e9c349 !important; }
+.theme-jawa .text-on-surface { color: #f1dfd6 !important; }
+.theme-jawa .text-on-surface-variant { color: #d0c5af !important; }
+.theme-jawa .bg-surface { background-color: #1a110d !important; }
+.theme-jawa .bg-surface-container { background-color: #271e18 !important; }
+.theme-jawa .bg-surface-container-low { background-color: #231a14 !important; }
+.theme-jawa .bg-surface-container-high { background-color: #322822 !important; }
+.theme-jawa .bg-surface-container-lowest { background-color: #150c08 !important; }
+.theme-jawa .border-secondary-container { border-color: #b38b23 !important; }
+.theme-jawa .bg-secondary-container { background-color: #b38b23 !important; }
+
+/* TEMPLATE 4: NUANSA ISLAMI (SACRED MAUVE & ROSE GOLD) */
+.theme-islami {
+  background-color: #fcf8f8;
+  color: #1c1b1c;
+}
+.theme-islami .text-primary { color: #5e2832 !important; }
+.theme-islami .text-secondary { color: #7a5367 !important; }
+.theme-islami .bg-primary { background-color: #5e2832 !important; color: #ffffff !important; }
+.theme-islami .bg-secondary { background-color: #7a5367 !important; color: #ffffff !important; }
+.theme-islami .bg-secondary-container { background-color: #fecce4 !important; }
+.theme-islami .bg-primary-container { background-color: #7a3e48 !important; color: #ffffff !important; }
+.theme-islami .bg-surface { background-color: #fcf8f8 !important; }
+.theme-islami .bg-surface-dim { background-color: #ddd9d9 !important; }
+.theme-islami .bg-surface-container-low { background-color: #f7f3f3 !important; }
+.theme-islami .bg-surface-container { background-color: #f1eded !important; }
+.theme-islami .bg-surface-container-high { background-color: #ebe7e7 !important; }
+.theme-islami .bg-surface-container-lowest { background-color: #ffffff !important; }
+.theme-islami .text-on-primary { color: #ffffff !important; }
+.theme-islami .text-on-secondary { color: #ffffff !important; }
+.theme-islami .text-on-surface { color: #1c1b1c !important; }
+.theme-islami .text-on-surface-variant { color: #524345 !important; }
+
+/* TEMPLATE 5: LUXURY ROYAL (MIDNIGHT NOIR & GOLD FOIL) */
+.theme-luxury {
+  background-color: #121316 !important;
+  color: #e2e2e8 !important;
+}
+.theme-luxury .text-primary { color: #ffe3ad !important; }
+.theme-luxury .text-secondary { color: #c4c6d0 !important; }
+.theme-luxury .bg-primary { background-color: #ffe3ad !important; color: #121316 !important; }
+.theme-luxury .bg-surface { background-color: #121316 !important; }
+.theme-luxury .bg-surface-container-low { background-color: #18191d !important; }
+.theme-luxury .bg-surface-container { background-color: #1e2024 !important; }
+.theme-luxury .bg-surface-container-high { background-color: #282a30 !important; }
+.theme-luxury .bg-surface-container-lowest { background-color: #0d0e10 !important; }
+.theme-luxury .text-on-surface { color: #e2e2e8 !important; }
+.theme-luxury .text-on-surface-variant { color: #c4c6d0 !important; }
+
+.font-editorial {
+  font-family: 'Cormorant Garamond', serif;
+}
+
+/* Floating glassmorphism */
+.glass-nav {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(234, 230, 223, 0.9);
+  box-shadow: 0 10px 30px -10px rgba(28, 28, 28, 0.12);
+}
+
+.glass-button {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Audio spinning animation */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+.paused {
+  animation-play-state: paused !important;
+}
+
+/* Elegant arch clipping */
+.arch-frame {
+  border-radius: 200px 200px 20px 20px;
+}
+
+/* ============================================================
+   CINEMATIC PAGE ENTRANCE & COVER EXIT TRANSITIONS
+   ============================================================ */
+@keyframes pageEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(36px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes coverExit {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-40px) scale(1.03);
+    filter: blur(6px);
+  }
+}
+
+.animate-page-enter {
+  animation: pageEnter 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-cover-exit {
+  animation: coverExit 0.65s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ============================================================
+   GPU-ACCELERATED SCROLL REVEAL ANIMATIONS
+   ============================================================ */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.93) translateY(20px);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-scale.is-visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-35px);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-left.is-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-right {
+  opacity: 0;
+  transform: translateX(35px);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-right.is-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Staggered Delay Utilities */
+.delay-100 { transition-delay: 100ms; }
+.delay-150 { transition-delay: 150ms; }
+.delay-200 { transition-delay: 200ms; }
+.delay-250 { transition-delay: 250ms; }
+.delay-300 { transition-delay: 300ms; }
+.delay-400 { transition-delay: 400ms; }
+.delay-500 { transition-delay: 500ms; }
+
+/* Above-the-fold Safety: Guarantee that immediate top Hero section photos 
+   are always visible seamlessly even during rapid Live/Preview mode switches */
+#hero .reveal,
+#hero .reveal-scale,
+#hero-section .reveal,
+#hero-section .reveal-scale,
+#pawarta .reveal,
+#pawarta .reveal-scale,
+#salam .reveal,
+#salam .reveal-scale,
+#hero-countdown .reveal,
+#hero-countdown .reveal-scale {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+

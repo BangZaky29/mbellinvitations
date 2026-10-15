@@ -1,0 +1,192 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        // Template 1 (Modern)
+        alabaster: '#FAF8F5',
+        'alabaster-card': '#FFFFFF',
+        'border-subtle': '#EAE6DF',
+        'charcoal-dark': '#1C1C1C',
+        'charcoal-muted': '#6B6864',
+        'gold-champagne': '#C5A059',
+        'gold-light': '#F4EDE0',
+
+        // Dynamic Material 3 tokens via scoped CSS variables
+        primary: "rgb(var(--color-primary) / <alpha-value>)",
+        "primary-container": "rgb(var(--color-primary-container) / <alpha-value>)",
+        "on-primary": "rgb(var(--color-on-primary) / <alpha-value>)",
+        "on-primary-container": "rgb(var(--color-on-primary-container) / <alpha-value>)",
+        "primary-fixed": "rgb(var(--color-primary-fixed) / <alpha-value>)",
+        "primary-fixed-dim": "rgb(var(--color-primary-fixed-dim) / <alpha-value>)",
+        "on-primary-fixed": "rgb(var(--color-on-primary-fixed) / <alpha-value>)",
+        "on-primary-fixed-variant": "rgb(var(--color-on-primary-fixed-variant) / <alpha-value>)",
+        "inverse-primary": "rgb(var(--color-inverse-primary) / <alpha-value>)",
+
+        secondary: "rgb(var(--color-secondary) / <alpha-value>)",
+        "secondary-container": "rgb(var(--color-secondary-container) / <alpha-value>)",
+        "on-secondary": "rgb(var(--color-on-secondary) / <alpha-value>)",
+        "on-secondary-container": "rgb(var(--color-on-secondary-container) / <alpha-value>)",
+        "secondary-fixed": "rgb(var(--color-secondary-fixed) / <alpha-value>)",
+        "secondary-fixed-dim": "rgb(var(--color-secondary-fixed-dim) / <alpha-value>)",
+        "on-secondary-fixed": "rgb(var(--color-on-secondary-fixed) / <alpha-value>)",
+        "on-secondary-fixed-variant": "rgb(var(--color-on-secondary-fixed-variant) / <alpha-value>)",
+
+        tertiary: "rgb(var(--color-tertiary) / <alpha-value>)",
+        "tertiary-container": "rgb(var(--color-tertiary-container) / <alpha-value>)",
+        "on-tertiary": "rgb(var(--color-on-tertiary) / <alpha-value>)",
+        "on-tertiary-container": "rgb(var(--color-on-tertiary-container) / <alpha-value>)",
+        "tertiary-fixed": "rgb(var(--color-tertiary-fixed) / <alpha-value>)",
+        "tertiary-fixed-dim": "rgb(var(--color-tertiary-fixed-dim) / <alpha-value>)",
+        "on-tertiary-fixed": "rgb(var(--color-on-tertiary-fixed) / <alpha-value>)",
+        "on-tertiary-fixed-variant": "rgb(var(--color-on-tertiary-fixed-variant) / <alpha-value>)",
+
+        surface: "rgb(var(--color-surface) / <alpha-value>)",
+        "surface-bright": "rgb(var(--color-surface-bright) / <alpha-value>)",
+        "surface-dim": "rgb(var(--color-surface-dim) / <alpha-value>)",
+        "surface-container": "rgb(var(--color-surface-container) / <alpha-value>)",
+        "surface-container-low": "rgb(var(--color-surface-container-low) / <alpha-value>)",
+        "surface-container-high": "rgb(var(--color-surface-container-high) / <alpha-value>)",
+        "surface-container-highest": "rgb(var(--color-surface-container-highest) / <alpha-value>)",
+        "surface-container-lowest": "rgb(var(--color-surface-container-lowest) / <alpha-value>)",
+        "surface-variant": "rgb(var(--color-surface-variant) / <alpha-value>)",
+        "surface-tint": "rgb(var(--color-surface-tint) / <alpha-value>)",
+        "on-surface": "rgb(var(--color-on-surface) / <alpha-value>)",
+        "on-surface-variant": "rgb(var(--color-on-surface-variant) / <alpha-value>)",
+        "inverse-surface": "rgb(var(--color-inverse-surface) / <alpha-value>)",
+        "inverse-on-surface": "rgb(var(--color-inverse-on-surface) / <alpha-value>)",
+        background: "rgb(var(--color-background) / <alpha-value>)",
+        "on-background": "rgb(var(--color-on-background) / <alpha-value>)",
+
+        outline: "rgb(var(--color-outline) / <alpha-value>)",
+        "outline-variant": "rgb(var(--color-outline-variant) / <alpha-value>)",
+        error: "rgb(var(--color-error) / <alpha-value>)",
+        "on-error": "rgb(var(--color-on-error) / <alpha-value>)",
+        "error-container": "rgb(var(--color-error-container) / <alpha-value>)",
+        "on-error-container": "rgb(var(--color-on-error-container) / <alpha-value>)",
+
+        sage: {
+          DEFAULT: '#7D8B78',
+          dark: '#4F5D4B',
+          light: '#EBF0EC',
+        },
+        terracotta: '#C17C60',
+        cream: '#FDFBF7',
+
+        // Template 3 (Jawa Adat)
+        jawa: {
+          dark: '#1a110d',
+          card: '#271b15',
+          gold: '#cba358',
+          text: '#f1dfd6',
+          muted: '#a89284',
+        },
+
+        // Template 4 (Islami)
+        islamic: {
+          green: '#1B4332',
+          lightgreen: '#2D6A4F',
+          gold: '#D4AF37',
+          sand: '#F7F4EA',
+        },
+
+        // Template 5 (Luxury)
+        luxury: {
+          black: '#0D0D0D',
+          darkgray: '#171717',
+          gold: '#D4AF37',
+          goldlight: '#F5E6BE',
+          silver: '#E5E5E5',
+        },
+      },
+      spacing: {
+        'space-xs': '0.25rem',
+        'space-sm': '0.5rem',
+        'space-md': '1rem',
+        'space-lg': '1.5rem',
+        'space-xl': '2.5rem',
+        'margin': '1.25rem',
+        'gutter': '1rem',
+      },
+      fontFamily: {
+        // Universal / Default
+        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+        serif: ['"Playfair Display"', 'serif'],
+
+        // Distinct Registered Fonts for 5 Templates
+        cormorant: ['"Cormorant Garamond"', 'serif'],
+        playfair: ['"Playfair Display"', 'serif'],
+        ebgaramond: ['"EB Garamond"', 'serif'],
+        bodoni: ['"Bodoni Moda"', 'serif'],
+        jakarta: ['"Plus Jakarta Sans"', 'sans-serif'],
+        manrope: ['"Manrope"', 'sans-serif'],
+
+        // Template 2 & 3 Semantic Typography tokens
+        'display-hero': ['"Playfair Display"', 'serif'],
+        'headline-lg': ['"Playfair Display"', 'serif'],
+        'headline-lg-mobile': ['"Playfair Display"', 'serif'],
+        'headline-xl': ['"Playfair Display"', 'serif'],
+        'headline-xl-mobile': ['"Playfair Display"', 'serif'],
+        'headline-md': ['"Playfair Display"', 'serif'],
+        'headline-sm': ['"Playfair Display"', 'serif'],
+        'title-lg': ['"Playfair Display"', 'serif'],
+        'title-md': ['"EB Garamond"', 'serif'],
+        'caption': ['"EB Garamond"', 'serif'],
+        'script-accent': ['"Playfair Display"', 'serif'],
+        'body-lg': ['"EB Garamond"', '"Plus Jakarta Sans"', 'serif'],
+        'body-md': ['"EB Garamond"', '"Plus Jakarta Sans"', 'serif'],
+        'body-sm': ['"Plus Jakarta Sans"', 'sans-serif'],
+        'label-lg': ['"Plus Jakarta Sans"', '"Manrope"', 'sans-serif'],
+        'label-md': ['"Plus Jakarta Sans"', '"Manrope"', 'sans-serif'],
+        'label-sm': ['"Plus Jakarta Sans"', 'sans-serif'],
+        'label-eyebrow': ['"Plus Jakarta Sans"', 'sans-serif'],
+        'display': ['"Playfair Display"', 'serif'],
+        'display-mobile': ['"Playfair Display"', 'serif'],
+        'display-hero-mobile': ['"Bodoni Moda"', 'serif'],
+      },
+      fontSize: {
+        'display': ['40px', { lineHeight: '48px', letterSpacing: '-0.01em', fontWeight: '600' }],
+        'display-mobile': ['32px', { lineHeight: '40px', letterSpacing: '-0.01em', fontWeight: '600' }],
+        'display-hero': ['48px', { lineHeight: '54px', letterSpacing: '-0.02em', fontWeight: '400' }],
+        'display-hero-mobile': ['40px', { lineHeight: '46px', letterSpacing: '-0.01em', fontWeight: '400' }],
+        'headline-lg': ['32px', { lineHeight: '40px', letterSpacing: '0em', fontWeight: '400' }],
+        'headline-lg-mobile': ['28px', { lineHeight: '36px', letterSpacing: '0.02em', fontWeight: '400' }],
+        'headline-xl': ['48px', { lineHeight: '56px', letterSpacing: '0.04em', fontWeight: '700' }],
+        'headline-xl-mobile': ['34px', { lineHeight: '42px', letterSpacing: '0.03em', fontWeight: '700' }],
+        'headline-md': ['24px', { lineHeight: '32px', letterSpacing: '0.04em', fontWeight: '400' }],
+        'headline-sm': ['20px', { lineHeight: '28px', letterSpacing: '0.03em', fontWeight: '500' }],
+        'title-lg': ['20px', { lineHeight: '28px', letterSpacing: '0.03em', fontWeight: '600' }],
+        'title-md': ['18px', { lineHeight: '26px', letterSpacing: '0.02em', fontWeight: '600' }],
+        'caption': ['13px', { lineHeight: '18px', fontWeight: '400' }],
+        'script-accent': ['22px', { lineHeight: '30px', letterSpacing: '0.02em', fontWeight: '400' }],
+        'body-lg': ['16px', { lineHeight: '26px', letterSpacing: '0.01em', fontWeight: '300' }],
+        'body-md': ['14px', { lineHeight: '22px', letterSpacing: '0.01em', fontWeight: '300' }],
+        'body-sm': ['12px', { lineHeight: '18px', letterSpacing: '0.02em', fontWeight: '300' }],
+        'label-lg': ['13px', { lineHeight: '18px', letterSpacing: '0.15em', fontWeight: '600' }],
+        'label-md': ['13px', { lineHeight: '18px', letterSpacing: '0.08em', fontWeight: '500' }],
+        'label-sm': ['11px', { lineHeight: '16px', letterSpacing: '0.06em', fontWeight: '400' }],
+        'label-eyebrow': ['11px', { lineHeight: '14px', letterSpacing: '0.22em', fontWeight: '600' }],
+      },
+      borderRadius: {
+        DEFAULT: '1rem',
+        arch: '160px 160px 16px 16px',
+        'arch-lg': '200px 200px 20px 20px',
+      },
+      animation: {
+        'spin-slow': 'spin-slow 8s linear infinite',
+      },
+      keyframes: {
+        'spin-slow': {
+          from: { transform: 'rotate(0deg)' },
+          to: { transform: 'rotate(360deg)' },
+        },
+      },
+    },
+  },
+  plugins: [],
+}
