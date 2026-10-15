@@ -63,24 +63,29 @@ export const PublicInvitationPage: React.FC = () => {
     );
   }
 
+  const isPublished = invitationData.status === 'published';
+  const showDemoPill = slug === 'demo' && !isPublished;
+
   return (
     <div className="relative w-full min-h-screen">
-      {/* Floating Demo & Info Pill Bar (Subtle Top Overlay) */}
-      <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-black/65 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-xl text-[11px] text-neutral-300 pointer-events-auto">
-        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span className="font-mono text-neutral-300">
-          /{slug}
-          {activeGuestCode ? ` • [Code: ${activeGuestCode}]` : ''}
-        </span>
-        <span className="text-white/20">|</span>
-        <Link
-          to="/demo"
-          className="text-amber-300 hover:text-amber-200 font-semibold transition-colors flex items-center gap-1"
-        >
-          <span>5-Template Demo</span>
-          <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-        </Link>
-      </div>
+      {/* Floating Demo & Info Pill Bar (Hanya tampil pada rute khusus demo, disembunyikan untuk template yang sudah live/dipublish) */}
+      {showDemoPill && (
+        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-black/65 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-xl text-[11px] text-neutral-300 pointer-events-auto">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span className="font-mono text-neutral-300">
+            /{slug}
+            {activeGuestCode ? ` • [Code: ${activeGuestCode}]` : ''}
+          </span>
+          <span className="text-white/20">|</span>
+          <Link
+            to="/demo"
+            className="text-amber-300 hover:text-amber-200 font-semibold transition-colors flex items-center gap-1"
+          >
+            <span>5-Template Demo</span>
+            <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+          </Link>
+        </div>
+      )}
 
       {/* Floating Global Toast Notification */}
       {toastMessage && (

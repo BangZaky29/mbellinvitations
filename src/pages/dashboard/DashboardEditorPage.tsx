@@ -105,7 +105,6 @@ export const DashboardEditorPage: React.FC = () => {
   const [formData, setFormData] = useState<InvitationData>(MOCK_MODERN_DATA);
   const [themeConfig, setThemeConfig] = useState<ThemeConfig>(MOCK_MODERN_THEME);
   const [wishes] = useState<WishItem[]>(MOCK_MODERN_WISHES);
-  // const [setIsCustomSlug] = useState(false);
 
   // Editor UI State
   const [activeTab, setActiveTab] = useState<DashboardTab>('edit-undangan');
