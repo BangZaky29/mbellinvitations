@@ -56,6 +56,7 @@ export interface MyTemplatesPanelProps {
   onImplementActiveTemplate?: () => void;
   onOpenAuthGate: () => void;
   onAddNewTemplate: (themeId: string) => void;
+  onSlugChange?: (newSlug: string) => void;
 }
 
 const THEME_BANNER_COLORS: Record<string, { bg: string; text: string; badge: string; label: string }> = {
@@ -99,6 +100,7 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
   onImplementActiveTemplate,
   onOpenAuthGate,
   onAddNewTemplate,
+  onSlugChange,
 }) => {
   const [templates, setTemplates] = useState<UserTemplateRecord[]>([]);
   const [loading, setLoading] = useState(false);
@@ -126,7 +128,16 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
     if (currentUserId) {
       loadTemplates();
     }
-  }, [currentUserId]);
+    const handleUpdate = () => {
+      if (currentUserId) {
+        loadTemplates();
+      }
+    };
+    window.addEventListener('mbell_templates_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('mbell_templates_updated', handleUpdate);
+    };
+  }, [currentUserId, activeTemplateId]);
 
   const handleCopyLink = (slug: string) => {
     const fullUrl = `${window.location.origin}/${slug}`;
@@ -273,55 +284,85 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
       )}
 
       {/* 4. Active Current Draft Card (Always accessible for editing) */}
-      <div className="bg-white rounded-3xl p-6 border-2 border-dashed border-stone-300/80 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-stone-900 text-amber-300 flex items-center justify-center font-serif font-bold text-xl shadow-xs shrink-0">
-              {currentFormData.groom?.name?.charAt(0) || 'R'}
-              <span className="text-stone-400 text-xs mx-0.5">&</span>
-              {currentFormData.bride?.name?.charAt(0) || 'J'}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold uppercase tracking-wider">
-                  Sedang Aktif di Editor
-                </span>
-                <span className="px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 text-[10px] font-medium uppercase">
-                  Tema: {currentFormData.theme_id || 'modern'}
-                </span>
-              </div>
-              <h2 className="text-base sm:text-lg font-serif font-bold text-stone-900 mt-1">
-                {currentFormData.groom?.name || 'Raditya'} & {currentFormData.bride?.name || 'Jessica'}
-              </h2>
-              <p className="text-xs text-stone-500">
-                Slug tautan: <span className="font-mono text-stone-700 font-medium">/{currentFormData.slug || 'raditya-jessica'}</span>
-              </p>
-            </div>
-          </div>
+      {(() => {
+        const gSlug = (currentFormData.groom?.name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        const bSlug = (currentFormData.bride?.name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        const autoCoupleSlug = (gSlug && bSlug) ? `${gSlug}-${bSlug}` : '';
+        const currentEffectiveSlug = (currentFormData.slug && currentFormData.slug !== 'raditya-jessica')
+          ? currentFormData.slug
+          : (autoCoupleSlug || currentFormData.slug || 'raditya-jessica');
 
-          <div className="flex items-center gap-2.5">
-            {onImplementActiveTemplate && (
-              <button
-                type="button"
-                onClick={onImplementActiveTemplate}
-                className="px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs hover:shadow-md transition-all cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[16px] text-amber-300">draw</span>
-                <span>Implementasikan Template</span>
-              </button>
-            )}
-            <a
-              href={`/${currentFormData.slug || 'raditya-jessica'}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3.5 py-2 rounded-xl border border-stone-200 text-stone-700 hover:bg-stone-50 text-xs font-medium flex items-center gap-1.5 transition-colors"
-            >
-              <span>Pratinjau Live</span>
-              <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-            </a>
+        return (
+          <div className="bg-white rounded-3xl p-6 border-2 border-dashed border-stone-300/80 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-stone-900 text-amber-300 flex items-center justify-center font-serif font-bold text-xl shadow-xs shrink-0">
+                  {currentFormData.groom?.name?.charAt(0) || 'Z'}
+                  <span className="text-stone-400 text-xs mx-0.5">&</span>
+                  {currentFormData.bride?.name?.charAt(0) || 'B'}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold uppercase tracking-wider">
+                      Sedang Aktif di Editor
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 text-[10px] font-medium uppercase">
+                      Tema: {currentFormData.theme_id || 'modern'}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                      currentFormData.status === 'published'
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center gap-1'
+                        : 'bg-amber-50 text-amber-800 border border-amber-300 flex items-center gap-1'
+                    }`}>
+                      {currentFormData.status === 'published' ? (
+                        <>
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                          <span>Live Tayang</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                          <span>Draf Checkpoint</span>
+                        </>
+                      )}
+                    </span>
+                  </div>
+                  <h2 className="text-base sm:text-lg font-serif font-bold text-stone-900 mt-1">
+                    {currentFormData.groom?.name || 'Raditya'} & {currentFormData.bride?.name || 'Jessica'}
+                  </h2>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="text-xs text-stone-500">
+                      Tautan Website: <span className="font-mono text-stone-900 font-bold select-all">mbell.id/{currentEffectiveSlug}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                {onImplementActiveTemplate && (
+                  <button
+                    type="button"
+                    onClick={onImplementActiveTemplate}
+                    className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs hover:shadow-md transition-all cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px] text-emerald-200">edit_note</span>
+                    <span>Lanjut Edit di Editor</span>
+                  </button>
+                )}
+                <a
+                  href={`/${currentEffectiveSlug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-2 rounded-xl border border-stone-200 text-stone-700 hover:bg-stone-50 text-xs font-medium flex items-center gap-1.5 transition-colors"
+                >
+                  <span>Pratinjau Live</span>
+                  <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                </a>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* 5. User Saved Templates Grid */}
       {loading ? (
@@ -333,7 +374,30 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {filteredTemplates.map((item) => {
             const themeStyle = THEME_BANNER_COLORS[item.theme_id || 'modern'] || THEME_BANNER_COLORS.modern;
-            const isCopied = copiedSlug === item.slug;
+            
+            // Hitung slug otomatis dari nama mempelai pada setiap template tersimpan
+            const itemG = (item.content?.groom?.name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+            const itemB = (item.content?.bride?.name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+            const itemAutoSlug = (itemG && itemB) ? `${itemG}-${itemB}` : '';
+            const itemEffectiveSlug = (item.slug && item.slug !== 'raditya-jessica') ? item.slug : (itemAutoSlug || item.slug || 'raditya-jessica');
+
+            const isCopied = copiedSlug === itemEffectiveSlug;
+            
+            const currentG = (currentFormData.groom?.name || '').trim().toLowerCase();
+            const currentB = (currentFormData.bride?.name || '').trim().toLowerCase();
+            const namesMatch = currentG && currentB && itemG === currentG && itemB === currentB;
+
+            const isCurrentActive =
+              (Boolean(activeTemplateId) && item.id === activeTemplateId) ||
+              namesMatch ||
+              (itemEffectiveSlug === (currentFormData.slug || 'raditya-jessica') &&
+                (item.theme_id === currentFormData.theme_id ||
+                  (item.template_id === 'template3' && currentFormData.theme_id === 'jawa') ||
+                  (item.template_id === 'template1' && currentFormData.theme_id === 'modern') ||
+                  (item.template_id === 'template2' && currentFormData.theme_id === 'rustic') ||
+                  (item.template_id === 'template4' && currentFormData.theme_id === 'islami') ||
+                  (item.template_id === 'template5' && currentFormData.theme_id === 'luxury')));
+
             const updatedDate = item.updated_at
               ? new Date(item.updated_at).toLocaleDateString('id-ID', {
                   day: 'numeric',
@@ -344,10 +408,16 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
                 })
               : 'Baru saja';
 
+            const isDraft = item.status === 'draft';
+
             return (
               <div
                 key={item.id}
-                className="bg-white rounded-3xl border border-stone-200/90 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col justify-between group"
+                className={`bg-white rounded-3xl border transition-all overflow-hidden flex flex-col justify-between group ${
+                  isCurrentActive
+                    ? 'border-emerald-500 ring-2 ring-emerald-500/30 shadow-md'
+                    : 'border-stone-200/90 shadow-xs hover:shadow-md'
+                }`}
               >
                 {/* Banner Visual */}
                 <div className={`p-5 bg-gradient-to-br ${themeStyle.bg} text-white relative`}>
@@ -356,20 +426,30 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
                       {themeStyle.label}
                     </span>
                     <div className="flex items-center gap-1.5">
-                      {item.id === activeTemplateId && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-400 text-stone-900 border border-amber-300 shadow-xs flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[12px]">check_circle</span>
+                      {isCurrentActive && (
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-400 text-stone-900 border border-amber-300 shadow-xs flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[13px]">check_circle</span>
                           <span>Sedang Aktif</span>
                         </span>
                       )}
                       <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase flex items-center gap-1 ${
                           item.status === 'published'
                             ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                            : 'bg-stone-500/20 text-stone-300 border border-stone-500/30'
+                            : 'bg-amber-500/25 text-amber-200 border border-amber-400/30'
                         }`}
                       >
-                        {item.status === 'published' ? 'Live' : 'Draft'}
+                        {item.status === 'published' ? (
+                          <>
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            <span>Live</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="material-symbols-outlined text-[11px]">bookmark</span>
+                            <span>Draf Checkpoint</span>
+                          </>
+                        )}
                       </span>
                     </div>
                   </div>
@@ -389,14 +469,14 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
                     <div className="flex items-center justify-between bg-stone-50 p-2.5 rounded-xl border border-stone-100">
                       <div className="flex items-center gap-1.5 overflow-hidden">
                         <span className="material-symbols-outlined text-stone-400 text-[16px]">link</span>
-                        <span className="font-mono text-xs text-stone-700 truncate">
-                          /{item.slug}
+                        <span className="font-mono text-xs text-stone-700 font-bold truncate">
+                          /{itemEffectiveSlug}
                         </span>
                       </div>
                       <button
-                        onClick={() => handleCopyLink(item.slug)}
+                        onClick={() => handleCopyLink(itemEffectiveSlug)}
                         title="Salin tautan undangan"
-                        className="p-1 hover:bg-stone-200 rounded-md text-stone-500 transition-colors shrink-0"
+                        className="p-1 hover:bg-stone-200 rounded-md text-stone-500 transition-colors shrink-0 cursor-pointer"
                       >
                         <span className="material-symbols-outlined text-[16px]">
                           {isCopied ? 'check' : 'content_copy'}
@@ -414,25 +494,29 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
                   <div className="flex items-center gap-2 pt-2 border-t border-stone-100">
                     <button
                       type="button"
-                      onClick={() => onSelectTemplate(item)}
-                      className={`flex-1 py-2.5 px-3.5 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs hover:shadow-md cursor-pointer ${
-                        item.id === activeTemplateId
+                      onClick={() => onSelectTemplate({ ...item, slug: itemEffectiveSlug })}
+                      className={`flex-1 py-2.5 px-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs hover:shadow-md cursor-pointer ${
+                        isCurrentActive
                           ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                          : isDraft
+                          ? 'bg-amber-600 hover:bg-amber-700 text-white'
                           : 'bg-stone-900 hover:bg-stone-800 text-white'
                       }`}
                     >
                       <span className="material-symbols-outlined text-[16px]">
-                        {item.id === activeTemplateId ? 'check_circle' : 'palette'}
+                        {isCurrentActive ? 'edit_note' : isDraft ? 'file_open' : 'palette'}
                       </span>
                       <span>
-                        {item.id === activeTemplateId
-                          ? 'Aktif di Editor (Edit)'
-                          : 'Implementasikan Template'}
+                        {isCurrentActive
+                          ? '✓ Sedang Diedit (Lanjut)'
+                          : isDraft
+                          ? '📂 Tarik & Lanjut Edit Draf Ini'
+                          : 'Buka & Edit Template Ini'}
                       </span>
                     </button>
 
                     <a
-                      href={`/${item.slug}`}
+                      href={`/${itemEffectiveSlug}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="py-2.5 px-3 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-700 text-xs font-medium flex items-center justify-center gap-1 transition-colors"
@@ -459,23 +543,52 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
         /* Empty State for Logged In User */
         <div className="bg-white rounded-3xl p-10 text-center border border-stone-200/80 shadow-xs space-y-4">
           <div className="w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/20 text-amber-700 flex items-center justify-center mx-auto">
-            <span className="material-symbols-outlined text-[32px]">folder_open</span>
+            <span className="material-symbols-outlined text-[32px]">
+              {filter === 'draft' ? 'bookmark_border' : filter === 'published' ? 'public_off' : 'folder_open'}
+            </span>
           </div>
           <div className="max-w-md mx-auto space-y-1">
             <h3 className="font-serif font-bold text-lg text-stone-900">
-              Belum Ada Template Tersimpan
+              {filter === 'draft'
+                ? 'Belum Ada Draf Checkpoint'
+                : filter === 'published'
+                ? 'Belum Ada Undangan Live'
+                : 'Belum Ada Template Tersimpan'}
             </h3>
             <p className="text-xs sm:text-sm text-stone-500 leading-relaxed">
-              Rancangan undangan aktif Anda otomatis tersimpan aman, atau klik <strong>"Buat Template Baru"</strong> di bawah untuk menambah variasi template.
+              {filter === 'draft' ? (
+                <>
+                  Anda belum memiliki draf checkpoint. Saat mengedit undangan, klik tombol <strong>"Simpan Draf"</strong> di toolbar atas editor untuk menyimpan checkpoint progres editan Anda.
+                </>
+              ) : filter === 'published' ? (
+                <>
+                  Undangan Anda belum dipublikasikan ke publik. Buka editor dan klik <strong>"Publikasikan"</strong> di pojok kanan atas untuk menerbitkan undangan live.
+                </>
+              ) : (
+                <>
+                  Rancangan undangan aktif Anda otomatis tersimpan aman, atau klik <strong>"Buat Undangan Baru"</strong> di bawah untuk menambah variasi template.
+                </>
+              )}
             </p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-stone-900 text-white font-medium text-xs sm:text-sm hover:bg-stone-800 transition-colors shadow-xs"
-          >
-            <span className="material-symbols-outlined text-[18px]">add</span>
-            <span>Mulai Buat Template Baru</span>
-          </button>
+          <div className="flex items-center justify-center gap-3">
+            {filter !== 'all' && (
+              <button
+                type="button"
+                onClick={() => setFilter('all')}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-stone-200 text-stone-700 font-medium text-xs sm:text-sm hover:bg-stone-50 transition-colors"
+              >
+                <span>Lihat Semua Template</span>
+              </button>
+            )}
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-stone-900 text-white font-medium text-xs sm:text-sm hover:bg-stone-800 transition-colors shadow-xs"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              <span>Mulai Buat Undangan Baru</span>
+            </button>
+          </div>
         </div>
       ) : null}
 

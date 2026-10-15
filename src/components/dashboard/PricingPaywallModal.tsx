@@ -79,6 +79,7 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<'qris' | 'bca' | 'mandiri'>('qris');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
 
@@ -126,20 +127,38 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
               Website pernikahan Anda sekarang sudah online dan siap disebarkan ke keluarga serta sahabat tercinta.
             </p>
 
-            <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200 max-w-sm mx-auto flex items-center justify-between">
-              <div className="text-left">
+            <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200 max-w-md mx-auto flex items-center justify-between gap-3">
+              <div className="text-left min-w-0 flex-1">
                 <span className="text-[11px] font-medium text-stone-500 uppercase tracking-wider block">Link Undangan Anda</span>
-                <span className="font-mono text-sm font-semibold text-stone-900">mbell.id/{invitationSlug}</span>
+                <span className="font-mono text-sm font-bold text-stone-900 truncate block">
+                  {typeof window !== 'undefined' ? `${window.location.host}/${invitationSlug}` : `mbell.id/${invitationSlug}`}
+                </span>
               </div>
-              <a
-                href={`/${invitationSlug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 rounded-xl bg-stone-900 hover:bg-neutral-800 text-white font-label-md text-xs font-semibold flex items-center gap-1.5 transition-colors"
-              >
-                <span>Buka</span>
-                <span className="material-symbols-outlined text-sm">open_in_new</span>
-              </a>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const fullUrl = `${window.location.origin}/${invitationSlug}`;
+                    navigator.clipboard.writeText(fullUrl);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2500);
+                  }}
+                  className="px-3 py-2 rounded-xl bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 font-label-md text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                  title="Salin Link"
+                >
+                  <span className="material-symbols-outlined text-sm">{copied ? 'check' : 'content_copy'}</span>
+                  <span>{copied ? 'Tersalin' : 'Salin'}</span>
+                </button>
+                <a
+                  href={`/${invitationSlug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-neutral-800 text-white font-label-md text-xs font-semibold flex items-center gap-1 transition-colors"
+                >
+                  <span>Buka</span>
+                  <span className="material-symbols-outlined text-sm">open_in_new</span>
+                </a>
+              </div>
             </div>
 
             <div className="pt-4">

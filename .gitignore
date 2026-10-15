@@ -7,7 +7,7 @@ node_modules/
 .yarn/install-state.gz
 
 # ============================================================
-# ENVIRONMENT VARIABLES (CRITICAL SECURITY)
+# ENVIRONMENT VARIABLES & SECRETS (CRITICAL SECURITY)
 # ============================================================
 .env
 .env.local
@@ -16,6 +16,9 @@ node_modules/
 .env.production.local
 *.env
 *.env.*
+client_secret*.json
+*.pem
+*.key
 # Izinkan template contoh .env.example agar bisa di-commit
 !.env.example
 

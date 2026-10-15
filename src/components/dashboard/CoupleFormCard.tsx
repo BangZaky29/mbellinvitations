@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import type { CoupleInfo } from '../../types/invitation';
 
 interface CoupleFormCardProps {
@@ -6,6 +6,8 @@ interface CoupleFormCardProps {
   bride: CoupleInfo;
   isBrideFirst: boolean;
   coverImage: string;
+  slug?: string;
+  onSlugChange?: (slug: string) => void;
   onGroomChange: (groom: CoupleInfo) => void;
   onBrideChange: (bride: CoupleInfo) => void;
   onToggleBrideFirst: (isBrideFirst: boolean) => void;
@@ -17,11 +19,14 @@ export const CoupleFormCard: React.FC<CoupleFormCardProps> = ({
   bride,
   isBrideFirst,
   coverImage,
+  slug = 'raditya-jessica',
+  onSlugChange,
   onGroomChange,
   onBrideChange,
   onToggleBrideFirst,
   onCoverChange,
 }) => {
+  const [copied, setCopied] = useState(false);
   const groomFileInputRef = useRef<HTMLInputElement>(null);
   const brideFileInputRef = useRef<HTMLInputElement>(null);
   const coverFileInputRef = useRef<HTMLInputElement>(null);
@@ -468,6 +473,69 @@ export const CoupleFormCard: React.FC<CoupleFormCardProps> = ({
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* 🌟 TAUTAN OTOMATIS BERDASARKAN NAMA PANGGILAN KEDUA MEMPELAI */}
+      <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-50/70 via-stone-50 to-white border border-amber-200/80 shadow-2xs space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-amber-700 text-[20px]">link</span>
+            <h3 className="text-sm font-bold text-stone-900">
+              Alamat Tautan Undangan (Otomatis Realtime)
+            </h3>
+          </div>
+          <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold self-start sm:self-auto flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+            <span>Auto-Update dari Nama</span>
+          </span>
+        </div>
+
+        <p className="text-xs text-stone-500 leading-relaxed">
+          Tautan website ini otomatis diperbarui secara realtime dari nama panggilan mempelai (<strong className="text-stone-800 font-semibold">{groom.name || 'Pria'}</strong> &amp; <strong className="text-stone-800 font-semibold">{bride.name || 'Wanita'}</strong>) tanpa perlu input manual.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+          <div className="flex-1 flex items-center justify-between rounded-xl bg-white border border-stone-200 px-3.5 py-2.5 text-xs shadow-2xs">
+            <div className="flex items-center gap-1 font-mono overflow-hidden">
+              <span className="text-stone-400 select-none">
+                {typeof window !== 'undefined' ? `${window.location.host}/` : 'mbell.id/'}
+              </span>
+              <span className="text-stone-900 font-bold truncate">
+                {slug}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const fullUrl = `${typeof window !== 'undefined' ? window.location.origin : 'https://mbell.id'}/${slug}`;
+                navigator.clipboard.writeText(fullUrl);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              className="p-1.5 hover:bg-stone-100 rounded-lg text-stone-600 hover:text-stone-900 transition-colors cursor-pointer shrink-0 ml-2 flex items-center gap-1"
+              title="Salin tautan resmi"
+            >
+              <span className="material-symbols-outlined text-[16px]">
+                {copied ? 'check' : 'content_copy'}
+              </span>
+              <span className="text-[11px] font-sans font-medium text-stone-500">
+                {copied ? 'Tersalin' : 'Salin'}
+              </span>
+            </button>
+          </div>
+
+          {/* Test Link Button */}
+          <a
+            href={`/${slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold transition-all shadow-xs flex items-center justify-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
+            title="Buka link undangan saat ini"
+          >
+            <span>Buka Undangan</span>
+            <span className="material-symbols-outlined text-[15px]">open_in_new</span>
+          </a>
         </div>
       </div>
     </section>

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 
 interface SettingsAccountPanelProps {
   userId?: string | null;
   userEmail?: string | null;
+  userName?: string | null;
   userAvatar?: string | null;
   invitationSlug?: string;
   onLogout?: () => void;
@@ -14,12 +15,18 @@ interface SettingsAccountPanelProps {
 export const SettingsAccountPanel: React.FC<SettingsAccountPanelProps> = ({
   userId,
   userEmail,
+  userName,
   userAvatar,
   invitationSlug = 'raditya-jessica',
   onLogout,
   onGoToEditor,
   onOpenAuthGate,
 }) => {
+  const [avatarError, setAvatarError] = useState(false);
+
+  const displayName = userName || userEmail?.split('@')[0] || 'Pengguna Mbell';
+  const initialLetter = (displayName.trim()[0] || 'U').toUpperCase();
+
   const handleLogoutAction = async () => {
     await supabase.auth.signOut();
     if (onLogout) {
@@ -73,18 +80,23 @@ export const SettingsAccountPanel: React.FC<SettingsAccountPanelProps> = ({
       <div className="bg-white rounded-2xl p-6 border border-stone-200/90 shadow-2xs space-y-5">
         <div className="flex items-center justify-between pb-4 border-b border-stone-100">
           <div className="flex items-center gap-3.5">
-            <img
-              src={
-                userAvatar ||
-                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200'
-              }
-              alt="Avatar Pengguna"
-              className="w-14 h-14 rounded-full object-cover ring-2 ring-stone-200 shadow-xs"
-            />
+            {userAvatar && !avatarError ? (
+              <img
+                src={userAvatar}
+                alt={displayName}
+                referrerPolicy="no-referrer"
+                onError={() => setAvatarError(true)}
+                className="w-14 h-14 rounded-full object-cover ring-2 ring-amber-500/40 shadow-xs"
+              />
+            ) : (
+              <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-600 to-amber-400 text-white font-bold text-xl flex items-center justify-center ring-2 ring-amber-500/40 shadow-xs">
+                {initialLetter}
+              </div>
+            )}
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-base text-stone-900">
-                  {userEmail?.split('@')[0] || 'Pengguna Mbell'}
+                  {displayName}
                 </h3>
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold">
                   <span className="material-symbols-outlined text-[12px] text-emerald-600">verified</span>
