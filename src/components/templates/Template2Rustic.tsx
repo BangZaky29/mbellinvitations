@@ -1,9 +1,10 @@
 import React from 'react';
-import { createPortal } from 'react-dom';
 import type { InvitationProps } from '../../types/invitation';
 import { useTemplateState } from '../../hooks/useTemplateState';
 import { FloatingDock } from '../common/FloatingDock';
 import { SleekToast } from '../common/SleekToast';
+import { VenueMapEmbed } from '../common/VenueMapEmbed';
+import { GalleryLightbox } from '../common/GalleryLightbox';
 
 export const Template2Rustic: React.FC<InvitationProps> = ({
   data,
@@ -77,44 +78,8 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
           isInsideMockup={isPreview}
         />
 
-        {/* Top Floating Header (Fixed) */}
-        {isOpen && (
-          <header className="fixed top-0 w-full max-w-[430px] z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.03)]">
-            <div className="h-16 px-margin flex items-center justify-between">
-              <div className="flex items-center gap-space-sm">
-                <span className="material-symbols-outlined text-secondary text-[22px]">
-                  local_florist
-                </span>
-                <h1 className="font-headline-sm text-headline-sm text-primary tracking-normal">
-                  {firstPerson.name} &amp; {secondPerson.name}
-                </h1>
-              </div>
-              <div className="flex items-center gap-space-sm">
-                <button
-                  type="button"
-                  onClick={toggleMusic}
-                  aria-label="Toggle music playback"
-                  className="w-11 h-11 rounded-full bg-surface-container/70 backdrop-blur-md flex items-center justify-center text-secondary hover:text-primary transition-all active:scale-95 shadow-[0_2px_8px_rgba(133,82,51,0.12)] cursor-pointer"
-                >
-                  <span
-                    className={`material-symbols-outlined text-[20px] ${
-                      isPlaying ? 'animate-spin' : ''
-                    }`}
-                    style={{ animationDuration: '8s' }}
-                  >
-                    album
-                  </span>
-                </button>
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary">
-                  <span className="material-symbols-outlined text-[18px]">person</span>
-                </div>
-              </div>
-            </div>
-          </header>
-        )}
-
         {/* Main Content Area */}
-        <main className={`flex flex-col relative w-full ${isOpen ? 'pt-16 pb-28 px-margin' : 'p-0'} bg-surface min-h-screen flex-1`}>
+        <main className={`flex flex-col relative w-full ${isOpen ? 'pt-4 pb-28 px-margin' : 'p-0'} bg-surface min-h-screen flex-1`}>
           <div className="flex flex-col w-full text-on-surface h-full flex-1">
 
             {/* ========================================== */}
@@ -505,22 +470,26 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                       ? 'church'
                       : 'celebration';
 
+                  const activeTargetIdx = data.countdown_target === 'resepsi' && data.events.length > 1 ? 1 : 0;
+                  const isCountdownEvent = idx === activeTargetIdx;
+
                   return (
                     <div
                       key={idx}
                       className="bg-surface-bright rounded-xl p-space-lg shadow-sm mb-space-lg relative overflow-hidden reveal-scale delay-150"
                     >
-                      <div className="flex items-center justify-between mb-space-md">
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-secondary text-[24px]">
+                      {/* Event Header: Category & Badge */}
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <div className="inline-flex items-center gap-1.5 text-secondary">
+                          <span className="material-symbols-outlined text-[18px] shrink-0">
                             {icon}
                           </span>
-                          <h4 className="font-headline-md text-headline-md text-primary">
-                            {event.name}
-                          </h4>
+                          <span className="text-[11px] font-bold tracking-widest uppercase text-secondary">
+                            {idx === 0 ? 'Akad' : 'Resepsi'}
+                          </span>
                         </div>
                         <span
-                          className={`px-3 py-1 rounded-full font-label-md text-label-md font-semibold ${
+                          className={`shrink-0 px-2.5 py-0.5 rounded-full text-[11px] font-medium leading-normal ${
                             idx === 0
                               ? 'bg-surface-container text-primary'
                               : 'bg-secondary-fixed text-on-secondary-fixed'
@@ -530,54 +499,58 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                         </span>
                       </div>
 
-                      <div className="flex flex-col gap-3 font-body-md text-body-md text-on-surface-variant">
+                      {/* Event Name: Full Width & Elegantly Proportioned */}
+                      <h4 className="font-headline-md text-headline-md text-primary font-bold mb-4 break-words">
+                        {event.name}
+                      </h4>
+
+                      <div className="flex flex-col gap-3 font-body-md text-body-md text-on-surface-variant mb-4">
                         <div className="flex items-start gap-3">
-                          <span className="material-symbols-outlined text-secondary text-[20px] mt-0.5">
+                          <span className="material-symbols-outlined text-secondary text-[20px] mt-0.5 shrink-0">
                             calendar_month
                           </span>
-                          <div>
-                            <div className="font-semibold text-primary">{event.date}</div>
-                            <div className="text-body-sm font-body-sm">Pukul {event.time}</div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-semibold text-primary break-words [overflow-wrap:anywhere]">{event.date}</div>
+                            <div className="text-body-sm font-body-sm break-words [overflow-wrap:anywhere]">Pukul {event.time}</div>
                           </div>
                         </div>
                         <div className="flex items-start gap-3">
-                          <span className="material-symbols-outlined text-secondary text-[20px] mt-0.5">
+                          <span className="material-symbols-outlined text-secondary text-[20px] mt-0.5 shrink-0">
                             location_on
                           </span>
-                          <div>
-                            <div className="font-semibold text-primary">{event.venue_name}</div>
-                            <div className="text-body-sm font-body-sm">{event.venue_address}</div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-semibold text-primary break-words [overflow-wrap:anywhere]">{event.venue_name}</div>
+                            <div className="text-body-sm font-body-sm break-words [overflow-wrap:anywhere]">{event.venue_address}</div>
                           </div>
                         </div>
                       </div>
+
+                      {/* Interactive Real Google Maps Embed (Hanya untuk Acara Mendatang Terpilih) */}
+                      {isCountdownEvent && (
+                        <div className="w-full mb-3">
+                          <VenueMapEmbed
+                            venueName={event.venue_name || 'Lokasi Pernikahan'}
+                            venueAddress={event.venue_address}
+                            mapsUrl={event.maps_url}
+                            heightClass="h-44"
+                            isPreview={isPreview}
+                          />
+                        </div>
+                      )}
+
+                      {/* Google Maps Button (Selalu tampil di setiap card acara) */}
+                      <a
+                        href={event.maps_url || 'https://maps.google.com'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full min-h-[44px] py-2.5 px-4 rounded-full bg-primary text-on-primary text-xs sm:text-sm font-semibold tracking-wide flex items-center justify-center gap-2 hover:bg-primary-container active:scale-98 transition-all shadow-sm text-center"
+                      >
+                        <span className="material-symbols-outlined text-[18px] shrink-0">near_me</span>
+                        <span>Buka Google Maps</span>
+                      </a>
                     </div>
                   );
                 })}
-
-                {/* Location Map Card */}
-                <div className="bg-surface-bright rounded-xl p-space-md shadow-sm flex flex-col">
-                  <div
-                    className="w-full h-48 bg-surface-container rounded-lg bg-cover bg-center mb-space-md flex items-center justify-center relative overflow-hidden"
-                    style={{
-                      backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuCjzJwBl16uXjvp0GfNuXVVE-jMkql_X09xMeeQPH5-Rxp0ITAuYlvq5fEkEOQIfUHd1XKkWgKxpV8N2e2_NzRiPSyc55nZd6WB1zDmaQPD5oSpTAUuasv4X1ZM2Lrsp0aq7kgCCQrTDDXYZwdCrzNt6ahe9JrDEVOowaiIjJkJURGgO0D0hkes7Q0MluHoSLTjz-zi0nrsfOiJB9UYhY3WiYlaFqRagVwsZ3Pt757tY8F4HeoZavHT')`,
-                    }}
-                  >
-                    <div className="absolute inset-0 bg-primary/20 backdrop-blur-[1px] flex items-center justify-center">
-                      <div className="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg animate-bounce">
-                        <span className="material-symbols-outlined text-[26px]">pin_drop</span>
-                      </div>
-                    </div>
-                  </div>
-                  <a
-                    href={data.events[0]?.maps_url || 'https://maps.google.com'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full h-12 rounded-full bg-primary text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 hover:bg-primary-container transition-all shadow-sm"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">near_me</span>
-                    <span>Petunjuk Lokasi (Google Maps)</span>
-                  </a>
-                </div>
               </section>
             )}
 
@@ -869,14 +842,14 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                               </span>
                             </div>
                             <div
-                              className={`font-headline-md text-headline-md font-semibold tracking-widest my-1 ${
+                              className={`font-headline-md text-headline-md font-semibold tracking-widest my-1 break-words [overflow-wrap:anywhere] ${
                                 isPrimary ? 'text-surface-bright' : 'text-primary'
                               }`}
                             >
                               {bank.account_number}
                             </div>
                             <div
-                              className={`font-body-sm text-body-sm mb-3 ${
+                              className={`font-body-sm text-body-sm mb-3 break-words [overflow-wrap:anywhere] ${
                                 isPrimary ? 'text-on-primary-container' : 'text-on-surface-variant'
                               }`}
                             >
@@ -918,10 +891,10 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                           </span>
                           <span>Alamat Pengiriman Kado</span>
                         </div>
-                        <div className="font-body-md text-body-md font-semibold text-primary">
+                        <div className="font-body-md text-body-md font-semibold text-primary break-words [overflow-wrap:anywhere]">
                           {firstPerson.name} &amp; {secondPerson.name} Sanctuary Residence
                         </div>
-                        <p className="font-body-sm text-body-sm text-on-surface-variant my-1">
+                        <p className="font-body-sm text-body-sm text-on-surface-variant my-1 break-words [overflow-wrap:anywhere]">
                           {data.gift_address ||
                             'Villa Pine Sanctuary Blok B7, Jl. Maribaya No. 120, Kayuambon, Kec. Lembang, Kabupaten Bandung Barat, Jawa Barat 40391'}
                         </p>
@@ -1045,22 +1018,22 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
 
                     return (
                       <div key={wish.id} className="bg-surface-bright rounded-lg p-space-md shadow-sm">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
                             <div
-                              className={`w-8 h-8 rounded-full ${avatarBg} font-bold flex items-center justify-center text-xs`}
+                              className={`w-8 h-8 rounded-full ${avatarBg} font-bold flex items-center justify-center text-xs shrink-0`}
                             >
                               {initials}
                             </div>
-                            <span className="font-headline-sm text-headline-sm text-primary">
+                            <span className="font-headline-sm text-headline-sm text-primary break-words [overflow-wrap:anywhere]">
                               {wish.guest_name}
                             </span>
                           </div>
-                          <span className="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-md text-label-md font-medium">
+                          <span className="shrink-0 px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-md text-label-md font-medium">
                             {wish.attendance === 'attending' ? 'Hadir' : 'Berhalangan'}
                           </span>
                         </div>
-                        <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+                        <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed break-words [overflow-wrap:anywhere]">
                           &ldquo;{wish.message}&rdquo;
                         </p>
                       </div>
@@ -1118,33 +1091,13 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
           )}
         </FloatingDock>
 
-        {/* Lightbox / Modal for Gallery */}
-        {selectedImage && typeof document !== 'undefined' && createPortal(
-          <div
-            className="fixed inset-0 z-[999999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer animate-fadeIn"
-            onClick={() => setSelectedImage(null)}
-          >
-            <div
-              className="relative max-w-lg w-full max-h-[88vh] flex flex-col items-center justify-center cursor-default"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                type="button"
-                onClick={() => setSelectedImage(null)}
-                className="absolute -top-12 right-0 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 text-white flex items-center justify-center transition-all cursor-pointer shadow-lg backdrop-blur-sm"
-                title="Tutup Foto"
-              >
-                <span className="material-symbols-outlined text-2xl">close</span>
-              </button>
-              <img
-                src={selectedImage}
-                alt="Enlarged view"
-                className="max-h-[80vh] w-auto max-w-full object-contain rounded-2xl shadow-2xl border border-white/10"
-              />
-            </div>
-          </div>,
-          document.body
-        )}
+        {/* Universal Gallery Lightbox (Terkunci sejajar layar di HP Preview maupun Web PC) */}
+        <GalleryLightbox
+          isOpen={Boolean(selectedImage)}
+          imageUrl={selectedImage}
+          onClose={() => setSelectedImage(null)}
+          isPreview={isPreview}
+        />
 
       </div>
     </div>

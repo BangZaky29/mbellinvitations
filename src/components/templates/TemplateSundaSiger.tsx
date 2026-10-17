@@ -3,6 +3,8 @@ import type { InvitationProps } from '../../types/invitation';
 import { useTemplateState } from '../../hooks/useTemplateState';
 import { FloatingDock } from '../common/FloatingDock';
 import { SleekToast } from '../common/SleekToast';
+import { VenueMapEmbed } from '../common/VenueMapEmbed';
+import { GalleryLightbox } from '../common/GalleryLightbox';
 
 // Drop-in motion shim to eliminate bulky external dependencies and guarantee seamless Vite builds
 const motion = {
@@ -109,6 +111,8 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
     handleRsvpSubmit,
     selectedImage,
     setSelectedImage,
+    showAllGallery,
+    setShowAllGallery,
     handleCopyAccount,
     handleCopyAddress,
     toastMessage,
@@ -179,9 +183,8 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
             {!isOpen && (
               <section
                 id="sampul"
-                className={`w-full relative flex flex-col items-center justify-center px-5 pt-8 pb-14 text-center bg-gradient-to-b from-[#fbf9f6] via-[#f5f3f0] to-[#eae8e5] transition-all duration-700 min-h-[100dvh] z-30 ${
-                  isOpening ? 'opacity-0 -translate-y-8 pointer-events-none' : 'opacity-100'
-                }`}
+                className={`w-full relative flex flex-col items-center justify-center px-5 pt-8 pb-14 text-center bg-gradient-to-b from-[#fbf9f6] via-[#f5f3f0] to-[#eae8e5] transition-all duration-700 min-h-[100dvh] z-30 ${isOpening ? 'opacity-0 -translate-y-8 pointer-events-none' : 'opacity-100'
+                  }`}
               >
                 {/* Floating Siger Royal Motif with Motion Parallax */}
                 <div className="w-24 h-10 mb-3 flex items-center justify-center text-[#c5a059] animate-float-siger">
@@ -479,55 +482,70 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                 <div className="w-full max-w-sm flex flex-col gap-6">
                   {data.events.map((ev, index) => {
                     const isResepsi = index === 1;
+                    const activeTargetIdx = data.countdown_target === 'resepsi' && data.events.length > 1 ? 1 : 0;
+                    const isCountdownEvent = index === activeTargetIdx;
+
                     return (
                       <div
                         key={ev.title || index}
-                        className="w-full rounded-3xl p-6 bg-white shadow-md flex flex-col items-center relative border border-[#d1c5b4]/30"
+                        className="w-full rounded-3xl p-6 bg-white shadow-md flex flex-col items-center relative border border-[#d1c5b4]/30 overflow-hidden"
                       >
                         <div
-                          className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-white text-[11px] font-semibold uppercase tracking-wider mb-4 shadow-xs ${
-                            isResepsi ? 'bg-[#775a19]' : 'bg-[#8a4c56]'
-                          }`}
+                          className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-white text-[11px] font-semibold uppercase tracking-wider mb-4 shadow-xs max-w-full ${isResepsi ? 'bg-[#775a19]' : 'bg-[#8a4c56]'
+                            }`}
                         >
-                          <span className="material-symbols-outlined text-[15px]">
+                          <span className="material-symbols-outlined text-[15px] shrink-0">
                             {ev.icon || (isResepsi ? 'celebration' : 'auto_stories')}
                           </span>
-                          <span>{ev.name || ev.title}</span>
+                          <span className="break-words [overflow-wrap:anywhere]">{ev.name || ev.title}</span>
                         </div>
 
-                        <div className="flex items-center gap-2 text-[#775a19] text-[17px] font-serif font-semibold mb-1">
-                          <span className="material-symbols-outlined text-[19px]">calendar_month</span>
-                          <span>{ev.date}</span>
+                        <div className="flex items-center gap-2 text-[#775a19] text-[17px] font-serif font-semibold mb-1 max-w-full">
+                          <span className="material-symbols-outlined text-[19px] shrink-0">calendar_month</span>
+                          <span className="break-words [overflow-wrap:anywhere]">{ev.date}</span>
                         </div>
-                        <p className="text-xs text-[#4e4639] mb-4">
+                        <p className="text-xs text-[#4e4639] mb-4 break-words [overflow-wrap:anywhere] max-w-full text-center">
                           {ev.time || `${ev.start_time || '08.00'} - ${ev.end_time || 'Selesai'} WIB`}
                         </p>
-                        <div className="w-10 h-0.5 bg-[#d1c5b4]/50 mb-4 rounded-full" />
+                        <div className="w-10 h-0.5 bg-[#d1c5b4]/50 mb-4 rounded-full shrink-0" />
 
-                        <h4 className="text-[17px] text-[#1b1c1a] font-serif font-bold mb-1">
+                        <h4 className="text-[17px] text-[#1b1c1a] font-serif font-bold mb-1 break-words [overflow-wrap:anywhere] max-w-full text-center">
                           {ev.venue_name || ev.location_name}
                         </h4>
-                        <p className="text-xs text-[#4e4639] text-center mb-4 leading-relaxed">
+                        <p className="text-xs text-[#4e4639] text-center mb-4 leading-relaxed break-words [overflow-wrap:anywhere] max-w-full">
                           {ev.venue_address || ev.address}
                         </p>
 
                         {/* Dresscode Badge if available */}
                         {ev.badge && (
-                          <div className="w-full py-2 px-3 rounded-xl bg-[#ffd9dd]/60 text-[#380a15] flex items-center justify-center gap-2 mb-4 text-xs font-medium">
-                            <span className="material-symbols-outlined text-[16px]">checkroom</span>
-                            <span>{ev.badge}</span>
+                          <div className="w-full py-2 px-3 rounded-xl bg-[#ffd9dd]/60 text-[#380a15] flex items-center justify-center gap-2 mb-3 text-xs font-medium">
+                            <span className="material-symbols-outlined text-[16px] shrink-0">checkroom</span>
+                            <span className="break-words [overflow-wrap:anywhere]">{ev.badge}</span>
                           </div>
                         )}
 
+                        {/* Interactive Real Google Maps Embed (Hanya untuk Acara Mendatang Terpilih) */}
+                        {isCountdownEvent && (
+                          <div className="w-full mb-4">
+                            <VenueMapEmbed
+                              venueName={ev.venue_name || ev.location_name}
+                              venueAddress={ev.venue_address || ev.address}
+                              mapsUrl={ev.maps_url}
+                              heightClass="h-40"
+                              isPreview={isPreview}
+                            />
+                          </div>
+                        )}
+
+                        {/* Google Maps Button (Selalu tampil di setiap card acara) */}
                         <a
                           href={ev.maps_url || 'https://maps.google.com'}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={`w-full py-2.5 rounded-full font-medium text-xs flex items-center justify-center gap-2 shadow-xs transition-colors ${
-                            isResepsi
+                          className={`w-full py-2.5 rounded-full font-medium text-xs flex items-center justify-center gap-2 shadow-xs transition-colors ${isResepsi
                               ? 'bg-[#8a4c56] text-white hover:bg-[#6e353f]'
                               : 'bg-[#775a19] text-white hover:bg-[#5d4201]'
-                          }`}
+                            }`}
                         >
                           <span className="material-symbols-outlined text-[17px]">near_me</span>
                           <span>Buka Google Maps</span>
@@ -544,7 +562,7 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
             {/* ============================================================ */}
             {isOpen && isSectionActive('gallery') && data.gallery && data.gallery.length > 0 && (
               <motion.section
-                initial={{ opacity: 0, y: 35 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.65 }}
@@ -564,94 +582,74 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                 {/* 2-Column Responsive Masonry Showcase */}
                 <div className="grid grid-cols-2 gap-3 w-full max-w-sm mb-4">
                   <div className="flex flex-col gap-3">
-                    <div
-                      onClick={() => setSelectedImage(data.gallery[0])}
-                      className="rounded-2xl overflow-hidden shadow-md bg-[#efeeeb] h-52 cursor-pointer hover:opacity-95 transition-opacity"
-                    >
-                      <img
-                        src={data.gallery[0]}
-                        alt="Gallery 1"
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                      />
-                    </div>
-                    {data.gallery[1] && (
-                      <div
-                        onClick={() => setSelectedImage(data.gallery[1])}
-                        className="rounded-2xl overflow-hidden shadow-md bg-[#efeeeb] h-36 cursor-pointer hover:opacity-95 transition-opacity"
-                      >
-                        <img
-                          src={data.gallery[1]}
-                          alt="Gallery 2"
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                        />
-                      </div>
-                    )}
+                    {(showAllGallery ? data.gallery : data.gallery.slice(0, 4))
+                      .filter((_, idx) => idx % 2 === 0)
+                      .map((imgUrl, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => setSelectedImage(imgUrl)}
+                          className={`rounded-2xl overflow-hidden shadow-md bg-[#efeeeb] cursor-pointer hover:opacity-95 transition-opacity ${
+                            idx % 2 === 0 ? 'h-52' : 'h-36'
+                          }`}
+                        >
+                          <img
+                            src={imgUrl}
+                            alt={`Gallery ${idx * 2 + 1}`}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                          />
+                        </div>
+                      ))}
                   </div>
                   <div className="flex flex-col gap-3">
-                    {data.gallery[2] && (
-                      <div
-                        onClick={() => setSelectedImage(data.gallery[2])}
-                        className="rounded-2xl overflow-hidden shadow-md bg-[#efeeeb] h-36 cursor-pointer hover:opacity-95 transition-opacity"
-                      >
-                        <img
-                          src={data.gallery[2]}
-                          alt="Gallery 3"
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                        />
-                      </div>
-                    )}
-                    {data.gallery[3] && (
-                      <div
-                        onClick={() => setSelectedImage(data.gallery[3])}
-                        className="rounded-2xl overflow-hidden shadow-md bg-[#efeeeb] h-52 cursor-pointer hover:opacity-95 transition-opacity"
-                      >
-                        <img
-                          src={data.gallery[3]}
-                          alt="Gallery 4"
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                        />
-                      </div>
-                    )}
+                    {(showAllGallery ? data.gallery : data.gallery.slice(0, 4))
+                      .filter((_, idx) => idx % 2 === 1)
+                      .map((imgUrl, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => setSelectedImage(imgUrl)}
+                          className={`rounded-2xl overflow-hidden shadow-md bg-[#efeeeb] cursor-pointer hover:opacity-95 transition-opacity ${
+                            idx % 2 === 0 ? 'h-36' : 'h-52'
+                          }`}
+                        >
+                          <img
+                            src={imgUrl}
+                            alt={`Gallery ${idx * 2 + 2}`}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                          />
+                        </div>
+                      ))}
                   </div>
                 </div>
 
-                {data.gallery[4] && (
-                  <div
-                    onClick={() => setSelectedImage(data.gallery[4])}
-                    className="w-full max-w-sm rounded-2xl overflow-hidden shadow-md bg-[#efeeeb] h-44 mb-3 cursor-pointer hover:opacity-95 transition-opacity"
-                  >
-                    <img
-                      src={data.gallery[4]}
-                      alt="Gallery 5"
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                    />
+                {/* Tombol Lihat Selengkapnya jika foto > 4 */}
+                {data.gallery.length > 4 && (
+                  <div className="text-center mt-2 mb-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAllGallery((prev) => !prev)}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-[#d1c5b4]/50 bg-white hover:bg-[#f5f3f0] text-xs font-semibold tracking-wider uppercase text-[#1b1c1a] shadow-xs transition-all active:scale-95 cursor-pointer"
+                    >
+                      <span>
+                        {showAllGallery
+                          ? 'Tampilkan Lebih Sedikit'
+                          : `Lihat Selengkapnya (${data.gallery.length - 4} Foto Lainnya)`}
+                      </span>
+                      <span className="material-symbols-outlined text-[16px] text-[#775a19]">
+                        {showAllGallery ? 'expand_less' : 'expand_more'}
+                      </span>
+                    </button>
                   </div>
                 )}
               </motion.section>
             )}
 
-            {/* Lightbox Modal */}
-            {selectedImage && (
-              <div
-                onClick={() => setSelectedImage(null)}
-                className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm cursor-zoom-out"
-              >
-                <div className="relative max-w-md w-full">
-                  <img
-                    src={selectedImage}
-                    alt="Lightbox Preview"
-                    className="w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setSelectedImage(null)}
-                    className="absolute -top-12 right-0 text-white p-2 rounded-full bg-white/20 hover:bg-white/30"
-                  >
-                    <span className="material-symbols-outlined text-2xl">close</span>
-                  </button>
-                </div>
-              </div>
-            )}
+            {/* Universal Gallery Lightbox (Terkunci sejajar layar di HP Preview maupun Web PC) */}
+            <GalleryLightbox
+              isOpen={Boolean(selectedImage)}
+              imageUrl={selectedImage}
+              onClose={() => setSelectedImage(null)}
+              isPreview={isPreview}
+            />
 
             {/* ============================================================ */}
             {/* 6. INTERACTIVE RSVP & VIP QR TICKET CARD                     */}
@@ -675,7 +673,7 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                 {/* RSVP Form */}
                 <form
                   onSubmit={handleRsvpSubmit}
-                  className="w-full max-w-sm rounded-3xl p-6 bg-white shadow-md flex flex-col gap-4 border border-[#d1c5b4]/30"
+                  className="w-full max-w-sm rounded-3xl p-5 sm:p-6 bg-white shadow-md flex flex-col gap-4 border border-[#d1c5b4]/30"
                 >
                   <div>
                     <label className="text-xs font-semibold text-[#1b1c1a] block mb-1">
@@ -695,7 +693,7 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                     <label className="text-xs font-semibold text-[#1b1c1a] block mb-2">
                       Konfirmasi Kehadiran
                     </label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                       {[
                         { key: 'hadir', label: 'Hadir', cls: 'bg-[#775a19] text-white' },
                         { key: 'ragu', label: 'Masih Ragu', cls: 'bg-[#c5a059] text-white' },
@@ -711,13 +709,14 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                               status: item.key === 'tidak' ? 'declined' : 'hadir',
                             });
                           }}
-                          className={`py-2 px-2 text-center rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                            activeRsvpTab === item.key
+                          className={`py-2 px-1 sm:px-2 text-center rounded-xl text-[10.5px] sm:text-xs font-semibold tracking-tight transition-all cursor-pointer flex items-center justify-center min-h-[42px] leading-tight ${activeRsvpTab === item.key
                               ? `${item.cls} shadow-xs`
                               : 'bg-[#efeeeb] text-[#1b1c1a] hover:bg-[#eae8e5]'
-                          }`}
+                            }`}
                         >
-                          {item.label}
+                          <span className="w-full text-center break-words [overflow-wrap:anywhere]">
+                            {item.label}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -749,49 +748,6 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                     <span>Kirim Konfirmasi</span>
                   </button>
                 </form>
-
-                {/* VIP QR Code Ticket Badge */}
-                <div className="w-full max-w-sm mt-8 rounded-3xl p-6 bg-gradient-to-br from-white via-[#fbf9f6] to-[#ffd9dd]/35 shadow-lg relative flex flex-col items-center text-center border border-[#d1c5b4]/40">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ffdea5] text-[#261900] text-[10px] font-semibold uppercase tracking-widest mb-3">
-                    <span className="material-symbols-outlined text-[14px]">verified</span>
-                    <span>VIP Access • Guest Pass</span>
-                  </div>
-                  <h4 className="text-[17px] text-[#1b1c1a] font-serif font-bold">
-                    {rsvpForm.name || recipientName} ({rsvpForm.pax} Pax)
-                  </h4>
-                  <p className="text-[11px] text-[#735855] font-mono tracking-widest mt-0.5">
-                    KODE: RSVP-2026-SUNDA
-                  </p>
-
-                  {/* Inline SVG Simulated QR Code */}
-                  <div className="w-36 h-36 bg-white p-3 rounded-2xl shadow-inner my-4 flex items-center justify-center border border-[#efeeeb]">
-                    <svg className="w-full h-full fill-[#1b1c1a]" viewBox="0 0 100 100">
-                      <rect x="5" y="5" width="28" height="28" rx="4" fill="currentColor" />
-                      <rect x="10" y="10" width="18" height="18" rx="2" fill="#FAF8F5" />
-                      <rect x="14" y="14" width="10" height="10" rx="1" fill="currentColor" />
-                      <rect x="67" y="5" width="28" height="28" rx="4" fill="currentColor" />
-                      <rect x="72" y="10" width="18" height="18" rx="2" fill="#FAF8F5" />
-                      <rect x="76" y="14" width="10" height="10" rx="1" fill="currentColor" />
-                      <rect x="5" y="67" width="28" height="28" rx="4" fill="currentColor" />
-                      <rect x="10" y="72" width="18" height="18" rx="2" fill="#FAF8F5" />
-                      <rect x="14" y="76" width="10" height="10" rx="1" fill="currentColor" />
-                      <circle cx="42" cy="18" r="4" fill="currentColor" />
-                      <circle cx="54" cy="18" r="3" fill="#C5A059" />
-                      <circle cx="48" cy="30" r="4" fill="currentColor" />
-                      <circle cx="48" cy="50" r="5" fill="#8A4C56" />
-                      <circle cx="20" cy="48" r="3" fill="currentColor" />
-                      <circle cx="78" cy="48" r="4" fill="currentColor" />
-                      <circle cx="65" cy="70" r="4" fill="currentColor" />
-                      <circle cx="85" cy="72" r="3" fill="currentColor" />
-                      <circle cx="42" cy="85" r="4" fill="#C5A059" />
-                      <circle cx="80" cy="88" r="3" fill="currentColor" />
-                      <circle cx="56" cy="75" r="3" fill="currentColor" />
-                    </svg>
-                  </div>
-                  <p className="text-xs text-[#4e4639] leading-tight">
-                    Tunjukkan QR Code ini pada meja registrasi tamu saat menghadiri resepsi.
-                  </p>
-                </div>
               </motion.section>
             )}
 
@@ -851,13 +807,13 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                       key={w.id || idx}
                       className="p-4 rounded-2xl bg-[#f5f3f0] shadow-xs flex flex-col border border-[#d1c5b4]/25"
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-[#ffdea5] text-[#261900] flex items-center justify-center font-serif text-xs font-bold">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <div className="w-8 h-8 rounded-full bg-[#ffdea5] text-[#261900] flex items-center justify-center font-serif text-xs font-bold shrink-0">
                             {(w.guest_name || 'U').charAt(0).toUpperCase()}
                           </div>
-                          <div className="flex flex-col text-left">
-                            <span className="text-xs font-bold text-[#1b1c1a]">
+                          <div className="flex flex-col text-left min-w-0 flex-1">
+                            <span className="text-xs font-bold text-[#1b1c1a] break-words [overflow-wrap:anywhere]">
                               {w.guest_name}
                             </span>
                             <span className="text-[10px] text-[#735855]">
@@ -865,11 +821,11 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                             </span>
                           </div>
                         </div>
-                        <span className="px-2 py-0.5 rounded-full bg-[#ffd9dd] text-[#380a15] text-[10px] font-semibold">
+                        <span className="shrink-0 px-2 py-0.5 rounded-full bg-[#ffd9dd] text-[#380a15] text-[10px] font-semibold">
                           {w.attendance === 'attending' ? 'Hadir' : 'Doa'}
                         </span>
                       </div>
-                      <p className="text-xs text-[#4e4639] leading-relaxed text-left">
+                      <p className="text-xs text-[#4e4639] leading-relaxed text-left break-words [overflow-wrap:anywhere]">
                         {w.message}
                       </p>
                     </div>
@@ -908,24 +864,21 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                       return (
                         <div
                           key={bank.account_number || index}
-                          className={`w-full rounded-3xl p-6 shadow-xl relative overflow-hidden text-left ${
-                            isEven
+                          className={`w-full rounded-3xl p-6 shadow-xl relative overflow-hidden text-left ${isEven
                               ? 'bg-gradient-to-br from-white via-[#fbf9f6] to-[#ffdea5]/40 text-[#1b1c1a] border border-[#c5a059]/30'
                               : 'bg-gradient-to-br from-[#8a4c56] via-[#7a3f49] to-[#4d3533] text-white shadow-[#8a4c56]/20'
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center justify-between mb-5">
                             <span
-                              className={`text-[17px] font-bold tracking-wider font-serif ${
-                                isEven ? 'text-[#775a19]' : 'text-[#ffd9dd]'
-                              }`}
+                              className={`text-[17px] font-bold tracking-wider font-serif ${isEven ? 'text-[#775a19]' : 'text-[#ffd9dd]'
+                                }`}
                             >
                               {bank.bank_name}
                             </span>
                             <div
-                              className={`w-9 h-6 rounded-md flex items-center justify-center ${
-                                isEven ? 'bg-[#c5a059]/20 text-[#775a19]' : 'bg-white/20 text-white'
-                              }`}
+                              className={`w-9 h-6 rounded-md flex items-center justify-center ${isEven ? 'bg-[#c5a059]/20 text-[#775a19]' : 'bg-white/20 text-white'
+                                }`}
                             >
                               <span className="material-symbols-outlined text-[17px]">memory</span>
                             </div>
@@ -934,9 +887,8 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                             {bank.account_number}
                           </p>
                           <span
-                            className={`text-[11px] uppercase tracking-wider block mb-4 font-semibold ${
-                              isEven ? 'text-[#735855]' : 'text-[#ffd9dd]'
-                            }`}
+                            className={`text-[11px] uppercase tracking-wider block mb-4 font-semibold ${isEven ? 'text-[#735855]' : 'text-[#ffd9dd]'
+                              }`}
                           >
                             a.n {bank.account_holder}
                           </span>
@@ -945,11 +897,10 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                             onClick={() =>
                               handleCopyAccount(bank.account_number_raw || bank.account_number, index)
                             }
-                            className={`w-full py-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition-transform cursor-pointer ${
-                              isEven
+                            className={`w-full py-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition-transform cursor-pointer ${isEven
                                 ? 'bg-[#775a19] text-white hover:bg-[#5d4201]'
                                 : 'bg-[#feaeb9] text-[#7a3f49] hover:bg-white'
-                            }`}
+                              }`}
                           >
                             <span className="material-symbols-outlined text-[16px]">content_copy</span>
                             <span>Salin No. Rekening</span>
@@ -969,7 +920,7 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                     <h4 className="text-[16px] text-[#1b1c1a] font-serif font-bold mb-1">
                       Kirim Kado Fisik
                     </h4>
-                    <p className="text-xs text-[#4e4639] mb-3 leading-relaxed">
+                    <p className="text-xs text-[#4e4639] mb-3 leading-relaxed break-words [overflow-wrap:anywhere]">
                       {data.gift_address}
                     </p>
                     <button
@@ -1019,62 +970,26 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
         </main>
 
         {/* ============================================================ */}
-        {/* 10. FLOATING AUDIO & QUICK NAVIGATION DOCK                   */}
+        {/* 10. FLOATING AUDIO CONTROLLER BUBBLE (CIRCULAR BUBBLE)        */}
         {/* ============================================================ */}
         <FloatingDock isPreview={isPreview}>
           {isOpen && (
-            <aside className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-[390px] bg-white/92 backdrop-blur-md rounded-full px-4 py-2.5 shadow-xl flex items-center justify-between border border-[#c5a059]/30">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={toggleMusic}
-                  aria-label="Toggle Audio"
-                  className="w-9 h-9 rounded-full bg-[#775a19] text-white flex items-center justify-center shadow-md active:scale-95 transition-transform cursor-pointer"
+            <aside className={`${isPreview ? 'absolute' : 'fixed'} bottom-5 right-5 z-40 flex items-center justify-center pointer-events-auto`}>
+              <button
+                type="button"
+                onClick={toggleMusic}
+                aria-label="Putar Gending Sunda"
+                className="relative group flex items-center justify-center w-11 h-11 rounded-full bg-[#775a19] border border-[#c5a059]/40 shadow-xl transition-transform active:scale-95 cursor-pointer"
+              >
+                <div
+                  className={`w-9 h-9 rounded-full bg-[#3e2e0a] flex items-center justify-center ${isPlaying ? 'animate-[spin_6s_linear_infinite]' : ''
+                    }`}
                 >
-                  <span className={`material-symbols-outlined text-[18px] ${isPlaying ? 'animate-spin' : ''}`}>
-                    music_note
-                  </span>
-                </button>
-                <div className="flex flex-col text-left">
-                  <span className="text-[10px] font-bold text-[#775a19] tracking-widest uppercase">
-                    Gending Sunda
-                  </span>
-                  <span className="text-[11px] text-[#4e4639] font-medium leading-none truncate max-w-[120px]">
-                    Kecapi Suling Kahuripan
+                  <span className="material-symbols-outlined text-[#e0bd68] text-lg">
+                    {isPlaying ? 'music_note' : 'music_off'}
                   </span>
                 </div>
-              </div>
-
-              <div className="flex items-center gap-1 text-[#4e4639]">
-                <a
-                  href="#acara"
-                  title="Jadwal Acara"
-                  className="w-8 h-8 rounded-full hover:bg-[#efeeeb] flex items-center justify-center transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[18px]">calendar_today</span>
-                </a>
-                <a
-                  href="#rsvp"
-                  title="RSVP Tamu"
-                  className="w-8 h-8 rounded-full hover:bg-[#efeeeb] flex items-center justify-center transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[18px]">how_to_reg</span>
-                </a>
-                <a
-                  href="#kado"
-                  title="Amplop Digital"
-                  className="w-8 h-8 rounded-full hover:bg-[#efeeeb] flex items-center justify-center transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[18px]">featured_seasonal_and_gifts</span>
-                </a>
-                <a
-                  href="#ucapan"
-                  title="Buku Tamu"
-                  className="w-8 h-8 rounded-full hover:bg-[#efeeeb] flex items-center justify-center transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[18px]">chat_bubble_outline</span>
-                </a>
-              </div>
+              </button>
             </aside>
           )}
         </FloatingDock>

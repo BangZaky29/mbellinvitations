@@ -39,7 +39,7 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
           title="Simpan editan saat ini sebagai Draf / Checkpoint di Supabase"
         >
           <span className="material-symbols-outlined text-[17px] text-amber-700">bookmark_added</span>
-          <span>Simpan Draf</span>
+          <span>Simpan Perubahan</span>
         </button>
 
         {activeStep > 1 && (

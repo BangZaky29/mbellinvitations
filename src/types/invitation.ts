@@ -87,6 +87,7 @@ export interface InvitationData {
   // --- Wedding Date ---
   wedding_date_iso: string;        // "2026-10-24T08:00:00+07:00" → untuk countdown
   wedding_date_display?: string;   // "Sabtu, 24 Oktober 2026"
+  countdown_target?: 'akad' | 'resepsi'; // Menetapkan acara patokan countdown (Akad vs Resepsi)
 
   // --- Content ---
   quote?: string;

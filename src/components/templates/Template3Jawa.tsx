@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
 import type { InvitationProps } from '../../types/invitation';
 import { useTemplateState } from '../../hooks/useTemplateState';
 import { FloatingDock } from '../common/FloatingDock';
 import { SleekToast } from '../common/SleekToast';
+import { VenueMapEmbed } from '../common/VenueMapEmbed';
+import { GalleryLightbox } from '../common/GalleryLightbox';
 
 export const Template3Jawa: React.FC<InvitationProps> = ({
   data,
@@ -463,8 +464,10 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
                     return (
                       <div key={index} className="relative flex flex-col">
                         <div className="absolute -left-6 top-1 w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center shadow-md">
-                          {index === 0 && <div className="w-2.5 h-2.5 rounded-full bg-primary animate-ping"></div>}
-                          <div className="w-2.5 h-2.5 rounded-full bg-primary"></div>
+                          {index === 0 && (
+                            <span className="absolute w-3.5 h-3.5 rounded-full bg-primary/60 animate-ping pointer-events-none" />
+                          )}
+                          <span className="relative w-2.5 h-2.5 rounded-full bg-primary shrink-0" />
                         </div>
                         <div className="bg-surface-container-low rounded-xl p-4 shadow-md ml-2">
                           <div className="flex items-center justify-between mb-1">
@@ -514,6 +517,9 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
                   const badgeText = event.badge || (idx === 0 ? 'Ijab Qobul' : 'Panggih & Pahargyan');
                   const headerSub = idx === 0 ? 'Sasana Ageng' : 'Resepsi Ageng';
 
+                  const activeTargetIdx = data.countdown_target === 'resepsi' && data.events.length > 1 ? 1 : 0;
+                  const isCountdownEvent = idx === activeTargetIdx;
+
                   return (
                     <div
                       key={idx}
@@ -531,73 +537,68 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
                         </span>
                       </div>
 
-                      <h3 className="font-headline-md text-headline-md text-on-surface mb-4">
+                      <h3 className="font-headline-md text-headline-md text-on-surface mb-4 break-words [overflow-wrap:anywhere]">
                         {event.name}
                       </h3>
 
                       <div className="space-y-3 font-body-md text-body-md text-on-surface-variant">
                         <div className="flex items-start gap-3">
-                          <span className="material-symbols-outlined text-primary text-xl mt-0.5">
+                          <span className="material-symbols-outlined text-primary text-xl mt-0.5 shrink-0">
                             calendar_today
                           </span>
-                          <div>
-                            <p className="text-on-surface font-semibold">{event.date}</p>
-                            <p className="font-caption text-caption">Dinten Berkah Mulya</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-on-surface font-semibold break-words [overflow-wrap:anywhere]">{event.date}</p>
+                            <p className="font-caption text-caption break-words [overflow-wrap:anywhere]">Dinten Berkah Mulya</p>
                           </div>
                         </div>
 
                         <div className="flex items-start gap-3">
-                          <span className="material-symbols-outlined text-primary text-xl mt-0.5">
+                          <span className="material-symbols-outlined text-primary text-xl mt-0.5 shrink-0">
                             schedule
                           </span>
-                          <div>
-                            <p className="text-on-surface font-semibold">{event.time}</p>
-                            <p className="font-caption text-caption">Kanthi khidmad kawiwitan tepat wekdal</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-on-surface font-semibold break-words [overflow-wrap:anywhere]">{event.time}</p>
+                            <p className="font-caption text-caption break-words [overflow-wrap:anywhere]">Kanthi khidmad kawiwitan tepat wekdal</p>
                           </div>
                         </div>
 
                         <div className="flex items-start gap-3">
-                          <span className="material-symbols-outlined text-primary text-xl mt-0.5">
+                          <span className="material-symbols-outlined text-primary text-xl mt-0.5 shrink-0">
                             account_balance
                           </span>
-                          <div>
-                            <p className="text-on-surface font-semibold">{event.venue_name}</p>
-                            <p className="font-caption text-caption leading-relaxed">{event.venue_address}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-on-surface font-semibold break-words [overflow-wrap:anywhere]">{event.venue_name}</p>
+                            <p className="font-caption text-caption leading-relaxed break-words [overflow-wrap:anywhere]">{event.venue_address}</p>
                           </div>
                         </div>
                       </div>
+
+                      {/* Interactive Real Google Maps Embed (Hanya untuk Acara Mendatang Terpilih) */}
+                      {isCountdownEvent && (
+                        <div className="w-full mt-4 mb-3">
+                          <VenueMapEmbed
+                            venueName={event.venue_name || 'Kraton Yogyakarta Hadiningrat'}
+                            venueAddress={event.venue_address}
+                            mapsUrl={event.maps_url}
+                            heightClass="h-44"
+                            isPreview={isPreview}
+                          />
+                        </div>
+                      )}
+
+                      {/* Google Maps CTA Button (Selalu tampil di setiap card acara) */}
+                      <a
+                        href={event.maps_url || 'https://maps.google.com'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full mt-4 py-3 px-6 rounded-full bg-gradient-to-r from-primary-fixed-dim via-primary to-secondary text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-lg hover:brightness-105 active:scale-95 transition-transform"
+                      >
+                        <span className="material-symbols-outlined text-lg">map</span>
+                        <span className="tracking-wider">BUKA GOOGLE MAPS</span>
+                      </a>
                     </div>
                   );
                 })}
-
-                {/* Interactive Map Element */}
-                <div className="w-full rounded-2xl overflow-hidden shadow-xl mb-5">
-                  <div
-                    className="w-full h-44 bg-cover bg-center rounded-2xl flex items-end p-3 relative"
-                    style={{
-                      backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuCFSF7s--4x0fW7pTs_9DSpLYTVTnCfq30S5Bt6RpLW709SS3pRyn89_uZtIRHCyeyjUBulAzdkU6rYKmjou_kicp-cDfuBpYMPi0CDfpSntSvU6shfE5nKqVsHRvzhkdUkQlKFgUaGoRC4tJ92rAUeJiQQaKiRiyngicp6QtFTMK_yOdXR34QUpVjeM-jKomro2NSNfhLkDBeghHwjBe5dc09ANPAXAmEfisfaT1Bct53SHuN0zc4G')`,
-                    }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
-                    <div className="relative z-10 flex items-center justify-between w-full">
-                      <span className="font-label-md text-label-md text-on-surface bg-surface-container-low/90 px-3 py-1 rounded-md backdrop-blur">
-                        {data.events[0]?.venue_name || 'Kraton Yogyakarta Hadiningrat'}
-                      </span>
-                      <span className="material-symbols-outlined text-primary text-base">pin_drop</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Google Maps CTA Button */}
-                <a
-                  href={data.events[0]?.maps_url || 'https://maps.google.com'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-3.5 px-6 rounded-full bg-gradient-to-r from-primary-fixed-dim via-primary to-secondary text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-lg hover:brightness-105 active:scale-95 transition-transform"
-                >
-                  <span className="material-symbols-outlined text-lg">map</span>
-                  <span className="tracking-wider">BUKA GOOGLE MAPS</span>
-                </a>
               </section>
             )}
 
@@ -825,7 +826,7 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
                         <p className="font-headline-md text-headline-md text-primary font-mono tracking-widest">
                           {bank.account_number}
                         </p>
-                        <p className="font-body-md text-body-md text-on-surface mt-1 mb-4">
+                        <p className="font-body-md text-body-md text-on-surface mt-1 mb-4 break-words [overflow-wrap:anywhere]">
                           a.n {bank.account_holder}
                         </p>
                         <button
@@ -898,23 +899,23 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
                 <div className="w-full space-y-3" id="wishes-container">
                   {wishes.map((wish) => (
                     <div key={wish.id} className="bg-surface-container-low rounded-xl p-4 shadow-sm">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="font-title-md text-title-md text-primary font-semibold">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <span className="font-title-md text-title-md text-primary font-semibold break-words [overflow-wrap:anywhere]">
                             {wish.guest_name}
                           </span>
-                          <span className="px-2 py-0.5 rounded-full bg-surface-container-high text-secondary font-label-md text-label-md">
+                          <span className="shrink-0 px-2 py-0.5 rounded-full bg-surface-container-high text-secondary font-label-md text-label-md">
                             {wish.attendance === 'attending' ? 'Hadir' : 'Kinasih'}
                           </span>
                         </div>
-                        <span className="font-caption text-caption text-on-surface-variant/60">
+                        <span className="shrink-0 font-caption text-caption text-on-surface-variant/60">
                           {new Date(wish.created_at).toLocaleDateString('id-ID', {
                             day: 'numeric',
                             month: 'short',
                           })}
                         </span>
                       </div>
-                      <p className="font-body-md text-body-md text-on-surface leading-relaxed">
+                      <p className="font-body-md text-body-md text-on-surface leading-relaxed break-words [overflow-wrap:anywhere]">
                         {wish.message}
                       </p>
                     </div>
@@ -970,33 +971,13 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
           )}
         </FloatingDock>
 
-        {/* Lightbox / Modal for Gallery */}
-        {selectedImage && typeof document !== 'undefined' && createPortal(
-          <div
-            className="fixed inset-0 z-[999999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer animate-fadeIn"
-            onClick={() => setSelectedImage(null)}
-          >
-            <div
-              className="relative max-w-lg w-full max-h-[88vh] flex flex-col items-center justify-center cursor-default"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                type="button"
-                onClick={() => setSelectedImage(null)}
-                className="absolute -top-12 right-0 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 text-white flex items-center justify-center transition-all cursor-pointer shadow-lg backdrop-blur-sm"
-                title="Tutup Foto"
-              >
-                <span className="material-symbols-outlined text-2xl">close</span>
-              </button>
-              <img
-                src={selectedImage}
-                alt="Enlarged view"
-                className="max-h-[80vh] w-auto max-w-full object-contain rounded-2xl shadow-2xl border border-white/10"
-              />
-            </div>
-          </div>,
-          document.body
-        )}
+        {/* Universal Gallery Lightbox (Terkunci sejajar layar di HP Preview maupun Web PC) */}
+        <GalleryLightbox
+          isOpen={Boolean(selectedImage)}
+          imageUrl={selectedImage}
+          onClose={() => setSelectedImage(null)}
+          isPreview={isPreview}
+        />
 
       </div>
     </div>

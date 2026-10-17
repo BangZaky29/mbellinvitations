@@ -18,6 +18,7 @@ interface EditorStepContentProps {
   setFormData: React.Dispatch<React.SetStateAction<InvitationData>>;
   setThemeConfig: React.Dispatch<React.SetStateAction<ThemeConfig>>;
   onEventsChange: (events: any) => void;
+  onSetCountdownTarget?: (target: 'akad' | 'resepsi') => void;
   onManualSave: () => void;
 }
 
@@ -32,6 +33,7 @@ export const EditorStepContent: React.FC<EditorStepContentProps> = ({
   setFormData,
   setThemeConfig,
   onEventsChange,
+  onSetCountdownTarget,
   onManualSave,
 }) => {
   return (
@@ -85,6 +87,8 @@ export const EditorStepContent: React.FC<EditorStepContentProps> = ({
       {activeStep === 3 && (
         <EventsFormCard
           events={formData.events}
+          countdownTarget={formData.countdown_target || 'akad'}
+          onSetCountdownTarget={onSetCountdownTarget}
           onEventsChange={onEventsChange}
         />
       )}

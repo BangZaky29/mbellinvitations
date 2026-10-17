@@ -99,25 +99,25 @@ export async function deleteUserTemplate(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // 1. Hapus dari user_templates berdasarkan id
-    const { error } = await supabase
-      .from('user_templates')
-      .delete()
-      .eq('id', id);
+    await supabase.from('user_templates').delete().eq('id', id);
 
-    // 2. Jika slug ada, hapus juga berdasarkan slug dari user_templates dan invitations
+    // 2. Hapus juga dari invitations berdasarkan id
+    await supabase.from('invitations').delete().eq('id', id);
+
+    // 3. Jika slug ada, hapus juga berdasarkan slug dari kedua tabel
     if (slug) {
       await supabase.from('user_templates').delete().eq('slug', slug);
       await supabase.from('invitations').delete().eq('slug', slug);
+      // Bersihkan buku tamu dan ucapan terkait invitation tersebut
+      await supabase.from('wishes').delete().eq('invitation_id', id);
+      await supabase.from('guests').delete().eq('invitation_id', id);
     }
 
-    // 3. Jika id atau slug terkait raditya-jessica, bersihkan seluruh tabel
+    // 4. Jika id atau slug terkait raditya-jessica, bersihkan seluruh tabel
     if (id === 'raditya-jessica' || slug === 'raditya-jessica') {
       await purgeRadityaJessica();
     }
 
-    if (error) {
-      return { success: false, error: error.message };
-    }
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message };

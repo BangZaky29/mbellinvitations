@@ -215,9 +215,17 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
     loadAllTemplates();
 
     const handleUpdate = () => loadAllTemplates();
+    const handleDelete = (e: any) => {
+      const deletedId = e?.detail?.id;
+      const deletedSlug = e?.detail?.slug;
+      setItems((prev) => prev.filter((p) => p.id !== deletedId && p.slug !== deletedSlug));
+    };
+
     window.addEventListener('mbell_templates_updated', handleUpdate);
+    window.addEventListener('mbell_template_deleted', handleDelete);
     return () => {
       window.removeEventListener('mbell_templates_updated', handleUpdate);
+      window.removeEventListener('mbell_template_deleted', handleDelete);
     };
   }, [loadAllTemplates]);
 
@@ -278,8 +286,8 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
         </div>
       </div>
 
-      {/* 2. Grid Card Pilihan Template */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* 2. Grid Card Pilihan Template (Compact Row Cards) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
         {items.map((item) => {
           const isSelected = selectedTemplate?.id === item.id || selectedTemplate?.slug === item.slug;
           const themeStyle = THEME_BANNER_COLORS[item.themeId] || THEME_BANNER_COLORS.modern;
@@ -288,98 +296,85 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
             <div
               key={item.id}
               onClick={() => onSelectTemplate(item)}
-              className={`group rounded-2xl border transition-all overflow-hidden flex flex-col justify-between cursor-pointer text-left relative ${
+              className={`group rounded-2xl border p-3 flex items-center justify-between gap-3 transition-all cursor-pointer text-left relative ${
                 isSelected
-                  ? 'border-emerald-500 ring-2 ring-emerald-500/40 bg-emerald-50/10 shadow-md'
-                  : 'border-stone-200/90 bg-white hover:border-amber-400 hover:shadow-md'
+                  ? 'border-emerald-500 ring-2 ring-emerald-500/30 bg-emerald-50/20 shadow-xs'
+                  : 'border-stone-200/90 bg-white hover:border-amber-400 hover:shadow-xs'
               }`}
             >
-              {/* Visual Banner Tema */}
-              <div className={`p-4 bg-gradient-to-br ${themeStyle.bg} text-white relative`}>
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase border ${themeStyle.badge}`}>
-                    {themeStyle.label}
-                  </span>
-
-                  <div className="flex items-center gap-1.5">
-                    {isSelected ? (
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-400 text-stone-900 border border-amber-300 shadow-xs flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[13px]">check_circle</span>
-                        <span>Sedang Dikelola</span>
-                      </span>
-                    ) : (
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase flex items-center gap-1 ${
-                          item.status === 'published'
-                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                            : 'bg-amber-500/25 text-amber-200 border border-amber-400/30'
-                        }`}
-                      >
-                        {item.status === 'published' ? (
-                          <>
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                            <span>Live</span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                            <span>Draf</span>
-                          </>
-                        )}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <h4 className="font-serif font-bold text-base sm:text-lg text-white drop-shadow-xs line-clamp-1">
-                  {item.coupleNames}
-                </h4>
-                <p className="text-xs text-white/80 font-mono mt-0.5">
-                  mbell.id/{item.slug}
-                </p>
+              {/* Visual Thumbnail Mini Tema */}
+              <div
+                className={`w-11 h-11 rounded-xl bg-gradient-to-br ${themeStyle.bg} text-white flex flex-col items-center justify-center shrink-0 shadow-xs relative overflow-hidden`}
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  {themeStyle.label.toLowerCase().includes('sunda') || themeStyle.label.toLowerCase().includes('rustic')
+                    ? 'local_florist'
+                    : themeStyle.label.toLowerCase().includes('jawa')
+                    ? 'architecture'
+                    : themeStyle.label.toLowerCase().includes('islami')
+                    ? 'mosque'
+                    : themeStyle.label.toLowerCase().includes('luxury')
+                    ? 'hotel_class'
+                    : 'auto_awesome'}
+                </span>
+                <span className="text-[8px] font-bold tracking-tight uppercase opacity-90 truncate max-w-full px-1">
+                  {themeStyle.label.split(' ')[0]}
+                </span>
               </div>
 
-              {/* Body Card */}
-              <div className="p-3.5 space-y-3 bg-white flex-1 flex flex-col justify-between">
-                <div className="text-xs text-stone-600 flex items-center justify-between">
-                  <span className="text-stone-400">ID: {item.themeId}</span>
-                  <span className="font-mono text-[11px] text-stone-500">
-                    {item.isCurrentDraft ? 'Draf Editor' : 'Tersimpan'}
+              {/* Info Pasangan & Slug */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <h4 className="font-serif font-bold text-sm text-stone-900 truncate">
+                    {item.coupleNames}
+                  </h4>
+                  <span
+                    className={`px-1.5 py-0.2 rounded-full text-[9px] font-bold uppercase shrink-0 ${
+                      item.status === 'published'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-amber-100 text-amber-800'
+                    }`}
+                  >
+                    {item.status === 'published' ? 'Live' : 'Draf'}
                   </span>
                 </div>
-
-                {/* Footer Action Tombol */}
-                <div className="pt-2 border-t border-stone-100 flex items-center gap-2">
-                  {isSelected ? (
-                    <div className="flex-1 py-2 px-3 rounded-xl bg-emerald-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs">
-                      <span className="material-symbols-outlined text-[16px]">verified</span>
-                      <span>✓ Data Sedang Ditampilkan</span>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSelectTemplate(item);
-                      }}
-                      className="flex-1 py-2 px-3 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">touch_app</span>
-                      <span>Pilih Template Ini</span>
-                    </button>
-                  )}
-
-                  <a
-                    href={`/${item.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="p-2 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-600 transition-colors shrink-0"
-                    title="Buka Halaman Undangan"
-                  >
-                    <span className="material-symbols-outlined text-[16px] block">open_in_new</span>
-                  </a>
+                <div className="flex items-center gap-2 text-stone-500 text-xs">
+                  <span className="font-mono text-[11px] text-stone-500 truncate">
+                    mbell.id/{item.slug}
+                  </span>
                 </div>
+              </div>
+
+              {/* Action Tombol Kanan */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                {isSelected ? (
+                  <span className="px-2.5 py-1 rounded-xl bg-emerald-600 text-white text-[11px] font-bold flex items-center gap-1 shadow-xs">
+                    <span className="material-symbols-outlined text-[14px]">check</span>
+                    <span>Aktif</span>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectTemplate(item);
+                    }}
+                    className="px-2.5 py-1 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-[11px] font-semibold transition-all cursor-pointer"
+                  >
+                    Pilih
+                  </button>
+                )}
+
+                <a
+                  href={`/${item.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="p-1.5 rounded-xl border border-stone-200 hover:bg-stone-100 text-stone-600 transition-colors"
+                  title="Buka Halaman Live"
+                >
+                  <span className="material-symbols-outlined text-[15px] block">open_in_new</span>
+                </a>
               </div>
             </div>
           );

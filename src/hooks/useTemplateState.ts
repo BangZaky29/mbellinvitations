@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { InvitationProps, WishItem } from '../types/invitation';
 import { useCountdown } from './useCountdown';
 import { useAudioPlayer } from './useAudioPlayer';
@@ -79,10 +79,27 @@ export function useTemplateState({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedImage]);
 
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, []);
+
   const showToast = (msg: string, type: 'success' | 'info' | 'error' | 'copy' = 'success') => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = null;
+    }
     setToastMessage(msg);
     setToastType(type);
-    setTimeout(() => setToastMessage(null), 2400);
+    toastTimerRef.current = setTimeout(() => {
+      setToastMessage(null);
+      toastTimerRef.current = null;
+    }, 2400);
   };
 
   // Handler buka undangan with smooth transition

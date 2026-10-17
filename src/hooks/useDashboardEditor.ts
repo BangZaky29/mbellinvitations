@@ -365,7 +365,6 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
             : `Template "${template.title}" aktif di editor`,
           type: 'info',
         });
-        setTimeout(() => setSaveToast(null), 2400);
       }
     } else {
       if (setSaveToast) {
@@ -374,7 +373,6 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
           message: `Template: ${template.title} dipilih`,
           type: 'info',
         });
-        setTimeout(() => setSaveToast(null), 2200);
       }
     }
   };
@@ -388,14 +386,21 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
         message: 'Lanjut mengedit template aktif',
         type: 'info',
       });
-      setTimeout(() => setSaveToast(null), 2200);
     }
   };
 
   // Handler Sinkronisasi Jadwal Acara, Tanggal & Hitung Mundur Real-time
-  const handleEventsChange = (events: any) => {
+  const handleEventsChange = (events: any, targetCountdown?: 'akad' | 'resepsi') => {
     const isArray = Array.isArray(events);
-    const primaryEvent = isArray ? events[0] : (events?.akad || events?.resepsi);
+    const activeTarget = targetCountdown || formData.countdown_target || 'akad';
+
+    let primaryEvent;
+    if (isArray) {
+      primaryEvent = activeTarget === 'resepsi' ? (events[1] || events[0]) : events[0];
+    } else {
+      primaryEvent = activeTarget === 'resepsi' ? (events?.resepsi || events?.akad) : (events?.akad || events?.resepsi);
+    }
+
     const dateStr = primaryEvent?.date;
     const timeStr = primaryEvent?.start_time || '08:00';
     const tzStr = primaryEvent?.timezone || 'WIB';
@@ -427,9 +432,21 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
     setFormData((prev) => ({
       ...prev,
       events,
+      countdown_target: activeTarget,
       wedding_date_iso: updatedIso,
       wedding_date_display: updatedDisplay,
     }));
+  };
+
+  const handleSetCountdownTarget = (target: 'akad' | 'resepsi') => {
+    handleEventsChange(formData.events, target);
+    if (setSaveToast) {
+      setSaveToast({
+        show: true,
+        message: `Hitungan mundur diatur ke ${target === 'resepsi' ? 'Resepsi Pernikahan' : 'Akad Nikah'}`,
+        type: 'info',
+      });
+    }
   };
 
   // Handler Buat Undangan / Template Baru dari Preset
@@ -444,7 +461,6 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
         message: `Preset tema ${themeId.toUpperCase()} siap diedit!`,
         isError: false,
       });
-      setTimeout(() => setSaveToast(null), 3000);
     }
   };
 
@@ -625,6 +641,7 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
     handleSelectSavedTemplate,
     handleImplementActiveTemplate,
     handleEventsChange,
+    handleSetCountdownTarget,
     handleAddNewTemplate,
     handleSlugChange,
     handleSelectStep,

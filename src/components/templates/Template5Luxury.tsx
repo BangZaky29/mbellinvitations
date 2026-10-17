@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import type { InvitationProps, WishItem } from '../../types/invitation';
 import { useTemplateState } from '../../hooks/useTemplateState';
 import { FloatingDock } from '../common/FloatingDock';
 import { SleekToast } from '../common/SleekToast';
+import { VenueMapEmbed } from '../common/VenueMapEmbed';
+import { GalleryLightbox } from '../common/GalleryLightbox';
 
 export const Template5Luxury: React.FC<InvitationProps> = ({
   data,
@@ -484,99 +485,136 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
 
                   {/* Matrimony Card */}
                   {data.events[0] && (
-                    <div className="w-full max-w-[360px] rounded-xl bg-surface-container-low/80 backdrop-blur-xl p-5 mb-5 shadow-xl shadow-surface-container-lowest/60 border border-white/5">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-primary-container/20 text-primary font-label-eyebrow text-[9px] uppercase tracking-wider">
+                    <div className="w-full max-w-[360px] rounded-xl bg-surface-container-low/80 backdrop-blur-xl p-5 mb-5 shadow-xl shadow-surface-container-lowest/60 border border-white/5 overflow-hidden">
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <span className="shrink-0 inline-block px-2.5 py-0.5 rounded-full bg-primary-container/20 text-primary font-label-eyebrow text-[9px] uppercase tracking-wider">
                           {data.events[0].badge || 'Chapter I'}
                         </span>
-                        <span className="font-label-md text-secondary text-xs">
+                        <span className="shrink-0 font-label-md text-secondary text-xs">
                           {data.events[0].time}
                         </span>
                       </div>
-                      <h3 className="font-headline-sm text-on-surface text-lg mb-1">
+                      <h3 className="font-headline-sm text-on-surface text-lg mb-1 break-words [overflow-wrap:anywhere]">
                         {data.events[0].name}
                       </h3>
                       <div className="flex items-start gap-2 mb-3 text-secondary">
-                        <span className="material-symbols-outlined text-sm text-primary mt-0.5">
+                        <span className="material-symbols-outlined text-sm text-primary mt-0.5 shrink-0">
                           location_on
                         </span>
-                        <p className="font-body-sm text-xs leading-snug">
-                          {data.events[0].venue_name}
-                          <br />
-                          <span className="text-on-surface-variant text-[11px]">
+                        <p className="font-body-sm text-xs leading-snug min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
+                          <strong className="block text-on-surface font-semibold">{data.events[0].venue_name}</strong>
+                          <span className="text-on-surface-variant text-[11px] block">
                             {data.events[0].venue_address}
                           </span>
                         </p>
                       </div>
-                      <div className="p-3 rounded-lg bg-surface-container/70 flex items-center gap-2.5">
-                        <span className="material-symbols-outlined text-primary text-base">
+                      <div className="p-3 rounded-lg bg-surface-container/70 flex items-center gap-2.5 mb-3">
+                        <span className="material-symbols-outlined text-primary text-base shrink-0">
                           checkroom
                         </span>
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <p className="font-label-eyebrow text-[9px] text-secondary uppercase tracking-widest">
                             Dress Code
                           </p>
-                          <p className="font-body-sm text-on-surface text-xs">
+                          <p className="font-body-sm text-on-surface text-xs break-words [overflow-wrap:anywhere]">
                             Formal Modest Black-Tie / Tuxedo
                           </p>
                         </div>
                       </div>
+
+                      {/* Interactive Real Google Maps Embed (Hanya untuk Acara Mendatang Terpilih) */}
+                      {(data.countdown_target !== 'resepsi' || !data.events[1]) && (
+                        <div className="w-full my-3">
+                          <VenueMapEmbed
+                            venueName={data.events[0].venue_name || 'Lokasi Akad'}
+                            venueAddress={data.events[0].venue_address}
+                            mapsUrl={data.events[0].maps_url}
+                            heightClass="h-44"
+                            isPreview={isPreview}
+                          />
+                        </div>
+                      )}
+
+                      {/* Google Maps Button (Selalu tampil di setiap card acara) */}
+                      <a
+                        className="w-full py-2.5 px-4 rounded-lg bg-surface-container-high/80 hover:bg-surface-container-highest text-on-surface flex items-center justify-center gap-2 font-label-md uppercase tracking-wider text-xs transition-colors shadow-md border border-white/5"
+                        href={data.events[0].maps_url || 'https://maps.google.com'}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        <span className="material-symbols-outlined text-primary text-base">map</span>
+                        <span>Open in Google Maps</span>
+                      </a>
                     </div>
                   )}
 
                   {/* Gala Reception Card */}
                   {data.events[1] && (
-                    <div className="w-full max-w-[360px] rounded-xl bg-surface-container-low/80 backdrop-blur-xl p-5 mb-6 shadow-xl shadow-surface-container-lowest/60 border border-white/5">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-primary-container/20 text-primary font-label-eyebrow text-[9px] uppercase tracking-wider">
+                    <div className="w-full max-w-[360px] rounded-xl bg-surface-container-low/80 backdrop-blur-xl p-5 mb-6 shadow-xl shadow-surface-container-lowest/60 border border-white/5 overflow-hidden">
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <span className="shrink-0 inline-block px-2.5 py-0.5 rounded-full bg-primary-container/20 text-primary font-label-eyebrow text-[9px] uppercase tracking-wider">
                           {data.events[1].badge || 'Chapter II'}
                         </span>
-                        <span className="font-label-md text-secondary text-xs">
+                        <span className="shrink-0 font-label-md text-secondary text-xs">
                           {data.events[1].time}
                         </span>
                       </div>
-                      <h3 className="font-headline-sm text-on-surface text-lg mb-1">
+                      <h3 className="font-headline-sm text-on-surface text-lg mb-1 break-words [overflow-wrap:anywhere]">
                         {data.events[1].name}
                       </h3>
                       <div className="flex items-start gap-2 mb-3 text-secondary">
-                        <span className="material-symbols-outlined text-sm text-primary mt-0.5">
+                        <span className="material-symbols-outlined text-sm text-primary mt-0.5 shrink-0">
                           location_on
                         </span>
-                        <p className="font-body-sm text-xs leading-snug">
-                          {data.events[1].venue_name}
-                          <br />
-                          <span className="text-on-surface-variant text-[11px]">
+                        <p className="font-body-sm text-xs leading-snug min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
+                          <strong className="block text-on-surface font-semibold">{data.events[1].venue_name}</strong>
+                          <span className="text-on-surface-variant text-[11px] block">
                             {data.events[1].venue_address}
                           </span>
                         </p>
                       </div>
-                      <div className="p-3 rounded-lg bg-surface-container/70 flex items-center gap-2.5">
-                        <span className="material-symbols-outlined text-primary text-base">
+                      <div className="p-3 rounded-lg bg-surface-container/70 flex items-center gap-2.5 mb-3">
+                        <span className="material-symbols-outlined text-primary text-base shrink-0">
                           styler
                         </span>
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <p className="font-label-eyebrow text-[9px] text-secondary uppercase tracking-widest">
                             Dress Code
                           </p>
-                          <p className="font-body-sm text-on-surface text-xs">
+                          <p className="font-body-sm text-on-surface text-xs break-words [overflow-wrap:anywhere]">
                             Midnight Black-Tie &amp; Evening Gown (Black, Champagne, Dark Emerald)
                           </p>
                         </div>
                       </div>
+
+                      {/* Interactive Real Google Maps Embed (Hanya untuk Acara Mendatang Terpilih) */}
+                      {data.countdown_target === 'resepsi' && (
+                        <div className="w-full my-3">
+                          <VenueMapEmbed
+                            venueName={data.events[1]?.venue_name || 'Lokasi Resepsi'}
+                            venueAddress={data.events[1]?.venue_address}
+                            mapsUrl={data.events[1]?.maps_url}
+                            heightClass="h-44"
+                            isPreview={isPreview}
+                          />
+                        </div>
+                      )}
+
+                      {/* Google Maps Button (Selalu tampil di setiap card acara) */}
+                      <a
+                        className="w-full py-2.5 px-4 rounded-lg bg-surface-container-high/80 hover:bg-surface-container-highest text-on-surface flex items-center justify-center gap-2 font-label-md uppercase tracking-wider text-xs transition-colors shadow-md border border-white/5"
+                        href={data.events[1].maps_url || 'https://maps.google.com'}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        <span className="material-symbols-outlined text-primary text-base">map</span>
+                        <span>Open in Google Maps</span>
+                      </a>
                     </div>
                   )}
 
-                  {/* Action Buttons */}
+                  {/* Add to Calendar Button */}
                   <div className="w-full max-w-[360px] flex flex-col gap-2.5">
-                    <a
-                      className="w-full py-3 px-4 rounded-lg bg-surface-container-high/80 hover:bg-surface-container-highest text-on-surface flex items-center justify-center gap-2 font-label-md uppercase tracking-wider text-xs transition-colors shadow-md border border-white/5"
-                      href={data.events[1]?.maps_url || data.events[0]?.maps_url || 'https://maps.google.com'}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    >
-                      <span className="material-symbols-outlined text-primary text-base">map</span>
-                      <span>Open in Google Maps</span>
-                    </a>
                     <button
                       className="w-full py-3 px-4 rounded-lg bg-surface-container-low hover:bg-surface-container text-secondary flex items-center justify-center gap-2 font-label-md uppercase tracking-wider text-xs transition-colors border border-white/5 cursor-pointer"
                       onClick={handleAddToCalendar}
@@ -866,12 +904,12 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
                           <p className="font-headline-sm text-on-surface text-lg tracking-wider mb-2 font-mono">
                             {bank.account_number}
                           </p>
-                          <div className="flex items-center justify-between">
-                            <p className="font-body-sm text-secondary text-xs">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-body-sm text-secondary text-xs min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
                               a/n {bank.account_holder}
                             </p>
                             <button
-                              className="py-1 px-3 rounded-full bg-primary-container/20 text-primary text-[11px] font-label-md uppercase tracking-wider transition-colors cursor-pointer hover:bg-primary-container/30"
+                              className="shrink-0 py-1 px-3 rounded-full bg-primary-container/20 text-primary text-[11px] font-label-md uppercase tracking-wider transition-colors cursor-pointer hover:bg-primary-container/30"
                               onClick={() => handleCopy(bank.account_number_raw || bank.account_number, `bank-${index}`)}
                               type="button"
                             >
@@ -893,7 +931,7 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
                               inventory_2
                             </span>
                           </div>
-                          <p className="font-body-sm text-on-surface-variant text-xs mb-3 leading-relaxed">
+                          <p className="font-body-sm text-on-surface-variant text-xs mb-3 leading-relaxed break-words [overflow-wrap:anywhere]">
                             {data.gift_address}
                           </p>
                           <button
@@ -973,20 +1011,20 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
                         key={item.id}
                         className="p-4 rounded-xl bg-surface-container-low/70 backdrop-blur-md shadow-md border border-white/5 animate-fadeIn"
                       >
-                        <div className="flex items-center justify-between mb-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-label-md text-on-surface text-xs font-medium">
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                            <span className="font-label-md text-on-surface text-xs font-medium break-words [overflow-wrap:anywhere]">
                               {item.guest_name}
                             </span>
                           </div>
-                          <span className="font-body-sm text-secondary text-[10px]">
+                          <span className="shrink-0 font-body-sm text-secondary text-[10px]">
                             {new Date(item.created_at).toLocaleDateString('id-ID', {
                               day: 'numeric',
                               month: 'short',
                             })}
                           </span>
                         </div>
-                        <p className="font-body-sm text-on-surface-variant text-xs leading-relaxed">
+                        <p className="font-body-sm text-on-surface-variant text-xs leading-relaxed break-words [overflow-wrap:anywhere]">
                           "{item.message}"
                         </p>
                       </div>
@@ -1043,35 +1081,13 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
           )}
         </FloatingDock>
 
-        {/* ============================================================ */}
-        {/* LIGHTBOX PHOTO MODAL                                         */}
-        {/* ============================================================ */}
-        {lightboxImg && typeof document !== 'undefined' && createPortal(
-          <div
-            onClick={() => setLightboxImg(null)}
-            className="fixed inset-0 z-[999999] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer animate-fadeIn"
-          >
-            <div
-              className="relative max-w-sm sm:max-w-md w-full max-h-[88vh] flex flex-col items-center justify-center cursor-default"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() => setLightboxImg(null)}
-                className="absolute -top-12 right-0 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 text-white flex items-center justify-center transition-all cursor-pointer shadow-lg backdrop-blur-sm"
-                type="button"
-                title="Tutup Foto"
-              >
-                <span className="material-symbols-outlined text-2xl">close</span>
-              </button>
-              <img
-                src={lightboxImg}
-                alt="Enlarged gallery view"
-                className="max-h-[80vh] w-auto max-w-full object-contain rounded-2xl shadow-2xl border border-white/10"
-              />
-            </div>
-          </div>,
-          document.body
-        )}
+        {/* Universal Gallery Lightbox (Terkunci sejajar layar di HP Preview maupun Web PC) */}
+        <GalleryLightbox
+          isOpen={Boolean(lightboxImg)}
+          imageUrl={lightboxImg}
+          onClose={() => setLightboxImg(null)}
+          isPreview={isPreview}
+        />
       </div>
     </div>
   );

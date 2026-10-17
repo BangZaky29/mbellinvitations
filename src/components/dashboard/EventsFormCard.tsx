@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
 import type { EventInfo } from '../../types/invitation';
 import { EventFormRow } from './events-form/EventFormRow';
+import { reverseGeocodeCoords, extractCoordsFromUrlOrText } from '../../lib/reverseGeocode';
 
 interface EventsFormCardProps {
   events: any;
+  countdownTarget?: 'akad' | 'resepsi';
+  onSetCountdownTarget?: (target: 'akad' | 'resepsi') => void;
   onEventsChange: (events: any) => void;
 }
 
 export const EventsFormCard: React.FC<EventsFormCardProps> = ({
   events,
+  countdownTarget = 'akad',
+  onSetCountdownTarget,
   onEventsChange,
 }) => {
   const isArray = Array.isArray(events);
@@ -54,19 +59,20 @@ export const EventsFormCard: React.FC<EventsFormCardProps> = ({
   };
 
   const handleAkadChange = (field: keyof EventInfo, value: string) => {
+    let cleanVal = value;
     if (field === 'date' && value && value < minDate) {
-      value = minDate;
+      cleanVal = minDate;
     }
 
-    const nextStart = field === 'start_time' ? value : akad.start_time;
-    const nextEnd = field === 'end_time' ? value : akad.end_time;
-    const nextTz = field === 'timezone' ? value : akad.timezone || 'WIB';
+    const nextStart = field === 'start_time' ? cleanVal : akad.start_time;
+    const nextEnd = field === 'end_time' ? cleanVal : akad.end_time;
+    const nextTz = field === 'timezone' ? cleanVal : akad.timezone || 'WIB';
 
     const updatedAkad: EventInfo = {
       ...akad,
-      [field]: value,
-      ...(field === 'location_name' ? { venue_name: value } : {}),
-      ...(field === 'address' ? { venue_address: value } : {}),
+      [field]: cleanVal,
+      ...(field === 'location_name' ? { venue_name: cleanVal } : {}),
+      ...(field === 'address' ? { venue_address: cleanVal } : {}),
       ...(field === 'start_time' || field === 'end_time' || field === 'timezone'
         ? { time: buildTimeString(nextStart, nextEnd, nextTz) }
         : {}),
@@ -80,22 +86,37 @@ export const EventsFormCard: React.FC<EventsFormCardProps> = ({
         akad: updatedAkad,
       });
     }
+
+    // Auto-detect & auto-fill alamat jika user memasukkan URL atau koordinat GPS ke maps_url
+    if (field === 'maps_url' && value) {
+      const coords = extractCoordsFromUrlOrText(value);
+      if (coords && (!akad.address || akad.address.includes('Kompleks Kraton') || akad.address.includes('Kraton'))) {
+        reverseGeocodeCoords(coords.lat, coords.lng)
+          .then((res) => {
+            if (res.formattedAddress) {
+              handleAkadChange('address', res.formattedAddress);
+            }
+          })
+          .catch((err) => console.warn('Auto geocode from maps_url error:', err));
+      }
+    }
   };
 
   const handleResepsiChange = (field: keyof EventInfo, value: string) => {
+    let cleanVal = value;
     if (field === 'date' && value && value < minDate) {
-      value = minDate;
+      cleanVal = minDate;
     }
 
-    const nextStart = field === 'start_time' ? value : resepsi.start_time;
-    const nextEnd = field === 'end_time' ? value : resepsi.end_time;
-    const nextTz = field === 'timezone' ? value : resepsi.timezone || 'WIB';
+    const nextStart = field === 'start_time' ? cleanVal : resepsi.start_time;
+    const nextEnd = field === 'end_time' ? cleanVal : resepsi.end_time;
+    const nextTz = field === 'timezone' ? cleanVal : resepsi.timezone || 'WIB';
 
     const updatedResepsi: EventInfo = {
       ...resepsi,
-      [field]: value,
-      ...(field === 'location_name' ? { venue_name: value } : {}),
-      ...(field === 'address' ? { venue_address: value } : {}),
+      [field]: cleanVal,
+      ...(field === 'location_name' ? { venue_name: cleanVal } : {}),
+      ...(field === 'address' ? { venue_address: cleanVal } : {}),
       ...(field === 'start_time' || field === 'end_time' || field === 'timezone'
         ? { time: buildTimeString(nextStart, nextEnd, nextTz) }
         : {}),
@@ -108,6 +129,20 @@ export const EventsFormCard: React.FC<EventsFormCardProps> = ({
         ...events,
         resepsi: updatedResepsi,
       });
+    }
+
+    // Auto-detect & auto-fill alamat jika user memasukkan URL atau koordinat GPS ke maps_url
+    if (field === 'maps_url' && value) {
+      const coords = extractCoordsFromUrlOrText(value);
+      if (coords && (!resepsi.address || resepsi.address.includes('Rotowijayan') || resepsi.address.includes('Kraton'))) {
+        reverseGeocodeCoords(coords.lat, coords.lng)
+          .then((res) => {
+            if (res.formattedAddress) {
+              handleResepsiChange('address', res.formattedAddress);
+            }
+          })
+          .catch((err) => console.warn('Auto geocode from maps_url error:', err));
+      }
     }
   };
 
@@ -122,14 +157,53 @@ export const EventsFormCard: React.FC<EventsFormCardProps> = ({
     setLocationError(null);
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords;
         const generatedUrl = `https://www.google.com/maps?q=${latitude.toFixed(6)},${longitude.toFixed(6)}`;
-        if (target === 'akad') {
-          handleAkadChange('maps_url', generatedUrl);
-        } else {
-          handleResepsiChange('maps_url', generatedUrl);
+
+        // Ambil alamat lengkap otomatis via reverse geocoding
+        let resolvedAddress = '';
+        let resolvedVenue = '';
+        try {
+          const res = await reverseGeocodeCoords(latitude, longitude);
+          resolvedAddress = res.formattedAddress;
+          resolvedVenue = res.venueName || '';
+        } catch (e) {
+          console.warn('Gagal reverse geocode koordinat GPS:', e);
         }
+
+        if (target === 'akad') {
+          const currentAkad = akad;
+          const updated: EventInfo = {
+            ...currentAkad,
+            maps_url: generatedUrl,
+            ...(resolvedAddress ? { address: resolvedAddress, venue_address: resolvedAddress } : {}),
+            ...(resolvedVenue && (!currentAkad.location_name && !currentAkad.venue_name)
+              ? { location_name: resolvedVenue, venue_name: resolvedVenue }
+              : {}),
+          };
+          if (isArray) {
+            onEventsChange([updated, resepsi]);
+          } else {
+            onEventsChange({ ...events, akad: updated });
+          }
+        } else {
+          const currentResepsi = resepsi;
+          const updated: EventInfo = {
+            ...currentResepsi,
+            maps_url: generatedUrl,
+            ...(resolvedAddress ? { address: resolvedAddress, venue_address: resolvedAddress } : {}),
+            ...(resolvedVenue && (!currentResepsi.location_name && !currentResepsi.venue_name)
+              ? { location_name: resolvedVenue, venue_name: resolvedVenue }
+              : {}),
+          };
+          if (isArray) {
+            onEventsChange([akad, updated]);
+          } else {
+            onEventsChange({ ...events, resepsi: updated });
+          }
+        }
+
         setLocatingTarget(null);
         setLocationSuccess(target);
         setTimeout(() => setLocationSuccess(null), 4000);
@@ -214,6 +288,8 @@ export const EventsFormCard: React.FC<EventsFormCardProps> = ({
           locationError={locationError}
           defaultPlaceholderVenue="cth: Masjid Agung Sunda Kelapa"
           defaultPlaceholderAddress="Jl. Taman Sunda Kelapa No. 16, Menteng, Jakarta Pusat"
+          isCountdownActive={countdownTarget === 'akad'}
+          onSetCountdown={() => onSetCountdownTarget?.('akad')}
         />
 
         <EventFormRow
@@ -230,6 +306,8 @@ export const EventsFormCard: React.FC<EventsFormCardProps> = ({
           locationError={locationError}
           defaultPlaceholderVenue="cth: Grand Ballroom Hotel Indonesia Kempinski"
           defaultPlaceholderAddress="Jl. M.H. Thamrin No. 1, Menteng, Jakarta Pusat"
+          isCountdownActive={countdownTarget === 'resepsi'}
+          onSetCountdown={() => onSetCountdownTarget?.('resepsi')}
         />
       </div>
     </section>

@@ -14,7 +14,7 @@ export interface OptimizedImageResult {
   height: number;
 }
 
-export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 Megabytes
+export const MAX_FILE_SIZE_BYTES = 30 * 1024 * 1024; // 30 Megabytes
 
 /**
  * Validasi dan konversi berkas gambar ke format .webp
@@ -32,11 +32,11 @@ export async function convertImageToWebP(
     throw new Error('Berkas yang dipilih bukan merupakan format gambar yang valid.');
   }
 
-  // 2. Validasi batas maksimal 10MB
+  // 2. Validasi batas maksimal 30MB
   if (file.size > MAX_FILE_SIZE_BYTES) {
     const sizeInMB = (file.size / (1024 * 1024)).toFixed(1);
     throw new Error(
-      `Ukuran file (${sizeInMB}MB) melebihi batas maksimal 10MB. Silakan pilih foto dengan ukuran lebih kecil.`
+      `Ukuran file (${sizeInMB}MB) melebihi batas maksimal 30MB. Silakan pilih foto dengan ukuran lebih kecil.`
     );
   }
 

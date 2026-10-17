@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 export interface ThemeOption {
   id: string;
@@ -10,30 +10,22 @@ export interface ThemeOption {
   accentColor: string;
   icon: string;
   bgClass: string;
+  category: 'adat' | 'casual';
 }
 
 const THEME_OPTIONS: ThemeOption[] = [
+  // Kategori 1: Adat & Tradisi Nusantara
   {
-    id: 'template1',
-    name: 'Modern Arch',
-    subtitle: 'Editorial Quiet Luxury',
-    styleTag: 'Editorial Minimalis',
-    coupleSample: 'Dimas & Sarah',
-    badge: 'Trending',
-    accentColor: '#D4AF37',
-    icon: 'flare',
-    bgClass: 'bg-[#FAF8F5] text-stone-900 border-stone-300',
-  },
-  {
-    id: 'template2',
-    name: 'Rustic Casual',
-    subtitle: 'Botanical Warm Harmony',
-    styleTag: 'Botanical Earthy',
-    coupleSample: 'Romeo & Juliet',
-    badge: 'Populer',
-    accentColor: '#556B2F',
+    id: 'template6',
+    name: 'Adat Sunda Siger',
+    subtitle: 'Mahkota Siger & Ronce Melati',
+    styleTag: 'Tradisi Parahyangan',
+    coupleSample: 'Raditya & Jessica',
+    badge: 'Royal Adat',
+    accentColor: '#C5A059',
     icon: 'local_florist',
-    bgClass: 'bg-[#F2EFE9] text-[#162a1f] border-emerald-200',
+    bgClass: 'bg-[#FBF9F6] text-[#775A19] border-[#C5A059]/40',
+    category: 'adat',
   },
   {
     id: 'template3',
@@ -45,6 +37,7 @@ const THEME_OPTIONS: ThemeOption[] = [
     accentColor: '#C5A059',
     icon: 'architecture',
     bgClass: 'bg-[#1C1A17] text-[#C5A059] border-amber-900/50',
+    category: 'adat',
   },
   {
     id: 'template4',
@@ -56,6 +49,33 @@ const THEME_OPTIONS: ThemeOption[] = [
     accentColor: '#93335B',
     icon: 'mosque',
     bgClass: 'bg-[#FDF8F9] text-[#5E2832] border-rose-200',
+    category: 'adat',
+  },
+
+  // Kategori 2: Modern & Casual Editorial
+  {
+    id: 'template1',
+    name: 'Modern Arch',
+    subtitle: 'Editorial Quiet Luxury',
+    styleTag: 'Editorial Minimalis',
+    coupleSample: 'Dimas & Sarah',
+    badge: 'Trending',
+    accentColor: '#D4AF37',
+    icon: 'flare',
+    bgClass: 'bg-[#FAF8F5] text-stone-900 border-stone-300',
+    category: 'casual',
+  },
+  {
+    id: 'template2',
+    name: 'Rustic Casual',
+    subtitle: 'Botanical Warm Harmony',
+    styleTag: 'Botanical Earthy',
+    coupleSample: 'Romeo & Juliet',
+    badge: 'Populer',
+    accentColor: '#556B2F',
+    icon: 'local_florist',
+    bgClass: 'bg-[#F2EFE9] text-[#162a1f] border-emerald-200',
+    category: 'casual',
   },
   {
     id: 'template5',
@@ -67,17 +87,7 @@ const THEME_OPTIONS: ThemeOption[] = [
     accentColor: '#E2C792',
     icon: 'hotel_class',
     bgClass: 'bg-[#121316] text-[#E2C792] border-amber-600/40',
-  },
-  {
-    id: 'template6',
-    name: 'Adat Sunda Siger',
-    subtitle: 'Mahkota Siger & Ronce Melati',
-    styleTag: 'Tradisi Parahyangan',
-    coupleSample: 'Raditya & Jessica',
-    badge: 'Royal Adat',
-    accentColor: '#C5A059',
-    icon: 'local_florist',
-    bgClass: 'bg-[#FBF9F6] text-[#775A19] border-[#C5A059]/40',
+    category: 'casual',
   },
 ];
 
@@ -94,6 +104,8 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
   onSelectTheme,
   onApplyPreset,
 }) => {
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'adat' | 'casual'>('all');
+
   const toTemplateId = (id: string) => {
     const map: Record<string, string> = {
       modern: 'template1',
@@ -128,6 +140,14 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
   const activeSemantic = toSemanticId(activeThemeId);
   const currentOption = THEME_OPTIONS.find((t) => t.id === effectiveActive) || THEME_OPTIONS[0];
 
+  const filteredOptions =
+    selectedCategory === 'all'
+      ? THEME_OPTIONS
+      : THEME_OPTIONS.filter((t) => t.category === selectedCategory);
+
+  const adatCount = THEME_OPTIONS.filter((t) => t.category === 'adat').length;
+  const casualCount = THEME_OPTIONS.filter((t) => t.category === 'casual').length;
+
   return (
     <section className="bg-white rounded-2xl p-6 sm:p-7 shadow-xs border border-stone-200/90 space-y-6">
       {/* Header Tahap 1 */}
@@ -142,19 +162,58 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
             </h2>
           </div>
           <p className="text-sm text-stone-500">
-            Pilih konsep visual, tipografi, dan nuansa warna untuk undangan pernikahan digital Anda.
+            Pilihan konsep visual, tipografi, dan nuansa warna untuk undangan pernikahan digital Anda.
           </p>
         </div>
 
         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 border border-stone-200/80 text-stone-700 text-xs font-semibold self-start sm:self-auto">
           <span className="material-symbols-outlined text-[16px] text-stone-600">palette</span>
-          <span>5 Koleksi Desain</span>
+          <span>{THEME_OPTIONS.length} Koleksi Desain</span>
         </span>
+      </div>
+
+      {/* Filter Segmented Tab: Kategori Adat vs Casual */}
+      <div className="flex items-center gap-1.5 p-1 rounded-xl bg-stone-100/90 border border-stone-200/70 w-full sm:w-fit overflow-x-auto">
+        <button
+          type="button"
+          onClick={() => setSelectedCategory('all')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
+            selectedCategory === 'all'
+              ? 'bg-white text-stone-900 shadow-xs'
+              : 'text-stone-600 hover:text-stone-900'
+          }`}
+        >
+          Semua Koleksi ({THEME_OPTIONS.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setSelectedCategory('adat')}
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
+            selectedCategory === 'adat'
+              ? 'bg-white text-stone-900 shadow-xs'
+              : 'text-stone-600 hover:text-stone-900'
+          }`}
+        >
+          <span>🏛️ Adat Nusantara</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-200/60 font-bold">{adatCount}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setSelectedCategory('casual')}
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
+            selectedCategory === 'casual'
+              ? 'bg-white text-stone-900 shadow-xs'
+              : 'text-stone-600 hover:text-stone-900'
+          }`}
+        >
+          <span>🌿 Modern & Casual</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-200/60 font-bold">{casualCount}</span>
+        </button>
       </div>
 
       {/* Grid Kartu Tema */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
-        {THEME_OPTIONS.map((theme) => {
+        {filteredOptions.map((theme) => {
           const isActive = effectiveActive === theme.id;
           return (
             <div

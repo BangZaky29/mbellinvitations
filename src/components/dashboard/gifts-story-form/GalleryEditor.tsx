@@ -60,7 +60,7 @@ export const GalleryEditor: React.FC<GalleryEditorProps> = ({
             </h2>
           </div>
           <p className="text-sm text-stone-500">
-            Maksimal 12 foto. Batas ukuran maks. 10MB per foto (otomatis dikonversi ke format <strong>.webp</strong> ringan).
+            Maksimal 12 foto. Batas ukuran maks. 30MB per foto (otomatis dikonversi ke format <strong>.webp</strong> ringan).
           </p>
         </div>
 
@@ -152,7 +152,7 @@ export const GalleryEditor: React.FC<GalleryEditorProps> = ({
             <p className="text-xs font-bold text-stone-700">
               {isOptimizingImage ? 'Memproses...' : 'Unggah Foto'}
             </p>
-            <p className="text-[10px] text-stone-400 mt-0.5">JPG / PNG / WEBP (Maks. 10MB)</p>
+            <p className="text-[10px] text-stone-400 mt-0.5">JPG / PNG / WEBP (Maks. 30MB)</p>
           </div>
         )}
       </div>

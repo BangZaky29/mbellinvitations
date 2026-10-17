@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import type { InvitationProps, WishItem } from '../../types/invitation';
 import { useTemplateState } from '../../hooks/useTemplateState';
 import { FloatingDock } from '../common/FloatingDock';
 import { SleekToast } from '../common/SleekToast';
+import { VenueMapEmbed } from '../common/VenueMapEmbed';
+import { GalleryLightbox } from '../common/GalleryLightbox';
 
 export const Template4Islami: React.FC<InvitationProps> = ({
   data,
@@ -577,38 +578,66 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                           {data.events[0].badge}
                         </span>
                       )}
-                      <h3 className="font-headline-md text-headline-md text-primary font-bold mb-3">
+                      <h3 className="font-headline-md text-headline-md text-primary font-bold mb-3 break-words [overflow-wrap:anywhere] max-w-full">
                         {data.events[0].name}
                       </h3>
-                      <div className="space-y-2 mb-4 font-body-md text-body-md text-on-surface">
+                      <div className="space-y-2 mb-4 font-body-md text-body-md text-on-surface w-full">
                         <div className="flex items-center justify-center gap-2">
-                          <span className="material-symbols-outlined text-[18px] text-secondary">
+                          <span className="material-symbols-outlined text-[18px] text-secondary shrink-0">
                             calendar_today
                           </span>
-                          <span>{data.events[0].date}</span>
+                          <span className="break-words [overflow-wrap:anywhere]">{data.events[0].date}</span>
                         </div>
                         <div className="flex items-center justify-center gap-2">
-                          <span className="material-symbols-outlined text-[18px] text-secondary">
+                          <span className="material-symbols-outlined text-[18px] text-secondary shrink-0">
                             schedule
                           </span>
-                          <span>{data.events[0].time}</span>
+                          <span className="break-words [overflow-wrap:anywhere]">{data.events[0].time}</span>
                         </div>
                         <div className="flex items-start justify-center gap-2 max-w-[280px] mx-auto text-on-surface-variant text-center">
                           <span className="material-symbols-outlined text-[18px] text-secondary shrink-0 mt-0.5">
                             location_on
                           </span>
-                          <span>
-                            {data.events[0].venue_name},{' '}
-                            {data.events[0].venue_address}
+                          <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
+                            <strong className="block font-semibold text-primary">{data.events[0].venue_name}</strong>
+                            <span>{data.events[0].venue_address}</span>
                           </span>
                         </div>
+                      </div>
+
+                      {/* Interactive Real Google Maps Embed (Hanya untuk Acara Mendatang Terpilih) */}
+                      {(data.countdown_target !== 'resepsi' || !data.events[1]) && (
+                        <div className="w-full my-4">
+                          <VenueMapEmbed
+                            venueName={data.events[0].venue_name || 'Lokasi Akad Nikah'}
+                            venueAddress={data.events[0].venue_address}
+                            mapsUrl={data.events[0].maps_url}
+                            heightClass="h-44"
+                            isPreview={isPreview}
+                          />
+                        </div>
+                      )}
+
+                      {/* Action Buttons (Selalu tampil di setiap card acara) */}
+                      <div className="w-full flex flex-col gap-2.5">
+                        <a
+                          className="w-full py-3 px-4 rounded-full bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center gap-2 shadow-sm hover:bg-primary-container transition-colors"
+                          href={data.events[0].maps_url || 'https://maps.google.com'}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">
+                            map
+                          </span>
+                          <span>Buka Google Maps</span>
+                        </a>
                       </div>
                     </div>
                   )}
 
                   {/* Resepsi Card */}
                   {data.events[1] && (
-                    <div className="w-full bg-surface-container-lowest rounded-t-full rounded-b-2xl p-6 shadow-md shadow-primary/5 text-center flex flex-col items-center border border-secondary-container/20">
+                    <div className="w-full bg-surface-container-lowest rounded-t-full rounded-b-2xl p-6 shadow-md shadow-primary/5 text-center flex flex-col items-center border border-secondary-container/20 overflow-hidden">
                       <div className="w-12 h-12 rounded-full bg-secondary-container/40 flex items-center justify-center text-primary mb-3">
                         <span className="material-symbols-outlined text-[24px]">
                           {data.events[1].icon || 'diversity_3'}
@@ -619,32 +648,45 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                           {data.events[1].badge}
                         </span>
                       )}
-                      <h3 className="font-headline-md text-headline-md text-primary font-bold mb-3">
+                      <h3 className="font-headline-md text-headline-md text-primary font-bold mb-3 break-words [overflow-wrap:anywhere] max-w-full">
                         {data.events[1].name}
                       </h3>
-                      <div className="space-y-2 mb-5 font-body-md text-body-md text-on-surface">
+                      <div className="space-y-2 mb-5 font-body-md text-body-md text-on-surface w-full">
                         <div className="flex items-center justify-center gap-2">
-                          <span className="material-symbols-outlined text-[18px] text-secondary">
+                          <span className="material-symbols-outlined text-[18px] text-secondary shrink-0">
                             calendar_today
                           </span>
-                          <span>{data.events[1].date}</span>
+                          <span className="break-words [overflow-wrap:anywhere]">{data.events[1].date}</span>
                         </div>
                         <div className="flex items-center justify-center gap-2">
-                          <span className="material-symbols-outlined text-[18px] text-secondary">
+                          <span className="material-symbols-outlined text-[18px] text-secondary shrink-0">
                             schedule
                           </span>
-                          <span>{data.events[1].time}</span>
+                          <span className="break-words [overflow-wrap:anywhere]">{data.events[1].time}</span>
                         </div>
                         <div className="flex items-start justify-center gap-2 max-w-[280px] mx-auto text-on-surface-variant text-center">
                           <span className="material-symbols-outlined text-[18px] text-secondary shrink-0 mt-0.5">
                             apartment
                           </span>
-                          <span>
-                            {data.events[1].venue_name},{' '}
-                            {data.events[1].venue_address}
+                          <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
+                            <strong className="block font-semibold text-primary">{data.events[1].venue_name}</strong>
+                            <span>{data.events[1].venue_address}</span>
                           </span>
                         </div>
                       </div>
+
+                      {/* Interactive Real Google Maps Embed (Hanya untuk Acara Mendatang Terpilih) */}
+                      {data.countdown_target === 'resepsi' && (
+                        <div className="w-full my-4">
+                          <VenueMapEmbed
+                            venueName={data.events[1]?.venue_name || 'Lokasi Resepsi'}
+                            venueAddress={data.events[1]?.venue_address}
+                            mapsUrl={data.events[1]?.maps_url}
+                            heightClass="h-44"
+                            isPreview={isPreview}
+                          />
+                        </div>
+                      )}
 
                       {/* Action Buttons */}
                       <div className="w-full flex flex-col gap-2.5">
@@ -993,10 +1035,10 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                               credit_card
                             </span>
                           </div>
-                          <p className="font-headline-sm text-headline-sm text-on-surface font-mono tracking-wider font-semibold mb-1">
+                          <p className="font-headline-sm text-headline-sm text-on-surface font-mono tracking-wider font-semibold mb-1 break-words [overflow-wrap:anywhere]">
                             {acc.account_number}
                           </p>
-                          <span className="font-body-sm text-body-sm text-on-surface-variant mb-4">
+                          <span className="font-body-sm text-body-sm text-on-surface-variant mb-4 break-words [overflow-wrap:anywhere]">
                             a.n {acc.account_holder}
                           </span>
                           <button
@@ -1029,7 +1071,7 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                               inventory_2
                             </span>
                           </div>
-                          <p className="font-body-sm text-body-sm text-on-surface mb-3">
+                          <p className="font-body-sm text-body-sm text-on-surface mb-3 break-words [overflow-wrap:anywhere]">
                             {data.gift_address}
                           </p>
                           <button
@@ -1132,18 +1174,18 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                         key={item.id}
                         className="p-4 rounded-xl bg-surface-container-lowest shadow-sm flex flex-col border border-secondary-container/10"
                       >
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="font-label-md text-label-md text-primary font-bold">
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <span className="font-label-md text-label-md text-primary font-bold min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
                             {item.guest_name}
                           </span>
-                          <span className="font-label-sm text-label-sm text-on-surface-variant text-[11px]">
+                          <span className="shrink-0 font-label-sm text-label-sm text-on-surface-variant text-[11px]">
                             {new Date(item.created_at).toLocaleDateString('id-ID', {
                               day: 'numeric',
                               month: 'short',
                             })}
                           </span>
                         </div>
-                        <p className="font-body-sm text-body-sm text-on-surface leading-relaxed">
+                        <p className="font-body-sm text-body-sm text-on-surface leading-relaxed break-words [overflow-wrap:anywhere]">
                           "{item.message}"
                         </p>
                       </div>
@@ -1206,34 +1248,14 @@ export const Template4Islami: React.FC<InvitationProps> = ({
         </FloatingDock>
 
         {/* ============================================================ */}
-        {/* LIGHTBOX PHOTO MODAL                                         */}
+        {/* LIGHTBOX PHOTO MODAL (Terkunci sejajar layar di HP & Web PC)  */}
         {/* ============================================================ */}
-        {lightboxImg && typeof document !== 'undefined' && createPortal(
-          <div
-            onClick={() => setLightboxImg(null)}
-            className="fixed inset-0 z-[999999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer animate-fadeIn"
-          >
-            <div
-              className="relative max-w-sm sm:max-w-md w-full max-h-[88vh] flex flex-col items-center justify-center cursor-default"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() => setLightboxImg(null)}
-                className="absolute -top-12 right-0 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 text-white flex items-center justify-center transition-all cursor-pointer shadow-lg backdrop-blur-sm"
-                type="button"
-                title="Tutup Foto"
-              >
-                <span className="material-symbols-outlined text-2xl">close</span>
-              </button>
-              <img
-                src={lightboxImg}
-                alt="Enlarged gallery view"
-                className="max-h-[80vh] w-auto max-w-full object-contain rounded-2xl shadow-2xl border border-white/10"
-              />
-            </div>
-          </div>,
-          document.body
-        )}
+        <GalleryLightbox
+          isOpen={Boolean(lightboxImg)}
+          imageUrl={lightboxImg}
+          onClose={() => setLightboxImg(null)}
+          isPreview={isPreview}
+        />
       </div>
     </div>
   );

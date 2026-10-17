@@ -46,10 +46,10 @@ export const SleekToast: React.FC<SleekToastProps> = ({
     borderColor = 'border-amber-500/30';
   }
 
-  // Positioning: top-center on mobile, top-right on desktop
+  // Positioning: di bawah header dashboard (h-16 / 64px), top-center di mobile, top-right di desktop
   const positionClasses = isInsideMockup
     ? 'absolute top-3 left-1/2 -translate-x-1/2 z-40 max-w-[90%]'
-    : 'fixed top-4 left-1/2 -translate-x-1/2 md:top-5 md:right-6 md:left-auto md:translate-x-0 z-[200] max-w-[92%] md:max-w-md';
+    : 'fixed top-[74px] left-1/2 -translate-x-1/2 md:top-[76px] md:right-8 md:left-auto md:translate-x-0 z-[200] max-w-[92%] md:max-w-md';
 
   return (
     <div

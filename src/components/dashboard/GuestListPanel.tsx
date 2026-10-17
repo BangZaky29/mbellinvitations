@@ -3,6 +3,7 @@ import type { GuestItem, GuestListPanelProps } from './guest-list/types';
 import { useWaBlast } from '../../hooks/useWaBlast';
 import { useGuestList } from '../../hooks/useGuestList';
 import { TemplateCardSelector, type TemplateSelectorItem } from './common/TemplateCardSelector';
+import { SleekToast } from '../common/SleekToast';
 
 // Sub-components
 import { QuickLinkGenerator } from './guest-list/QuickLinkGenerator';
@@ -141,14 +142,13 @@ export const GuestListPanel: React.FC<GuestListPanelProps> = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Toast Notifikasi */}
-      {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 animate-in fade-in slide-in-from-top-3 duration-200">
-          <div className="px-4 py-2.5 rounded-xl bg-stone-900 text-white text-xs font-medium shadow-2xl border border-stone-700 flex items-center gap-2">
-            <span>{toastMessage}</span>
-          </div>
-        </div>
-      )}
+      {/* Toast Notifikasi Standar Konsisten */}
+      <SleekToast
+        show={Boolean(toastMessage)}
+        message={toastMessage || ''}
+        type="info"
+        onClose={() => setToastMessage(null)}
+      />
 
       {/* Hidden File Input untuk CSV */}
       <input

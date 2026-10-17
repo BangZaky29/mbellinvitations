@@ -127,10 +127,12 @@ export const BankAccountEditor: React.FC<BankAccountEditorProps> = ({
                   </label>
                   <input
                     type="text"
+                    inputMode="numeric"
+                    pattern="[0-9\s]*"
                     value={account.account_number}
                     onChange={(e) => updateBankAccount(index, 'account_number', e.target.value)}
                     placeholder="cth: 5310928172"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white text-stone-900 border border-stone-200 hover:border-stone-300 focus:outline-none focus:border-stone-900 focus:ring-2 focus:ring-stone-900/10 text-sm shadow-2xs transition-all"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white text-stone-900 border border-stone-200 hover:border-stone-300 focus:outline-none focus:border-stone-900 focus:ring-2 focus:ring-stone-900/10 text-sm shadow-2xs transition-all font-mono"
                   />
                 </div>
 

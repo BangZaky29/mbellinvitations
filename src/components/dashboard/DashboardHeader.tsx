@@ -324,7 +324,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             title="Simpan editan saat ini sebagai Draf / Checkpoint di Supabase"
           >
             <span className="material-symbols-outlined text-[17px] text-amber-700">bookmark_added</span>
-            <span className="hidden sm:inline">Simpan Draf</span>
+            <span className="hidden sm:inline">Simpan Perubahan</span>
           </button>
         )}
 

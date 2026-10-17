@@ -120,7 +120,6 @@ export const DashboardEditorPage: React.FC = () => {
         type: 'success',
         isError: false,
       });
-      setTimeout(() => save.setSaveToast(null), 2400);
     } catch (err) {
       console.warn('Auto upsert exception:', err);
     }
@@ -136,7 +135,6 @@ export const DashboardEditorPage: React.FC = () => {
       type: 'info',
       isError: false,
     });
-    setTimeout(() => save.setSaveToast(null), 2400);
   };
 
   const previewWishes =
@@ -218,6 +216,7 @@ export const DashboardEditorPage: React.FC = () => {
                       setFormData={editor.setFormData}
                       setThemeConfig={editor.setThemeConfig}
                       onEventsChange={editor.handleEventsChange}
+                      onSetCountdownTarget={editor.handleSetCountdownTarget}
                       onManualSave={save.handleManualSave}
                     />
 

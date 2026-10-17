@@ -65,129 +65,116 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
 
   return (
     <div
-      className={`bg-white rounded-3xl border transition-all overflow-hidden flex flex-col justify-between group ${
+      className={`bg-white rounded-2xl border p-3.5 sm:p-4 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 group ${
         isCurrentActive
-          ? 'border-emerald-500 ring-2 ring-emerald-500/30 shadow-md'
-          : 'border-stone-200/90 shadow-xs hover:shadow-md'
+          ? 'border-emerald-500 ring-2 ring-emerald-500/30 bg-emerald-50/15 shadow-xs'
+          : 'border-stone-200/90 hover:border-amber-400 hover:shadow-xs'
       }`}
     >
-      {/* Banner Visual */}
-      <div className={`p-5 bg-gradient-to-br ${themeStyle.bg} text-white relative`}>
-        <div className="flex items-center justify-between mb-3">
-          <span
-            className={`px-2.5 py-1 rounded-full text-[10px] font-semibold tracking-wider uppercase border ${themeStyle.badge}`}
-          >
-            {themeStyle.label}
+      {/* Sisi Kiri: Thumbnail Tema Mini + Detail Teks */}
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        {/* Thumbnail Mini Tema */}
+        <div
+          className={`w-12 h-12 rounded-xl bg-gradient-to-br ${themeStyle.bg} text-white flex flex-col items-center justify-center shrink-0 shadow-xs relative overflow-hidden`}
+        >
+          <span className="material-symbols-outlined text-[20px]">
+            {themeStyle.label.toLowerCase().includes('sunda') || themeStyle.label.toLowerCase().includes('rustic')
+              ? 'local_florist'
+              : themeStyle.label.toLowerCase().includes('jawa')
+              ? 'architecture'
+              : themeStyle.label.toLowerCase().includes('islami')
+              ? 'mosque'
+              : themeStyle.label.toLowerCase().includes('luxury')
+              ? 'hotel_class'
+              : 'auto_awesome'}
           </span>
-          <div className="flex items-center gap-1.5">
+          <span className="text-[8px] font-bold tracking-tight uppercase opacity-90 truncate max-w-full px-1">
+            {themeStyle.label.split(' ')[0]}
+          </span>
+        </div>
+
+        {/* Informasi Utama Template */}
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h4 className="font-serif font-bold text-sm sm:text-base text-stone-900 truncate">
+              {item.title || `${item.content?.groom?.name || 'Mempelai Pria'} & ${item.content?.bride?.name || 'Mempelai Wanita'}`}
+            </h4>
             {isCurrentActive && (
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-400 text-stone-900 border border-amber-300 shadow-xs flex items-center gap-1">
-                <span className="material-symbols-outlined text-[13px]">check_circle</span>
-                <span>Sedang Aktif</span>
+              <span className="px-2 py-0.2 rounded-full text-[9px] font-bold uppercase bg-amber-400 text-stone-900 border border-amber-300 shadow-2xs flex items-center gap-0.5 shrink-0">
+                <span className="material-symbols-outlined text-[11px]">check_circle</span>
+                <span>Aktif</span>
               </span>
             )}
             <span
-              className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase flex items-center gap-1 ${
+              className={`px-2 py-0.2 rounded-full text-[9px] font-bold uppercase shrink-0 ${
                 item.status === 'published'
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                  : 'bg-amber-500/25 text-amber-200 border border-amber-400/30'
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                  : 'bg-amber-100 text-amber-800 border border-amber-200'
               }`}
             >
-              {item.status === 'published' ? (
-                <>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Live</span>
-                </>
-              ) : (
-                <>
-                  <span className="material-symbols-outlined text-[11px]">bookmark</span>
-                  <span>Draf Checkpoint</span>
-                </>
-              )}
+              {item.status === 'published' ? 'Live' : 'Draf'}
             </span>
           </div>
-        </div>
 
-        <h3 className="font-serif font-bold text-lg text-white group-hover:text-amber-200 transition-colors line-clamp-1">
-          {item.title || 'Undangan Pernikahan'}
-        </h3>
-        <p className="text-xs text-stone-300/80 mt-0.5">
-          {item.content?.groom?.name || 'Mempelai Pria'} & {item.content?.bride?.name || 'Mempelai Wanita'}
-        </p>
-      </div>
-
-      {/* Content Details */}
-      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-        <div className="space-y-2">
-          {/* Slug & Link */}
-          <div className="flex items-center justify-between bg-stone-50 p-2.5 rounded-xl border border-stone-100">
-            <div className="flex items-center gap-1.5 overflow-hidden">
-              <span className="material-symbols-outlined text-stone-400 text-[16px]">link</span>
-              <span className="font-mono text-xs text-stone-700 font-bold truncate">
-                /{itemEffectiveSlug}
-              </span>
-            </div>
+          <div className="flex items-center gap-2 text-stone-500 text-xs flex-wrap">
+            <span className="font-mono text-[11px] text-stone-600 font-semibold truncate">
+              mbell.id/{itemEffectiveSlug}
+            </span>
             <button
+              type="button"
               onClick={() => onCopyLink(itemEffectiveSlug)}
-              title="Salin tautan undangan"
-              className="p-1 hover:bg-stone-200 rounded-md text-stone-500 transition-colors shrink-0 cursor-pointer"
+              title="Salin tautan"
+              className="p-0.5 hover:bg-stone-100 rounded text-stone-400 hover:text-stone-700 transition-colors cursor-pointer shrink-0"
             >
-              <span className="material-symbols-outlined text-[16px]">
+              <span className="material-symbols-outlined text-[13px] block">
                 {isCopied ? 'check' : 'content_copy'}
               </span>
             </button>
-          </div>
-
-          <div className="flex items-center justify-between text-[11px] text-stone-400 px-1">
-            <span>Diperbarui: {updatedDate}</span>
-            <span>ID: {item.template_id}</span>
+            <span className="text-stone-300">•</span>
+            <span className="text-[11px] text-stone-400">
+              {updatedDate}
+            </span>
           </div>
         </div>
+      </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 pt-2 border-t border-stone-100">
-          <button
-            type="button"
-            onClick={() => onSelectTemplate({ ...item, slug: itemEffectiveSlug })}
-            className={`flex-1 py-2.5 px-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs hover:shadow-md cursor-pointer ${
-              isCurrentActive
-                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                : isDraft
-                ? 'bg-amber-600 hover:bg-amber-700 text-white'
-                : 'bg-stone-900 hover:bg-stone-800 text-white'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[16px]">
-              {isCurrentActive ? 'edit_note' : isDraft ? 'file_open' : 'palette'}
-            </span>
-            <span>
-              {isCurrentActive
-                ? '✓ Sedang Diedit (Lanjut)'
-                : isDraft
-                ? '📂 Tarik & Lanjut Edit Draf Ini'
-                : 'Buka & Edit Template Ini'}
-            </span>
-          </button>
+      {/* Sisi Kanan: Action Buttons Ramping */}
+      <div className="flex items-center gap-1.5 self-end sm:self-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-stone-100 w-full sm:w-auto justify-end">
+        <button
+          type="button"
+          onClick={() => onSelectTemplate({ ...item, slug: itemEffectiveSlug })}
+          className={`flex-1 sm:flex-initial py-1.5 px-3 rounded-xl font-semibold text-xs flex items-center justify-center gap-1 transition-all cursor-pointer shadow-xs ${
+            isCurrentActive
+              ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+              : isDraft
+              ? 'bg-stone-900 hover:bg-stone-800 text-white'
+              : 'bg-stone-900 hover:bg-stone-800 text-white'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[15px]">
+            {isCurrentActive ? 'edit_note' : 'palette'}
+          </span>
+          <span>{isCurrentActive ? 'Sedang Diedit' : 'Buka & Edit'}</span>
+        </button>
 
-          <a
-            href={`/${itemEffectiveSlug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="py-2.5 px-3 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-700 text-xs font-medium flex items-center justify-center gap-1 transition-colors"
-            title="Buka pratinjau publik"
-          >
-            <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-          </a>
+        <a
+          href={`/${itemEffectiveSlug}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-1.5 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-600 transition-colors shrink-0"
+          title="Buka pratinjau publik"
+        >
+          <span className="material-symbols-outlined text-[16px] block">open_in_new</span>
+        </a>
 
-          <button
-            type="button"
-            onClick={() => onDeleteClick(item.id)}
-            className="py-2.5 px-3 rounded-xl border border-stone-200 hover:border-rose-300 hover:bg-rose-50 text-stone-400 hover:text-rose-600 text-xs font-medium flex items-center justify-center transition-colors cursor-pointer"
-            title="Hapus template"
-          >
-            <span className="material-symbols-outlined text-[16px]">delete</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => onDeleteClick(item.id)}
+          className="p-1.5 rounded-xl border border-stone-200 hover:border-rose-300 hover:bg-rose-50 text-stone-400 hover:text-rose-600 transition-colors cursor-pointer shrink-0"
+          title="Hapus template ini"
+        >
+          <span className="material-symbols-outlined text-[16px] block">delete</span>
+        </button>
       </div>
     </div>
   );

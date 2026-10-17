@@ -16,6 +16,63 @@ interface UseDashboardSaveOptions {
   setFormData: React.Dispatch<React.SetStateAction<InvitationData>>;
 }
 
+/**
+ * Sinkronisasi baris invitations dengan aman tanpa memicu 409 Conflict:
+ * - Update berdasarkan primary key 'id' jika row sudah ada
+ * - Menjaga status 'published' agar tidak tertimpa 'draft' saat autosave
+ * - Mencegah error foreign key jika user belum login
+ */
+async function syncInvitationsRow(
+  targetSlug: string,
+  payload: {
+    user_id?: string | null;
+    template_id: string;
+    content: any;
+    theme_config: any;
+    status: 'draft' | 'published' | 'archived';
+    music_url: string;
+    music_type: string;
+  }
+) {
+  try {
+    const { data: existingRows } = await supabase
+      .from('invitations')
+      .select('id, user_id, status')
+      .eq('slug', targetSlug);
+
+    if (existingRows && existingRows.length > 0) {
+      const existing = existingRows[0];
+      const canUpdate = !existing.user_id || existing.user_id === payload.user_id || !payload.user_id;
+      if (canUpdate) {
+        const updatePayload: any = {
+          template_id: payload.template_id,
+          content: payload.content,
+          theme_config: payload.theme_config,
+          music_url: payload.music_url,
+          music_type: payload.music_type,
+          updated_at: new Date().toISOString(),
+        };
+        if (existing.status !== 'published') {
+          updatePayload.status = payload.status;
+        }
+        if (payload.user_id && !existing.user_id) {
+          updatePayload.user_id = payload.user_id;
+        }
+        await supabase.from('invitations').update(updatePayload).eq('id', existing.id);
+      }
+    } else if (payload.user_id) {
+      const insertPayload = {
+        ...payload,
+        slug: targetSlug,
+        updated_at: new Date().toISOString(),
+      };
+      await supabase.from('invitations').insert(insertPayload);
+    }
+  } catch (err: any) {
+    console.warn('Sync invitations row notice:', err?.message || err);
+  }
+}
+
 export function useDashboardSave({
   user,
   formData,
@@ -25,8 +82,33 @@ export function useDashboardSave({
   setFormData,
 }: UseDashboardSaveOptions) {
   const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(new Date());
-  const [saveToast, setSaveToast] = useState<{ show: boolean; message: string; isError?: boolean; type?: 'success' | 'info' | 'error' | 'copy' } | null>(null);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [saveToast, setSaveToastState] = useState<{ show: boolean; message: string; isError?: boolean; type?: 'success' | 'info' | 'error' | 'copy' } | null>(null);
+  const saveToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (saveToastTimerRef.current) {
+        clearTimeout(saveToastTimerRef.current);
+      }
+    };
+  }, []);
+
+  const setSaveToast = React.useCallback((toastData: { show: boolean; message: string; isError?: boolean; type?: 'success' | 'info' | 'error' | 'copy' } | null, duration: number = 2400) => {
+    if (saveToastTimerRef.current) {
+      clearTimeout(saveToastTimerRef.current);
+      saveToastTimerRef.current = null;
+    }
+    if (!toastData || !toastData.show) {
+      setSaveToastState(null);
+      return;
+    }
+    setSaveToastState(toastData);
+    saveToastTimerRef.current = setTimeout(() => {
+      setSaveToastState(null);
+      saveToastTimerRef.current = null;
+    }, duration);
+  }, []);
 
   // 2. Debounced Autosave (800ms) to Supabase
   const isInitialMount = useRef(true);
@@ -65,33 +147,16 @@ export function useDashboardSave({
 
         const effectiveStatus = (formData.status || 'draft') as any;
 
-        // 1. Simpan ke public.invitations
-        const payload = {
+        // 1. Simpan ke public.invitations secara aman
+        await syncInvitationsRow(targetSlug, {
           user_id: user?.id || null,
           template_id,
-          slug: targetSlug,
           content: formData,
           theme_config: themeConfig,
           status: effectiveStatus,
           music_url: resolvedMusicUrl,
           music_type: resolvedMusicType,
-          updated_at: new Date().toISOString(),
-        };
-
-        const { data: invUpdate, error: invError } = await supabase
-          .from('invitations')
-          .update(payload)
-          .eq('slug', targetSlug)
-          .select();
-
-        if (invError || !invUpdate || invUpdate.length === 0) {
-          const { error: upsertErr } = await supabase
-            .from('invitations')
-            .upsert(payload, { onConflict: 'slug' });
-          if (upsertErr) {
-            console.warn('Autosave invitations upsert notice:', upsertErr.message);
-          }
-        }
+        });
 
         // 2. Autosave ke public.user_templates jika user login
         if (user?.id) {
@@ -146,8 +211,7 @@ export function useDashboardSave({
           show: true,
           message: 'Template raditya-jessica telah dihapus permanen dan tidak dapat disimpan.',
           isError: true,
-        });
-        setTimeout(() => setSaveToast(null), 3000);
+        }, 3000);
         return;
       }
 
@@ -157,33 +221,16 @@ export function useDashboardSave({
       const resolvedMusicType = Boolean(extractYouTubeId(resolvedMusicUrl)) ? 'youtube' : 'mp3';
       const effectiveStatus = (formData.status || 'draft') as any;
 
-      // 1. Simpan ke tabel public.invitations
-      const payload = {
+      // 1. Simpan ke tabel public.invitations secara aman
+      await syncInvitationsRow(targetSlug, {
         user_id: user?.id || null,
         template_id,
-        slug: targetSlug,
         content: formData,
         theme_config: themeConfig,
         status: effectiveStatus,
         music_url: resolvedMusicUrl,
         music_type: resolvedMusicType,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { data: updateData, error: invError } = await supabase
-        .from('invitations')
-        .update(payload)
-        .eq('slug', targetSlug)
-        .select();
-
-      if (invError || !updateData || updateData.length === 0) {
-        const { error: upsertErr } = await supabase
-          .from('invitations')
-          .upsert(payload, { onConflict: 'slug' });
-        if (upsertErr) {
-          console.warn('Invitations upsert notice:', upsertErr.message);
-        }
-      }
+      });
 
       // 2. Jika user terautentikasi (login), simpan/upsert ke tabel public.user_templates
       if (user?.id) {
@@ -218,19 +265,16 @@ export function useDashboardSave({
           ? 'Berhasil Disimpan! Perubahan tersimpan ke koleksi Template Saya.'
           : 'Berhasil Disimpan! Perubahan template telah tersimpan.',
         isError: false,
-      });
+      }, 3500);
     } catch (err: any) {
       console.error('Manual save exception:', err);
       setSaveToast({
         show: true,
         message: 'Terjadi kesalahan saat menyimpan perubahan.',
         isError: true,
-      });
+      }, 3500);
     } finally {
       setIsSaving(false);
-      setTimeout(() => {
-        setSaveToast(null);
-      }, 4000);
     }
   };
 
@@ -255,8 +299,7 @@ export function useDashboardSave({
           show: true,
           message: 'Template raditya-jessica telah dihapus permanen dan tidak dapat disimpan.',
           isError: true,
-        });
-        setTimeout(() => setSaveToast(null), 3000);
+        }, 3000);
         return;
       }
 
@@ -313,29 +356,15 @@ export function useDashboardSave({
 
         // Jangan merusak status public.invitations menjadi 'draft' jika template live sudah terbit!
         if (!isCurrentlyPublished) {
-          const invDraftPayload = {
+          await syncInvitationsRow(targetSlug, {
             user_id: user.id,
             template_id,
-            slug: targetSlug,
             content: draftContent,
             theme_config: themeConfig,
             status: 'draft',
             music_url: resolvedMusicUrl,
             music_type: resolvedMusicType,
-            updated_at: new Date().toISOString(),
-          };
-
-          const { data: updateData, error: invError } = await supabase
-            .from('invitations')
-            .update(invDraftPayload)
-            .eq('slug', targetSlug)
-            .select();
-
-          if (invError || !updateData || updateData.length === 0) {
-            await supabase
-              .from('invitations')
-              .upsert(invDraftPayload, { onConflict: 'slug' });
-          }
+          });
         }
       }
 
@@ -360,7 +389,6 @@ export function useDashboardSave({
       });
     } finally {
       setIsSaving(false);
-      setTimeout(() => setSaveToast(null), 2400);
     }
   };
 

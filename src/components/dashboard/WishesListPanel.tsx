@@ -41,6 +41,8 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [hasCopied, setHasCopied] = useState(false);
+  const [wishToDelete, setWishToDelete] = useState<WishEntry | null>(null);
+  const [isDeletingWish, setIsDeletingWish] = useState(false);
 
   // State template yang sedang dipilih di selector
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateSelectorItem | null>(null);
@@ -139,6 +141,22 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
     navigator.clipboard.writeText(url);
     setHasCopied(true);
     setTimeout(() => setHasCopied(false), 2500);
+  };
+
+  const handleConfirmDeleteWish = async () => {
+    if (!wishToDelete) return;
+    setIsDeletingWish(true);
+    try {
+      if (!wishToDelete.id.startsWith('wish-')) {
+        await supabase.from('wishes').delete().eq('id', wishToDelete.id);
+      }
+      setWishes((prev) => prev.filter((w) => w.id !== wishToDelete.id));
+      setWishToDelete(null);
+    } catch (e) {
+      console.error('Gagal menghapus pesan ucapan:', e);
+    } finally {
+      setIsDeletingWish(false);
+    }
   };
 
   const filteredWishes = wishes.filter(
@@ -290,11 +308,59 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
                 </p>
               </div>
 
-              <div className="flex items-center justify-end text-[10px] text-stone-400 font-medium">
+              <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-[10px] text-stone-400 font-medium">
                 <span>Diterima via mbell.id/{effectiveSlug}</span>
+                <button
+                  type="button"
+                  onClick={() => setWishToDelete(wish)}
+                  className="px-2 py-1 rounded-lg border border-stone-200 hover:border-rose-300 hover:bg-rose-50 text-stone-400 hover:text-rose-600 transition-colors cursor-pointer flex items-center gap-1"
+                  title="Hapus ucapan ini"
+                >
+                  <span className="material-symbols-outlined text-[13px]">delete</span>
+                  <span>Hapus</span>
+                </button>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* MODAL KONFIRMASI PERINGATAN HAPUS UCAPAN */}
+      {wishToDelete && (
+        <div className="fixed inset-0 z-[300] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-stone-200 space-y-4">
+            <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+              <span className="material-symbols-outlined text-2xl">delete_forever</span>
+            </div>
+            <div className="text-center space-y-1">
+              <h3 className="font-serif font-bold text-lg text-stone-900">Hapus Ucapan Ini?</h3>
+              <p className="text-xs text-stone-500 leading-relaxed">
+                Pesan doa dari <strong className="text-stone-800">{wishToDelete.guest_name}</strong> akan dihapus permanen dari buku tamu online.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                disabled={isDeletingWish}
+                onClick={() => setWishToDelete(null)}
+                className="flex-1 py-2 rounded-xl border border-stone-200 text-stone-700 text-xs font-semibold hover:bg-stone-50 transition-colors cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingWish}
+                onClick={handleConfirmDeleteWish}
+                className="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1"
+              >
+                {isDeletingWish ? (
+                  <span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
+                ) : (
+                  <span>Hapus Permanen</span>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

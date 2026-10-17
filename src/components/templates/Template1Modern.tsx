@@ -1,9 +1,10 @@
 import React from 'react';
-import { createPortal } from 'react-dom';
 import type { InvitationProps } from '../../types/invitation';
 import { useTemplateState } from '../../hooks/useTemplateState';
 import { FloatingDock } from '../common/FloatingDock';
 import { SleekToast } from '../common/SleekToast';
+import { VenueMapEmbed } from '../common/VenueMapEmbed';
+import { GalleryLightbox } from '../common/GalleryLightbox';
 
 export const Template1Modern: React.FC<InvitationProps> = ({
   data,
@@ -502,76 +503,82 @@ export const Template1Modern: React.FC<InvitationProps> = ({
               </div>
 
               <div className="space-y-6">
-                {data.events.map((event: any, idx: number) => (
-                  <div
-                    key={idx}
-                    className="bg-white border border-border-subtle rounded-2xl p-6 shadow-sm relative overflow-hidden reveal-scale delay-150"
-                  >
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-gold-light/40 rounded-bl-full pointer-events-none"></div>
+                {data.events.map((event: any, idx: number) => {
+                  const activeTargetIdx = data.countdown_target === 'resepsi' && data.events.length > 1 ? 1 : 0;
+                  const isCountdownEvent = idx === activeTargetIdx;
 
-                    <div className="flex items-center space-x-2 text-gold-champagne mb-2">
-                      <i
-                        className={`text-sm ${
-                          event.icon === 'champagne-glasses'
-                            ? 'fa-solid fa-champagne-glasses'
-                            : 'fa-solid fa-ring'
-                        }`}
-                      ></i>
-                      <span className="text-[11px] tracking-[0.25em] uppercase font-semibold">
-                        {event.name}
-                      </span>
-                    </div>
+                  return (
+                    <div
+                      key={idx}
+                      className="bg-white border border-border-subtle rounded-2xl p-6 shadow-sm relative overflow-hidden reveal-scale delay-150"
+                    >
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-gold-light/40 rounded-bl-full pointer-events-none"></div>
 
-                    <h3 className="font-editorial text-2xl text-charcoal-dark font-medium">
-                      {event.title}
-                    </h3>
-
-                    <div className="my-4 py-3 border-y border-border-subtle space-y-2 text-xs text-charcoal-muted">
-                      <div className="flex items-center space-x-3">
-                        <i className="fa-regular fa-calendar text-gold-champagne w-4 text-center"></i>
-                        <span className="font-medium text-charcoal-dark">{event.date}</span>
+                      <div className="flex items-center space-x-2 text-gold-champagne mb-2">
+                        <i
+                          className={`text-sm ${
+                            event.icon === 'champagne-glasses'
+                              ? 'fa-solid fa-champagne-glasses'
+                              : 'fa-solid fa-ring'
+                          }`}
+                        ></i>
+                        <span className="text-[11px] tracking-[0.25em] uppercase font-semibold">
+                          {event.name}
+                        </span>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <i className="fa-regular fa-clock text-gold-champagne w-4 text-center"></i>
-                        <span>{event.time}</span>
-                      </div>
-                      <div className="flex items-start space-x-3 pt-1">
-                        <i className="fa-solid fa-location-dot text-gold-champagne w-4 text-center mt-0.5"></i>
-                        <div>
-                          <span className="font-medium text-charcoal-dark block">
-                            {event.venue_name}
-                          </span>
-                          <span className="font-light leading-relaxed">
-                            {event.venue_address}
-                          </span>
+
+                      <h3 className="font-editorial text-2xl text-charcoal-dark font-medium break-words [overflow-wrap:anywhere]">
+                        {event.title}
+                      </h3>
+
+                      <div className="my-4 py-3 border-y border-border-subtle space-y-2 text-xs text-charcoal-muted">
+                        <div className="flex items-center space-x-3">
+                          <i className="fa-regular fa-calendar text-gold-champagne w-4 text-center shrink-0"></i>
+                          <span className="font-medium text-charcoal-dark min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{event.date}</span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <i className="fa-regular fa-clock text-gold-champagne w-4 text-center shrink-0"></i>
+                          <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{event.time}</span>
+                        </div>
+                        <div className="flex items-start space-x-3 pt-1">
+                          <i className="fa-solid fa-location-dot text-gold-champagne w-4 text-center mt-0.5 shrink-0"></i>
+                          <div className="min-w-0 flex-1">
+                            <span className="font-medium text-charcoal-dark block break-words [overflow-wrap:anywhere]">
+                              {event.venue_name}
+                            </span>
+                            <span className="font-light leading-relaxed break-words [overflow-wrap:anywhere]">
+                              {event.venue_address}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Stylized Map Placeholder */}
-                    <div className="w-full h-32 rounded-xl bg-[#F0EDE6] border border-border-subtle overflow-hidden relative flex flex-col items-center justify-center mb-4">
-                      <div className="absolute inset-0 opacity-40 bg-[radial-gradient(#C5A059_1px,transparent_1px)] [background-size:12px_12px]"></div>
-                      <i className="fa-solid fa-map-pin text-2xl text-gold-champagne animate-bounce mb-1"></i>
-                      <span className="text-[11px] font-medium text-charcoal-dark tracking-wider">
-                        {event.venue_name}
-                      </span>
-                      <span className="text-[9px] text-charcoal-muted font-light">
-                        {event.badge || 'Tersedia Lokasi Parkir & VIP Area'}
-                      </span>
-                    </div>
+                      {/* Interactive Real Google Maps Embed (Hanya untuk Acara Mendatang Terpilih) */}
+                      {isCountdownEvent && (
+                        <div className="w-full mb-4">
+                          <VenueMapEmbed
+                            venueName={event.venue_name}
+                            venueAddress={event.venue_address}
+                            mapsUrl={event.maps_url}
+                            heightClass="h-40"
+                            isPreview={isPreview}
+                          />
+                        </div>
+                      )}
 
-                    {/* Google Maps Button */}
-                    <a
-                      href={event.maps_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full py-3 rounded-full bg-charcoal-dark text-white text-xs tracking-[0.15em] uppercase font-medium flex items-center justify-center space-x-2 hover:bg-gold-champagne transition-colors shadow"
-                    >
-                      <i className="fa-solid fa-location-arrow text-xs"></i>
-                      <span>Buka Google Maps</span>
-                    </a>
-                  </div>
-                ))}
+                      {/* Google Maps Button (Selalu tampil di setiap card acara) */}
+                      <a
+                        href={event.maps_url || 'https://maps.google.com'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-3 rounded-full bg-charcoal-dark text-white text-xs tracking-[0.15em] uppercase font-medium flex items-center justify-center space-x-2 hover:bg-gold-champagne transition-colors shadow"
+                      >
+                        <i className="fa-solid fa-location-arrow text-xs"></i>
+                        <span>Buka Google Maps</span>
+                      </a>
+                    </div>
+                  );
+                })}
               </div>
             </section>
           )}
@@ -952,8 +959,8 @@ export const Template1Modern: React.FC<InvitationProps> = ({
                           <div className="w-7 h-7 rounded-full bg-gold-light border border-gold-champagne/40 flex items-center justify-center text-gold-champagne text-xs font-semibold">
                             {initials}
                           </div>
-                          <div>
-                            <h5 className="text-xs font-semibold text-charcoal-dark">{wish.guest_name}</h5>
+                          <div className="min-w-0 flex-1">
+                            <h5 className="text-xs font-semibold text-charcoal-dark break-words [overflow-wrap:anywhere]">{wish.guest_name}</h5>
                             <span className="text-[9px] text-charcoal-muted">
                               {new Date(wish.created_at).toLocaleDateString('id-ID', {
                                 day: 'numeric',
@@ -965,7 +972,7 @@ export const Template1Modern: React.FC<InvitationProps> = ({
                           </div>
                         </div>
                         <span
-                          className={`text-[10px] font-medium px-2.5 py-0.5 rounded-full border flex items-center space-x-1 ${
+                          className={`text-[10px] font-medium px-2.5 py-0.5 rounded-full border shrink-0 flex items-center space-x-1 ${
                             wish.attendance === 'attending'
                               ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
                               : 'text-amber-700 bg-amber-50 border-amber-200'
@@ -979,7 +986,7 @@ export const Template1Modern: React.FC<InvitationProps> = ({
                           <span>{wish.attendance === 'attending' ? 'Hadir' : 'Berhalangan'}</span>
                         </span>
                       </div>
-                      <p className="text-xs text-charcoal-dark/80 font-light leading-relaxed pl-9">
+                      <p className="text-xs text-charcoal-dark/80 font-light leading-relaxed pl-9 break-words [overflow-wrap:anywhere]">
                         {wish.message}
                       </p>
                     </div>
@@ -1029,33 +1036,13 @@ export const Template1Modern: React.FC<InvitationProps> = ({
         )}
       </FloatingDock>
 
-        {/* Lightbox / Modal for Gallery */}
-        {selectedImage && typeof document !== 'undefined' && createPortal(
-          <div
-            className="fixed inset-0 z-[999999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer animate-fadeIn"
-            onClick={() => setSelectedImage(null)}
-          >
-            <div
-              className="relative max-w-lg w-full max-h-[88vh] flex flex-col items-center justify-center cursor-default"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                type="button"
-                onClick={() => setSelectedImage(null)}
-                className="absolute -top-12 right-0 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 text-white flex items-center justify-center transition-all cursor-pointer shadow-lg backdrop-blur-sm"
-                title="Tutup Foto"
-              >
-                <i className="fa-solid fa-xmark text-lg"></i>
-              </button>
-              <img
-                src={selectedImage}
-                alt="Enlarged view"
-                className="max-h-[80vh] w-auto max-w-full object-contain rounded-2xl shadow-2xl border border-white/10"
-              />
-            </div>
-          </div>,
-          document.body
-        )}
+        {/* Universal Gallery Lightbox (Terkunci sejajar layar di HP Preview maupun Web PC) */}
+        <GalleryLightbox
+          isOpen={Boolean(selectedImage)}
+          imageUrl={selectedImage}
+          onClose={() => setSelectedImage(null)}
+          isPreview={isPreview}
+        />
       </div>
     </div>
   );

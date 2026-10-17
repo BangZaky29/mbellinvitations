@@ -16,6 +16,7 @@ import { TemplateCard } from './my-templates/TemplateCard';
 import { ThemeShowcase } from './my-templates/ThemeShowcase';
 import { DeleteTemplateModal } from './my-templates/DeleteTemplateModal';
 import { NewTemplateModal } from './my-templates/NewTemplateModal';
+import { SleekToast } from '../common/SleekToast';
 
 // Re-export types and presets for external consumers
 export type { ThemePresetItem, MyTemplatesPanelProps };
@@ -37,6 +38,7 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   // Load user templates
   const loadTemplates = async () => {
@@ -74,6 +76,7 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
     const fullUrl = `${window.location.origin}/${slug}`;
     navigator.clipboard.writeText(fullUrl);
     setCopiedSlug(slug);
+    setToastMsg(`Tautan mbell.id/${slug} berhasil disalin!`);
     setTimeout(() => setCopiedSlug(null), 2500);
   };
 
@@ -87,6 +90,11 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
       if (res.success) {
         setTemplates((prev) => prev.filter((t) => t.id !== id));
         setDeleteConfirmId(null);
+        setToastMsg('Template berhasil dihapus permanen');
+
+        // Beritahu seluruh komponen dashboard (Selector, Tamu, Ucapan) bahwa template ini telah dihapus
+        window.dispatchEvent(new CustomEvent('mbell_template_deleted', { detail: { id, slug: targetSlug } }));
+        window.dispatchEvent(new CustomEvent('mbell_templates_updated'));
 
         // Jika target slug adalah raditya-jessica, jalankan pembersihan tuntas
         if (targetSlug === 'raditya-jessica' || (targetTemplate?.title || '').toLowerCase().includes('raditya')) {
@@ -118,25 +126,56 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
     }
   };
 
+  // Deteksi template yang sedang aktif di editor
+  const isTemplateActive = (t: UserTemplateRecord) => {
+    if (activeTemplateId && t.id === activeTemplateId) return true;
+    if (t.slug && currentFormData.slug && t.slug === currentFormData.slug) return true;
+    const gName = (t.content?.groom?.name || '').trim().toLowerCase();
+    const bName = (t.content?.bride?.name || '').trim().toLowerCase();
+    const curG = (currentFormData.groom?.name || '').trim().toLowerCase();
+    const curB = (currentFormData.bride?.name || '').trim().toLowerCase();
+    if (curG && curB && gName === curG && bName === curB) return true;
+    return false;
+  };
+
+  // Record template aktif di Supabase jika sudah tersimpan
+  const activeRecord = templates.find(isTemplateActive) || null;
+
   // Filtered list: pastikan raditya-jessica dan judul Raditya & Jessica disaring keluar 100%
-  const filteredTemplates = templates
-    .filter((t) => {
-      if (t.slug === 'raditya-jessica') return false;
-      const title = (t.title || '').toLowerCase();
-      if (title.includes('raditya') && title.includes('jessica')) return false;
-      const gName = (t.content?.groom?.name || '').toLowerCase();
-      const bName = (t.content?.bride?.name || '').toLowerCase();
-      if (gName.includes('raditya') && bName.includes('jessica')) return false;
-      return true;
-    })
+  const cleanTemplates = templates.filter((t) => {
+    if (t.slug === 'raditya-jessica') return false;
+    const title = (t.title || '').toLowerCase();
+    if (title.includes('raditya') && title.includes('jessica')) return false;
+    const gName = (t.content?.groom?.name || '').toLowerCase();
+    const bName = (t.content?.bride?.name || '').toLowerCase();
+    if (gName.includes('raditya') && bName.includes('jessica')) return false;
+    return true;
+  });
+
+  // Template lainnya (selain yang sedang aktif di editor agar TIDAK DOUBLE)
+  const otherTemplates = cleanTemplates
+    .filter((t) => !isTemplateActive(t))
     .filter((t) => {
       if (filter === 'published') return t.status === 'published';
       if (filter === 'draft') return t.status === 'draft';
       return true;
     });
 
+  const showActiveCard =
+    filter === 'all' ||
+    (filter === 'published' && (currentFormData.status === 'published' || activeRecord?.status === 'published')) ||
+    (filter === 'draft' && currentFormData.status !== 'published');
+
   return (
     <div className="space-y-6">
+      {/* Sleek Universal Toast Notification */}
+      <SleekToast
+        show={Boolean(toastMsg)}
+        message={toastMsg || ''}
+        type="copy"
+        onClose={() => setToastMsg(null)}
+      />
+
       {/* 1. Header Banner */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
@@ -207,7 +246,7 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
       )}
 
       {/* 3. Filter Tabs (If user has templates) */}
-      {currentUserId && templates.length > 0 && (
+      {currentUserId && cleanTemplates.length > 0 && (
         <div className="flex items-center justify-between border-b border-stone-200/80 pb-3">
           <div className="flex items-center gap-2">
             <button
@@ -218,7 +257,7 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
                   : 'text-stone-600 hover:bg-stone-100'
               }`}
             >
-              Semua ({templates.length})
+              Semua ({cleanTemplates.length})
             </button>
             <button
               onClick={() => setFilter('published')}
@@ -228,7 +267,7 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
                   : 'text-stone-600 hover:bg-stone-100'
               }`}
             >
-              Published ({templates.filter((t) => t.status === 'published').length})
+              Published ({cleanTemplates.filter((t) => t.status === 'published').length})
             </button>
             <button
               onClick={() => setFilter('draft')}
@@ -238,7 +277,7 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
                   : 'text-stone-600 hover:bg-stone-100'
               }`}
             >
-              Draft ({templates.filter((t) => t.status === 'draft').length})
+              Draft ({cleanTemplates.filter((t) => t.status === 'draft').length})
             </button>
           </div>
 
@@ -248,35 +287,49 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
         </div>
       )}
 
-      {/* 4. Active Current Draft Card */}
-      <ActiveDraftCard
-        currentFormData={currentFormData}
-        onImplementActiveTemplate={onImplementActiveTemplate}
-      />
+      {/* 4. Active Current Draft Card (Hanya Tampil Sekali di Kontainer Garis Putus-Putus) */}
+      {showActiveCard && (
+        <ActiveDraftCard
+          currentFormData={currentFormData}
+          activeRecord={activeRecord}
+          copiedSlug={copiedSlug}
+          onCopyLink={handleCopyLink}
+          onImplementActiveTemplate={onImplementActiveTemplate}
+          onDeleteClick={(id) => setDeleteConfirmId(id)}
+        />
+      )}
 
-      {/* 5. User Saved Templates Grid */}
+      {/* 5. User Saved Templates Grid (Hanya Menampilkan Koleksi Lainnya Agar Tidak Duplikat) */}
       {loading ? (
         <div className="py-16 flex flex-col items-center justify-center gap-3">
           <div className="w-8 h-8 border-3 border-stone-900 border-t-transparent rounded-full animate-spin" />
           <p className="text-xs text-stone-500">Memuat koleksi template Anda...</p>
         </div>
-      ) : filteredTemplates.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {filteredTemplates.map((item) => (
-            <TemplateCard
-              key={item.id}
-              item={item}
-              currentFormData={currentFormData}
-              activeTemplateId={activeTemplateId}
-              copiedSlug={copiedSlug}
-              onCopyLink={handleCopyLink}
-              onSelectTemplate={onSelectTemplate}
-              onDeleteClick={(id) => setDeleteConfirmId(id)}
-            />
-          ))}
+      ) : otherTemplates.length > 0 ? (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-serif font-bold text-sm sm:text-base text-stone-900 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-amber-600">collections_bookmark</span>
+              <span>Koleksi Template Lainnya ({otherTemplates.length})</span>
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {otherTemplates.map((item) => (
+              <TemplateCard
+                key={item.id}
+                item={item}
+                currentFormData={currentFormData}
+                activeTemplateId={activeTemplateId}
+                copiedSlug={copiedSlug}
+                onCopyLink={handleCopyLink}
+                onSelectTemplate={onSelectTemplate}
+                onDeleteClick={(id) => setDeleteConfirmId(id)}
+              />
+            ))}
+          </div>
         </div>
-      ) : currentUserId ? (
-        /* Empty State for Logged In User */
+      ) : cleanTemplates.length === 0 && currentUserId ? (
+        /* Empty State for Logged In User jika benar-benar belum ada data */
         <div className="bg-white rounded-3xl p-10 text-center border border-stone-200/80 shadow-xs space-y-4">
           <div className="w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/20 text-amber-700 flex items-center justify-center mx-auto">
             <span className="material-symbols-outlined text-[32px]">

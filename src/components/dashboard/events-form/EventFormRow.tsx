@@ -15,6 +15,8 @@ interface EventFormRowProps {
   locationError: string | null;
   defaultPlaceholderVenue: string;
   defaultPlaceholderAddress: string;
+  isCountdownActive?: boolean;
+  onSetCountdown?: () => void;
 }
 
 export const EventFormRow: React.FC<EventFormRowProps> = ({
@@ -31,17 +33,39 @@ export const EventFormRow: React.FC<EventFormRowProps> = ({
   locationError,
   defaultPlaceholderVenue,
   defaultPlaceholderAddress,
+  isCountdownActive = false,
+  onSetCountdown,
 }) => {
   return (
     <div className="p-5 sm:p-6 rounded-2xl bg-stone-50/70 border border-stone-200/90 space-y-4 hover:border-stone-300 transition-colors">
-      <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+      <div className="flex items-center justify-between pb-3 border-b border-stone-200 gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-stone-800 text-[20px]">{icon}</span>
           <h3 className="text-sm font-bold text-stone-900">{title}</h3>
         </div>
-        <span className="px-2.5 py-0.5 rounded-full bg-stone-200 text-stone-800 text-xs font-medium">
-          {badge}
-        </span>
+
+        <div className="flex items-center gap-2">
+          {isCountdownActive ? (
+            <span className="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[11px] font-bold flex items-center gap-1 shadow-2xs">
+              <span className="material-symbols-outlined text-[13px]">timer</span>
+              <span>Countdown Aktif</span>
+            </span>
+          ) : onSetCountdown ? (
+            <button
+              type="button"
+              onClick={onSetCountdown}
+              className="px-2.5 py-0.5 rounded-full border border-stone-300 hover:border-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 text-stone-600 text-[11px] font-medium transition-all cursor-pointer flex items-center gap-1"
+              title="Tetapkan acara ini sebagai patokan hitungan mundur hari, jam, menit, detik"
+            >
+              <span className="material-symbols-outlined text-[13px]">timer</span>
+              <span>Jadikan Acara Mendatang</span>
+            </button>
+          ) : null}
+
+          <span className="px-2.5 py-0.5 rounded-full bg-stone-200 text-stone-800 text-xs font-medium">
+            {badge}
+          </span>
+        </div>
       </div>
 
       <div className="space-y-3.5">
@@ -193,7 +217,7 @@ export const EventFormRow: React.FC<EventFormRowProps> = ({
                 {isLocating ? 'progress_activity' : 'my_location'}
               </span>
               <span>
-                {isLocating ? 'Mendeteksi Lokasi GPS...' : 'Gunakan Lokasi Perangkat Ini'}
+                {isLocating ? 'Mendeteksi Lokasi & Alamat...' : 'Gunakan Lokasi Perangkat Ini'}
               </span>
             </button>
           </div>
@@ -201,7 +225,7 @@ export const EventFormRow: React.FC<EventFormRowProps> = ({
           {isLocationSuccess && (
             <p className="text-[11px] text-emerald-700 font-medium flex items-center gap-1 animate-in fade-in">
               <span className="material-symbols-outlined text-[14px]">task_alt</span>
-              <span>Koordinat lokasi perangkat real-time berhasil disematkan ke tautan maps!</span>
+              <span>Tautan Maps & Alamat Lengkap berhasil terisi otomatis dari lokasi perangkat!</span>
             </p>
           )}
 
