@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import type { InvitationProps } from '../../types/invitation';
 import { useTemplateState } from '../../hooks/useTemplateState';
 import { FloatingDock } from '../common/FloatingDock';
+import { SleekToast } from '../common/SleekToast';
 
 export const Template3Jawa: React.FC<InvitationProps> = ({
   data,
@@ -29,6 +30,7 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
     showAllGallery,
     setShowAllGallery,
     toastMessage,
+    toastType,
     showToast,
     firstPerson,
     secondPerson,
@@ -81,16 +83,13 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
       {/* Mobile Viewport Container (Max 430px) */}
       <div className="w-full max-w-[430px] min-h-screen bg-[#1a110d] relative flex flex-col shadow-[0_12px_40px_rgba(10,6,4,0.9)] overflow-x-hidden border-x border-[#322822]/60">
         
-        {/* Floating Toast Notification */}
-        <div
-          id="copyToast"
-          className={`fixed top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-opacity duration-300 bg-primary text-on-primary font-label-md text-label-md px-4 py-2.5 rounded-full shadow-lg flex items-center gap-2 ${
-            toastMessage ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          <span className="material-symbols-outlined text-[18px]">verified</span>
-          <span>{toastMessage}</span>
-        </div>
+        {/* Sleek Universal Toast Notification */}
+        <SleekToast
+          show={Boolean(toastMessage)}
+          message={toastMessage || ''}
+          type={toastType}
+          isInsideMockup={isPreview}
+        />
 
         <main className={`flex flex-col relative w-full bg-surface min-h-screen flex-1`}>
           <div className="flex flex-col w-full relative select-none h-full flex-1">

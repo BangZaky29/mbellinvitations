@@ -24,6 +24,7 @@ export function useTemplateState({
   const [copiedAccountIndex, setCopiedAccountIndex] = useState<number | null>(null);
   const [copiedAddress, setCopiedAddress] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'success' | 'info' | 'error' | 'copy'>('success');
   const [activeGiftTab, setActiveGiftTab] = useState<'transfer' | 'kado'>('transfer');
 
   // Hook for GPU-accelerated scroll reveal
@@ -78,9 +79,10 @@ export function useTemplateState({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedImage]);
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, type: 'success' | 'info' | 'error' | 'copy' = 'success') => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+    setToastType(type);
+    setTimeout(() => setToastMessage(null), 2400);
   };
 
   // Handler buka undangan with smooth transition
@@ -98,7 +100,7 @@ export function useTemplateState({
   const handleCopyAccount = (accountNumber: string, index: number) => {
     navigator.clipboard.writeText(accountNumber);
     setCopiedAccountIndex(index);
-    showToast('Nomor rekening berhasil disalin!');
+    showToast('No. rekening disalin', 'copy');
     setTimeout(() => setCopiedAccountIndex(null), 2500);
   };
 
@@ -106,7 +108,7 @@ export function useTemplateState({
   const handleCopyAddress = (address: string) => {
     navigator.clipboard.writeText(address);
     setCopiedAddress(true);
-    showToast('Alamat berhasil disalin!');
+    showToast('Alamat kado disalin', 'copy');
     setTimeout(() => setCopiedAddress(false), 2500);
   };
 
@@ -117,8 +119,8 @@ export function useTemplateState({
       onSubmitRsvp(rsvpForm.name, rsvpForm.status, rsvpForm.pax);
     }
     setRsvpSubmitted(true);
-    showToast('Terima kasih atas konfirmasi kehadiran Anda!');
-    setTimeout(() => setRsvpSubmitted(false), 4000);
+    showToast('Konfirmasi kehadiran terkirim', 'success');
+    setTimeout(() => setRsvpSubmitted(false), 2400);
   };
 
   // Handler Wish Submit
@@ -140,8 +142,8 @@ export function useTemplateState({
     }
     setWishForm({ name: '', message: '' });
     setWishSubmitted(true);
-    showToast('Ucapan dan doa Anda telah tersampaikan!');
-    setTimeout(() => setWishSubmitted(false), 3000);
+    showToast('Ucapan berhasil dikirim', 'success');
+    setTimeout(() => setWishSubmitted(false), 2400);
   };
 
   // Helpers for couple order
@@ -186,6 +188,7 @@ export function useTemplateState({
     activeGiftTab,
     setActiveGiftTab,
     toastMessage,
+    toastType,
     showToast,
     firstPerson,
     secondPerson,

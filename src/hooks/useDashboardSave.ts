@@ -26,7 +26,7 @@ export function useDashboardSave({
 }: UseDashboardSaveOptions) {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(new Date());
-  const [saveToast, setSaveToast] = useState<{ show: boolean; message: string; isError?: boolean } | null>(null);
+  const [saveToast, setSaveToast] = useState<{ show: boolean; message: string; isError?: boolean; type?: 'success' | 'info' | 'error' | 'copy' } | null>(null);
 
   // 2. Debounced Autosave (800ms) to Supabase
   const isInitialMount = useRef(true);
@@ -345,20 +345,22 @@ export function useDashboardSave({
       setSaveToast({
         show: true,
         message: user?.id
-          ? `💾 Checkpoint draf "${coupleTitle}" berhasil disimpan ke Supabase! Anda dapat menariknya kembali kapan saja melalui menu Template Saya.`
-          : '💾 Draf tersimpan sementara di browser. Masuk akun agar tersimpan permanen di cloud!',
+          ? 'Perubahan draf berhasil disimpan'
+          : 'Draf tersimpan di browser',
+        type: 'success',
         isError: false,
       });
     } catch (err: any) {
       console.error('Save draft error:', err);
       setSaveToast({
         show: true,
-        message: 'Gagal menyimpan draf: ' + (err.message || 'Silakan coba lagi.'),
+        message: 'Gagal menyimpan perubahan',
+        type: 'error',
         isError: true,
       });
     } finally {
       setIsSaving(false);
-      setTimeout(() => setSaveToast(null), 4000);
+      setTimeout(() => setSaveToast(null), 2400);
     }
   };
 

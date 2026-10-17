@@ -6,6 +6,7 @@ import { Template2Rustic } from '../components/templates/Template2Rustic';
 import { Template3Jawa } from '../components/templates/Template3Jawa';
 import { Template4Islami } from '../components/templates/Template4Islami';
 import { Template5Luxury } from '../components/templates/Template5Luxury';
+import { SleekToast } from '../components/common/SleekToast';
 
 export const PublicInvitationPage: React.FC = () => {
   const { slug = 'raditya-jessica' } = useParams<{ slug: string }>();
@@ -30,6 +31,7 @@ export const PublicInvitationPage: React.FC = () => {
   });
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'success' | 'info' | 'error' | 'copy'>('success');
 
   // Dynamic Browser Tab Title
   useEffect(() => {
@@ -44,24 +46,25 @@ export const PublicInvitationPage: React.FC = () => {
     }
   }, [invitationData.groom?.name, invitationData.bride?.name, invitationData.is_bride_first]);
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, type: 'success' | 'info' | 'error' | 'copy' = 'success') => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
+    setToastType(type);
+    setTimeout(() => setToastMessage(null), 2400);
   };
 
   const onSubmitWish = async (name: string, message: string) => {
     const res = await handleSendWish(name, message);
     if (res.success) {
-      showToast('✨ Doa & ucapan Anda berhasil terkirim dan tayang secara live!');
+      showToast('Ucapan berhasil dikirim', 'success');
     }
   };
 
   const onSubmitRsvp = async (name: string, status: string, pax: number) => {
     const res = await handleSendRsvp(name, status, pax);
     if (res.success) {
-      showToast(`✅ Konfirmasi kehadiran berhasil disimpan! ${res.message || ''}`);
+      showToast('Konfirmasi kehadiran terkirim', 'success');
     } else {
-      showToast('⚠️ Gagal menyimpan RSVP: ' + (res.message || 'Silakan coba lagi.'));
+      showToast('Gagal menyimpan konfirmasi', 'error');
     }
   };
 
@@ -100,13 +103,13 @@ export const PublicInvitationPage: React.FC = () => {
         </div>
       )}
 
-      {/* Floating Global Toast Notification */}
-      {toastMessage && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 max-w-sm w-[90%] bg-neutral-900/95 text-white text-xs px-4 py-3 rounded-2xl shadow-2xl border border-amber-500/40 backdrop-blur-xl flex items-center gap-2 animate-page-enter">
-          <span className="material-symbols-outlined text-amber-400 text-base">check_circle</span>
-          <span className="leading-snug">{toastMessage}</span>
-        </div>
-      )}
+      {/* Sleek Universal Toast Notification */}
+      <SleekToast
+        show={Boolean(toastMessage)}
+        message={toastMessage || ''}
+        type={toastType}
+        onClose={() => setToastMessage(null)}
+      />
 
       {/* Render Template Sesuai template_id dari Supabase */}
       {templateId === 'template1' && (

@@ -43,7 +43,7 @@ export const DashboardEditorPage: React.FC = () => {
   const { user, setUser } = useDashboardAuth();
 
   // Ref bridges to avoid cyclic dependencies between editor, save, and publish hooks
-  const saveToastRef = useRef<(toast: { show: boolean; message: string; isError?: boolean } | null) => void>(() => {});
+  const saveToastRef = useRef<(toast: { show: boolean; message: string; isError?: boolean; type?: 'success' | 'info' | 'error' | 'copy' } | null) => void>(() => {});
   const isSavingRef = useRef<(saving: boolean) => void>(() => {});
   const lastSavedRef = useRef<(date: Date | null) => void>(() => {});
 
@@ -116,10 +116,11 @@ export const DashboardEditorPage: React.FC = () => {
 
       save.setSaveToast({
         show: true,
-        message: `Selamat datang, ${parsed?.full_name || loggedInUser.email}! Draf undangan Anda telah otomatis tersimpan aman.`,
+        message: 'Draf otomatis tersimpan',
+        type: 'success',
         isError: false,
       });
-      setTimeout(() => save.setSaveToast(null), 4000);
+      setTimeout(() => save.setSaveToast(null), 2400);
     } catch (err) {
       console.warn('Auto upsert exception:', err);
     }
@@ -132,9 +133,10 @@ export const DashboardEditorPage: React.FC = () => {
     save.setSaveToast({
       show: true,
       message: 'Berhasil keluar akun',
+      type: 'info',
       isError: false,
     });
-    setTimeout(() => save.setSaveToast(null), 3000);
+    setTimeout(() => save.setSaveToast(null), 2400);
   };
 
   const previewWishes =

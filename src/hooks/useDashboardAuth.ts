@@ -15,7 +15,7 @@ interface UseDashboardAuthOptions {
   formData?: InvitationData;
   themeConfig?: ThemeConfig;
   setCurrentTemplateRecordId?: React.Dispatch<React.SetStateAction<string | null>>;
-  setSaveToast?: React.Dispatch<React.SetStateAction<{ show: boolean; message: string; isError?: boolean } | null>>;
+  setSaveToast?: React.Dispatch<React.SetStateAction<{ show: boolean; message: string; isError?: boolean; type?: 'success' | 'info' | 'error' | 'copy' } | null>>;
 }
 
 // Helper ekstraksi profil lengkap user Google / Supabase
@@ -130,7 +130,8 @@ export function useDashboardAuth(options?: UseDashboardAuthOptions) {
       if (setSaveToast) {
         setSaveToast({
           show: true,
-          message: `Selamat datang, ${parsed?.full_name || loggedInUser.email}! Draf undangan Anda telah otomatis tersimpan aman.`,
+          message: 'Berhasil masuk akun',
+          type: 'success',
           isError: false,
         });
       }

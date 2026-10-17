@@ -29,7 +29,7 @@ export const QuickLinkGenerator: React.FC<QuickLinkGeneratorProps> = ({
     navigator.clipboard.writeText(url);
     setQuickCopied(true);
     setTimeout(() => setQuickCopied(false), 2500);
-    showToast('🚀 Link grup instan berhasil disalin ke clipboard!');
+    showToast('Link undangan grup disalin');
   };
 
   const handleShareQuickGroupWhatsApp = () => {

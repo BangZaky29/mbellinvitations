@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import type { InvitationProps, WishItem } from '../../types/invitation';
 import { useTemplateState } from '../../hooks/useTemplateState';
 import { FloatingDock } from '../common/FloatingDock';
+import { SleekToast } from '../common/SleekToast';
 
 export const Template5Luxury: React.FC<InvitationProps> = ({
   data,
@@ -20,6 +21,9 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
     isPlaying,
     toggleMusic: toggleAudio,
     countdown,
+    toastMessage,
+    toastType,
+    showToast,
   } = useTemplateState({
     data,
     theme,
@@ -33,9 +37,10 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
 
   // 4. Copy to Clipboard State
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const handleCopy = (text: string, key: string) => {
+  const handleCopy = (text: string, key: string, label: string = 'No. rekening disalin') => {
     navigator.clipboard.writeText(text).then(() => {
       setCopiedKey(key);
+      showToast(label, 'copy');
       setTimeout(() => setCopiedKey(null), 2200);
     });
   };
@@ -60,6 +65,7 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
       );
     }
     setRsvpSubmitted(true);
+    showToast('Konfirmasi kehadiran terkirim', 'success');
   };
 
   // 6. Wishes State
@@ -92,6 +98,7 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
     }
     setWishMessage('');
     setWishName('');
+    showToast('Ucapan berhasil dikirim', 'success');
   };
 
   // 7. Lightbox Modal
@@ -128,6 +135,13 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
   return (
     <div className="theme-luxury bg-surface text-on-surface antialiased flex justify-center min-h-screen selection:bg-primary-container/30 selection:text-on-surface font-sans w-full">
       <div className="w-full max-w-[430px] min-h-screen bg-surface flex flex-col relative">
+        {/* Sleek Universal Toast Notification */}
+        <SleekToast
+          show={Boolean(toastMessage)}
+          message={toastMessage || ''}
+          type={toastType}
+          isInsideMockup={isPreview}
+        />
 
         {/* ============================================================ */}
         {/* MAIN BODY                                                    */}

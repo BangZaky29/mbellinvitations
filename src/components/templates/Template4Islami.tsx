@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import type { InvitationProps, WishItem } from '../../types/invitation';
 import { useTemplateState } from '../../hooks/useTemplateState';
 import { FloatingDock } from '../common/FloatingDock';
+import { SleekToast } from '../common/SleekToast';
 
 export const Template4Islami: React.FC<InvitationProps> = ({
   data,
@@ -20,6 +21,9 @@ export const Template4Islami: React.FC<InvitationProps> = ({
     isPlaying,
     toggleMusic: toggleAudio,
     countdown,
+    toastMessage,
+    toastType,
+    showToast,
   } = useTemplateState({
     data,
     theme,
@@ -33,9 +37,10 @@ export const Template4Islami: React.FC<InvitationProps> = ({
 
   // 4. Copy to Clipboard State
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const handleCopy = (text: string, key: string) => {
+  const handleCopy = (text: string, key: string, label: string = 'No. rekening disalin') => {
     navigator.clipboard.writeText(text).then(() => {
       setCopiedKey(key);
+      showToast(label, 'copy');
       setTimeout(() => setCopiedKey(null), 2200);
     });
   };
@@ -58,6 +63,7 @@ export const Template4Islami: React.FC<InvitationProps> = ({
       onSubmitRsvp(rsvpName, statusMap[rsvpStatus], Number(rsvpPax));
     }
     setRsvpSubmitted(true);
+    showToast('Konfirmasi kehadiran terkirim', 'success');
   };
 
   // 6. Wishes State
@@ -88,6 +94,7 @@ export const Template4Islami: React.FC<InvitationProps> = ({
       onSubmitWish(wishName.trim(), wishMessage.trim());
     }
     setWishMessage('');
+    showToast('Ucapan berhasil dikirim', 'success');
   };
 
   // 7. Lightbox Modal
@@ -126,6 +133,13 @@ export const Template4Islami: React.FC<InvitationProps> = ({
       style={{ backgroundColor: '#fcf8f8', color: '#1c1b1c' }}
     >
       <div className="w-full max-w-[430px] min-h-screen bg-surface flex flex-col relative shadow-[0_20px_50px_rgba(94,40,50,0.08)]">
+        {/* Sleek Universal Toast Notification */}
+        <SleekToast
+          show={Boolean(toastMessage)}
+          message={toastMessage || ''}
+          type={toastType}
+          isInsideMockup={isPreview}
+        />
         {/* ============================================================ */}
         {/* TOP FIXED APP BAR                                            */}
         {/* ============================================================ */}

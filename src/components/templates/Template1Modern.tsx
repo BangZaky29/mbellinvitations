@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import type { InvitationProps } from '../../types/invitation';
 import { useTemplateState } from '../../hooks/useTemplateState';
 import { FloatingDock } from '../common/FloatingDock';
+import { SleekToast } from '../common/SleekToast';
 
 export const Template1Modern: React.FC<InvitationProps> = ({
   data,
@@ -37,6 +38,8 @@ export const Template1Modern: React.FC<InvitationProps> = ({
     copiedAddress,
     handleCopyAccount,
     handleCopyAddress,
+    toastMessage,
+    toastType,
     firstPerson,
     secondPerson,
     firstPersonRole,
@@ -57,6 +60,14 @@ export const Template1Modern: React.FC<InvitationProps> = ({
 
   return (
     <div className="w-full h-full min-h-screen flex justify-center items-start bg-[#ECE8E1]">
+      {/* Sleek Universal Toast Notification */}
+      <SleekToast
+        show={Boolean(toastMessage)}
+        message={toastMessage || ''}
+        type={toastType}
+        isInsideMockup={isPreview}
+      />
+
       {/* Mobile Viewport Container (Max 430px) */}
       <div className="relative w-full max-w-[430px] h-full min-h-screen bg-alabaster shadow-2xl overflow-x-hidden border-x border-[#E2DDD3] flex flex-col">
 

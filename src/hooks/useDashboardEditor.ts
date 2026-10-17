@@ -81,7 +81,7 @@ export const INITIAL_BLANK_DRAFT: InvitationData = {
 export interface UseDashboardEditorOptions {
   user?: DashboardUser | null;
   setUser?: React.Dispatch<React.SetStateAction<DashboardUser | null>> | ((u: DashboardUser | null) => void);
-  setSaveToast?: ((toast: { show: boolean; message: string; isError?: boolean } | null) => void) | React.Dispatch<React.SetStateAction<{ show: boolean; message: string; isError?: boolean } | null>>;
+  setSaveToast?: ((toast: { show: boolean; message: string; isError?: boolean; type?: 'success' | 'info' | 'error' | 'copy' } | null) => void) | React.Dispatch<React.SetStateAction<{ show: boolean; message: string; isError?: boolean; type?: 'success' | 'info' | 'error' | 'copy' } | null>>;
   setIsSaving?: ((saving: boolean) => void) | React.Dispatch<React.SetStateAction<boolean>>;
   setLastSaved?: ((date: Date | null) => void) | React.Dispatch<React.SetStateAction<Date | null>>;
 }
@@ -171,8 +171,8 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
               if (setSaveToast) {
                 setSaveToast({
                   show: true,
-                  message: `Selamat datang, ${currentUser.user_metadata?.full_name || currentUser.email}! Draf yang Anda ketik telah otomatis tersimpan aman ke akun Anda.`,
-                  isError: false,
+                  message: 'Draf otomatis tersimpan ke akun',
+                  type: 'success',
                 });
               }
               setLoading(false);
@@ -361,20 +361,20 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
         setSaveToast({
           show: true,
           message: isDraft
-            ? `📂 Draf checkpoint "${template.title}" berhasil ditarik ke editor! Silakan lanjutkan pengeditan.`
-            : `Template "${template.title}" berhasil diimplementasikan ke editor!`,
-          isError: false,
+            ? `Draf "${template.title}" dimuat ke editor`
+            : `Template "${template.title}" aktif di editor`,
+          type: 'info',
         });
-        setTimeout(() => setSaveToast(null), 3500);
+        setTimeout(() => setSaveToast(null), 2400);
       }
     } else {
       if (setSaveToast) {
         setSaveToast({
           show: true,
-          message: `🔄 Mengelola data untuk template "${template.title}".`,
-          isError: false,
+          message: `Template: ${template.title} dipilih`,
+          type: 'info',
         });
-        setTimeout(() => setSaveToast(null), 2500);
+        setTimeout(() => setSaveToast(null), 2200);
       }
     }
   };
@@ -385,10 +385,10 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
     if (setSaveToast) {
       setSaveToast({
         show: true,
-        message: 'Melanjutkan pengeditan template di editor!',
-        isError: false,
+        message: 'Lanjut mengedit template aktif',
+        type: 'info',
       });
-      setTimeout(() => setSaveToast(null), 3000);
+      setTimeout(() => setSaveToast(null), 2200);
     }
   };
 
