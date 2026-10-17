@@ -11,6 +11,7 @@ export interface SupabaseInvitationRecord {
   theme_config: ThemeConfig;
   content: InvitationData;
   views_count: number;
+  alternate_id?: string;
   created_at: string;
   updated_at: string;
 }

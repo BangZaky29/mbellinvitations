@@ -14,7 +14,9 @@ import {
   MOCK_MODERN_DATA,
   MOCK_MODERN_THEME,
   MOCK_MODERN_WISHES,
+  MOCK_THEME_WISHES_MAP,
 } from '../data/mockInvitation';
+import { TEMPLATE_ID_TO_THEME } from '../pages/dashboard/constants/themeMapping';
 
 export interface UseInvitationRealtimeOptions {
   slug?: string;
@@ -101,10 +103,14 @@ export function useInvitationRealtime({
             }
           }
 
-          // Fetch Live Wishes
-          const liveWishes = await fetchWishes(inv.id);
+          // Fetch Live Wishes with multi-ID support (inv.id + inv.alternate_id)
+          const liveWishes = await fetchWishes(inv.id, inv.alternate_id);
+          const currentTplId = inv.template_id || 'template1';
+          const themeKey = TEMPLATE_ID_TO_THEME[currentTplId] || currentTplId;
+          const themeDefaultWishes = (MOCK_THEME_WISHES_MAP as any)[themeKey] || MOCK_MODERN_WISHES;
+
           if (isMounted) {
-            setWishes(liveWishes.length > 0 ? liveWishes : MOCK_MODERN_WISHES);
+            setWishes(liveWishes.length > 0 ? liveWishes : themeDefaultWishes);
           }
         } else if (isMounted) {
           // Fallback to mock data if slug not yet inserted in Supabase
@@ -132,9 +138,10 @@ export function useInvitationRealtime({
     };
   }, [slug, guestParam, codeParam]);
 
-  // 2. Realtime Subscription: Listen for new wishes live
+  // 2. Realtime Subscription: Listen for new wishes live (supports both primary and alternate IDs)
   useEffect(() => {
     const invId = invitationRecord?.id;
+    const alternateId = invitationRecord?.alternate_id;
     if (!invId) return;
 
     const channel = supabase
@@ -145,11 +152,14 @@ export function useInvitationRealtime({
           event: 'INSERT',
           schema: 'public',
           table: 'wishes',
-          filter: `invitation_id=eq.${invId}`,
         },
         (payload) => {
           const newWish = payload.new as any;
-          if (newWish && !newWish.is_hidden) {
+          if (
+            newWish &&
+            !newWish.is_hidden &&
+            (newWish.invitation_id === invId || (alternateId && newWish.invitation_id === alternateId))
+          ) {
             const formatted: WishItem = {
               id: newWish.id,
               guest_name: newWish.guest_name,
@@ -159,8 +169,11 @@ export function useInvitationRealtime({
             };
 
             setWishes((prev) => {
-              if (prev.some((w) => w.id === formatted.id)) return prev;
-              return [formatted, ...prev];
+              // Bersihkan mock wishes saat ucapan nyata pertama masuk
+              const isAllMocks = prev.every((w) => w.id === '1' || w.id === '2' || w.id === '3' || w.id.startsWith('sunda-wish-'));
+              const base = isAllMocks ? [] : prev;
+              if (base.some((w) => w.id === formatted.id)) return base;
+              return [formatted, ...base];
             });
           }
         }
@@ -199,20 +212,23 @@ export function useInvitationRealtime({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [invitationRecord?.id, activeGuestName, activeGuestCode]);
+  }, [invitationRecord?.id, invitationRecord?.alternate_id, activeGuestName, activeGuestCode]);
 
   // 3. Handler Submit Wish
   const handleSendWish = useCallback(
     async (name: string, message: string, attendance: string = 'hadir') => {
       const invId = invitationRecord?.id || 'a0000000-0000-0000-0000-000000000001';
+      const alternateId = invitationRecord?.alternate_id;
       setIsSubmittingWish(true);
 
       try {
-        const res = await submitWish(invId, name, message, attendance);
+        const res = await submitWish(invId, name, message, attendance, alternateId);
         if (res.success && res.data) {
           setWishes((prev) => {
-            if (prev.some((w) => w.id === res.data!.id)) return prev;
-            return [res.data!, ...prev];
+            const isAllMocks = prev.every((w) => w.id === '1' || w.id === '2' || w.id === '3' || w.id.startsWith('sunda-wish-'));
+            const base = isAllMocks ? [] : prev;
+            if (base.some((w) => w.id === res.data!.id)) return base;
+            return [res.data!, ...base];
           });
           return { success: true };
         } else {
@@ -224,14 +240,18 @@ export function useInvitationRealtime({
             attendance: attendance === 'hadir' ? 'attending' : 'declined',
             created_at: new Date().toISOString(),
           };
-          setWishes((prev) => [optimisticWish, ...prev]);
+          setWishes((prev) => {
+            const isAllMocks = prev.every((w) => w.id === '1' || w.id === '2' || w.id === '3' || w.id.startsWith('sunda-wish-'));
+            const base = isAllMocks ? [] : prev;
+            return [optimisticWish, ...base];
+          });
           return { success: true, localOnly: true };
         }
       } finally {
         setIsSubmittingWish(false);
       }
     },
-    [invitationRecord?.id]
+    [invitationRecord?.id, invitationRecord?.alternate_id]
   );
 
   // 4. Handler Submit RSVP

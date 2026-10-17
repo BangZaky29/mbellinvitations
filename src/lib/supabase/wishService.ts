@@ -4,11 +4,17 @@ import type { WishItem } from '../../types/invitation';
 /**
  * Fetch approved/visible wishes for an invitation
  */
-export async function fetchWishes(invitationId: string): Promise<WishItem[]> {
+export async function fetchWishes(
+  invitationId: string,
+  alternateId?: string
+): Promise<WishItem[]> {
+  const ids = Array.from(new Set([invitationId, alternateId].filter(Boolean))) as string[];
+  if (ids.length === 0) return [];
+
   const { data, error } = await supabase
     .from('wishes')
     .select('id, guest_name, message, attendance, created_at')
-    .eq('invitation_id', invitationId)
+    .in('invitation_id', ids)
     .eq('is_hidden', false)
     .order('created_at', { ascending: false })
     .limit(50);
@@ -34,7 +40,8 @@ export async function submitWish(
   invitationId: string,
   guestName: string,
   message: string,
-  attendance: string = 'attending'
+  attendance: string = 'attending',
+  alternateId?: string
 ): Promise<{ success: boolean; data?: WishItem; error?: string }> {
   try {
     const { data, error } = await supabase
@@ -49,6 +56,32 @@ export async function submitWish(
       .single();
 
     if (error) {
+      if (alternateId && alternateId !== invitationId) {
+        console.warn('[Supabase] Primary submitWish error, trying alternateId:', error.message);
+        const altResult = await supabase
+          .from('wishes')
+          .insert({
+            invitation_id: alternateId,
+            guest_name: guestName,
+            message,
+            attendance: attendance === 'hadir' ? 'attending' : 'declined',
+          })
+          .select('id, guest_name, message, attendance, created_at')
+          .single();
+
+        if (altResult.data) {
+          return {
+            success: true,
+            data: {
+              id: altResult.data.id,
+              guest_name: altResult.data.guest_name,
+              message: altResult.data.message,
+              attendance: altResult.data.attendance as any,
+              created_at: altResult.data.created_at,
+            },
+          };
+        }
+      }
       console.error('[Supabase] submitWish error:', error);
       return { success: false, error: error.message };
     }

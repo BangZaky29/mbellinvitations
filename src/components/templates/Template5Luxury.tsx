@@ -75,7 +75,7 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
   const [wishMessage, setWishMessage] = useState('');
 
   useEffect(() => {
-    if (initialWishes && initialWishes.length > 0) {
+    if (initialWishes !== undefined) {
       setWishesList(initialWishes);
     }
   }, [initialWishes]);

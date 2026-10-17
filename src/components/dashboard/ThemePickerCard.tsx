@@ -68,6 +68,17 @@ const THEME_OPTIONS: ThemeOption[] = [
     icon: 'hotel_class',
     bgClass: 'bg-[#121316] text-[#E2C792] border-amber-600/40',
   },
+  {
+    id: 'template6',
+    name: 'Adat Sunda Siger',
+    subtitle: 'Mahkota Siger & Ronce Melati',
+    styleTag: 'Tradisi Parahyangan',
+    coupleSample: 'Raditya & Jessica',
+    badge: 'Royal Adat',
+    accentColor: '#C5A059',
+    icon: 'local_florist',
+    bgClass: 'bg-[#FBF9F6] text-[#775A19] border-[#C5A059]/40',
+  },
 ];
 
 export interface ThemePickerCardProps {
@@ -90,6 +101,7 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
       jawa: 'template3',
       islami: 'template4',
       luxury: 'template5',
+      sunda: 'template6',
     };
     return map[id] || id;
   };
@@ -101,6 +113,7 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
       template3: 'jawa',
       template4: 'islami',
       template5: 'luxury',
+      template6: 'sunda',
     };
     return map[id] || id;
   };

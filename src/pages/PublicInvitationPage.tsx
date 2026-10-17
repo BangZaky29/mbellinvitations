@@ -6,6 +6,7 @@ import { Template2Rustic } from '../components/templates/Template2Rustic';
 import { Template3Jawa } from '../components/templates/Template3Jawa';
 import { Template4Islami } from '../components/templates/Template4Islami';
 import { Template5Luxury } from '../components/templates/Template5Luxury';
+import { TemplateSundaSiger } from '../components/templates/TemplateSundaSiger';
 import { SleekToast } from '../components/common/SleekToast';
 
 export const PublicInvitationPage: React.FC = () => {
@@ -158,6 +159,17 @@ export const PublicInvitationPage: React.FC = () => {
 
       {templateId === 'template5' && (
         <Template5Luxury
+          invitationId={slug}
+          data={invitationData}
+          theme={themeConfig}
+          wishes={wishes}
+          onSubmitWish={onSubmitWish}
+          onSubmitRsvp={onSubmitRsvp}
+        />
+      )}
+
+      {(templateId === 'template6' || templateId === 'sunda') && (
+        <TemplateSundaSiger
           invitationId={slug}
           data={invitationData}
           theme={themeConfig}

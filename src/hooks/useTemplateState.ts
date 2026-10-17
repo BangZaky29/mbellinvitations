@@ -49,9 +49,9 @@ export function useTemplateState({
   const [wishForm, setWishForm] = useState({ name: data.guest_name || '', message: '' });
   const [wishSubmitted, setWishSubmitted] = useState(false);
 
-  // Sync wishes if initialWishes changes
+  // Sync wishes if initialWishes changes (ensures live realtime Supabase wishes reflect immediately)
   useEffect(() => {
-    if (initialWishes && initialWishes.length > 0) {
+    if (initialWishes !== undefined) {
       setWishes(initialWishes);
     }
   }, [initialWishes]);

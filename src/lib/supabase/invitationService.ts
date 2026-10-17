@@ -5,13 +5,6 @@ import type { SupabaseInvitationRecord } from './types';
  * Fetch invitation data by slug (Dual-sync: prioritizes latest customized version from user_templates or invitations)
  */
 export async function fetchInvitationBySlug(slug: string): Promise<SupabaseInvitationRecord | null> {
-  if (slug === 'raditya-jessica') {
-    // Purge lingering row from Supabase secara permanen
-    supabase.from('invitations').delete().eq('slug', 'raditya-jessica').then(() => {});
-    supabase.from('user_templates').delete().eq('slug', 'raditya-jessica').then(() => {});
-    return null;
-  }
-
   // 1. Fetch record from public.invitations
   const { data: invData } = await supabase
     .from('invitations')
@@ -37,8 +30,12 @@ export async function fetchInvitationBySlug(slug: string): Promise<SupabaseInvit
     const isDemoUnowned = invData && !invData.user_id;
 
     if (isUtNewer || isDemoUnowned) {
+      const primaryId = invData?.id || utData.id;
+      const altId = utData.id !== primaryId ? utData.id : (invData?.id !== primaryId ? invData?.id : undefined);
+
       return {
-        id: invData?.id || utData.id,
+        id: primaryId,
+        alternate_id: altId,
         user_id: utData.user_id,
         template_id: utData.template_id || 'template1',
         slug: utData.slug,

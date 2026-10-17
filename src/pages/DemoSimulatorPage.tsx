@@ -5,6 +5,7 @@ import { Template2Rustic } from '../components/templates/Template2Rustic';
 import { Template3Jawa } from '../components/templates/Template3Jawa';
 import { Template4Islami } from '../components/templates/Template4Islami';
 import { Template5Luxury } from '../components/templates/Template5Luxury';
+import { TemplateSundaSiger } from '../components/templates/TemplateSundaSiger';
 import {
   MOCK_MODERN_DATA,
   MOCK_MODERN_THEME,
@@ -21,6 +22,9 @@ import {
   MOCK_LUXURY_DATA,
   MOCK_LUXURY_THEME,
   MOCK_LUXURY_WISHES,
+  MOCK_SUNDA_DATA,
+  MOCK_SUNDA_THEME,
+  MOCK_SUNDA_WISHES,
 } from '../data/mockInvitation';
 
 const TEMPLATE_LIST = [
@@ -29,6 +33,7 @@ const TEMPLATE_LIST = [
   { id: 'template3', num: '3', name: 'Adat Jawa', short: 'Jawa', accentColor: '#C5A059' },
   { id: 'template4', num: '4', name: 'Islami Kubah', short: 'Islami', accentColor: '#5E2832' },
   { id: 'template5', num: '5', name: 'Luxury Glamour', short: 'Luxury', accentColor: '#E2C792' },
+  { id: 'template6', num: '6', name: 'Adat Sunda Siger', short: 'Sunda', accentColor: '#C5A059' },
 ];
 
 export const DemoSimulatorPage: React.FC = () => {
@@ -140,8 +145,8 @@ export const DemoSimulatorPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Row 2: 5-Segment Tab Bar */}
-            <div className="grid grid-cols-5 gap-1 bg-black/50 p-1 rounded-xl border border-white/5">
+            {/* Row 2: 6-Segment Tab Bar */}
+            <div className="grid grid-cols-6 gap-1 bg-black/50 p-1 rounded-xl border border-white/5">
               {TEMPLATE_LIST.map((tpl) => {
                 const isActive = selectedTemplate === tpl.id;
                 return (
@@ -223,6 +228,17 @@ export const DemoSimulatorPage: React.FC = () => {
             data={MOCK_LUXURY_DATA}
             theme={MOCK_LUXURY_THEME}
             wishes={MOCK_LUXURY_WISHES}
+            isCoverOpen={isCoverOpen}
+            isPreview={isPreview}
+          />
+        )}
+
+        {selectedTemplate === 'template6' && (
+          <TemplateSundaSiger
+            invitationId="demo-invitation-006"
+            data={MOCK_SUNDA_DATA}
+            theme={MOCK_SUNDA_THEME}
+            wishes={MOCK_SUNDA_WISHES}
             isCoverOpen={isCoverOpen}
             isPreview={isPreview}
           />

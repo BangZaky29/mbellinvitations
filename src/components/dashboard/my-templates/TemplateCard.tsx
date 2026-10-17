@@ -48,7 +48,8 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
         (item.template_id === 'template1' && currentFormData.theme_id === 'modern') ||
         (item.template_id === 'template2' && currentFormData.theme_id === 'rustic') ||
         (item.template_id === 'template4' && currentFormData.theme_id === 'islami') ||
-        (item.template_id === 'template5' && currentFormData.theme_id === 'luxury')));
+        (item.template_id === 'template5' && currentFormData.theme_id === 'luxury') ||
+        (item.template_id === 'template6' && currentFormData.theme_id === 'sunda')));
 
   const updatedDate = item.updated_at
     ? new Date(item.updated_at).toLocaleDateString('id-ID', {

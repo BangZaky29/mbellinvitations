@@ -5,6 +5,7 @@ import {
   MOCK_JAWA_THEME,
   MOCK_ISLAMI_THEME,
   MOCK_LUXURY_THEME,
+  MOCK_SUNDA_THEME,
 } from '../../../data/mockInvitation';
 
 // Template ID Normalization (PostgreSQL FK constraint to public.templates)
@@ -14,11 +15,13 @@ export const THEME_TO_TEMPLATE_ID: Record<string, string> = {
   jawa: 'template3',
   islami: 'template4',
   luxury: 'template5',
+  sunda: 'template6',
   template1: 'template1',
   template2: 'template2',
   template3: 'template3',
   template4: 'template4',
   template5: 'template5',
+  template6: 'template6',
 };
 
 export const TEMPLATE_ID_TO_THEME: Record<string, string> = {
@@ -27,11 +30,13 @@ export const TEMPLATE_ID_TO_THEME: Record<string, string> = {
   template3: 'jawa',
   template4: 'islami',
   template5: 'luxury',
+  template6: 'sunda',
   modern: 'modern',
   rustic: 'rustic',
   jawa: 'jawa',
   islami: 'islami',
   luxury: 'luxury',
+  sunda: 'sunda',
 };
 
 export const DEFAULT_THEME_CONFIGS: Record<string, ThemeConfig> = {
@@ -45,6 +50,8 @@ export const DEFAULT_THEME_CONFIGS: Record<string, ThemeConfig> = {
   template4: MOCK_ISLAMI_THEME,
   luxury: MOCK_LUXURY_THEME,
   template5: MOCK_LUXURY_THEME,
+  sunda: MOCK_SUNDA_THEME,
+  template6: MOCK_SUNDA_THEME,
 };
 
 // Demo keywords untuk deteksi apakah form masih memakai data bawaan template

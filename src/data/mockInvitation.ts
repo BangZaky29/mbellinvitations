@@ -31,6 +31,12 @@ export {
   MOCK_RUSTIC_WISHES,
 } from './mock/rusticData';
 
+export {
+  MOCK_SUNDA_DATA,
+  MOCK_SUNDA_THEME,
+  MOCK_SUNDA_WISHES,
+} from './mock/sundaData';
+
 import {
   MOCK_INVITATION_DATA,
   MOCK_THEME_CONFIG,
@@ -56,6 +62,11 @@ import {
   MOCK_RUSTIC_THEME,
   MOCK_RUSTIC_WISHES,
 } from './mock/rusticData';
+import {
+  MOCK_SUNDA_DATA,
+  MOCK_SUNDA_THEME,
+  MOCK_SUNDA_WISHES,
+} from './mock/sundaData';
 
 // Aliases for modern
 export const MOCK_MODERN_DATA = MOCK_INVITATION_DATA;
@@ -76,6 +87,8 @@ export const MOCK_THEME_DATA_MAP: Record<string, InvitationData> = {
   template4: MOCK_ISLAMI_DATA,
   luxury: MOCK_LUXURY_DATA,
   template5: MOCK_LUXURY_DATA,
+  sunda: MOCK_SUNDA_DATA,
+  template6: MOCK_SUNDA_DATA,
 };
 
 export const MOCK_THEME_CONFIG_MAP: Record<string, ThemeConfig> = {
@@ -89,6 +102,8 @@ export const MOCK_THEME_CONFIG_MAP: Record<string, ThemeConfig> = {
   template4: MOCK_ISLAMI_THEME,
   luxury: MOCK_LUXURY_THEME,
   template5: MOCK_LUXURY_THEME,
+  sunda: MOCK_SUNDA_THEME,
+  template6: MOCK_SUNDA_THEME,
 };
 
 export const MOCK_THEME_WISHES_MAP: Record<string, WishItem[]> = {
@@ -102,4 +117,6 @@ export const MOCK_THEME_WISHES_MAP: Record<string, WishItem[]> = {
   template4: MOCK_ISLAMI_WISHES,
   luxury: MOCK_LUXURY_WISHES,
   template5: MOCK_LUXURY_WISHES,
+  sunda: MOCK_SUNDA_WISHES,
+  template6: MOCK_SUNDA_WISHES,
 };

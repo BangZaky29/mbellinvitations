@@ -45,6 +45,13 @@ export const THEME_PRESETS: ThemePresetItem[] = [
     description: 'Kemewahan monokrom midnight black dan aksen foil emas berkilau',
     thumbnail: 'https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=600&q=80',
   },
+  {
+    id: 'sunda',
+    name: 'Adat Sunda Siger & Melati',
+    category: 'Adat Nusantara',
+    description: 'Kemegahan Mahkota Siger, ronce melati, gending kecapi suling, dan nuansa Parahyangan',
+    thumbnail: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDSMQzGjURPVSsGCRPPE-zHZ7bgKvtteTLFR6OM9LyCulQKLncbS8LirSkj3E_Ec1t0kJzOapSpd3NsulL3IStOlVI1tPnPGmcvYQoygMvF5gCkYEGhruz0lao1Cvo72k1VcpUgtv_jCWbRtWdBfhARMKHCGycQV3bau425N0jO8a6JVq5ufjrf_Pobe0giwVbiqnYhx5nY-LXDs9HaYTaUkUyKwqa5yxlJAfvBxubqUxz0wQHVGIl6mQ',
+  },
 ];
 
 export const THEME_BANNER_COLORS: Record<string, { bg: string; text: string; badge: string; label: string }> = {
@@ -77,6 +84,12 @@ export const THEME_BANNER_COLORS: Record<string, { bg: string; text: string; bad
     text: 'text-amber-300',
     badge: 'bg-amber-300/20 text-amber-300 border-amber-300/40',
     label: 'Royal Gold & Black Luxury',
+  },
+  sunda: {
+    bg: 'from-[#775a19]/90 via-[#c5a059]/70 to-[#8a4c56]/80',
+    text: 'text-[#ffdea5]',
+    badge: 'bg-[#c5a059]/25 text-[#ffdea5] border-[#c5a059]/40',
+    label: 'Adat Sunda Siger',
   },
 };
 
