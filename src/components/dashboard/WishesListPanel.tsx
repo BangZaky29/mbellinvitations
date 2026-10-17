@@ -59,18 +59,18 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
   useEffect(() => {
     const fetchWishes = async () => {
       setIsLoading(true);
-      try {
-        const themeKey = selectedTemplate?.themeId || 'modern';
-        const defaultMocks = ((MOCK_THEME_WISHES_MAP as any)[themeKey] || MOCK_MODERN_WISHES).map(
-          (m: any, i: number) => ({
-            id: `wish-${themeKey}-${i}`,
-            guest_name: m.guest_name,
-            message: m.message,
-            attendance: m.attendance,
-            created_at: m.created_at || new Date().toISOString(),
-          })
-        );
+      const themeKey = selectedTemplate?.themeId || 'modern';
+      const defaultMocks: WishEntry[] = ((MOCK_THEME_WISHES_MAP as any)[themeKey] || MOCK_MODERN_WISHES).map(
+        (m: any, i: number) => ({
+          id: `wish-${themeKey}-${i}`,
+          guest_name: m.guest_name,
+          message: m.message,
+          attendance: m.attendance,
+          created_at: m.created_at || new Date().toISOString(),
+        })
+      );
 
+      try {
         if (!userId) {
           setWishes(defaultMocks);
           setIsLoading(false);
