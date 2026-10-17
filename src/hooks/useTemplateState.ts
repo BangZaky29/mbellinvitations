@@ -31,6 +31,7 @@ export function useTemplateState({
   const activeAnimConfig = theme?.animation_config || data?.theme_config?.animation_config;
   useUniversalScrollAnimation([isOpen, isPreview, activeAnimConfig], {
     config: activeAnimConfig,
+    isOpen,
   });
 
   // Sync isCoverOpen prop (from Dashboard Editor toggle)

@@ -33,6 +33,18 @@ export async function fetchInvitationBySlug(slug: string): Promise<SupabaseInvit
       const primaryId = invData?.id || utData.id;
       const altId = utData.id !== primaryId ? utData.id : (invData?.id !== primaryId ? invData?.id : undefined);
 
+      const animConfig =
+        utData.animation_config ||
+        utData.theme_config?.animation_config ||
+        invData?.animation_config ||
+        invData?.theme_config?.animation_config;
+
+      const baseThemeConfig = utData.theme_config || invData?.theme_config || {};
+      const mergedThemeConfig = {
+        ...baseThemeConfig,
+        ...(animConfig ? { animation_config: animConfig } : {}),
+      };
+
       return {
         id: primaryId,
         alternate_id: altId,
@@ -42,8 +54,9 @@ export async function fetchInvitationBySlug(slug: string): Promise<SupabaseInvit
         custom_domain: null,
         status: (utData.status as any) || 'published',
         storage_path: null,
-        theme_config: utData.theme_config || invData?.theme_config,
+        theme_config: mergedThemeConfig,
         content: utData.content || invData?.content,
+        animation_config: animConfig,
         views_count: invData?.views_count || 0,
         created_at: utData.created_at || new Date().toISOString(),
         updated_at: utData.updated_at || new Date().toISOString(),
@@ -61,6 +74,12 @@ export async function fetchInvitationBySlug(slug: string): Promise<SupabaseInvit
       .maybeSingle();
 
     if (latestUt) {
+      const animConfig = latestUt.animation_config || latestUt.theme_config?.animation_config;
+      const mergedThemeConfig = {
+        ...(latestUt.theme_config || {}),
+        ...(animConfig ? { animation_config: animConfig } : {}),
+      };
+
       return {
         id: latestUt.id,
         user_id: latestUt.user_id,
@@ -69,8 +88,9 @@ export async function fetchInvitationBySlug(slug: string): Promise<SupabaseInvit
         custom_domain: null,
         status: (latestUt.status as any) || 'published',
         storage_path: null,
-        theme_config: latestUt.theme_config,
+        theme_config: mergedThemeConfig,
         content: latestUt.content,
+        animation_config: animConfig,
         views_count: 0,
         created_at: latestUt.created_at || new Date().toISOString(),
         updated_at: latestUt.updated_at || new Date().toISOString(),
@@ -81,5 +101,13 @@ export async function fetchInvitationBySlug(slug: string): Promise<SupabaseInvit
     return null;
   }
 
-  return invData as SupabaseInvitationRecord;
+  const animConfig = invData.animation_config || invData.theme_config?.animation_config;
+  if (animConfig && invData.theme_config) {
+    invData.theme_config.animation_config = animConfig;
+  }
+
+  return {
+    ...invData,
+    animation_config: animConfig,
+  } as SupabaseInvitationRecord;
 }

@@ -1,4 +1,4 @@
-import type { InvitationData, ThemeConfig } from '../../types/invitation';
+import type { InvitationData, ThemeConfig, AnimationConfig } from '../../types/invitation';
 
 export interface SupabaseInvitationRecord {
   id: string;
@@ -10,6 +10,7 @@ export interface SupabaseInvitationRecord {
   storage_path: string | null;
   theme_config: ThemeConfig;
   content: InvitationData;
+  animation_config?: AnimationConfig;
   views_count: number;
   alternate_id?: string;
   created_at: string;
@@ -42,6 +43,7 @@ export interface UserTemplateRecord {
   status: 'draft' | 'published' | 'archived';
   content: InvitationData;
   theme_config: ThemeConfig;
+  animation_config?: AnimationConfig;
   thumbnail_url: string | null;
   music_url?: string | null;
   music_type?: string;

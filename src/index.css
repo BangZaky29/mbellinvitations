@@ -409,7 +409,7 @@
 @keyframes pageEnter {
   0% {
     opacity: 0;
-    transform: translateY(36px) scale(0.98);
+    transform: translateY(var(--anim-distance, 24px)) scale(0.98);
   }
   100% {
     opacity: 1;
@@ -431,7 +431,7 @@
 }
 
 .animate-page-enter {
-  animation: pageEnter 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: pageEnter var(--anim-duration, 1.05s) var(--anim-ease, cubic-bezier(0.16, 1, 0.3, 1)) forwards;
 }
 
 .animate-cover-exit {
@@ -597,18 +597,27 @@
   transform: scale(1) translateY(0);
 }
 
-/* 2. Minimalist Pure (No movement displacement, pure serene dissolve) */
+/* 2. Minimalist Pure (Serene dissolve with subtle micro-drift) */
 [data-anim-preset="minimalist"] .anim-target:not(.is-revealed):not(.is-visible),
-[data-anim-preset="minimalist"] .reveal:not(.is-revealed):not(.is-visible) {
+[data-anim-preset="minimalist"] .reveal:not(.is-revealed):not(.is-visible),
+[data-anim-preset="minimalist"] .reveal-scale:not(.is-revealed):not(.is-visible),
+[data-anim-preset="minimalist"] .reveal-left:not(.is-revealed):not(.is-visible),
+[data-anim-preset="minimalist"] .reveal-right:not(.is-revealed):not(.is-visible) {
   opacity: 0;
-  transform: none !important;
+  transform: translateY(var(--anim-distance, 0px));
 }
 [data-anim-preset="minimalist"] .anim-target.is-revealed,
 [data-anim-preset="minimalist"] .anim-target.is-visible,
 [data-anim-preset="minimalist"] .reveal.is-revealed,
-[data-anim-preset="minimalist"] .reveal.is-visible {
+[data-anim-preset="minimalist"] .reveal.is-visible,
+[data-anim-preset="minimalist"] .reveal-scale.is-revealed,
+[data-anim-preset="minimalist"] .reveal-scale.is-visible,
+[data-anim-preset="minimalist"] .reveal-left.is-revealed,
+[data-anim-preset="minimalist"] .reveal-left.is-visible,
+[data-anim-preset="minimalist"] .reveal-right.is-revealed,
+[data-anim-preset="minimalist"] .reveal-right.is-visible {
   opacity: 1;
-  transform: none !important;
+  transform: translateY(0);
 }
 
 /* 3. Dynamic Cascade (Alternating left/right subtle lateral entrance) */
@@ -628,27 +637,6 @@
 [data-anim-preset="cascade"] .reveal.is-visible {
   opacity: 1;
   transform: translateX(0) translateY(0);
-}
-
-/* Above-the-fold Safety & Exemption */
-#hero .anim-target,
-#hero .reveal,
-#hero .reveal-scale,
-#hero-section .anim-target,
-#hero-section .reveal,
-#hero-section .reveal-scale,
-#pawarta .anim-target,
-#pawarta .reveal,
-#pawarta .reveal-scale,
-#salam .anim-target,
-#salam .reveal,
-#salam .reveal-scale,
-#hero-countdown .anim-target,
-#hero-countdown .reveal,
-#hero-countdown .reveal-scale {
-  opacity: 1 !important;
-  transform: none !important;
-  filter: none !important;
 }
 
 /* ============================================================

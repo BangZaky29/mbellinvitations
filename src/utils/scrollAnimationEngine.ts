@@ -30,6 +30,8 @@ export interface UniversalScrollOptions {
   marginOffset?: number;
   /** Konfigurasi animasi kustom dari themeConfig (Step 6) */
   config?: AnimationConfig;
+  /** Status apakah cover sudah terbuka (untuk trigger entrance hero) */
+  isOpen?: boolean;
 }
 
 /**
@@ -101,14 +103,20 @@ export function applyAnimationConfigStyles(
 
   // Durasi: 0.40s s/d 5.00s (pada angka 100 durasi tepat 5 detik)
   const durationSec = isReduced ? 0.15 : (0.40 + norm * 4.60).toFixed(2);
-  // Jarak: 36px (snappy) s/d 14px (ultra-smooth cushioned)
-  const distancePx = isReduced || stylePreset === 'minimalist' ? 0 : Math.round(36 - norm * 22);
+  // Jarak: 24px s/d 34px untuk Romantic/Cinematic/Cascade; subtle 8px untuk Minimalist
+  const distancePx = isReduced
+    ? 0
+    : stylePreset === 'minimalist'
+    ? 8
+    : Math.round(24 + norm * 10);
+  // Easing: Balanced, continuous silky ease-out (outQuart/outCubic)
+  // Menghindari kurva terlalu ekstrem di awal agar gerakan 5 detik mengalir anggun dan nyata terlihat
   const easing = smoothness >= 60
-    ? 'cubic-bezier(0.16, 1, 0.3, 1)'
+    ? 'cubic-bezier(0.22, 1, 0.36, 1)'
     : 'cubic-bezier(0.25, 1, 0.5, 1)';
 
   const staggerSpeed = config?.stagger_speed || 'normal';
-  const staggerMs = staggerSpeed === 'fast' ? 80 : staggerSpeed === 'relaxed' ? 260 : 160;
+  const staggerMs = staggerSpeed === 'fast' ? 80 : staggerSpeed === 'relaxed' ? 220 : 140;
   const blurPx = config?.lens_focus_blur === false ? '0px' : '4px';
 
   const phoneContainers = Array.from(document.querySelectorAll('[data-phone-preview="true"]')) as HTMLElement[];
@@ -155,8 +163,10 @@ export function applyAnimationConfigStyles(
   } else {
     // MODE STANDALONE PUBLIC INVITATION:
     // Terapkan ke rootElement atau document.documentElement
-    const targets: HTMLElement[] = [document.documentElement];
+    const targets: HTMLElement[] = [document.documentElement, document.body];
     if (rootElement) targets.push(rootElement);
+    const pubRoot = document.querySelector('#invitation-root') as HTMLElement | null;
+    if (pubRoot) targets.push(pubRoot);
 
     targets.forEach((target) => {
       target.style.setProperty('--anim-duration', `${durationSec}s`);
@@ -277,9 +287,10 @@ export function useUniversalScrollAnimation(
   dependencies: any[] = [],
   options: UniversalScrollOptions = {}
 ) {
-  const { rootElement = null, disableAutoScan = false, marginOffset = 40, config } = options;
+  const { rootElement = null, disableAutoScan = false, marginOffset = 40, config, isOpen } = options;
   const isMountedRef = useRef(true);
   const prevConfigJsonRef = useRef<string>('');
+  const prevIsOpenRef = useRef(isOpen);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -294,6 +305,14 @@ export function useUniversalScrollAnimation(
       replayUniversalScrollAnimation(rootElement);
     }
     prevConfigJsonRef.current = currentConfigJson;
+
+    if (isOpen && !prevIsOpenRef.current) {
+      // Cover barusan dibuka: jadwalkan staggered entrance seketika
+      setTimeout(() => {
+        if (isMountedRef.current) scanAndObserve();
+      }, 60);
+    }
+    prevIsOpenRef.current = isOpen;
 
     // Selector elemen yang diamati
     const TARGET_SELECTORS = [
@@ -341,7 +360,7 @@ export function useUniversalScrollAnimation(
         },
         {
           root,
-          rootMargin: `${marginOffset}px 0px ${marginOffset}px 0px`,
+          rootMargin: `0px 0px -${marginOffset}px 0px`,
           threshold: [0, 0.05, 0.1],
         }
       );
@@ -399,6 +418,8 @@ export function useUniversalScrollAnimation(
         const scope = rootElement || document.querySelector('#invitation-root') || document;
         candidates = Array.from(scope.querySelectorAll(COMBINED_SELECTOR));
       }
+
+      const visibleToStagger: HTMLElement[] = [];
 
       candidates.forEach((el) => {
         // PROTEKSI MUTLAK: Jangan sentuh elemen apapun di luar Phone Preview jika di dashboard
@@ -467,18 +488,27 @@ export function useUniversalScrollAnimation(
         const isWin = container === window;
         const rect = el.getBoundingClientRect();
 
-        let inViewport = false;
-        if (isWin) {
-          const vh = window.innerHeight || document.documentElement.clientHeight;
-          inViewport = rect.top <= vh + marginOffset && rect.bottom >= -marginOffset;
-        } else {
-          const cRect = (container as HTMLElement).getBoundingClientRect();
-          inViewport = rect.top <= cRect.bottom + marginOffset && rect.bottom >= cRect.top - marginOffset;
+        // Cek apakah elemen sudah pernah lewat di atas layar (scrolled past above)
+        const isPassedAbove = isWin
+          ? rect.bottom < -20
+          : rect.bottom < ((container as HTMLElement).getBoundingClientRect().top - 20);
+        if (isPassedAbove) {
+          markRevealed(el);
+          return;
         }
 
-        // Jika elemen sudah masuk viewport atau berada di posisi atas, tampilkan langsung
-        if (inViewport) {
-          markRevealed(el);
+        // Cek apakah elemen saat ini sedang berada di dalam viewport yang terlihat
+        const vh = isWin
+          ? (window.innerHeight || document.documentElement.clientHeight)
+          : (container as HTMLElement).getBoundingClientRect().bottom;
+        const containerTop = isWin
+          ? 0
+          : (container as HTMLElement).getBoundingClientRect().top;
+
+        const isInViewportNow = rect.top <= vh && rect.bottom >= containerTop;
+
+        if (isInViewportNow) {
+          visibleToStagger.push(el as HTMLElement);
         } else if ('IntersectionObserver' in window) {
           const obs = getOrCreateObserver(container);
           obs.observe(el);
@@ -486,14 +516,29 @@ export function useUniversalScrollAnimation(
           markRevealed(el);
         }
       });
+
+      // Reveal elemen di viewport yang terlihat secara beruntun (stagger) setelah browser selesai reflow
+      if (visibleToStagger.length > 0) {
+        const speed = config?.stagger_speed || 'normal';
+        const staggerStep = speed === 'fast' ? 70 : speed === 'relaxed' ? 180 : 120;
+        requestAnimationFrame(() => {
+          visibleToStagger.forEach((el, index) => {
+            setTimeout(() => {
+              if (isMountedRef.current) {
+                markRevealed(el);
+              }
+            }, 60 + index * staggerStep);
+          });
+        });
+      }
     };
 
     // Eksekusi scan awal bertahap untuk sinkronisasi layout React DOM
     scanAndObserve();
-    const timer1 = setTimeout(scanAndObserve, 50);
-    const timer2 = setTimeout(scanAndObserve, 200);
-    const timer3 = setTimeout(scanAndObserve, 500);
-    const timer4 = setTimeout(scanAndObserve, 1000);
+    const timer1 = setTimeout(scanAndObserve, 60);
+    const timer2 = setTimeout(scanAndObserve, 250);
+    const timer3 = setTimeout(scanAndObserve, 600);
+    const timer4 = setTimeout(scanAndObserve, 1200);
 
     const phoneContainers = Array.from(document.querySelectorAll('[data-phone-preview="true"]')) as HTMLElement[];
     const isDashboard = phoneContainers.length > 0;
@@ -531,9 +576,9 @@ export function useUniversalScrollAnimation(
 
     // Dengarkan event pembukaan cover undangan
     const handleCoverOpened = () => {
-      setTimeout(scanAndObserve, 50);
-      setTimeout(scanAndObserve, 200);
-      setTimeout(scanAndObserve, 500);
+      setTimeout(scanAndObserve, 60);
+      setTimeout(scanAndObserve, 250);
+      setTimeout(scanAndObserve, 600);
     };
     window.addEventListener('mbell_cover_opened', handleCoverOpened);
 

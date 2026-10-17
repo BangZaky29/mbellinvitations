@@ -184,7 +184,7 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
             {/* INNER CONTENT (Tampil jika sudah Buka atau Mode Preview) */}
             {/* ========================================== */}
             {isOpen && (
-              <div className="flex flex-col w-full animate-page-enter transition-opacity duration-700">
+              <div className="flex flex-col w-full animate-page-enter">
                 {/* ========================================== */}
                 {/* SECTION 2: HERO & LIVE COUNTDOWN           */}
                 {/* ========================================== */}

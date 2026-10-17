@@ -16,7 +16,9 @@ import {
   MOCK_MODERN_WISHES,
   MOCK_THEME_WISHES_MAP,
 } from '../data/mockInvitation';
+import { DEFAULT_ANIMATION_CONFIG } from '../types/invitation';
 import { TEMPLATE_ID_TO_THEME } from '../pages/dashboard/constants/themeMapping';
+import { applyAnimationConfigStyles } from '../utils/scrollAnimationEngine';
 
 export interface UseInvitationRealtimeOptions {
   slug?: string;
@@ -86,7 +88,20 @@ export function useInvitationRealtime({
             guest_code: codeParam || undefined,
           };
           setInvitationData(mergedData);
-          setThemeConfig(inv.theme_config || MOCK_MODERN_THEME);
+
+          const resolvedAnim =
+            inv.animation_config ||
+            inv.theme_config?.animation_config ||
+            (inv.content as any)?.theme_config?.animation_config ||
+            DEFAULT_ANIMATION_CONFIG;
+
+          const mergedTheme: ThemeConfig = {
+            ...(inv.theme_config || MOCK_MODERN_THEME),
+            animation_config: resolvedAnim,
+          };
+
+          setThemeConfig(mergedTheme);
+          applyAnimationConfigStyles(resolvedAnim);
 
           // Fetch guest info if code is provided
           if (codeParam) {
@@ -202,7 +217,13 @@ export function useInvitationRealtime({
               }));
             }
             if (updated.theme_config && typeof updated.theme_config === 'object') {
+              const anim =
+                updated.theme_config?.animation_config ||
+                (updated as any).animation_config;
               setThemeConfig(updated.theme_config);
+              if (anim) {
+                applyAnimationConfigStyles(anim);
+              }
             }
           }
         }

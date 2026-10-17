@@ -167,7 +167,7 @@ export const Template1Modern: React.FC<InvitationProps> = ({
         {isOpen && (
           <main
             id="main-content"
-            className="relative z-20 pb-28 animate-page-enter transition-opacity duration-700"
+            className="relative z-20 pb-28 animate-page-enter"
           >
           {/* ========================================== */}
           {/* 2. HERO & COUNTDOWN SECTION                */}
