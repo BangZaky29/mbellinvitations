@@ -64,11 +64,11 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
 
   return (
     <div
-      className="theme-rustic bg-[#EBF0EC] min-h-screen flex justify-center text-[#1b1c1a] antialiased"
+      className="theme-rustic bg-[#EBF0EC] min-h-screen flex justify-center text-[#1b1c1a] antialiased no-scrollbar"
       style={{ backgroundColor: '#EBF0EC', color: '#1b1c1a' }}
     >
       {/* Mobile Viewport Container (Max 430px) */}
-      <div className="w-full max-w-[430px] min-h-screen relative flex flex-col bg-[#fbf9f5] shadow-[0_12px_36px_-6px_rgba(44,64,52,0.08),0_4px_12px_-2px_rgba(44,64,52,0.04)]">
+      <div className="w-full max-w-[430px] min-h-screen relative flex flex-col bg-[#fbf9f5] shadow-[0_12px_36px_-6px_rgba(44,64,52,0.08),0_4px_12px_-2px_rgba(44,64,52,0.04)] overflow-x-clip no-scrollbar">
         
         {/* Sleek Universal Toast Notification */}
         <SleekToast

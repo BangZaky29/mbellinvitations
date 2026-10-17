@@ -61,17 +61,13 @@ function findScrollContainer(element: Element | null): HTMLElement | Window {
   if (!element) return window;
 
   const phonePreview = element.closest('[data-phone-preview="true"]') as HTMLElement | null;
-  if (phonePreview) return phonePreview;
-
-  let current = element.parentElement;
-  while (current && current !== document.body && current !== document.documentElement) {
-    const style = window.getComputedStyle(current);
-    if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
-      return current;
-    }
-    current = current.parentElement;
+  if (phonePreview) {
+    const scrollable = phonePreview.querySelector('.overflow-y-auto') as HTMLElement | null;
+    return scrollable || phonePreview;
   }
 
+  // Pada halaman publik atau standalone invitation (di luar dashboard PhoneMockup),
+  // scroll container 100% PASTI adalah Window!
   return window;
 }
 
@@ -360,7 +356,7 @@ export function useUniversalScrollAnimation(
         },
         {
           root,
-          rootMargin: `0px 0px -${marginOffset}px 0px`,
+          rootMargin: isWin ? '0px 0px -15px 0px' : `0px 0px -${marginOffset}px 0px`,
           threshold: [0, 0.05, 0.1],
         }
       );
@@ -370,7 +366,7 @@ export function useUniversalScrollAnimation(
     };
 
     // Fungsi pemindaian dan pelabelan otomatis
-    const scanAndObserve = () => {
+    const scanAndObserve = (isScrollCall: boolean = false) => {
       if (!isMountedRef.current) return;
 
       const phoneContainers = Array.from(document.querySelectorAll('[data-phone-preview="true"]')) as HTMLElement[];
@@ -505,10 +501,14 @@ export function useUniversalScrollAnimation(
           ? 0
           : (container as HTMLElement).getBoundingClientRect().top;
 
-        const isInViewportNow = rect.top <= vh && rect.bottom >= containerTop;
+        const isInViewportNow = rect.top <= (vh - 10) && rect.bottom >= containerTop;
 
         if (isInViewportNow) {
-          visibleToStagger.push(el as HTMLElement);
+          if (isScrollCall) {
+            markRevealed(el);
+          } else {
+            visibleToStagger.push(el as HTMLElement);
+          }
         } else if ('IntersectionObserver' in window) {
           const obs = getOrCreateObserver(container);
           obs.observe(el);
@@ -535,10 +535,10 @@ export function useUniversalScrollAnimation(
 
     // Eksekusi scan awal bertahap untuk sinkronisasi layout React DOM
     scanAndObserve();
-    const timer1 = setTimeout(scanAndObserve, 60);
-    const timer2 = setTimeout(scanAndObserve, 250);
-    const timer3 = setTimeout(scanAndObserve, 600);
-    const timer4 = setTimeout(scanAndObserve, 1200);
+    const timer1 = setTimeout(() => scanAndObserve(), 60);
+    const timer2 = setTimeout(() => scanAndObserve(), 250);
+    const timer3 = setTimeout(() => scanAndObserve(), 600);
+    const timer4 = setTimeout(() => scanAndObserve(), 1200);
 
     const phoneContainers = Array.from(document.querySelectorAll('[data-phone-preview="true"]')) as HTMLElement[];
     const isDashboard = phoneContainers.length > 0;
@@ -560,7 +560,7 @@ export function useUniversalScrollAnimation(
 
     // Passive scroll listener pada window dan PhonePreview sebagai fallback terpercaya
     const handlePassiveScroll = () => {
-      scanAndObserve();
+      scanAndObserve(true);
     };
 
     if (!isDashboard) {

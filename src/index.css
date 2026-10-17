@@ -12,23 +12,37 @@
     padding: 0;
   }
 
-  /* Custom subtle scrollbar */
-  ::-webkit-scrollbar {
-    width: 4px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: #FAF8F5;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: #D9D3C7;
-    border-radius: 4px;
-  }
+  /* Sembunyikan scrollbar secara universal untuk tampilan mobile & undangan digital */
 }
 
-/* Hide scrollbar utility & Phone Preview strict suppression */
+/* ============================================================
+   GLOBAL SCROLLBAR SUPPRESSION (ZERO FLICKER & HIDDEN SCROLLER)
+   Sembunyikan scrollbar sepenuhnya pada semua halaman undangan digital publik,
+   template undangan, root container, body, dan preview HP agar bebas kedipan / scroller.
+   Pengguna tetap dapat melakukan scrolling 100% lancar via layar sentuh / trackpad / mouse.
+   ============================================================ */
+html,
+body,
+#root,
+#invitation-root,
+[data-public-invitation],
+[data-public-invitation] *,
+.no-scrollbar,
+.no-scrollbar *,
+[data-phone-preview],
+[data-phone-preview] * {
+  -ms-overflow-style: none !important; /* IE, Edge */
+  scrollbar-width: none !important; /* Firefox */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar,
+#invitation-root::-webkit-scrollbar,
+[data-public-invitation]::-webkit-scrollbar,
+[data-public-invitation] *::-webkit-scrollbar,
 .no-scrollbar::-webkit-scrollbar,
+.no-scrollbar *::-webkit-scrollbar,
 [data-phone-preview]::-webkit-scrollbar,
 [data-phone-preview] *::-webkit-scrollbar {
   display: none !important;
@@ -37,21 +51,28 @@
   background: transparent !important;
 }
 
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+#root::-webkit-scrollbar-track,
+#invitation-root::-webkit-scrollbar-track,
+[data-public-invitation]::-webkit-scrollbar-track,
+[data-public-invitation] *::-webkit-scrollbar-track,
 .no-scrollbar::-webkit-scrollbar-track,
-.no-scrollbar::-webkit-scrollbar-thumb,
+.no-scrollbar *::-webkit-scrollbar-track,
 [data-phone-preview]::-webkit-scrollbar-track,
 [data-phone-preview] *::-webkit-scrollbar-track,
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+#root::-webkit-scrollbar-thumb,
+#invitation-root::-webkit-scrollbar-thumb,
+[data-public-invitation]::-webkit-scrollbar-thumb,
+[data-public-invitation] *::-webkit-scrollbar-thumb,
+.no-scrollbar::-webkit-scrollbar-thumb,
+.no-scrollbar *::-webkit-scrollbar-thumb,
 [data-phone-preview]::-webkit-scrollbar-thumb,
 [data-phone-preview] *::-webkit-scrollbar-thumb {
   display: none !important;
   background: transparent !important;
-}
-
-.no-scrollbar,
-[data-phone-preview],
-[data-phone-preview] * {
-  -ms-overflow-style: none !important;
-  scrollbar-width: none !important;
 }
 
 
@@ -448,6 +469,9 @@
 .reveal-left,
 .reveal-right {
   will-change: opacity, transform;
+  transition: opacity var(--anim-duration, 1.05s) var(--anim-ease, cubic-bezier(0.16, 1, 0.3, 1)),
+              transform var(--anim-duration, 1.05s) var(--anim-ease, cubic-bezier(0.16, 1, 0.3, 1)),
+              filter var(--anim-duration, 1.05s) var(--anim-ease, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 /* 1. Gentle Float-Up (Default Section & Container) */
@@ -622,21 +646,32 @@
 
 /* 3. Dynamic Cascade (Alternating left/right subtle lateral entrance) */
 [data-anim-preset="cascade"] .anim-target:not(.is-revealed):not(.is-visible):nth-of-type(odd),
-[data-anim-preset="cascade"] .reveal:not(.is-revealed):not(.is-visible):nth-of-type(odd) {
+[data-anim-preset="cascade"] .reveal:not(.is-revealed):not(.is-visible):nth-of-type(odd),
+[data-anim-preset="cascade"] .reveal-scale:not(.is-revealed):not(.is-visible):nth-of-type(odd) {
   opacity: 0;
   transform: translateX(calc(var(--anim-distance, 20px) * -1.2)) translateY(8px);
 }
 [data-anim-preset="cascade"] .anim-target:not(.is-revealed):not(.is-visible):nth-of-type(even),
-[data-anim-preset="cascade"] .reveal:not(.is-revealed):not(.is-visible):nth-of-type(even) {
+[data-anim-preset="cascade"] .reveal:not(.is-revealed):not(.is-visible):nth-of-type(even),
+[data-anim-preset="cascade"] .reveal-scale:not(.is-revealed):not(.is-visible):nth-of-type(even) {
   opacity: 0;
   transform: translateX(calc(var(--anim-distance, 20px) * 1.2)) translateY(8px);
 }
 [data-anim-preset="cascade"] .anim-target.is-revealed,
 [data-anim-preset="cascade"] .anim-target.is-visible,
 [data-anim-preset="cascade"] .reveal.is-revealed,
-[data-anim-preset="cascade"] .reveal.is-visible {
+[data-anim-preset="cascade"] .reveal.is-visible,
+[data-anim-preset="cascade"] .reveal-scale.is-revealed,
+[data-anim-preset="cascade"] .reveal-scale.is-visible {
   opacity: 1;
   transform: translateX(0) translateY(0);
+}
+[data-anim-preset="cascade"] .reveal-left.is-revealed,
+[data-anim-preset="cascade"] .reveal-left.is-visible,
+[data-anim-preset="cascade"] .reveal-right.is-revealed,
+[data-anim-preset="cascade"] .reveal-right.is-visible {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 /* ============================================================

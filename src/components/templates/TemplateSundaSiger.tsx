@@ -158,7 +158,7 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
 
   return (
     <div
-      className="theme-sunda bg-[#fbf9f6] text-[#1b1c1a] font-sans antialiased flex flex-col items-center justify-start min-h-screen relative selection:bg-[#feaeb9] selection:text-[#7a3f49] w-full"
+      className="theme-sunda bg-[#fbf9f6] text-[#1b1c1a] font-sans antialiased flex flex-col items-center justify-start min-h-screen relative selection:bg-[#feaeb9] selection:text-[#7a3f49] w-full no-scrollbar"
       style={{ backgroundColor: '#fbf9f6', color: '#1b1c1a' }}
     >
       {/* Sleek Universal Toast Notification */}
@@ -173,7 +173,7 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
       <FallingPetals />
 
       {/* Main Container Phone Frame Max-Width 430px */}
-      <div className="w-full max-w-[430px] min-h-screen flex flex-col relative bg-[#fbf9f6] shadow-[0_20px_50px_rgba(119,90,25,0.08)]">
+      <div className="w-full max-w-[430px] min-h-screen flex flex-col relative bg-[#fbf9f6] shadow-[0_20px_50px_rgba(119,90,25,0.08)] overflow-x-clip no-scrollbar">
         <main className="flex-1 flex flex-col w-full bg-[#fbf9f6] relative">
           <div className="flex flex-col w-full text-[#1b1c1a]">
 

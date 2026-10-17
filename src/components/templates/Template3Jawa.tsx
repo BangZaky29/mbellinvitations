@@ -78,11 +78,11 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
 
   return (
     <div
-      className="theme-jawa dark bg-[#1a110d] min-h-screen font-body-md text-body-md text-[#f1dfd6] antialiased flex justify-center"
+      className="theme-jawa dark bg-[#1a110d] min-h-screen font-body-md text-body-md text-[#f1dfd6] antialiased flex justify-center no-scrollbar"
       style={{ backgroundColor: '#1a110d', color: '#f1dfd6' }}
     >
       {/* Mobile Viewport Container (Max 430px) */}
-      <div className="w-full max-w-[430px] min-h-screen bg-[#1a110d] relative flex flex-col shadow-[0_12px_40px_rgba(10,6,4,0.9)] overflow-x-hidden border-x border-[#322822]/60">
+      <div className="w-full max-w-[430px] min-h-screen bg-[#1a110d] relative flex flex-col shadow-[0_12px_40px_rgba(10,6,4,0.9)] overflow-x-clip border-x border-[#322822]/60 no-scrollbar">
         
         {/* Sleek Universal Toast Notification */}
         <SleekToast

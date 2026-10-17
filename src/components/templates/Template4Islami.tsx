@@ -130,10 +130,10 @@ export const Template4Islami: React.FC<InvitationProps> = ({
 
   return (
     <div
-      className="theme-islami bg-[#fcf8f8] flex justify-center min-h-screen text-[#1c1b1c] antialiased font-sans w-full"
+      className="theme-islami bg-[#fcf8f8] flex justify-center min-h-screen text-[#1c1b1c] antialiased font-sans w-full no-scrollbar"
       style={{ backgroundColor: '#fcf8f8', color: '#1c1b1c' }}
     >
-      <div className="w-full max-w-[430px] min-h-screen bg-surface flex flex-col relative shadow-[0_20px_50px_rgba(94,40,50,0.08)]">
+      <div className="w-full max-w-[430px] min-h-screen bg-surface flex flex-col relative shadow-[0_20px_50px_rgba(94,40,50,0.08)] overflow-x-clip no-scrollbar">
         {/* Sleek Universal Toast Notification */}
         <SleekToast
           show={Boolean(toastMessage)}

@@ -60,7 +60,7 @@ export const Template1Modern: React.FC<InvitationProps> = ({
   const { days, hours, minutes, seconds } = countdown;
 
   return (
-    <div className="w-full h-full min-h-screen flex justify-center items-start bg-[#ECE8E1]">
+    <div className="w-full h-full min-h-screen flex justify-center items-start bg-[#ECE8E1] no-scrollbar">
       {/* Sleek Universal Toast Notification */}
       <SleekToast
         show={Boolean(toastMessage)}
@@ -70,7 +70,7 @@ export const Template1Modern: React.FC<InvitationProps> = ({
       />
 
       {/* Mobile Viewport Container (Max 430px) */}
-      <div className="relative w-full max-w-[430px] h-full min-h-screen bg-alabaster shadow-2xl overflow-x-hidden border-x border-[#E2DDD3] flex flex-col">
+      <div className="relative w-full max-w-[430px] h-full min-h-screen bg-alabaster shadow-2xl overflow-x-clip border-x border-[#E2DDD3] flex flex-col no-scrollbar">
 
         {/* ========================================== */}
         {/* 1. COVER GATE OVERLAY (Full-screen)        */}

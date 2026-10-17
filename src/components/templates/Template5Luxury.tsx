@@ -134,8 +134,8 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
   const monogram = `${data.groom.name.charAt(0)}&${data.bride.name.charAt(0)}`;
 
   return (
-    <div className="theme-luxury bg-surface text-on-surface antialiased flex justify-center min-h-screen selection:bg-primary-container/30 selection:text-on-surface font-sans w-full">
-      <div className="w-full max-w-[430px] min-h-screen bg-surface flex flex-col relative">
+    <div className="theme-luxury bg-surface text-on-surface antialiased flex justify-center min-h-screen selection:bg-primary-container/30 selection:text-on-surface font-sans w-full no-scrollbar">
+      <div className="w-full max-w-[430px] min-h-screen bg-surface flex flex-col relative overflow-x-clip no-scrollbar">
         {/* Sleek Universal Toast Notification */}
         <SleekToast
           show={Boolean(toastMessage)}
