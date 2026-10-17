@@ -15,7 +15,7 @@ interface UseDashboardPublishOptions {
   setFormData: React.Dispatch<React.SetStateAction<InvitationData>>;
   setIsSaving: React.Dispatch<React.SetStateAction<boolean>>;
   setLastSaved: React.Dispatch<React.SetStateAction<Date | null>>;
-  setSaveToast: React.Dispatch<React.SetStateAction<{ show: boolean; message: string; isError?: boolean } | null>>;
+  setSaveToast: ((toast: { show: boolean; message: string; isError?: boolean; type?: 'success' | 'info' | 'error' | 'copy' } | null, duration?: number) => void) | React.Dispatch<React.SetStateAction<{ show: boolean; message: string; isError?: boolean; type?: 'success' | 'info' | 'error' | 'copy' } | null>>;
   setShowAuthGateModal: React.Dispatch<React.SetStateAction<boolean>>;
   setShowConfirmPublishModal: React.Dispatch<React.SetStateAction<boolean>>;
   setShowPricingModal: React.Dispatch<React.SetStateAction<boolean>>;

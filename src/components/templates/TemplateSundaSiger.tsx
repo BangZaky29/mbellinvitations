@@ -480,7 +480,7 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                 </h2>
 
                 <div className="w-full max-w-sm flex flex-col gap-6">
-                  {data.events.map((ev, index) => {
+                  {data.events.map((ev: any, index: number) => {
                     const isResepsi = index === 1;
                     const activeTargetIdx = data.countdown_target === 'resepsi' && data.events.length > 1 ? 1 : 0;
                     const isCountdownEvent = index === activeTargetIdx;
@@ -859,7 +859,7 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                 {/* Bank Account Cards */}
                 {data.bank_accounts && data.bank_accounts.length > 0 && (
                   <div className="w-full max-w-sm flex flex-col gap-4 mb-6">
-                    {data.bank_accounts.map((bank, index) => {
+                    {data.bank_accounts.map((bank: any, index: number) => {
                       const isEven = index % 2 === 0;
                       return (
                         <div
