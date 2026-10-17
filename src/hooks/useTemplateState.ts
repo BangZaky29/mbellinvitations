@@ -113,6 +113,9 @@ export function useTemplateState({
       setIsOpen(true);
       setIsOpening(false);
       window.scrollTo({ top: 0, behavior: 'instant' });
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('mbell_cover_opened'));
+      }
     }, 600);
   };
 

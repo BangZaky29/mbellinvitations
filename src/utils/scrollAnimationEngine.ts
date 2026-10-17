@@ -308,10 +308,12 @@ export function useUniversalScrollAnimation(
     if (!disableAutoScan) {
       // Auto-scan elemen semantik pada template undangan
       TARGET_SELECTORS.push(
-        'section:not(#cover):not(#hero):not(.no-anim)',
-        'section:not(#cover):not(#hero) > div.max-w-sm:not(.no-anim)',
-        'section:not(#cover):not(#hero) h2:not(.no-anim)',
-        'section:not(#cover):not(#hero) blockquote:not(.no-anim)'
+        'section:not(#cover):not(#sampul):not(#hero):not(.no-anim)',
+        'section:not(#cover):not(#sampul):not(#hero) > div.max-w-sm:not(.no-anim)',
+        'section:not(#cover):not(#sampul):not(#hero) h2:not(.no-anim)',
+        'section:not(#cover):not(#sampul):not(#hero) blockquote:not(.no-anim)',
+        'section:not(#cover):not(#sampul):not(#hero) .rounded-2xl:not(.no-anim)',
+        'section:not(#cover):not(#sampul):not(#hero) .rounded-3xl:not(.no-anim)'
       );
     }
 
@@ -355,10 +357,10 @@ export function useUniversalScrollAnimation(
       const phoneContainers = Array.from(document.querySelectorAll('[data-phone-preview="true"]')) as HTMLElement[];
       const isDashboardMode = phoneContainers.length > 0;
 
-      // 1. PEMBERSIHAN OTOMATIS: Bersihkan class animasi yang bocor ke dashboard UI
+      // 1. PEMBERSIHAN OTOMATIS: Bersihkan class animasi yang bocor ke dashboard editor UI
       if (isDashboardMode) {
         const leakedInDashboard = document.querySelectorAll(
-          'main .anim-target, nav .anim-target, header .anim-target, aside:not(:has([data-phone-preview])) .anim-target, #dashboard-layout .anim-target, section:not([data-phone-preview] *)'
+          '[data-dashboard-editor="true"] .anim-target, #dashboard-editor-main .anim-target, nav .anim-target, header .anim-target, aside:not(:has([data-phone-preview])) .anim-target, #dashboard-layout .anim-target'
         );
         leakedInDashboard.forEach((el) => {
           if (!el.closest('[data-phone-preview="true"]')) {
@@ -393,32 +395,35 @@ export function useUniversalScrollAnimation(
           candidates.push(...Array.from(scrollable.querySelectorAll(COMBINED_SELECTOR)));
         });
       } else {
-        // Public Standalone Invitation
-        const scope = rootElement || document;
+        // Public Standalone Invitation: Ambil seluruh elemen template publik
+        const scope = rootElement || document.querySelector('#invitation-root') || document;
         candidates = Array.from(scope.querySelectorAll(COMBINED_SELECTOR));
       }
 
       candidates.forEach((el) => {
         // PROTEKSI MUTLAK: Jangan sentuh elemen apapun di luar Phone Preview jika di dashboard
-        if (isDashboardMode && !el.closest('[data-phone-preview="true"]')) {
-          return;
-        }
+        if (isDashboardMode) {
+          const inDashboardEditor =
+            el.closest('[data-dashboard-editor="true"]') ||
+            el.closest('#dashboard-editor-main') ||
+            el.closest('#dashboard-layout') ||
+            el.closest('.dashboard-content') ||
+            el.closest('.dashboard-sidebar') ||
+            el.closest('header') ||
+            el.closest('nav');
 
-        // Jangan pernah menganimasi elemen dashboard settings / shell
-        if (
-          el.closest('main') ||
-          el.closest('header') ||
-          el.closest('nav') ||
-          el.closest('#dashboard-layout') ||
-          el.closest('.dashboard-content')
-        ) {
-          if (!el.closest('[data-phone-preview="true"]')) {
+          if (inDashboardEditor && !el.closest('[data-phone-preview="true"]')) {
             return;
           }
         }
 
         // Abaikan elemen cover pembuka di atas
-        if (el.closest('#cover') || el.classList.contains('no-anim')) {
+        if (
+          el.closest('#cover') ||
+          el.closest('#sampul') ||
+          el.closest('[data-cover="true"]') ||
+          el.classList.contains('no-anim')
+        ) {
           markRevealed(el);
           return;
         }
@@ -488,6 +493,7 @@ export function useUniversalScrollAnimation(
     const timer1 = setTimeout(scanAndObserve, 50);
     const timer2 = setTimeout(scanAndObserve, 200);
     const timer3 = setTimeout(scanAndObserve, 500);
+    const timer4 = setTimeout(scanAndObserve, 1000);
 
     const phoneContainers = Array.from(document.querySelectorAll('[data-phone-preview="true"]')) as HTMLElement[];
     const isDashboard = phoneContainers.length > 0;
@@ -502,7 +508,7 @@ export function useUniversalScrollAnimation(
       // Jika di dashboard, amati HANYA Phone Preview container, bukan document.body!
       const observeTarget = isDashboard
         ? (phoneContainers[0].querySelector('.overflow-y-auto') || phoneContainers[0])
-        : (rootElement || document.body);
+        : (document.querySelector('#invitation-root') || rootElement || document.body);
 
       mutationObserver.observe(observeTarget, { childList: true, subtree: true });
     }
@@ -523,11 +529,20 @@ export function useUniversalScrollAnimation(
       scrollable.addEventListener('scroll', handlePassiveScroll, { passive: true });
     });
 
+    // Dengarkan event pembukaan cover undangan
+    const handleCoverOpened = () => {
+      setTimeout(scanAndObserve, 50);
+      setTimeout(scanAndObserve, 200);
+      setTimeout(scanAndObserve, 500);
+    };
+    window.addEventListener('mbell_cover_opened', handleCoverOpened);
+
     return () => {
       isMountedRef.current = false;
       clearTimeout(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
+      clearTimeout(timer4);
 
       observersMap.forEach((obs) => obs.disconnect());
       observersMap.clear();
@@ -538,6 +553,7 @@ export function useUniversalScrollAnimation(
 
       window.removeEventListener('scroll', handlePassiveScroll);
       window.removeEventListener('resize', handlePassiveScroll);
+      window.removeEventListener('mbell_cover_opened', handleCoverOpened);
       phoneContainers.forEach((c) => {
         const scrollable = c.querySelector('.overflow-y-auto') || c;
         scrollable.removeEventListener('scroll', handlePassiveScroll);

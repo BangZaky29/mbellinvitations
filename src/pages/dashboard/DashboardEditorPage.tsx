@@ -190,7 +190,7 @@ export const DashboardEditorPage: React.FC = () => {
             <DashboardSidebar activeTab={editor.activeTab} onSelectTab={editor.setActiveTab} />
 
             {/* KOLOM 2: CENTER EDITOR PANEL (VERTICAL SCROLL) */}
-            <main className="flex-1 h-full overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 scroll-smooth bg-[#F5F2EB]">
+            <main id="dashboard-editor-main" data-dashboard-editor="true" className="flex-1 h-full overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 scroll-smooth bg-[#F5F2EB]">
               <div className="max-w-3xl mx-auto space-y-6 pb-32 sm:pb-28">
                 {editor.activeTab === 'template-saya' ? (
                   <MyTemplatesPanel

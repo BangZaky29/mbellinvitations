@@ -655,30 +655,32 @@
    STRICT DASHBOARD ISOLATION (ZERO LEAK TO SETTINGS / DASHBOARD)
    Seluruh panel dashboard, setting step 1-6, header, sidebar,
    dan form input 100% instan, bebas dari efek pergeseran / transisi smooth.
+   HANYA berlaku pada elemen internal dashboard editor, BUKAN template publik.
    ============================================================ */
-main:not([data-phone-preview] *),
-header:not([data-phone-preview] *),
-nav:not([data-phone-preview] *),
-aside:not([data-phone-preview] *):not(:has([data-phone-preview])),
-section:not([data-phone-preview] *),
+[data-dashboard-editor="true"],
+[data-dashboard-editor="true"] *,
+#dashboard-editor-main,
+#dashboard-editor-main *,
 .dashboard-content,
-.dashboard-sidebar {
+.dashboard-content *,
+.dashboard-sidebar,
+.dashboard-sidebar *,
+header#dashboard-header,
+header#dashboard-header * {
   --anim-duration: 0s !important;
   --anim-distance: 0px !important;
   --anim-blur: 0px !important;
 }
 
-main:not([data-phone-preview] *) .anim-target,
-main:not([data-phone-preview] *) .reveal,
-main:not([data-phone-preview] *) .reveal-scale,
-main:not([data-phone-preview] *) .reveal-left,
-main:not([data-phone-preview] *) .reveal-right,
-header .anim-target,
-nav .anim-target,
-aside:not(:has([data-phone-preview])) .anim-target,
-section:not([data-phone-preview] *) .anim-target,
-section:not([data-phone-preview] *) h2.anim-title,
-section:not([data-phone-preview] *).anim-card {
+[data-dashboard-editor="true"] .anim-target,
+[data-dashboard-editor="true"] .reveal,
+[data-dashboard-editor="true"] .reveal-scale,
+[data-dashboard-editor="true"] .reveal-left,
+[data-dashboard-editor="true"] .reveal-right,
+#dashboard-editor-main .anim-target,
+#dashboard-editor-main .reveal,
+.dashboard-content .anim-target,
+.dashboard-sidebar .anim-target {
   opacity: 1 !important;
   transform: none !important;
   transition: none !important;

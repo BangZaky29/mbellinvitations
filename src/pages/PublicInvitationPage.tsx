@@ -84,7 +84,7 @@ export const PublicInvitationPage: React.FC = () => {
   const showDemoPill = slug === 'demo' && !isPublished;
 
   return (
-    <div className="relative w-full min-h-screen">
+    <div id="invitation-root" data-public-invitation="true" className="relative w-full min-h-screen">
       {/* Floating Demo & Info Pill Bar (Hanya tampil pada rute khusus demo, disembunyikan untuk template yang sudah live/dipublish) */}
       {showDemoPill && (
         <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-black/65 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-xl text-[11px] text-neutral-300 pointer-events-auto">
