@@ -24,6 +24,24 @@ export const THEME_TO_TEMPLATE_ID: Record<string, string> = {
   template6: 'template6',
 };
 
+export const KNOWN_DB_TEMPLATE_IDS = new Set([
+  'template1',
+  'template2',
+  'template3',
+  'template4',
+  'template5',
+]);
+
+/**
+ * Mendapatkan ID template yang aman untuk tabel public.invitations
+ * Mencegah error 409 Foreign Key Constraint jika template baru (seperti template6 Sunda)
+ * belum terdaftar di tabel master public.templates Supabase.
+ */
+export function getSafeDbTemplateId(themeOrTemplateId?: string): string {
+  const mapped = THEME_TO_TEMPLATE_ID[themeOrTemplateId || 'modern'] || 'template1';
+  return KNOWN_DB_TEMPLATE_IDS.has(mapped) ? mapped : 'template1';
+}
+
 export const TEMPLATE_ID_TO_THEME: Record<string, string> = {
   template1: 'modern',
   template2: 'rustic',

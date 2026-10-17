@@ -285,7 +285,7 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                 </span>
 
                 {/* Quranic / Scripture Verse */}
-                <p className="text-sm text-[#1b1c1a] max-w-sm italic leading-relaxed">
+                <p data-anim="quote" className="text-sm text-[#1b1c1a] max-w-sm italic leading-relaxed">
                   “{data.quote || 'Dan di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya, dan Dia menjadikan di antaramu rasa kasih dan sayang.'}”
                 </p>
                 <span className="text-[11px] font-semibold text-[#775a19] tracking-widest mt-2 uppercase">
@@ -377,7 +377,7 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
 
                 {/* First Person Card */}
                 <div className="w-full max-w-xs rounded-3xl p-5 bg-white shadow-md flex flex-col items-center relative mb-6 border border-[#d1c5b4]/30">
-                  <div className="w-44 h-52 rounded-t-full rounded-b-xl overflow-hidden shadow-inner mb-4 bg-[#efeeeb] p-1">
+                  <div data-anim="soft-scale" className="w-44 h-52 rounded-t-full rounded-b-xl overflow-hidden shadow-inner mb-4 bg-[#efeeeb] p-1">
                     <img
                       src={
                         firstPerson.photo_url ||
@@ -423,7 +423,7 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
 
                 {/* Second Person Card */}
                 <div className="w-full max-w-xs rounded-3xl p-5 bg-white shadow-md flex flex-col items-center relative mt-6 border border-[#d1c5b4]/30">
-                  <div className="w-44 h-52 rounded-t-full rounded-b-xl overflow-hidden shadow-inner mb-4 bg-[#efeeeb] p-1">
+                  <div data-anim="soft-scale" className="w-44 h-52 rounded-t-full rounded-b-xl overflow-hidden shadow-inner mb-4 bg-[#efeeeb] p-1">
                     <img
                       src={
                         secondPerson.photo_url ||

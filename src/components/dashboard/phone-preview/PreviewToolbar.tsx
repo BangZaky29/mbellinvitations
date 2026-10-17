@@ -1,4 +1,5 @@
 import React from 'react';
+import { replayUniversalScrollAnimation } from '../../../utils/scrollAnimationEngine';
 
 interface PreviewToolbarProps {
   onClose?: () => void;
@@ -118,11 +119,22 @@ export const PreviewToolbar: React.FC<PreviewToolbarProps> = ({
         <span className={`w-px h-3.5 mx-0.5 ${onClose ? 'bg-white/20' : 'bg-stone-200'}`} />
         <button
           type="button"
+          onClick={() => replayUniversalScrollAnimation()}
+          className={`p-1.5 rounded-lg transition-colors active:scale-90 cursor-pointer ${
+            onClose ? 'text-neutral-400 hover:text-white' : 'text-stone-500 hover:text-stone-800'
+          }`}
+          title="Kembalikan ke Sampul & Putar Ulang Animasi"
+        >
+          <span className="material-symbols-outlined text-[17px]">play_circle</span>
+        </button>
+
+        <button
+          type="button"
           onClick={onRefresh}
           className={`p-1.5 rounded-lg transition-colors active:rotate-180 cursor-pointer ${
             onClose ? 'text-neutral-400 hover:text-white' : 'text-stone-500 hover:text-stone-800'
           }`}
-          title="Muat Ulang Preview"
+          title="Muat Ulang Preview dari Awal"
         >
           <span className="material-symbols-outlined text-[17px]">refresh</span>
         </button>

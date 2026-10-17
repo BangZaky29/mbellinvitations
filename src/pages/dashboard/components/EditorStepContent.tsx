@@ -5,6 +5,7 @@ import { ThemePickerCard } from '../../../components/dashboard/ThemePickerCard';
 import { CoupleFormCard } from '../../../components/dashboard/CoupleFormCard';
 import { EventsFormCard } from '../../../components/dashboard/EventsFormCard';
 import { GiftsStoryFormCard } from '../../../components/dashboard/GiftsStoryFormCard';
+import { AnimationSettingsCard } from '../../../components/dashboard/AnimationSettingsCard';
 import { computeCoupleSlug } from '../helpers/computeCoupleSlug';
 
 interface EditorStepContentProps {
@@ -121,6 +122,19 @@ export const EditorStepContent: React.FC<EditorStepContentProps> = ({
             setThemeConfig((prev) => ({ ...prev, music_url }));
           }}
           onSaveMusic={onManualSave}
+        />
+      )}
+
+      {activeStep === 6 && (
+        <AnimationSettingsCard
+          themeConfig={themeConfig}
+          onThemeConfigChange={(newConfig) => {
+            setThemeConfig(newConfig);
+            setFormData((prev) => ({
+              ...prev,
+              theme_config: newConfig,
+            }));
+          }}
         />
       )}
     </>

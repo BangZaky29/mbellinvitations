@@ -47,7 +47,28 @@ export const PhoneMockupPreview: React.FC<PhoneMockupPreviewProps> = ({
     }
   }, [data.theme_id, onClose]);
 
+  // Dengarkan event putar ulang: kembalikan tampilan frame HP ke Sampul (Cover Gate)
+  useEffect(() => {
+    const handleReplayEvent = () => {
+      setIsCoverOpen(false);
+      setPreviewKey((prev) => prev + 1);
+
+      setTimeout(() => {
+        const phoneScrollable = document.querySelector('[data-phone-preview="true"] .overflow-y-auto');
+        if (phoneScrollable) {
+          phoneScrollable.scrollTop = 0;
+        }
+      }, 40);
+    };
+
+    window.addEventListener('mbell_replay_preview', handleReplayEvent);
+    return () => {
+      window.removeEventListener('mbell_replay_preview', handleReplayEvent);
+    };
+  }, []);
+
   const handleRefresh = () => {
+    setIsCoverOpen(false);
     setPreviewKey((prev) => prev + 1);
   };
 

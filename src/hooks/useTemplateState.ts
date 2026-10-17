@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import type { InvitationProps, WishItem } from '../types/invitation';
 import { useCountdown } from './useCountdown';
 import { useAudioPlayer } from './useAudioPlayer';
-import { useScrollReveal } from './useScrollReveal';
+import { useUniversalScrollAnimation, anim } from '../utils/scrollAnimationEngine';
 
 interface UseTemplateStateOptions extends InvitationProps {
   fallbackMusicUrl?: string;
@@ -27,8 +27,11 @@ export function useTemplateState({
   const [toastType, setToastType] = useState<'success' | 'info' | 'error' | 'copy'>('success');
   const [activeGiftTab, setActiveGiftTab] = useState<'transfer' | 'kado'>('transfer');
 
-  // Hook for GPU-accelerated scroll reveal
-  useScrollReveal([isOpen, isPreview]);
+  // Central Universal Scroll Animation Engine (Step 6 Config Aware)
+  const activeAnimConfig = theme?.animation_config || data?.theme_config?.animation_config;
+  useUniversalScrollAnimation([isOpen, isPreview, activeAnimConfig], {
+    config: activeAnimConfig,
+  });
 
   // Sync isCoverOpen prop (from Dashboard Editor toggle)
   useEffect(() => {
@@ -212,5 +215,6 @@ export function useTemplateState({
     firstPersonRole,
     secondPersonRole,
     isSectionActive,
+    anim,
   };
 }

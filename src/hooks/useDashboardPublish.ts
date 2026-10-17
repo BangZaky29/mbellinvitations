@@ -2,7 +2,7 @@ import React from 'react';
 import { supabase, saveUserTemplate } from '../lib/supabaseClient';
 import type { InvitationData, ThemeConfig } from '../types/invitation';
 import { extractYouTubeId } from './useAudioPlayer';
-import { THEME_TO_TEMPLATE_ID } from '../pages/dashboard/constants/themeMapping';
+import { THEME_TO_TEMPLATE_ID, getSafeDbTemplateId } from '../pages/dashboard/constants/themeMapping';
 import type { DashboardUser } from './useDashboardAuth';
 import { computeCoupleSlug } from '../pages/dashboard/helpers/computeCoupleSlug';
 
@@ -105,10 +105,11 @@ export function useDashboardPublish({
         is_paid: true,
       };
 
-      // 1. Simpan dan terbitkan ke tabel public.invitations
+      // 1. Simpan dan terbitkan ke tabel public.invitations (menggunakan safeDbTemplateId untuk mencegah 409 FK violation)
+      const safeDbTemplateId = getSafeDbTemplateId(formData.theme_id);
       const payload = {
         user_id: user?.id || null,
-        template_id,
+        template_id: safeDbTemplateId,
         slug: targetSlug,
         content: publishedContent,
         theme_config: themeConfig,

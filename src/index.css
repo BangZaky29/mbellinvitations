@@ -439,79 +439,251 @@
 }
 
 /* ============================================================
-   GPU-ACCELERATED SCROLL REVEAL ANIMATIONS
+   GPU-ACCELERATED UNIVERSAL SCROLL REVEAL ANIMATIONS
+   Ultra-Smooth, Elegant, Relaxed Pacing for Wedding Invitations
    ============================================================ */
-.reveal {
-  opacity: 0;
-  transform: translateY(32px);
-  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+.anim-target,
+.reveal,
+.reveal-scale,
+.reveal-left,
+.reveal-right {
   will-change: opacity, transform;
 }
 
-.reveal.is-visible {
+/* 1. Gentle Float-Up (Default Section & Container) */
+.anim-target.anim-fade-up,
+.reveal {
+  opacity: 0;
+  transform: translateY(var(--anim-distance, 24px));
+  transition: opacity var(--anim-duration, 1.05s) var(--anim-ease, cubic-bezier(0.16, 1, 0.3, 1)),
+              transform var(--anim-duration, 1.05s) var(--anim-ease, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.anim-target.anim-fade-up.is-revealed,
+.anim-target.anim-fade-up.is-visible,
+.reveal.is-visible,
+.reveal.is-revealed {
   opacity: 1;
   transform: translateY(0);
 }
 
+/* 2. Editorial Soft-Scale (Photos, Portraits, Gallery) */
+.anim-target.anim-soft-scale,
 .reveal-scale {
   opacity: 0;
-  transform: scale(0.93) translateY(20px);
-  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform;
+  transform: scale(0.96) translateY(calc(var(--anim-distance, 24px) * 0.6));
+  transition: opacity var(--anim-duration, 1.05s) var(--anim-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+              transform var(--anim-duration, 1.05s) var(--anim-ease, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
-.reveal-scale.is-visible {
+.anim-target.anim-soft-scale.is-revealed,
+.anim-target.anim-soft-scale.is-visible,
+.reveal-scale.is-visible,
+.reveal-scale.is-revealed {
   opacity: 1;
   transform: scale(1) translateY(0);
 }
 
-.reveal-left {
+/* 3. Soft Title & Heading Reveal */
+.anim-target.anim-title {
   opacity: 0;
-  transform: translateX(-35px);
-  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform;
+  transform: translateY(calc(var(--anim-distance, 24px) * 0.6));
+  transition: opacity calc(var(--anim-duration, 1.05s) * 1.05) var(--anim-ease, cubic-bezier(0.16, 1, 0.3, 1)),
+              transform calc(var(--anim-duration, 1.05s) * 1.05) var(--anim-ease, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
-.reveal-left.is-visible {
+.anim-target.anim-title.is-revealed,
+.anim-target.anim-title.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 4. Warm Focus Dissolve (Quotes, Verses, Sacred Texts) */
+.anim-target.anim-quote {
+  opacity: 0;
+  transform: translateY(calc(var(--anim-distance, 24px) * 0.5));
+  filter: blur(var(--anim-blur, 4px));
+  transition: opacity calc(var(--anim-duration, 1.05s) * 1.15) var(--anim-ease, cubic-bezier(0.16, 1, 0.3, 1)),
+              transform calc(var(--anim-duration, 1.05s) * 1.15) var(--anim-ease, cubic-bezier(0.16, 1, 0.3, 1)),
+              filter calc(var(--anim-duration, 1.05s) * 1.15) var(--anim-ease, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.anim-target.anim-quote.is-revealed,
+.anim-target.anim-quote.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0px);
+}
+
+/* 5. Smooth Card Reveal (Events, Banks, RSVP Forms) */
+.anim-target.anim-card {
+  opacity: 0;
+  transform: translateY(calc(var(--anim-distance, 24px) * 0.85));
+  transition: opacity calc(var(--anim-duration, 1.05s) * 0.9) var(--anim-ease, cubic-bezier(0.16, 1, 0.3, 1)),
+              transform calc(var(--anim-duration, 1.05s) * 0.9) var(--anim-ease, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.anim-target.anim-card.is-revealed,
+.anim-target.anim-card.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 6. Lateral Glides (Couple Comparison / Split Columns) */
+.anim-target.anim-fade-left,
+.reveal-left {
+  opacity: 0;
+  transform: translateX(calc(var(--anim-distance, 24px) * -1));
+  transition: opacity var(--anim-duration, 1.05s) var(--anim-ease, cubic-bezier(0.16, 1, 0.3, 1)),
+              transform var(--anim-duration, 1.05s) var(--anim-ease, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.anim-target.anim-fade-left.is-revealed,
+.anim-target.anim-fade-left.is-visible,
+.reveal-left.is-visible,
+.reveal-left.is-revealed {
   opacity: 1;
   transform: translateX(0);
 }
 
+.anim-target.anim-fade-right,
 .reveal-right {
   opacity: 0;
-  transform: translateX(35px);
-  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform;
+  transform: translateX(var(--anim-distance, 24px));
+  transition: opacity var(--anim-duration, 1.05s) var(--anim-ease, cubic-bezier(0.16, 1, 0.3, 1)),
+              transform var(--anim-duration, 1.05s) var(--anim-ease, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
-.reveal-right.is-visible {
+.anim-target.anim-fade-right.is-revealed,
+.anim-target.anim-fade-right.is-visible,
+.reveal-right.is-visible,
+.reveal-right.is-revealed {
   opacity: 1;
   transform: translateX(0);
 }
 
 /* Staggered Delay Utilities */
-.delay-100 { transition-delay: 100ms; }
-.delay-150 { transition-delay: 150ms; }
-.delay-200 { transition-delay: 200ms; }
-.delay-250 { transition-delay: 250ms; }
-.delay-300 { transition-delay: 300ms; }
-.delay-400 { transition-delay: 400ms; }
-.delay-500 { transition-delay: 500ms; }
+.delay-100 { transition-delay: var(--anim-stagger, 100ms); }
+.delay-150 { transition-delay: calc(var(--anim-stagger, 140ms) * 1.1); }
+.delay-200 { transition-delay: calc(var(--anim-stagger, 140ms) * 1.5); }
+.delay-250 { transition-delay: calc(var(--anim-stagger, 140ms) * 1.8); }
+.delay-300 { transition-delay: calc(var(--anim-stagger, 140ms) * 2.2); }
+.delay-400 { transition-delay: calc(var(--anim-stagger, 140ms) * 2.8); }
+.delay-500 { transition-delay: calc(var(--anim-stagger, 140ms) * 3.5); }
+.delay-600 { transition-delay: calc(var(--anim-stagger, 140ms) * 4.2); }
 
-/* Above-the-fold Safety: Guarantee that immediate top Hero section photos 
-   are always visible seamlessly even during rapid Live/Preview mode switches */
+/* Sembunyikan partikel melayang jika floating_petals dimatikan */
+[data-hide-floating-petals="true"] .animate-fall-petal,
+[data-hide-floating-petals="true"] .falling-petal,
+[data-hide-floating-petals="true"] .floating-ornament {
+  display: none !important;
+}
+
+/* ============================================================
+   STEP 6 ANIMATION STYLE PRESETS (Dramatic Real-Time Visual Differentiation)
+   ============================================================ */
+
+/* 1. Cinematic Editorial (Soft expansion scale from 0.92 to 1.0) */
+[data-anim-preset="cinematic"] .anim-target:not(.is-revealed):not(.is-visible),
+[data-anim-preset="cinematic"] .reveal:not(.is-revealed):not(.is-visible) {
+  opacity: 0;
+  transform: scale(0.92) translateY(calc(var(--anim-distance, 20px) * 0.5));
+}
+[data-anim-preset="cinematic"] .anim-target.is-revealed,
+[data-anim-preset="cinematic"] .anim-target.is-visible,
+[data-anim-preset="cinematic"] .reveal.is-revealed,
+[data-anim-preset="cinematic"] .reveal.is-visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+/* 2. Minimalist Pure (No movement displacement, pure serene dissolve) */
+[data-anim-preset="minimalist"] .anim-target:not(.is-revealed):not(.is-visible),
+[data-anim-preset="minimalist"] .reveal:not(.is-revealed):not(.is-visible) {
+  opacity: 0;
+  transform: none !important;
+}
+[data-anim-preset="minimalist"] .anim-target.is-revealed,
+[data-anim-preset="minimalist"] .anim-target.is-visible,
+[data-anim-preset="minimalist"] .reveal.is-revealed,
+[data-anim-preset="minimalist"] .reveal.is-visible {
+  opacity: 1;
+  transform: none !important;
+}
+
+/* 3. Dynamic Cascade (Alternating left/right subtle lateral entrance) */
+[data-anim-preset="cascade"] .anim-target:not(.is-revealed):not(.is-visible):nth-of-type(odd),
+[data-anim-preset="cascade"] .reveal:not(.is-revealed):not(.is-visible):nth-of-type(odd) {
+  opacity: 0;
+  transform: translateX(calc(var(--anim-distance, 20px) * -1.2)) translateY(8px);
+}
+[data-anim-preset="cascade"] .anim-target:not(.is-revealed):not(.is-visible):nth-of-type(even),
+[data-anim-preset="cascade"] .reveal:not(.is-revealed):not(.is-visible):nth-of-type(even) {
+  opacity: 0;
+  transform: translateX(calc(var(--anim-distance, 20px) * 1.2)) translateY(8px);
+}
+[data-anim-preset="cascade"] .anim-target.is-revealed,
+[data-anim-preset="cascade"] .anim-target.is-visible,
+[data-anim-preset="cascade"] .reveal.is-revealed,
+[data-anim-preset="cascade"] .reveal.is-visible {
+  opacity: 1;
+  transform: translateX(0) translateY(0);
+}
+
+/* Above-the-fold Safety & Exemption */
+#hero .anim-target,
 #hero .reveal,
 #hero .reveal-scale,
+#hero-section .anim-target,
 #hero-section .reveal,
 #hero-section .reveal-scale,
+#pawarta .anim-target,
 #pawarta .reveal,
 #pawarta .reveal-scale,
+#salam .anim-target,
 #salam .reveal,
 #salam .reveal-scale,
+#hero-countdown .anim-target,
 #hero-countdown .reveal,
 #hero-countdown .reveal-scale {
   opacity: 1 !important;
   transform: none !important;
+  filter: none !important;
+}
+
+/* ============================================================
+   STRICT DASHBOARD ISOLATION (ZERO LEAK TO SETTINGS / DASHBOARD)
+   Seluruh panel dashboard, setting step 1-6, header, sidebar,
+   dan form input 100% instan, bebas dari efek pergeseran / transisi smooth.
+   ============================================================ */
+main:not([data-phone-preview] *),
+header:not([data-phone-preview] *),
+nav:not([data-phone-preview] *),
+aside:not([data-phone-preview] *):not(:has([data-phone-preview])),
+section:not([data-phone-preview] *),
+.dashboard-content,
+.dashboard-sidebar {
+  --anim-duration: 0s !important;
+  --anim-distance: 0px !important;
+  --anim-blur: 0px !important;
+}
+
+main:not([data-phone-preview] *) .anim-target,
+main:not([data-phone-preview] *) .reveal,
+main:not([data-phone-preview] *) .reveal-scale,
+main:not([data-phone-preview] *) .reveal-left,
+main:not([data-phone-preview] *) .reveal-right,
+header .anim-target,
+nav .anim-target,
+aside:not(:has([data-phone-preview])) .anim-target,
+section:not([data-phone-preview] *) .anim-target,
+section:not([data-phone-preview] *) h2.anim-title,
+section:not([data-phone-preview] *).anim-card {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+  filter: none !important;
 }
 
 

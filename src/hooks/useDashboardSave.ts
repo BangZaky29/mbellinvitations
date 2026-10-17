@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase, saveUserTemplate } from '../lib/supabaseClient';
 import type { InvitationData, ThemeConfig } from '../types/invitation';
 import { extractYouTubeId } from './useAudioPlayer';
-import { THEME_TO_TEMPLATE_ID } from '../pages/dashboard/constants/themeMapping';
+import { THEME_TO_TEMPLATE_ID, getSafeDbTemplateId } from '../pages/dashboard/constants/themeMapping';
 import type { DashboardUser } from './useDashboardAuth';
 
 import { computeCoupleSlug } from '../pages/dashboard/helpers/computeCoupleSlug';
@@ -18,6 +18,7 @@ interface UseDashboardSaveOptions {
 
 /**
  * Sinkronisasi baris invitations dengan aman tanpa memicu 409 Conflict:
+ * - Menggunakan getSafeDbTemplateId untuk menghindari pelanggaran foreign key ke public.templates
  * - Update berdasarkan primary key 'id' jika row sudah ada
  * - Menjaga status 'published' agar tidak tertimpa 'draft' saat autosave
  * - Mencegah error foreign key jika user belum login
@@ -35,17 +36,24 @@ async function syncInvitationsRow(
   }
 ) {
   try {
-    const { data: existingRows } = await supabase
+    const { data: existingRows, error: selectError } = await supabase
       .from('invitations')
       .select('id, user_id, status')
       .eq('slug', targetSlug);
+
+    if (selectError) {
+      console.warn('Sync invitations row query warning:', selectError.message);
+      return;
+    }
+
+    const safeTemplateId = getSafeDbTemplateId(payload.template_id);
 
     if (existingRows && existingRows.length > 0) {
       const existing = existingRows[0];
       const canUpdate = !existing.user_id || existing.user_id === payload.user_id || !payload.user_id;
       if (canUpdate) {
         const updatePayload: any = {
-          template_id: payload.template_id,
+          template_id: safeTemplateId,
           content: payload.content,
           theme_config: payload.theme_config,
           music_url: payload.music_url,
@@ -58,15 +66,29 @@ async function syncInvitationsRow(
         if (payload.user_id && !existing.user_id) {
           updatePayload.user_id = payload.user_id;
         }
-        await supabase.from('invitations').update(updatePayload).eq('id', existing.id);
+        const { error: updateError } = await supabase
+          .from('invitations')
+          .update(updatePayload)
+          .eq('id', existing.id);
+
+        if (updateError) {
+          console.warn('Sync invitations row update warning:', updateError.message);
+        }
       }
     } else if (payload.user_id) {
       const insertPayload = {
         ...payload,
+        template_id: safeTemplateId,
         slug: targetSlug,
         updated_at: new Date().toISOString(),
       };
-      await supabase.from('invitations').insert(insertPayload);
+      const { error: insertError } = await supabase
+        .from('invitations')
+        .insert(insertPayload);
+
+      if (insertError) {
+        console.warn('Sync invitations insert warning:', insertError.message);
+      }
     }
   } catch (err: any) {
     console.warn('Sync invitations row notice:', err?.message || err);

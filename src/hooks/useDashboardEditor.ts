@@ -13,6 +13,7 @@ import {
   TEMPLATE_ID_TO_THEME,
   DEFAULT_THEME_CONFIGS,
   DEMO_KEYWORDS,
+  getSafeDbTemplateId,
 } from '../pages/dashboard/constants/themeMapping';
 import { computeCoupleSlug } from '../pages/dashboard/helpers/computeCoupleSlug';
 import { parseSupabaseUser, type DashboardUser } from './useDashboardAuth';
@@ -222,9 +223,10 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
                       content: { ...loadedContent, slug: coupleSlug },
                     });
 
+                    const safeDbTemplateId = getSafeDbTemplateId(userTemplateData.theme_id || loadedContent.theme_id);
                     const { error: syncInvError } = await supabase.from('invitations').upsert({
                       user_id: currentUser.id,
-                      template_id: THEME_TO_TEMPLATE_ID[userTemplateData.theme_id || loadedContent.theme_id || 'modern'] || 'template1',
+                      template_id: safeDbTemplateId,
                       slug: coupleSlug,
                       content: { ...loadedContent, slug: coupleSlug },
                       theme_config: userTemplateData.theme_config || themeConfig,
@@ -487,9 +489,10 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
       const effectiveStatus = (formData.status || 'draft') as any;
 
       // 1. Update/Upsert di public.invitations
+      const safeDbTemplateId = getSafeDbTemplateId(formData.theme_id);
       const invPayload = {
         user_id: user?.id || null,
-        template_id,
+        template_id: safeDbTemplateId,
         slug: cleanSlug,
         content: updatedFormData,
         theme_config: themeConfig,
@@ -567,7 +570,7 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
 
   // Handler Next Step
   const handleNextStep = () => {
-    if (activeStep < 5) {
+    if (activeStep < 6) {
       setActiveStep((prev) => prev + 1);
     }
   };

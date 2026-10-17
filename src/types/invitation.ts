@@ -120,6 +120,24 @@ export interface InvitationData {
   theme_config?: ThemeConfig;
 }
 
+export interface AnimationConfig {
+  smoothness: number;           // 1 - 100 (Default: 75, angka 100 = 5 detik)
+  preset: 'romantic' | 'cinematic' | 'minimalist' | 'cascade';
+  floating_petals: boolean;     // Default: true
+  stagger_speed: 'fast' | 'normal' | 'relaxed';
+  lens_focus_blur: boolean;     // Default: true
+  reduced_motion: boolean;      // Default: false
+}
+
+export const DEFAULT_ANIMATION_CONFIG: AnimationConfig = {
+  smoothness: 75,
+  preset: 'romantic',
+  floating_petals: true,
+  stagger_speed: 'normal',
+  lens_focus_blur: true,
+  reduced_motion: false,
+};
+
 export interface ThemeConfig {
   primary_color: string;
   music_url: string;
@@ -130,6 +148,7 @@ export interface ThemeConfig {
   show_rsvp?: boolean;
   show_gift?: boolean;
   show_wishes?: boolean;
+  animation_config?: AnimationConfig;
 }
 
 export interface InvitationProps {

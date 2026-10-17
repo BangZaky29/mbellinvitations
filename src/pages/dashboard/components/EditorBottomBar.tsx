@@ -52,8 +52,8 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
           </button>
         )}
 
-        {/* Tombol Lanjutkan (Muncul di Step 1-4, di Step 5 tampil tombol Selesai & Terbitkan) */}
-        {activeStep < 5 ? (
+        {/* Tombol Lanjutkan (Muncul di Step 1-5, di Step 6 tampil tombol Selesai & Terbitkan) */}
+        {activeStep < 6 ? (
           <button
             type="button"
             onClick={onNextStep}
