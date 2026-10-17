@@ -73,7 +73,7 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
   isOpen,
   onClose,
   onConfirmPublish,
-  invitationSlug = 'raditya-jessica',
+  invitationSlug = 'undangan-baru',
 }) => {
   const [selectedPlanId, setSelectedPlanId] = useState<string>('premium');
   const [paymentMethod, setPaymentMethod] = useState<'qris' | 'bca' | 'mandiri'>('qris');

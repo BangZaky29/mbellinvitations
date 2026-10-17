@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase, type UserTemplateRecord } from '../../lib/supabaseClient';
+import type { InvitationData } from '../../types/invitation';
+import { TemplateCardSelector, type TemplateSelectorItem } from './common/TemplateCardSelector';
 
 interface WishEntry {
   id: string;
@@ -9,25 +11,49 @@ interface WishEntry {
   created_at: string;
 }
 
-interface WishesListPanelProps {
+export interface WishesListPanelProps {
   userId?: string | null;
   invitationId?: string | null;
   invitationSlug?: string;
+  coupleNames?: string;
+  currentFormData?: InvitationData;
+  activeTemplateId?: string | null;
   onGoToEditor: () => void;
+  onOpenMyTemplates?: () => void;
   onOpenAuthGate?: () => void;
+  onSelectSavedTemplate?: (template: UserTemplateRecord, stayOnCurrentTab?: boolean) => void;
 }
 
 export const WishesListPanel: React.FC<WishesListPanelProps> = ({
   userId,
   invitationId,
-  invitationSlug = 'raditya-jessica',
+  invitationSlug = 'undangan-baru',
+  coupleNames = 'Mempelai Pria & Mempelai Wanita',
+  currentFormData,
+  activeTemplateId,
   onGoToEditor,
+  onOpenMyTemplates,
   onOpenAuthGate,
+  onSelectSavedTemplate,
 }) => {
   const [wishes, setWishes] = useState<WishEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [hasCopied, setHasCopied] = useState(false);
+
+  // State template yang sedang dipilih di selector
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateSelectorItem | null>(null);
+
+  const effectiveSlug = selectedTemplate?.slug || invitationSlug || 'undangan-baru';
+  const effectiveId = selectedTemplate?.invitationRecordId || selectedTemplate?.id || invitationId;
+  const effectiveCouple = selectedTemplate?.coupleNames || coupleNames;
+
+  const handleSelectTemplate = (item: TemplateSelectorItem) => {
+    setSelectedTemplate(item);
+    if (item.rawTemplate && onSelectSavedTemplate) {
+      onSelectSavedTemplate(item.rawTemplate, true);
+    }
+  };
 
   useEffect(() => {
     const fetchWishes = async () => {
@@ -39,7 +65,21 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
           return;
         }
 
-        let targetInvitationId = invitationId;
+        let targetInvitationId = effectiveId;
+
+        // Jika ada slug, resolve ID record dari tabel invitations
+        if (effectiveSlug && effectiveSlug !== 'undangan-baru' && effectiveSlug !== 'raditya-jessica') {
+          const { data: invRow } = await supabase
+            .from('invitations')
+            .select('id')
+            .eq('slug', effectiveSlug)
+            .maybeSingle();
+
+          if (invRow?.id) {
+            targetInvitationId = invRow.id;
+          }
+        }
+
         if (!targetInvitationId) {
           const { data: invData } = await supabase
             .from('invitations')
@@ -55,14 +95,19 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
         }
 
         if (targetInvitationId) {
-          const { data: wishesData, error } = await supabase
-            .from('wishes')
-            .select('*')
-            .eq('invitation_id', targetInvitationId)
-            .order('created_at', { ascending: false });
+          let query = supabase.from('wishes').select('*');
+          if (effectiveId && targetInvitationId && effectiveId !== targetInvitationId) {
+            query = query.or(`invitation_id.eq.${targetInvitationId},invitation_id.eq.${effectiveId}`);
+          } else {
+            query = query.eq('invitation_id', targetInvitationId);
+          }
+
+          const { data: wishesData, error } = await query.order('created_at', { ascending: false });
 
           if (!error && wishesData) {
             setWishes(wishesData as WishEntry[]);
+          } else {
+            setWishes([]);
           }
         } else {
           setWishes([]);
@@ -75,10 +120,10 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
     };
 
     fetchWishes();
-  }, [userId, invitationId]);
+  }, [userId, effectiveId, effectiveSlug]);
 
   const handleCopyLink = () => {
-    const url = `https://mbell.id/${invitationSlug}`;
+    const url = `https://mbell.id/${effectiveSlug}`;
     navigator.clipboard.writeText(url);
     setHasCopied(true);
     setTimeout(() => setHasCopied(false), 2500);
@@ -91,77 +136,44 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
       w.message.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // 1. Kondisi Belum Login
-  if (!userId) {
-    return (
-      <div className="bg-white rounded-3xl p-8 sm:p-12 border border-stone-200/80 shadow-xs text-center space-y-5 animate-in fade-in">
-        <div className="w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/20 text-amber-700 flex items-center justify-center mx-auto">
-          <span className="material-symbols-outlined text-[32px]">lock</span>
-        </div>
-        <div className="max-w-md mx-auto space-y-2">
-          <h3 className="font-serif font-bold text-xl text-stone-900">
-            Masuk untuk Melihat Ucapan &amp; Doa Restu
-          </h3>
-          <p className="text-xs sm:text-sm text-stone-500 leading-relaxed">
-            Silakan masuk dengan akun Anda untuk melihat pesan hangat dan doa restu dari para sahabat dan keluarga.
-          </p>
-        </div>
-        <div className="pt-2 flex justify-center">
-          <button
-            type="button"
-            onClick={onOpenAuthGate || onGoToEditor}
-            className="inline-flex items-center gap-2.5 px-7 py-3 rounded-full bg-[#d97706] hover:bg-[#b45309] text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-[20px]">login</span>
-            <span>Masuk / Daftar Akun</span>
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // 2. Kondisi Undangan Belum Dibuat
-  if (!invitationId && wishes.length === 0 && !isLoading) {
-    return (
-      <div className="bg-white rounded-3xl p-8 sm:p-12 border border-stone-200/80 shadow-xs text-center space-y-5 animate-in fade-in">
-        <div className="w-16 h-16 rounded-3xl bg-stone-100 border border-stone-200 text-stone-600 flex items-center justify-center mx-auto">
-          <span className="material-symbols-outlined text-[32px]">draft</span>
-        </div>
-        <div className="max-w-md mx-auto space-y-2">
-          <h3 className="font-serif font-bold text-xl text-stone-900">
-            Belum Ada Undangan yang Dibuat
-          </h3>
-          <p className="text-xs sm:text-sm text-stone-500 leading-relaxed">
-            Anda belum memiliki undangan pernikahan aktif. Buat undangan terlebih dahulu untuk mulai menerima ucapan penuh berkah dari para tamu.
-          </p>
-        </div>
-        <button
-          onClick={onGoToEditor}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition-colors shadow-xs cursor-pointer"
-        >
-          <span className="material-symbols-outlined text-[18px]">add_circle</span>
-          <span>Mulai Buat Undangan</span>
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Header Panel */}
+      {/* 0. SELECTOR KARTU TEMPLATE UNDANGAN */}
+      <TemplateCardSelector
+        userId={userId}
+        currentFormData={currentFormData}
+        activeTemplateId={activeTemplateId}
+        activeSlug={effectiveSlug}
+        selectedTemplate={selectedTemplate}
+        onSelectTemplate={handleSelectTemplate}
+        onGoToEditor={onGoToEditor}
+        onOpenMyTemplates={onOpenMyTemplates}
+        onOpenAuthGate={onOpenAuthGate}
+        sectionTitle="Pilih Template Undangan Yang Dikelola"
+        sectionSubtitle="Pilih kartu undangan di bawah untuk melihat pesan doa & ucapan khusus undangan tersebut:"
+        badgeLabel="Ucapan Masuk"
+      />
+
+      {/* HEADER PANEL UCAPAN */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200/80">
         <div>
-          <h2 className="font-serif font-bold text-2xl text-stone-900">
-            Ucapan &amp; Doa Restu Masuk
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="font-serif font-bold text-2xl text-stone-900">
+              Ucapan &amp; Doa Restu Masuk
+            </h2>
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+              {effectiveCouple}
+            </span>
+          </div>
           <p className="text-xs sm:text-sm text-stone-500 mt-0.5">
-            Kumpulan doa dan ucapan selamat dari keluarga serta sahabat tercinta.
+            Kumpulan doa dan ucapan selamat dari keluarga serta sahabat tercinta untuk tautan{' '}
+            <span className="font-mono text-stone-700 font-semibold">mbell.id/{effectiveSlug}</span>.
           </p>
         </div>
 
         <button
           onClick={handleCopyLink}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer shrink-0"
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer shrink-0"
         >
           <span className="material-symbols-outlined text-[16px]">
             {hasCopied ? 'done' : 'content_copy'}
@@ -180,7 +192,7 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari pengirim atau pesan doa..."
+            placeholder={`Cari pengirim atau ucapan untuk ${effectiveCouple}...`}
             className="w-full pl-10 pr-4 py-2 rounded-xl bg-white border border-stone-200 text-xs sm:text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 shadow-2xs"
           />
         </div>
@@ -206,14 +218,26 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
           </div>
           <h4 className="font-semibold text-stone-800 text-sm">
             {wishes.length === 0
-              ? 'Belum Ada Ucapan dan Doa yang Masuk'
+              ? `Belum Ada Ucapan dan Doa untuk ${effectiveCouple}`
               : 'Tidak Ada Ucapan yang Sesuai dengan Pencarian'}
           </h4>
           <p className="text-xs text-stone-500 max-w-sm mx-auto">
             {wishes.length === 0
-              ? 'Bagikan tautan undangan Anda ke keluarga & sahabat untuk mulai menerima pesan doa restu.'
+              ? `Bagikan tautan mbell.id/${effectiveSlug} ke keluarga & sahabat untuk mulai menerima pesan doa restu pada template ini.`
               : 'Silakan gunakan kata kunci lain untuk mencari ucapan tertentu.'}
           </p>
+          {wishes.length === 0 && (
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[16px]">share</span>
+                <span>Salin Link Undangan Ini</span>
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
@@ -255,7 +279,7 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
               </div>
 
               <div className="flex items-center justify-end text-[10px] text-stone-400 font-medium">
-                <span>Diterima via Undangan Digital</span>
+                <span>Diterima via mbell.id/{effectiveSlug}</span>
               </div>
             </div>
           ))}

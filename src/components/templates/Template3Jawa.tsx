@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import type { InvitationProps, WishItem } from '../../types/invitation';
-import { useCountdown } from '../../hooks/useCountdown';
-import { useAudioPlayer } from '../../hooks/useAudioPlayer';
-import { useScrollReveal } from '../../hooks/useScrollReveal';
+import type { InvitationProps } from '../../types/invitation';
+import { useTemplateState } from '../../hooks/useTemplateState';
 import { FloatingDock } from '../common/FloatingDock';
 
 export const Template3Jawa: React.FC<InvitationProps> = ({
@@ -15,81 +13,46 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
   onSubmitRsvp,
   onSubmitWish,
 }) => {
-  // State Cover Gate: user opened or editor forced open
-  const [isOpen, setIsOpen] = useState(isCoverOpen || false);
-  const [isOpening, setIsOpening] = useState(false);
-
-  // Hook for GPU-accelerated scroll reveal
-  useScrollReveal([isOpen, isPreview]);
-
-  // Toast feedback state
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // Selected image for gallery lightbox
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [showAllGallery, setShowAllGallery] = useState(false);
-
-  // Close gallery lightbox on Escape key
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSelectedImage(null);
-    };
-    if (selectedImage) {
-      window.addEventListener('keydown', handleKeyDown);
-    }
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedImage]);
-
-  // Sync isCoverOpen prop (from Dashboard Editor toggle)
-  useEffect(() => {
-    if (isCoverOpen !== undefined) {
-      setIsOpen(isCoverOpen);
-    }
-  }, [isCoverOpen]);
-
-  // Audio player hook (traditional gamelan or custom audio)
-  const defaultMusicUrl =
-    data.music_url ||
-    theme.music_url ||
-    'https://assets.mixkit.co/music/preview/mixkit-romantic-wedding-walk-257.mp3';
-  const { isPlaying, toggle, play } = useAudioPlayer(defaultMusicUrl);
-
-  // Real-time countdown hook
-  const { days, hours, minutes, seconds } = useCountdown(data.wedding_date_iso);
-
-  // Local Wishes state
-  const [wishes, setWishes] = useState<WishItem[]>(initialWishes);
-  const [wishForm, setWishForm] = useState({
-    name: data.guest_name || '',
-    message: '',
+  const {
+    isOpen,
+    isOpening,
+    handleOpenInvitation,
+    isPlaying,
+    toggleMusic,
+    countdown,
+    wishes,
+    wishForm,
+    setWishForm,
+    handleWishSubmit,
+    selectedImage,
+    setSelectedImage,
+    showAllGallery,
+    setShowAllGallery,
+    toastMessage,
+    showToast,
+    firstPerson,
+    secondPerson,
+    isSectionActive,
+  } = useTemplateState({
+    data,
+    theme,
+    wishes: initialWishes,
+    isPreview,
+    isCoverOpen,
+    onSubmitRsvp,
+    onSubmitWish,
+    fallbackMusicUrl: 'https://assets.mixkit.co/music/preview/mixkit-romantic-wedding-walk-257.mp3',
   });
 
-  // RSVP Form state
+  const { days, hours, minutes, seconds } = countdown;
+
+  // RSVP Form state specific to Javanese theme
   const [rsvpForm, setRsvpForm] = useState({
     name: data.guest_name || '',
     guests: 2,
     presence: 'hadir',
   });
   const [rsvpToastVisible, setRsvpToastVisible] = useState(false);
-
-  // Helper show toast notification
-  const showToast = (message: string) => {
-    setToastMessage(message);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 2800);
-  };
-
-  // Handler buka undangan with cinematic smooth transition
-  const handleOpenInvitation = () => {
-    setIsOpening(true);
-    play();
-    setTimeout(() => {
-      setIsOpen(true);
-      setIsOpening(false);
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    }, 600);
-  };
 
   // Copy to clipboard helper
   const handleCopy = (text: string, label: string) => {
@@ -108,37 +71,6 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
     setRsvpToastVisible(true);
     setTimeout(() => setRsvpToastVisible(false), 4000);
     showToast('Matur nuwun, konfirmasi rawuh panjenengan sampun katampi!');
-  };
-
-  // Handler Wish Submit
-  const handleWishSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!wishForm.name.trim() || !wishForm.message.trim()) return;
-
-    const newWish: WishItem = {
-      id: Date.now().toString(),
-      guest_name: wishForm.name,
-      message: wishForm.message,
-      attendance: rsvpForm.presence === 'hadir' ? 'attending' : 'declined',
-      created_at: new Date().toISOString(),
-    };
-
-    setWishes((prev) => [newWish, ...prev]);
-    if (onSubmitWish) {
-      onSubmitWish(wishForm.name, wishForm.message);
-    }
-    setWishForm({ name: '', message: '' });
-    showToast('Matur nuwun! Serat donga pangestu panjenengan sampun kakintun.');
-  };
-
-  // Helpers for couple order
-  const firstPerson = data.is_bride_first ? data.bride : data.groom;
-  const secondPerson = data.is_bride_first ? data.groom : data.bride;
-
-  // Section visibility checks
-  const isSectionActive = (sectionName: string) => {
-    if (!theme.active_sections || theme.active_sections.length === 0) return true;
-    return theme.active_sections.includes(sectionName);
   };
 
   return (
@@ -1021,7 +953,7 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
             <aside className={`${isPreview ? 'absolute' : 'fixed'} bottom-5 right-5 z-40 flex items-center justify-center pointer-events-auto`}>
               <button
                 type="button"
-                onClick={toggle}
+                onClick={toggleMusic}
                 aria-label="Putar Gamelan Kraton"
                 className="relative group flex items-center justify-center w-11 h-11 rounded-full bg-[#322822] border border-[#f2ca50]/40 shadow-xl transition-transform active:scale-95 cursor-pointer"
               >

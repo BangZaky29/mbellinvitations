@@ -12,7 +12,7 @@ interface AuthGateModalProps {
 export const AuthGateModal: React.FC<AuthGateModalProps> = ({
   isOpen,
   onClose,
-  invitationSlug = 'raditya-jessica',
+  invitationSlug = 'undangan-baru',
   onBeforeAuth,
   onSuccessLogin,
 }) => {

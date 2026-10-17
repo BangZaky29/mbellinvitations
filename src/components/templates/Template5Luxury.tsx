@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { InvitationProps, WishItem } from '../../types/invitation';
-import { useAudioPlayer } from '../../hooks/useAudioPlayer';
-import { useCountdown } from '../../hooks/useCountdown';
-import { useScrollReveal } from '../../hooks/useScrollReveal';
+import { useTemplateState } from '../../hooks/useTemplateState';
 import { FloatingDock } from '../common/FloatingDock';
 
 export const Template5Luxury: React.FC<InvitationProps> = ({
@@ -15,28 +13,23 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
   onSubmitRsvp,
   onSubmitWish,
 }) => {
-  // 1. Cover Gate State
-  const [isOpen, setIsOpen] = useState(propIsCoverOpen ?? false);
-  const [isOpening, setIsOpening] = useState(false);
-
-  // Hook for GPU-accelerated scroll reveal
-  useScrollReveal([isOpen, isPreview]);
-
-  useEffect(() => {
-    if (propIsCoverOpen !== undefined) {
-      setIsOpen(propIsCoverOpen);
-    }
-  }, [propIsCoverOpen]);
-
-  // 2. Audio Player Hook
-  const { isPlaying, toggle: toggleAudio, play: playAudio } = useAudioPlayer(
-    data.music_url ||
-      theme?.music_url ||
-      'https://assets.mixkit.co/music/preview/mixkit-serene-view-443.mp3'
-  );
-
-  // 3. Countdown Hook
-  const countdown = useCountdown(data.wedding_date_iso);
+  const {
+    isOpen,
+    isOpening,
+    handleOpenInvitation,
+    isPlaying,
+    toggleMusic: toggleAudio,
+    countdown,
+  } = useTemplateState({
+    data,
+    theme,
+    wishes: initialWishes,
+    isCoverOpen: propIsCoverOpen,
+    isPreview,
+    onSubmitRsvp,
+    onSubmitWish,
+    fallbackMusicUrl: 'https://assets.mixkit.co/music/preview/mixkit-serene-view-443.mp3',
+  });
 
   // 4. Copy to Clipboard State
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -127,17 +120,6 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
     );
     const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=20261024T030000Z/20261024T160000Z&details=${details}&location=${location}`;
     window.open(googleCalUrl, '_blank');
-  };
-
-  // Open Invitation Handler with cinematic smooth transition
-  const handleOpenInvitation = () => {
-    setIsOpening(true);
-    playAudio();
-    setTimeout(() => {
-      setIsOpen(true);
-      setIsOpening(false);
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    }, 600);
   };
 
   // Groom and Bride Initials Monogram

@@ -47,12 +47,11 @@ export const DashboardPage: React.FC = () => {
 
         <div className="flex items-center space-x-4">
           <Link
-            to="/raditya-jessica"
-            target="_blank"
+            to="/dashboard"
             className="text-xs text-amber-300 hover:text-amber-200 flex items-center gap-1 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20"
           >
-            <span>Buka Undangan Live</span>
-            <span className="material-symbols-outlined text-sm">open_in_new</span>
+            <span>Buka Editor Undangan</span>
+            <span className="material-symbols-outlined text-sm">edit_note</span>
           </Link>
           <button
             onClick={handleLogout}

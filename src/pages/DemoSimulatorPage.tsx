@@ -119,14 +119,14 @@ export const DemoSimulatorPage: React.FC = () => {
                   <span>{isPreview ? 'Preview' : 'Live'}</span>
                 </button>
 
-                {/* Link to live slug /raditya-jessica */}
+                {/* Link to Editor Dashboard */}
                 <Link
-                  to="/raditya-jessica"
+                  to="/dashboard"
                   className="px-2 py-1 rounded-lg text-[10px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition-all flex items-center gap-1"
-                  title="Buka Undangan Live Supabase"
+                  title="Buka Editor Dashboard"
                 >
-                  <span className="material-symbols-outlined text-[13px]">link</span>
-                  <span>Live</span>
+                  <span className="material-symbols-outlined text-[13px]">dashboard</span>
+                  <span>Editor</span>
                 </Link>
 
                 {/* Minimize Button */}

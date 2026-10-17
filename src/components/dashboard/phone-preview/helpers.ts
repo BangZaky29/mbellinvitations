@@ -1,0 +1,88 @@
+import type { InvitationData, ThemeConfig } from '../../../types/invitation';
+import {
+  MOCK_MODERN_DATA,
+  MOCK_MODERN_THEME,
+  MOCK_RUSTIC_THEME,
+  MOCK_JAWA_THEME,
+  MOCK_ISLAMI_THEME,
+  MOCK_LUXURY_THEME,
+  MOCK_THEME_DATA_MAP,
+  MOCK_THEME_CONFIG_MAP,
+} from '../../../data/mockInvitation';
+
+export const DEFAULT_THEMES: Record<string, ThemeConfig> = {
+  modern: MOCK_MODERN_THEME,
+  rustic: MOCK_RUSTIC_THEME,
+  jawa: MOCK_JAWA_THEME,
+  islami: MOCK_ISLAMI_THEME,
+  luxury: MOCK_LUXURY_THEME,
+};
+
+export const THEME_ID_MAP: Record<string, string> = {
+  template1: 'modern',
+  template2: 'rustic',
+  template3: 'jawa',
+  template4: 'islami',
+  template5: 'luxury',
+  modern: 'modern',
+  rustic: 'rustic',
+  jawa: 'jawa',
+  islami: 'islami',
+  luxury: 'luxury',
+};
+
+export function resolveNormalizedThemeId(themeId?: string): string {
+  return THEME_ID_MAP[String(themeId || 'modern')] || 'modern';
+}
+
+export function buildSafePreviewData(data: InvitationData): {
+  safeData: InvitationData;
+  normalizedThemeId: string;
+} {
+  const normalizedThemeId = resolveNormalizedThemeId(data.theme_id);
+  const defaultThematicData = MOCK_THEME_DATA_MAP[normalizedThemeId] || MOCK_MODERN_DATA;
+
+  const safeData: InvitationData = {
+    ...data,
+    couple_photo: data.couple_photo || data.cover_image || defaultThematicData.couple_photo,
+    cover_image: data.cover_image || data.couple_photo || defaultThematicData.cover_image,
+    groom: {
+      ...defaultThematicData.groom,
+      ...data.groom,
+      photo_url: data.groom?.photo_url || (data.groom as any)?.photo || defaultThematicData.groom.photo_url,
+      photo: (data.groom as any)?.photo || data.groom?.photo_url || defaultThematicData.groom.photo_url,
+    },
+    bride: {
+      ...defaultThematicData.bride,
+      ...data.bride,
+      photo_url: data.bride?.photo_url || (data.bride as any)?.photo || defaultThematicData.bride.photo_url,
+      photo: (data.bride as any)?.photo || data.bride?.photo_url || defaultThematicData.bride.photo_url,
+    },
+    wedding_date_display: data.wedding_date_display !== undefined ? data.wedding_date_display : defaultThematicData.wedding_date_display,
+    wedding_date_iso: data.wedding_date_iso !== undefined ? data.wedding_date_iso : defaultThematicData.wedding_date_iso,
+    quote: data.quote !== undefined ? data.quote : defaultThematicData.quote,
+    quote_source: data.quote_source !== undefined ? data.quote_source : defaultThematicData.quote_source,
+    hashtag: data.hashtag !== undefined ? data.hashtag : defaultThematicData.hashtag,
+    guest_name: data.guest_name !== undefined ? data.guest_name : defaultThematicData.guest_name,
+    guest_code: data.guest_code !== undefined ? data.guest_code : defaultThematicData.guest_code,
+    events: data.events && data.events.length > 0 ? data.events : defaultThematicData.events,
+    gallery: data.gallery && data.gallery.length > 0 ? data.gallery : defaultThematicData.gallery,
+    love_story: data.love_story && data.love_story.length > 0 ? data.love_story : defaultThematicData.love_story,
+    banks: (data.banks && data.banks.length > 0 ? data.banks : data.bank_accounts) || defaultThematicData.banks || [],
+    bank_accounts: (data.bank_accounts && data.bank_accounts.length > 0 ? data.bank_accounts : data.banks) || defaultThematicData.bank_accounts || [],
+  };
+
+  return { safeData, normalizedThemeId };
+}
+
+export function resolveEffectiveTheme(
+  theme: ThemeConfig | undefined,
+  normalizedThemeId: string
+): ThemeConfig {
+  return (
+    theme ||
+    MOCK_THEME_CONFIG_MAP[normalizedThemeId] ||
+    DEFAULT_THEMES[normalizedThemeId] ||
+    MOCK_MODERN_THEME
+  );
+}

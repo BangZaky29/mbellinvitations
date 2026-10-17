@@ -18,7 +18,7 @@ const THEME_OPTIONS: ThemeOption[] = [
     name: 'Modern Arch',
     subtitle: 'Editorial Quiet Luxury',
     styleTag: 'Editorial Minimalis',
-    coupleSample: 'Raditya & Jessica',
+    coupleSample: 'Dimas & Sarah',
     badge: 'Trending',
     accentColor: '#D4AF37',
     icon: 'flare',

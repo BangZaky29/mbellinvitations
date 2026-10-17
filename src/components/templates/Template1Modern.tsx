@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
-import type { InvitationProps, WishItem } from '../../types/invitation';
-import { useCountdown } from '../../hooks/useCountdown';
-import { useAudioPlayer } from '../../hooks/useAudioPlayer';
-import { useScrollReveal } from '../../hooks/useScrollReveal';
+import type { InvitationProps } from '../../types/invitation';
+import { useTemplateState } from '../../hooks/useTemplateState';
 import { FloatingDock } from '../common/FloatingDock';
 
 export const Template1Modern: React.FC<InvitationProps> = ({
@@ -15,128 +13,47 @@ export const Template1Modern: React.FC<InvitationProps> = ({
   onSubmitRsvp,
   onSubmitWish,
 }) => {
-  // State Cover Gate: user opened or editor forced open
-  const [isOpen, setIsOpen] = useState(isCoverOpen || false);
-  const [isOpening, setIsOpening] = useState(false);
-  const [copiedAccountIndex, setCopiedAccountIndex] = useState<number | null>(null);
-  const [copiedAddress, setCopiedAddress] = useState(false);
-
-  // Hook for GPU-accelerated scroll reveal
-  useScrollReveal([isOpen, isPreview]);
-
-  // Sync isCoverOpen prop (from Dashboard Editor toggle)
-  useEffect(() => {
-    if (isCoverOpen !== undefined) {
-      setIsOpen(isCoverOpen);
-    }
-  }, [isCoverOpen]);
-
-  // Audio player hook
-  const defaultMusicUrl =
-    data.music_url ||
-    theme.music_url ||
-    'https://www.youtube.com/watch?v=2Vv-BfVoq4g';
-  const { isPlaying, toggle, play } = useAudioPlayer(defaultMusicUrl);
-
-  // Real-time countdown hook
-  const { days, hours, minutes, seconds } = useCountdown(data.wedding_date_iso);
-
-  // Local Wishes state
-  const [wishes, setWishes] = useState<WishItem[]>(initialWishes);
-  const [wishForm, setWishForm] = useState({ name: data.guest_name || '', message: '' });
-  const [wishSubmitted, setWishSubmitted] = useState(false);
-
-  // RSVP Form state
-  const [rsvpForm, setRsvpForm] = useState({
-    name: data.guest_name || '',
-    status: 'hadir',
-    pax: 1,
+  const {
+    isOpen,
+    isOpening,
+    handleOpenInvitation,
+    isPlaying,
+    toggleMusic,
+    countdown,
+    wishes,
+    wishForm,
+    setWishForm,
+    wishSubmitted,
+    handleWishSubmit,
+    rsvpForm,
+    setRsvpForm,
+    rsvpSubmitted,
+    handleRsvpSubmit,
+    selectedImage,
+    setSelectedImage,
+    showAllGallery,
+    setShowAllGallery,
+    copiedAccountIndex,
+    copiedAddress,
+    handleCopyAccount,
+    handleCopyAddress,
+    firstPerson,
+    secondPerson,
+    firstPersonRole,
+    secondPersonRole,
+    isSectionActive,
+  } = useTemplateState({
+    data,
+    theme,
+    wishes: initialWishes,
+    isPreview,
+    isCoverOpen,
+    onSubmitRsvp,
+    onSubmitWish,
+    fallbackMusicUrl: 'https://www.youtube.com/watch?v=2Vv-BfVoq4g',
   });
-  const [rsvpSubmitted, setRsvpSubmitted] = useState(false);
 
-  // Image Modal state
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [showAllGallery, setShowAllGallery] = useState(false);
-
-  // Close gallery lightbox on Escape key
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSelectedImage(null);
-    };
-    if (selectedImage) {
-      window.addEventListener('keydown', handleKeyDown);
-    }
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedImage]);
-
-  // Handler buka undangan with cinematic smooth transition
-  const handleOpenInvitation = () => {
-    setIsOpening(true);
-    play();
-    setTimeout(() => {
-      setIsOpen(true);
-      setIsOpening(false);
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    }, 600);
-  };
-
-  // Handler copy rekening
-  const handleCopyAccount = (accountNumber: string, index: number) => {
-    navigator.clipboard.writeText(accountNumber);
-    setCopiedAccountIndex(index);
-    setTimeout(() => setCopiedAccountIndex(null), 2500);
-  };
-
-  // Handler copy alamat kado
-  const handleCopyAddress = (address: string) => {
-    navigator.clipboard.writeText(address);
-    setCopiedAddress(true);
-    setTimeout(() => setCopiedAddress(false), 2500);
-  };
-
-  // Handler RSVP Submit
-  const handleRsvpSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (onSubmitRsvp) {
-      onSubmitRsvp(rsvpForm.name, rsvpForm.status, rsvpForm.pax);
-    }
-    setRsvpSubmitted(true);
-    setTimeout(() => setRsvpSubmitted(false), 4000);
-  };
-
-  // Handler Wish Submit
-  const handleWishSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!wishForm.name.trim() || !wishForm.message.trim()) return;
-
-    const newWish: WishItem = {
-      id: Date.now().toString(),
-      guest_name: wishForm.name,
-      message: wishForm.message,
-      attendance: rsvpForm.status === 'hadir' ? 'attending' : 'declined',
-      created_at: new Date().toISOString(),
-    };
-
-    setWishes((prev) => [newWish, ...prev]);
-    if (onSubmitWish) {
-      onSubmitWish(wishForm.name, wishForm.message);
-    }
-    setWishForm({ name: '', message: '' });
-    setWishSubmitted(true);
-    setTimeout(() => setWishSubmitted(false), 3000);
-  };
-
-  // Helpers for couple order
-  const firstPerson = data.is_bride_first ? data.bride : data.groom;
-  const secondPerson = data.is_bride_first ? data.groom : data.bride;
-  const firstPersonRole = data.is_bride_first ? 'Sang Mempelai Wanita' : 'Sang Mempelai Pria';
-  const secondPersonRole = data.is_bride_first ? 'Sang Mempelai Pria' : 'Sang Mempelai Wanita';
-
-  // Section visibility checks
-  const isSectionActive = (sectionName: string) => {
-    if (!theme.active_sections || theme.active_sections.length === 0) return true;
-    return theme.active_sections.includes(sectionName);
-  };
+  const { days, hours, minutes, seconds } = countdown;
 
   return (
     <div className="w-full h-full min-h-screen flex justify-center items-start bg-[#ECE8E1]">
@@ -171,13 +88,13 @@ export const Template1Modern: React.FC<InvitationProps> = ({
               <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border border-white/35 flex items-center justify-center backdrop-blur-md bg-white/10 my-1 shadow-md ring-1 ring-white/15">
                 <div className="inline-flex items-center justify-center gap-1.5 leading-none select-none">
                   <span className="font-editorial text-xl sm:text-2xl text-white font-normal uppercase leading-none">
-                    {data.groom?.name ? data.groom.name.charAt(0) : 'R'}
+                    {data.groom?.name ? data.groom.name.charAt(0) : 'D'}
                   </span>
                   <span className="font-serif text-xs sm:text-sm text-gold-champagne/90 italic leading-none">
                     &amp;
                   </span>
                   <span className="font-editorial text-xl sm:text-2xl text-white font-normal uppercase leading-none">
-                    {data.bride?.name ? data.bride.name.charAt(0) : 'J'}
+                    {data.bride?.name ? data.bride.name.charAt(0) : 'S'}
                   </span>
                 </div>
               </div>
@@ -1086,7 +1003,7 @@ export const Template1Modern: React.FC<InvitationProps> = ({
             <button
               id="music-btn"
               type="button"
-              onClick={toggle}
+              onClick={toggleMusic}
               className="w-11 h-11 rounded-full glass-button border border-border-subtle shadow-lg flex items-center justify-center text-gold-champagne hover:scale-105 active:scale-95 transition-transform cursor-pointer"
               title="Putar / Hentikan Musik"
             >

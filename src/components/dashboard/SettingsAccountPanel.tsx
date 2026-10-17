@@ -17,7 +17,7 @@ export const SettingsAccountPanel: React.FC<SettingsAccountPanelProps> = ({
   userEmail,
   userName,
   userAvatar,
-  invitationSlug = 'raditya-jessica',
+  invitationSlug = 'undangan-baru',
   onLogout,
   onGoToEditor,
   onOpenAuthGate,

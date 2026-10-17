@@ -1,0 +1,92 @@
+import type { UserTemplateRecord } from '../../../lib/supabaseClient';
+import type { InvitationData } from '../../../types/invitation';
+
+export interface ThemePresetItem {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  thumbnail: string;
+}
+
+export const THEME_PRESETS: ThemePresetItem[] = [
+  {
+    id: 'modern',
+    name: 'Modern Arch & Minimalist',
+    category: 'Editorial Luxury',
+    description: 'Palet warm champagne, typografi majalah editorial, clean layout',
+    thumbnail: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    id: 'rustic',
+    name: 'Rustic Botanical Garden',
+    category: 'Earthy Nature',
+    description: 'Nuansa botanical sage green & wood warm, hangat & natural',
+    thumbnail: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    id: 'jawa',
+    name: 'Klasik Keraton Jawa',
+    category: 'Adat Nusantara',
+    description: 'Sentuhan ornamen ukir batik emas & tradisi panggih agung',
+    thumbnail: 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    id: 'islami',
+    name: 'Islami Nuansa Kubah',
+    category: 'Sacred Ornament',
+    description: 'Kubah Maroko bernuansa emerald dan ayat-ayat suci pernikahan',
+    thumbnail: 'https://images.unsplash.com/photo-1544077960-604201fe74bc?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    id: 'luxury',
+    name: 'Midnight Black & Gold Luxury',
+    category: 'VIP Glamour',
+    description: 'Kemewahan monokrom midnight black dan aksen foil emas berkilau',
+    thumbnail: 'https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=600&q=80',
+  },
+];
+
+export const THEME_BANNER_COLORS: Record<string, { bg: string; text: string; badge: string; label: string }> = {
+  modern: {
+    bg: 'from-stone-900 via-stone-800 to-amber-950/80',
+    text: 'text-amber-200',
+    badge: 'bg-amber-400/20 text-amber-300 border-amber-400/30',
+    label: 'Modern Minimalist',
+  },
+  rustic: {
+    bg: 'from-stone-800 via-amber-900/60 to-emerald-950/80',
+    text: 'text-amber-100',
+    badge: 'bg-amber-600/20 text-amber-200 border-amber-500/30',
+    label: 'Rustic Garden & Wood',
+  },
+  jawa: {
+    bg: 'from-amber-950 via-stone-900 to-yellow-950/80',
+    text: 'text-yellow-200',
+    badge: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+    label: 'Jawa Klasik Kasunanan',
+  },
+  islami: {
+    bg: 'from-emerald-950 via-teal-900 to-stone-900',
+    text: 'text-emerald-200',
+    badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+    label: 'Islami Nuansa Emerald',
+  },
+  luxury: {
+    bg: 'from-slate-950 via-stone-900 to-amber-950/90',
+    text: 'text-amber-300',
+    badge: 'bg-amber-300/20 text-amber-300 border-amber-300/40',
+    label: 'Royal Gold & Black Luxury',
+  },
+};
+
+export interface MyTemplatesPanelProps {
+  currentUserId?: string | null;
+  currentFormData: InvitationData;
+  activeTemplateId?: string | null;
+  onSelectTemplate: (template: UserTemplateRecord) => void;
+  onImplementActiveTemplate?: () => void;
+  onOpenAuthGate: () => void;
+  onAddNewTemplate: (themeId: string) => void;
+  onSlugChange?: (newSlug: string) => void;
+}

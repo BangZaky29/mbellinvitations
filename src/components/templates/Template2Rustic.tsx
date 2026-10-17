@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
-import type { InvitationProps, WishItem } from '../../types/invitation';
-import { useCountdown } from '../../hooks/useCountdown';
-import { useAudioPlayer } from '../../hooks/useAudioPlayer';
-import { useScrollReveal } from '../../hooks/useScrollReveal';
+import type { InvitationProps } from '../../types/invitation';
+import { useTemplateState } from '../../hooks/useTemplateState';
 import { FloatingDock } from '../common/FloatingDock';
 
 export const Template2Rustic: React.FC<InvitationProps> = ({
@@ -15,84 +13,43 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
   onSubmitRsvp,
   onSubmitWish,
 }) => {
-  // State Cover Gate: user opened or editor forced open
-  const [isOpen, setIsOpen] = useState(isCoverOpen || false);
-  const [isOpening, setIsOpening] = useState(false);
-
-  // Hook for GPU-accelerated scroll reveal
-  useScrollReveal([isOpen, isPreview]);
-
-  // Toast feedback state
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // Gift Tab state: 'transfer' | 'kado'
-  const [activeGiftTab, setActiveGiftTab] = useState<'transfer' | 'kado'>('transfer');
-
-  // Selected image for gallery lightbox
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [showAllGallery, setShowAllGallery] = useState(false);
-
-  // Close gallery lightbox on Escape key
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSelectedImage(null);
-    };
-    if (selectedImage) {
-      window.addEventListener('keydown', handleKeyDown);
-    }
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedImage]);
-
-  // Sync isCoverOpen prop (from Dashboard Editor toggle)
-  useEffect(() => {
-    if (isCoverOpen !== undefined) {
-      setIsOpen(isCoverOpen);
-    }
-  }, [isCoverOpen]);
-
-  // Audio player hook
-  const defaultMusicUrl =
-    data.music_url ||
-    theme.music_url ||
-    'https://assets.mixkit.co/music/preview/mixkit-romantic-wedding-walk-257.mp3';
-  const { isPlaying, toggle, play } = useAudioPlayer(defaultMusicUrl);
-
-  // Real-time countdown hook
-  const { days, hours, minutes, seconds } = useCountdown(data.wedding_date_iso);
-
-  // Local Wishes state
-  const [wishes, setWishes] = useState<WishItem[]>(initialWishes);
-  const [wishForm, setWishForm] = useState({
-    name: data.guest_name || '',
-    relation: 'Sahabat',
-    message: '',
+  const {
+    isOpen,
+    isOpening,
+    handleOpenInvitation,
+    isPlaying,
+    toggleMusic,
+    countdown,
+    wishes,
+    wishForm,
+    setWishForm,
+    handleWishSubmit,
+    rsvpForm,
+    setRsvpForm,
+    handleRsvpSubmit,
+    selectedImage,
+    setSelectedImage,
+    showAllGallery,
+    setShowAllGallery,
+    activeGiftTab,
+    setActiveGiftTab,
+    toastMessage,
+    showToast,
+    firstPerson,
+    secondPerson,
+    isSectionActive,
+  } = useTemplateState({
+    data,
+    theme,
+    wishes: initialWishes,
+    isPreview,
+    isCoverOpen,
+    onSubmitRsvp,
+    onSubmitWish,
+    fallbackMusicUrl: 'https://assets.mixkit.co/music/preview/mixkit-romantic-wedding-walk-257.mp3',
   });
 
-  // RSVP Form state
-  const [rsvpForm, setRsvpForm] = useState({
-    name: data.guest_name || '',
-    status: 'Hadir',
-    pax: 1,
-  });
-
-  // Helper show toast notification
-  const showToast = (message: string) => {
-    setToastMessage(message);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 2800);
-  };
-
-  // Handler buka undangan with cinematic smooth transition
-  const handleOpenInvitation = () => {
-    setIsOpening(true);
-    play();
-    setTimeout(() => {
-      setIsOpen(true);
-      setIsOpening(false);
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    }, 600);
-  };
+  const { days, hours, minutes, seconds } = countdown;
 
   // Copy to clipboard helper
   const handleCopy = (text: string, label: string) => {
@@ -100,46 +57,6 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
       navigator.clipboard.writeText(text);
     }
     showToast(label);
-  };
-
-  // Handler RSVP Submit
-  const handleRsvpSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (onSubmitRsvp) {
-      onSubmitRsvp(rsvpForm.name, rsvpForm.status, rsvpForm.pax);
-    }
-    showToast('Terima kasih! Konfirmasi kehadiran Anda telah tersimpan.');
-  };
-
-  // Handler Wish Submit
-  const handleWishSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!wishForm.name.trim() || !wishForm.message.trim()) return;
-
-    const newWish: WishItem = {
-      id: Date.now().toString(),
-      guest_name: wishForm.name,
-      message: wishForm.message,
-      attendance: rsvpForm.status === 'Hadir' ? 'attending' : 'declined',
-      created_at: new Date().toISOString(),
-    };
-
-    setWishes((prev) => [newWish, ...prev]);
-    if (onSubmitWish) {
-      onSubmitWish(wishForm.name, wishForm.message);
-    }
-    setWishForm({ name: '', relation: 'Sahabat', message: '' });
-    showToast('Terima kasih! Ucapan manis Anda telah terkirim.');
-  };
-
-  // Helpers for couple order
-  const firstPerson = data.is_bride_first ? data.bride : data.groom;
-  const secondPerson = data.is_bride_first ? data.groom : data.bride;
-
-  // Section visibility checks
-  const isSectionActive = (sectionName: string) => {
-    if (!theme.active_sections || theme.active_sections.length === 0) return true;
-    return theme.active_sections.includes(sectionName);
   };
 
   return (
@@ -1186,7 +1103,7 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
             <div className={`${isPreview ? 'absolute' : 'fixed'} bottom-5 right-5 z-40 pointer-events-auto`}>
               <button
                 type="button"
-                onClick={toggle}
+                onClick={toggleMusic}
                 aria-label="Toggle music playback"
                 className="w-11 h-11 rounded-full bg-surface-container/90 backdrop-blur-md border border-primary/20 flex items-center justify-center text-primary shadow-lg transition-transform active:scale-95 cursor-pointer hover:bg-surface-container-high"
                 title="Putar / Hentikan Musik"
