@@ -247,6 +247,11 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
+          {loading && (
+            <span className="material-symbols-outlined text-[16px] text-amber-600 animate-spin" title="Memuat template...">
+              progress_activity
+            </span>
+          )}
           <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-stone-100 text-stone-600 border border-stone-200">
             {items.length} Template Pilihan
           </span>
