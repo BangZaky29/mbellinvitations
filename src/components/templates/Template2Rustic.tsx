@@ -95,7 +95,7 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
               <div className="flex items-center gap-space-sm">
                 <button
                   type="button"
-                  onClick={toggle}
+                  onClick={toggleMusic}
                   aria-label="Toggle music playback"
                   className="w-11 h-11 rounded-full bg-surface-container/70 backdrop-blur-md flex items-center justify-center text-secondary hover:text-primary transition-all active:scale-95 shadow-[0_2px_8px_rgba(133,82,51,0.12)] cursor-pointer"
                 >
@@ -990,8 +990,8 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                       </label>
                       <div className="relative">
                         <select
-                          value={wishForm.relation}
-                          onChange={(e) => setWishForm({ ...wishForm, relation: e.target.value })}
+                          value={(wishForm as any).relation || 'Sahabat'}
+                          onChange={(e) => setWishForm({ ...wishForm, relation: e.target.value } as any)}
                           className="w-full h-11 px-4 rounded-lg bg-surface-container text-primary font-body-md text-body-md appearance-none focus:outline-none focus:bg-surface-container-lowest"
                         >
                           <option value="Sahabat">Sahabat</option>

@@ -51,9 +51,9 @@ export const DashboardEditorPage: React.FC = () => {
   const editor = useDashboardEditor({
     user,
     setUser,
-    setSaveToast: (t) => saveToastRef.current(t),
-    setIsSaving: (s) => isSavingRef.current(s),
-    setLastSaved: (d) => lastSavedRef.current(d),
+    setSaveToast: (t: any) => saveToastRef.current(t),
+    setIsSaving: (s: boolean) => isSavingRef.current(s),
+    setLastSaved: (d: Date | null) => lastSavedRef.current(d),
   });
 
   // 3. Save Hook (Debounced autosave, manual save, checkpoint draft, toast)
