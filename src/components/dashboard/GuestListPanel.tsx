@@ -138,34 +138,6 @@ export const GuestListPanel: React.FC<GuestListPanelProps> = ({
     }
   };
 
-  // KONDISI BELUM LOGIN
-  if (!userId) {
-    return (
-      <div className="bg-white rounded-3xl p-8 sm:p-12 border border-stone-200/80 shadow-xs text-center space-y-6 animate-in fade-in">
-        <div className="w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/20 text-amber-700 flex items-center justify-center mx-auto">
-          <span className="material-symbols-outlined text-[32px]">lock</span>
-        </div>
-        <div className="max-w-md mx-auto space-y-2">
-          <h3 className="font-serif font-bold text-xl sm:text-2xl text-stone-900">
-            Masuk untuk Melihat Daftar Tamu
-          </h3>
-          <p className="text-xs sm:text-sm text-stone-500 leading-relaxed">
-            Silakan masuk dengan akun Anda untuk melihat rekap kehadiran tamu undangan pernikahan secara langsung.
-          </p>
-        </div>
-        <div className="pt-2 flex justify-center">
-          <button
-            type="button"
-            onClick={onOpenAuthGate || onGoToEditor}
-            className="inline-flex items-center gap-2.5 px-7 py-3 rounded-full bg-[#d97706] hover:bg-[#b45309] text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-[20px]">login</span>
-            <span>Masuk / Daftar Akun</span>
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">

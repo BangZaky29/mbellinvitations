@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase, type UserTemplateRecord } from '../../lib/supabaseClient';
 import type { InvitationData } from '../../types/invitation';
 import { TemplateCardSelector, type TemplateSelectorItem } from './common/TemplateCardSelector';
+import { MOCK_THEME_WISHES_MAP, MOCK_MODERN_WISHES } from '../../data/mockInvitation';
 
 interface WishEntry {
   id: string;
@@ -59,8 +60,19 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
     const fetchWishes = async () => {
       setIsLoading(true);
       try {
+        const themeKey = selectedTemplate?.themeId || 'modern';
+        const defaultMocks = ((MOCK_THEME_WISHES_MAP as any)[themeKey] || MOCK_MODERN_WISHES).map(
+          (m: any, i: number) => ({
+            id: `wish-${themeKey}-${i}`,
+            guest_name: m.guest_name,
+            message: m.message,
+            attendance: m.attendance,
+            created_at: m.created_at || new Date().toISOString(),
+          })
+        );
+
         if (!userId) {
-          setWishes([]);
+          setWishes(defaultMocks);
           setIsLoading(false);
           return;
         }
@@ -104,16 +116,16 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
 
           const { data: wishesData, error } = await query.order('created_at', { ascending: false });
 
-          if (!error && wishesData) {
+          if (!error && wishesData && wishesData.length > 0) {
             setWishes(wishesData as WishEntry[]);
           } else {
-            setWishes([]);
+            setWishes(defaultMocks);
           }
         } else {
-          setWishes([]);
+          setWishes(defaultMocks);
         }
       } catch {
-        setWishes([]);
+        setWishes(defaultMocks);
       } finally {
         setIsLoading(false);
       }
