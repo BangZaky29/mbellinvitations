@@ -26,6 +26,7 @@ export interface DashboardHeaderProps {
   accountStatus?: 'Gratis' | 'Pro' | 'Platinum';
   hasUnsavedChanges?: boolean;
   unsavedCount?: number;
+  onRevertAll?: () => void;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -35,6 +36,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   isPublished = true,
   status = 'published',
   onSaveDraft,
+  onRevertAll,
   onPublishToggle,
   onPublish,
   onOpenPreview,
@@ -320,6 +322,19 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           >
             <span className="material-symbols-outlined text-[18px]">account_circle</span>
             <span>Masuk / Daftar Akun</span>
+          </button>
+        )}
+
+        {/* Revert Changes Button */}
+        {hasUnsavedChanges && unsavedCount > 0 && onRevertAll && (
+          <button
+            type="button"
+            onClick={onRevertAll}
+            disabled={isSaving}
+            className="px-2.5 py-2 rounded-xl text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 transition-all cursor-pointer flex items-center justify-center shadow-2xs"
+            title="Kembalikan semua nilai ke kondisi tersimpan semula (Revert)"
+          >
+            <span className="material-symbols-outlined text-[17px]">undo</span>
           </button>
         )}
 

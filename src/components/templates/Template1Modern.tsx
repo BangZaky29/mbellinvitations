@@ -46,6 +46,9 @@ export const Template1Modern: React.FC<InvitationProps> = ({
     firstPersonRole,
     secondPersonRole,
     isSectionActive,
+    coverSwipeProps,
+    renderSwipeHint,
+    renderBrandFooter,
   } = useTemplateState({
     data,
     theme,
@@ -78,7 +81,8 @@ export const Template1Modern: React.FC<InvitationProps> = ({
         {!isOpen && (
           <section
             id="cover-overlay"
-            className={`relative w-full h-full min-h-[100dvh] flex flex-col justify-between items-center text-center p-5 sm:p-7 z-30 transition-all duration-700 ${
+            {...coverSwipeProps}
+            className={`relative w-full h-full min-h-[100dvh] flex flex-col justify-between items-center text-center p-5 sm:p-7 z-30 transition-all duration-700 cursor-grab active:cursor-grabbing ${
               isOpening ? 'animate-cover-exit pointer-events-none' : ''
             }`}
           >
@@ -157,6 +161,9 @@ export const Template1Modern: React.FC<InvitationProps> = ({
                 <i className="fa-regular fa-envelope-open text-gold-champagne text-sm group-hover:scale-110 transition-transform"></i>
                 <span>Buka Undangan</span>
               </button>
+
+              {/* Interaktif Petunjuk Usap ke Atas */}
+              {renderSwipeHint({ variant: 'light' })}
             </div>
           </section>
         )}
@@ -167,7 +174,7 @@ export const Template1Modern: React.FC<InvitationProps> = ({
         {isOpen && (
           <main
             id="main-content"
-            className="relative z-20 pb-28 animate-page-enter"
+            className="relative z-20 pb-6 animate-page-enter"
           >
           {/* ========================================== */}
           {/* 2. HERO & COUNTDOWN SECTION                */}
@@ -971,20 +978,6 @@ export const Template1Modern: React.FC<InvitationProps> = ({
                             </span>
                           </div>
                         </div>
-                        <span
-                          className={`text-[10px] font-medium px-2.5 py-0.5 rounded-full border shrink-0 flex items-center space-x-1 ${
-                            wish.attendance === 'attending'
-                              ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
-                              : 'text-amber-700 bg-amber-50 border-amber-200'
-                          }`}
-                        >
-                          <i
-                            className={`text-[8px] ${
-                              wish.attendance === 'attending' ? 'fa-solid fa-circle-check' : 'fa-solid fa-paper-plane'
-                            }`}
-                          ></i>
-                          <span>{wish.attendance === 'attending' ? 'Hadir' : 'Berhalangan'}</span>
-                        </span>
                       </div>
                       <p className="text-xs text-charcoal-dark/80 font-light leading-relaxed pl-9 break-words [overflow-wrap:anywhere]">
                         {wish.message}
@@ -995,7 +988,7 @@ export const Template1Modern: React.FC<InvitationProps> = ({
               </div>
 
               {/* Footer Thank You */}
-              <div className="text-center pt-14 pb-8">
+              <div className="text-center pt-10 pb-2">
                 <p className="text-[10px] tracking-[0.3em] uppercase text-gold-champagne font-medium mb-1">
                   Terima Kasih
                 </p>
@@ -1005,6 +998,9 @@ export const Template1Modern: React.FC<InvitationProps> = ({
                 <p className="text-[10px] text-charcoal-muted tracking-widest mt-2 font-light">
                   {data.hashtag} &bull; 2026
                 </p>
+
+                {/* Dynamic mbell Invitations Brand Signature Footer */}
+                {renderBrandFooter()}
               </div>
             </section>
           )}

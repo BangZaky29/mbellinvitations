@@ -64,6 +64,8 @@ export const DashboardEditorPage: React.FC = () => {
     currentTemplateRecordId: editor.currentTemplateRecordId,
     setCurrentTemplateRecordId: editor.setCurrentTemplateRecordId,
     setFormData: editor.setFormData,
+    setThemeConfig: editor.setThemeConfig,
+    loading: editor.loading,
   });
 
   // Connect bridges
@@ -168,6 +170,7 @@ export const DashboardEditorPage: React.FC = () => {
             isPublished={editor.formData.status === 'published'}
             suggestedSlug={computeCoupleSlug(editor.formData.groom?.name, editor.formData.bride?.name)}
             onSaveDraft={save.handleManualSave}
+            onRevertAll={save.handleRevertAll}
             isSaving={save.isSaving}
             lastSaved={save.lastSaved}
             hasUnsavedChanges={save.hasUnsavedChanges}
@@ -228,6 +231,7 @@ export const DashboardEditorPage: React.FC = () => {
                       hasUnsavedChanges={save.hasUnsavedChanges}
                       unsavedCount={save.unsavedCount}
                       onSaveDraft={save.handleManualSave}
+                      onRevertAll={save.handleRevertAll}
                       onPrevStep={editor.handlePrevStep}
                       onNextStep={editor.handleNextStep}
                       onRequestPublish={publish.handleRequestPublish}

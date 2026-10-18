@@ -37,6 +37,9 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
     firstPerson,
     secondPerson,
     isSectionActive,
+    coverSwipeProps,
+    renderSwipeHint,
+    renderBrandFooter,
   } = useTemplateState({
     data,
     theme,
@@ -101,7 +104,8 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
             {!isOpen && (
               <section
                 id="sampul"
-                className={`relative w-full h-full min-h-[100dvh] flex flex-col justify-between items-center text-center p-5 sm:p-7 z-30 overflow-hidden bg-[#14100D] transition-all duration-700 ${
+                {...coverSwipeProps}
+                className={`relative w-full h-full min-h-[100dvh] flex flex-col justify-between items-center text-center p-5 sm:p-7 z-30 overflow-hidden bg-[#14100D] transition-all duration-700 cursor-grab active:cursor-grabbing ${
                   isOpening ? 'animate-cover-exit pointer-events-none' : ''
                 }`}
               >
@@ -213,6 +217,9 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
                     <span className="material-symbols-outlined text-lg">drafts</span>
                     <span>BUKA UNDANGAN</span>
                   </button>
+
+                  {/* Interaktif Petunjuk Usap ke Atas */}
+                  {renderSwipeHint({ variant: 'jawa' })}
                 </div>
               </section>
             )}
@@ -890,7 +897,7 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
             {/* SECTION 8: LIVE WISHES WALL & GUESTBOOK    */}
             {/* ========================================== */}
             {theme.show_wishes !== false && isSectionActive('wishes') && (
-              <section className="relative w-full bg-surface px-margin pt-space-xl pb-32 flex flex-col items-center">
+              <section className="relative w-full bg-surface px-margin pt-space-xl pb-6 flex flex-col items-center">
                 <div className="text-center mb-6">
                   <span className="font-label-md text-label-md uppercase tracking-widest text-secondary block mb-1">
                     Buku Pasugatan
@@ -941,9 +948,6 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
                           <span className="font-title-md text-title-md text-primary font-semibold break-words [overflow-wrap:anywhere]">
                             {wish.guest_name}
                           </span>
-                          <span className="shrink-0 px-2 py-0.5 rounded-full bg-surface-container-high text-secondary font-label-md text-label-md">
-                            {wish.attendance === 'attending' ? 'Hadir' : 'Kinasih'}
-                          </span>
                         </div>
                         <span className="shrink-0 font-caption text-caption text-on-surface-variant/60">
                           {new Date(wish.created_at).toLocaleDateString('id-ID', {
@@ -960,7 +964,7 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
                 </div>
 
                 {/* Final Royal Footer Emblem */}
-                <div className="mt-12 flex flex-col items-center text-center opacity-80">
+                <div className="mt-6 flex flex-col items-center text-center opacity-80">
                   <span className="material-symbols-outlined text-primary text-2xl mb-2">flare</span>
                   <p className="font-caption text-caption text-on-surface-variant tracking-wider uppercase">
                     Matur Nuwun Sanget
@@ -972,6 +976,9 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
                     {data.hashtag || 'Kraton Ngayogyakarta Hadiningrat'}
                   </p>
                 </div>
+
+                {/* Dynamic mbell Invitations Brand Signature Footer */}
+                {renderBrandFooter({ themeId: 'jawa' })}
               </section>
             )}
 

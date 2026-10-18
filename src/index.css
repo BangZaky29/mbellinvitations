@@ -441,13 +441,16 @@ body::-webkit-scrollbar-thumb,
 @keyframes coverExit {
   0% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
     filter: blur(0px);
+  }
+  75% {
+    opacity: 0.95;
   }
   100% {
     opacity: 0;
-    transform: translateY(-40px) scale(1.03);
-    filter: blur(6px);
+    transform: translateY(-100%);
+    filter: blur(1px);
   }
 }
 
@@ -456,7 +459,20 @@ body::-webkit-scrollbar-thumb,
 }
 
 .animate-cover-exit {
-  animation: coverExit 0.65s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: coverExit 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes swipeBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+.animate-swipe-bounce {
+  animation: swipeBounce 1.6s ease-in-out infinite;
 }
 
 /* ============================================================
@@ -506,6 +522,32 @@ body::-webkit-scrollbar-thumb,
 .reveal-scale.is-revealed {
   opacity: 1;
   transform: scale(1) translateY(0);
+}
+
+/* ============================================================
+   JAMINAN MUTLAK HERO & TOP ELEMENTS SELALU TAMPIL (ANTI-BLANK)
+   ============================================================ */
+#hero .reveal,
+#hero .reveal-scale,
+#hero-section .reveal,
+#hero-section .reveal-scale,
+#pawarta .reveal,
+#pawarta .reveal-scale,
+#salam .reveal,
+#salam .reveal-scale,
+#hero-countdown .reveal,
+#hero-countdown .reveal-scale,
+#doaMempelai .reveal,
+#doaMempelai .reveal-scale,
+#hero .anim-target,
+#hero-section .anim-target,
+#pawarta .anim-target,
+#salam .anim-target,
+#hero-countdown .anim-target,
+#doaMempelai .anim-target {
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
 }
 
 /* 3. Soft Title & Heading Reveal */

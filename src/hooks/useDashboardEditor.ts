@@ -328,6 +328,7 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
     setCurrentTemplateRecordId(template.id);
     localStorage.setItem('mbell_active_template_id', template.id);
 
+    let loadedFormData: InvitationData = formData;
     if (template.content && typeof template.content === 'object') {
       const gName = (template.content.groom?.name || '').trim();
       const bName = (template.content.bride?.name || '').trim();
@@ -346,14 +347,20 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
       if (template.music_url) {
         mergedContent.music_url = template.music_url;
       }
+      loadedFormData = mergedContent;
       setFormData(mergedContent);
     }
 
+    const loadedThemeConfig: ThemeConfig =
+      template.theme_config && typeof template.theme_config === 'object'
+        ? {
+            ...template.theme_config,
+            ...(template.music_url ? { music_url: template.music_url } : {}),
+          }
+        : themeConfig;
+
     if (template.theme_config && typeof template.theme_config === 'object') {
-      setThemeConfig({
-        ...template.theme_config,
-        ...(template.music_url ? { music_url: template.music_url } : {}),
-      });
+      setThemeConfig(loadedThemeConfig);
     }
 
     if (!stayOnCurrentTab) {
@@ -377,6 +384,16 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
         });
       }
     }
+
+    window.dispatchEvent(
+      new CustomEvent('mbell_template_loaded', {
+        detail: {
+          template,
+          formData: loadedFormData,
+          themeConfig: loadedThemeConfig,
+        },
+      })
+    );
   };
 
   // Handler Implementasikan Template Aktif
@@ -585,6 +602,11 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
   // Theme Change Handler
   const handleThemeChange = (newThemeId: string, forcePreset = false) => {
     const semanticId = TEMPLATE_ID_TO_THEME[newThemeId] || newThemeId;
+    const currentTheme = formData.theme_id || 'modern';
+    if (!forcePreset && currentTheme === semanticId) {
+      return;
+    }
+
     const matchedConfig = MOCK_THEME_CONFIG_MAP[semanticId] || DEFAULT_THEME_CONFIGS[semanticId] || themeConfig;
     const thematicData = MOCK_THEME_DATA_MAP[semanticId];
 

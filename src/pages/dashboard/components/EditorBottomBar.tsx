@@ -6,6 +6,7 @@ interface EditorBottomBarProps {
   hasUnsavedChanges?: boolean;
   unsavedCount?: number;
   onSaveDraft: () => void;
+  onRevertAll?: () => void;
   onPrevStep: () => void;
   onNextStep: () => void;
   onRequestPublish: () => void;
@@ -17,6 +18,7 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
   hasUnsavedChanges = false,
   unsavedCount = 0,
   onSaveDraft,
+  onRevertAll,
   onPrevStep,
   onNextStep,
   onRequestPublish,
@@ -45,6 +47,20 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
       </div>
 
       <div className="flex flex-wrap items-center gap-2.5">
+        {/* Tombol Batalkan / Revert Perubahan */}
+        {hasUnsavedChanges && unsavedCount > 0 && onRevertAll && (
+          <button
+            type="button"
+            onClick={onRevertAll}
+            disabled={isSaving}
+            className="px-3 sm:px-3.5 py-2.5 rounded-xl font-medium text-xs text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200/80 transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+            title="Kembalikan semua nilai ke kondisi tersimpan semula (Revert)"
+          >
+            <span className="material-symbols-outlined text-[15px]">undo</span>
+            <span className="hidden sm:inline">Batalkan</span>
+          </button>
+        )}
+
         {/* Tombol Simpan Draf / Checkpoint */}
         <button
           type="button"

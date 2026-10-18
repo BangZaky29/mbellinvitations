@@ -25,6 +25,9 @@ export const Template4Islami: React.FC<InvitationProps> = ({
     toastMessage,
     toastType,
     showToast,
+    coverSwipeProps,
+    renderSwipeHint,
+    renderBrandFooter,
   } = useTemplateState({
     data,
     theme,
@@ -180,14 +183,15 @@ export const Template4Islami: React.FC<InvitationProps> = ({
         {/* ============================================================ */}
         {/* MAIN BODY                                                    */}
         {/* ============================================================ */}
-        <main className={`flex-1 flex flex-col relative w-full bg-surface ${isOpen ? 'pt-16 pb-28' : 'p-0'}`}>
+        <main className={`flex-1 flex flex-col relative w-full bg-surface ${isOpen ? 'pt-16 pb-6' : 'p-0'}`}>
           <div className="flex flex-col w-full text-on-surface h-full flex-1">
             {/* -------------------------------------------------------- */}
             {/* SECTION 1: Cover Gate Overlay (Sampul & Opening Gate)   */}
             {/* -------------------------------------------------------- */}
             {!isOpen && (
               <section
-                className={`relative w-full h-full min-h-[100dvh] flex flex-col justify-between items-center text-center p-5 sm:p-7 z-30 overflow-hidden transition-all duration-700 ${
+                {...coverSwipeProps}
+                className={`relative w-full h-full min-h-[100dvh] flex flex-col justify-between items-center text-center p-5 sm:p-7 z-30 overflow-hidden transition-all duration-700 cursor-grab active:cursor-grabbing ${
                   isOpening ? 'animate-cover-exit pointer-events-none' : ''
                 }`}
                 id="sampul"
@@ -267,6 +271,9 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                     </span>
                     <span>Buka Undangan</span>
                   </button>
+
+                  {/* Interaktif Petunjuk Usap ke Atas */}
+                  {renderSwipeHint({ variant: 'gold' })}
                 </div>
               </section>
             )}
@@ -1110,7 +1117,7 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                 {/* SECTION 8: Live Wishes Wall & Closing                */}
                 {/* ---------------------------------------------------- */}
                 <section
-                  className="px-margin py-space-xl flex flex-col items-center"
+                  className="px-margin pt-space-xl pb-2 flex flex-col items-center"
                   id="doa"
                 >
                   <div className="text-center mb-8">
@@ -1228,6 +1235,9 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                     </p>
                   </div>
                 </section>
+
+                {/* Dynamic mbell Invitations Brand Signature Footer */}
+                {renderBrandFooter({ themeId: 'islami' })}
               </div>
             )}
           </div>

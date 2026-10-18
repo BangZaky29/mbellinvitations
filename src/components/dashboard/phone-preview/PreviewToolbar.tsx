@@ -66,7 +66,20 @@ export const PreviewToolbar: React.FC<PreviewToolbarProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => setIsCoverOpen(true)}
+            onClick={() => {
+              setIsCoverOpen(true);
+              setTimeout(() => {
+                const scrollables = document.querySelectorAll(
+                  '[data-phone-scroll="true"], #phone-screen-scroll-container, [data-phone-preview="true"] .overflow-y-auto'
+                );
+                scrollables.forEach((s) => {
+                  s.scrollTop = 0;
+                });
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('mbell_cover_opened'));
+                }
+              }, 40);
+            }}
             className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
               isCoverOpen
                 ? onClose

@@ -134,6 +134,9 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
     firstPerson,
     secondPerson,
     isSectionActive,
+    coverSwipeProps,
+    renderSwipeHint,
+    renderBrandFooter,
   } = useTemplateState({
     data,
     theme,
@@ -197,8 +200,9 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
             {!isOpen && (
               <section
                 id="sampul"
-                className={`w-full relative flex flex-col items-center justify-between px-6 pt-10 pb-12 text-center bg-gradient-to-b from-[#fbf9f6] via-[#f7f4ed] to-[#ede7dc] transition-all duration-700 min-h-[100dvh] z-30 overflow-hidden ${
-                  isOpening ? 'opacity-0 -translate-y-8 pointer-events-none' : 'opacity-100'
+                {...coverSwipeProps}
+                className={`w-full relative flex flex-col items-center justify-between px-6 pt-10 pb-12 text-center bg-gradient-to-b from-[#fbf9f6] via-[#f7f4ed] to-[#ede7dc] transition-all duration-700 min-h-[100dvh] z-30 overflow-hidden cursor-grab active:cursor-grabbing ${
+                  isOpening ? 'animate-cover-exit pointer-events-none' : 'opacity-100'
                 }`}
               >
                 {/* Ambient Sundanese Backdrop using Cover Photo if present */}
@@ -292,6 +296,9 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                     <span className="material-symbols-outlined text-[19px]">mail</span>
                     <span>Buka Undangan</span>
                   </button>
+
+                  {/* Interaktif Petunjuk Usap ke Atas */}
+                  {renderSwipeHint({ variant: 'gold' })}
                 </div>
               </section>
             )}
@@ -847,9 +854,6 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                                 </span>
                               </div>
                             </div>
-                            <span className="shrink-0 px-2 py-0.5 rounded-full bg-[#f4efe4] text-[#5d4201] border border-[#c5a059]/30 text-[10px] font-semibold">
-                              {w.attendance === 'attending' ? 'Hadir' : 'Doa'}
-                            </span>
                           </div>
                           <p className="text-xs text-[#4e4639] leading-relaxed text-left break-words [overflow-wrap:anywhere]">
                             {w.message}
@@ -982,7 +986,7 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                 {/* ============================================================ */}
                 {/* 9. CLOSING & SUNDANESE BLESSING                              */}
                 {/* ============================================================ */}
-                <footer className="w-full px-5 pt-12 pb-28 bg-[#fbf9f6] flex flex-col items-center text-center relative border-t border-[#ede9e1]">
+                <footer className="w-full px-5 pt-10 pb-4 bg-[#fbf9f6] flex flex-col items-center text-center relative border-t border-[#ede9e1]">
                   <div className="w-20 h-8 flex items-center justify-center text-[#8a6822] mb-3">
                     <SigerCrownSvg />
                   </div>
@@ -1005,6 +1009,9 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                   <p className="text-[10px] text-[#735855] tracking-widest uppercase mt-4">
                     © {new Date().getFullYear()} The Royal Sundanese Wedding of {coupleOrderTitle}
                   </p>
+
+                  {/* Dynamic mbell Invitations Brand Signature Footer */}
+                  {renderBrandFooter()}
                 </footer>
 
               </div>

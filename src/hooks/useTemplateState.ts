@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { InvitationProps, WishItem } from '../types/invitation';
 import { useCountdown } from './useCountdown';
 import { useAudioPlayer } from './useAudioPlayer';
 import { useUniversalScrollAnimation, anim } from '../utils/scrollAnimationEngine';
+import { renderMbellBrandFooter, type MbellBrandFooterProps } from '../components/common/MbellBrandFooter';
+import { CoverSwipeHint, type CoverSwipeHintProps } from '../components/common/CoverSwipeHint';
 
 interface UseTemplateStateOptions extends InvitationProps {
   fallbackMusicUrl?: string;
@@ -106,8 +108,9 @@ export function useTemplateState({
     }, 2400);
   };
 
-  // Handler buka undangan with smooth transition
+  // Handler buka undangan with smooth paper lift transition
   const handleOpenInvitation = () => {
+    if (isOpen || isOpening) return;
     setIsOpening(true);
     play();
     setTimeout(() => {
@@ -117,7 +120,38 @@ export function useTemplateState({
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('mbell_cover_opened'));
       }
-    }, 600);
+    }, 700);
+  };
+
+  // Touch & Pointer gesture tracking for swipe-up cover opening
+  const touchStartY = useRef<number | null>(null);
+  const touchStartTime = useRef<number>(0);
+
+  const handleTouchStart = (e: React.TouchEvent | React.MouseEvent) => {
+    if (isOpen || isOpening) return;
+    const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
+    touchStartY.current = clientY;
+    touchStartTime.current = Date.now();
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent | React.MouseEvent) => {
+    if (isOpen || isOpening || touchStartY.current === null) return;
+    const clientY = 'changedTouches' in e ? e.changedTouches[0].clientY : (e as React.MouseEvent).clientY;
+    const deltaY = touchStartY.current - clientY; // Nilai positif = usap/geser ke atas
+    const deltaTime = Date.now() - touchStartTime.current;
+
+    // Trigger open jika diusap ke atas > 40px atau flick cepat > 20px
+    if (deltaY > 40 || (deltaY > 20 && deltaTime < 350)) {
+      handleOpenInvitation();
+    }
+    touchStartY.current = null;
+  };
+
+  const coverSwipeProps = {
+    onTouchStart: handleTouchStart,
+    onTouchEnd: handleTouchEnd,
+    onMouseDown: handleTouchStart,
+    onMouseUp: handleTouchEnd,
   };
 
   // Handler copy rekening
@@ -226,5 +260,17 @@ export function useTemplateState({
     resolvedCoverImage,
     resolvedCouplePhoto,
     anim,
+    coverSwipeProps,
+    renderSwipeHint: (extraProps?: Partial<CoverSwipeHintProps>) =>
+      React.createElement(CoverSwipeHint, {
+        isOpen,
+        ...extraProps,
+      }),
+    renderBrandFooter: (extraProps?: Partial<MbellBrandFooterProps>) =>
+      renderMbellBrandFooter({
+        themeId: (theme as any)?.theme_id || (data as any)?.theme_id || '',
+        isOpen,
+        ...extraProps,
+      }),
   };
 }

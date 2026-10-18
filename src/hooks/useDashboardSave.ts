@@ -6,6 +6,13 @@ import { THEME_TO_TEMPLATE_ID, getSafeDbTemplateId } from '../pages/dashboard/co
 import type { DashboardUser } from './useDashboardAuth';
 
 import { computeCoupleSlug } from '../pages/dashboard/helpers/computeCoupleSlug';
+import {
+  computeAuditTrail,
+  type FieldChangeDetail,
+  type AuditTrailState,
+} from '../utils/changeAuditEngine';
+
+export type { FieldChangeDetail, AuditTrailState };
 
 interface UseDashboardSaveOptions {
   user: DashboardUser | null;
@@ -14,6 +21,8 @@ interface UseDashboardSaveOptions {
   currentTemplateRecordId: string | null;
   setCurrentTemplateRecordId: React.Dispatch<React.SetStateAction<string | null>>;
   setFormData: React.Dispatch<React.SetStateAction<InvitationData>>;
+  setThemeConfig?: React.Dispatch<React.SetStateAction<ThemeConfig>>;
+  loading?: boolean;
 }
 
 /**
@@ -119,6 +128,8 @@ export function useDashboardSave({
   currentTemplateRecordId,
   setCurrentTemplateRecordId,
   setFormData,
+  setThemeConfig,
+  loading = false,
 }: UseDashboardSaveOptions) {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -151,27 +162,226 @@ export function useDashboardSave({
 
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [unsavedCount, setUnsavedCount] = useState(0);
+  const [auditTrail, setAuditTrail] = useState<AuditTrailState>({
+    count: 0,
+    changes: [],
+    hasChanges: false,
+  });
 
-  // 2. Local Draft Caching (DO NOT mutate public live invitation until user clicks 'Simpan Perubahan' or 'Publikasikan')
-  const isInitialMount = useRef(true);
+  // Snapshot baseline data yang tersimpan di server/database
+  const baselineSnapshotRef = useRef<{
+    formData: InvitationData;
+    themeConfig: ThemeConfig;
+  } | null>(null);
+
+  const prevRecordIdRef = useRef<string | null>(currentTemplateRecordId);
+
+  // Listener sinkronisasi baseline saat template di-load dari MyTemplates atau di-reset
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
+    const handleTemplateLoaded = (e: any) => {
+      const detail = e.detail;
+      if (detail?.formData && detail?.themeConfig) {
+        baselineSnapshotRef.current = {
+          formData: JSON.parse(JSON.stringify(detail.formData)),
+          themeConfig: JSON.parse(JSON.stringify(detail.themeConfig)),
+        };
+      } else {
+        baselineSnapshotRef.current = {
+          formData: JSON.parse(JSON.stringify(formData)),
+          themeConfig: JSON.parse(JSON.stringify(themeConfig)),
+        };
+      }
+      setHasUnsavedChanges(false);
+      setUnsavedCount(0);
+      setAuditTrail({ count: 0, changes: [], hasChanges: false });
+      try {
+        localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
+      } catch (e) {}
+    };
+
+    const handleResetBlank = () => {
+      baselineSnapshotRef.current = null;
+      setHasUnsavedChanges(false);
+      setUnsavedCount(0);
+      setAuditTrail({ count: 0, changes: [], hasChanges: false });
+      try {
+        localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
+      } catch (e) {}
+    };
+
+    window.addEventListener('mbell_template_loaded', handleTemplateLoaded);
+    window.addEventListener('mbell_reset_editor_blank', handleResetBlank);
+    return () => {
+      window.removeEventListener('mbell_template_loaded', handleTemplateLoaded);
+      window.removeEventListener('mbell_reset_editor_blank', handleResetBlank);
+    };
+  }, [formData, themeConfig]);
+
+  // Pantau perubahan record template ID (ganti template tersimpan)
+  useEffect(() => {
+    if (currentTemplateRecordId !== prevRecordIdRef.current) {
+      prevRecordIdRef.current = currentTemplateRecordId;
+      if (!loading) {
+        baselineSnapshotRef.current = {
+          formData: JSON.parse(JSON.stringify(formData)),
+          themeConfig: JSON.parse(JSON.stringify(themeConfig)),
+        };
+        setHasUnsavedChanges(false);
+        setUnsavedCount(0);
+        setAuditTrail({ count: 0, changes: [], hasChanges: false });
+      }
+    }
+  }, [currentTemplateRecordId, loading, formData, themeConfig]);
+
+  // 2. Diff Calculator: hitung perubahan nyata terhadap baseline menggunakan ChangeAuditEngine
+  useEffect(() => {
+    if (loading) return;
+
+    // Jika baseline belum terpasang, inisialisasi dengan data awal yang baru dimuat
+    if (!baselineSnapshotRef.current) {
+      baselineSnapshotRef.current = {
+        formData: JSON.parse(JSON.stringify(formData)),
+        themeConfig: JSON.parse(JSON.stringify(themeConfig)),
+      };
+      setHasUnsavedChanges(false);
+      setUnsavedCount(0);
+      setAuditTrail({ count: 0, changes: [], hasChanges: false });
       return;
     }
 
-    setHasUnsavedChanges(true);
-    setUnsavedCount((prev) => prev + 1);
+    // Hitung audit trail perubahan nyata
+    const trail = computeAuditTrail(baselineSnapshotRef.current, {
+      formData,
+      themeConfig,
+    });
 
-    // Simpan editan lokal ke localStorage sebagai cadangan offline aman
-    try {
-      localStorage.setItem('mbell_pending_draft_formData', JSON.stringify(formData));
-      localStorage.setItem('mbell_pending_draft_themeConfig', JSON.stringify(themeConfig));
-      localStorage.setItem('mbell_pending_draft_hasUnsavedEdits', 'true');
-    } catch (e) {
-      console.warn('Draft local cache warning:', e);
+    setAuditTrail(trail);
+    setUnsavedCount(trail.count);
+    setHasUnsavedChanges(trail.hasChanges);
+
+    if (trail.hasChanges) {
+      try {
+        localStorage.setItem('mbell_pending_draft_formData', JSON.stringify(formData));
+        localStorage.setItem('mbell_pending_draft_themeConfig', JSON.stringify(themeConfig));
+        localStorage.setItem('mbell_pending_draft_hasUnsavedEdits', 'true');
+      } catch (e) {
+        console.warn('Draft local cache warning:', e);
+      }
+    } else {
+      try {
+        localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
+      } catch (e) {}
     }
-  }, [formData, themeConfig]);
+  }, [formData, themeConfig, loading]);
+
+  // 🔄 Revert All Changes: mengembalikan seluruh data ke baseline tersimpan
+  const handleRevertAll = React.useCallback(() => {
+    if (!baselineSnapshotRef.current) return;
+    setFormData(JSON.parse(JSON.stringify(baselineSnapshotRef.current.formData)));
+    if (setThemeConfig) {
+      setThemeConfig(JSON.parse(JSON.stringify(baselineSnapshotRef.current.themeConfig)));
+    }
+    setUnsavedCount(0);
+    setHasUnsavedChanges(false);
+    setAuditTrail({ count: 0, changes: [], hasChanges: false });
+    try {
+      localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
+    } catch (e) {}
+    setSaveToast({
+      show: true,
+      message: 'Semua perubahan berhasil dikembalikan ke posisi semula',
+      type: 'info',
+    });
+  }, [setFormData, setThemeConfig, setSaveToast]);
+
+  // ↩️ Revert Single Field: mengembalikan 1 field spesifik ke baseline
+  const handleRevertField = React.useCallback((fieldKey: string) => {
+    if (!baselineSnapshotRef.current) return;
+    const baseForm = baselineSnapshotRef.current.formData;
+    const baseTheme = baselineSnapshotRef.current.themeConfig;
+
+    if (fieldKey === 'theme_id') {
+      setFormData((prev) => ({ ...prev, theme_id: baseForm.theme_id }));
+    } else if (fieldKey.startsWith('groom.')) {
+      const prop = fieldKey.replace('groom.', '');
+      setFormData((prev) => ({
+        ...prev,
+        groom: { ...prev.groom, [prop]: (baseForm.groom as any)?.[prop] },
+      }));
+    } else if (fieldKey.startsWith('bride.')) {
+      const prop = fieldKey.replace('bride.', '');
+      setFormData((prev) => ({
+        ...prev,
+        bride: { ...prev.bride, [prop]: (baseForm.bride as any)?.[prop] },
+      }));
+    } else if (fieldKey === 'is_bride_first') {
+      setFormData((prev) => ({ ...prev, is_bride_first: baseForm.is_bride_first }));
+    } else if (fieldKey === 'wedding_date_iso') {
+      setFormData((prev) => ({ ...prev, wedding_date_iso: baseForm.wedding_date_iso }));
+    } else if (fieldKey === 'wedding_date_display') {
+      setFormData((prev) => ({ ...prev, wedding_date_display: baseForm.wedding_date_display }));
+    } else if (fieldKey === 'countdown_target') {
+      setFormData((prev) => ({ ...prev, countdown_target: baseForm.countdown_target }));
+    } else if (fieldKey.startsWith('events')) {
+      setFormData((prev) => ({ ...prev, events: JSON.parse(JSON.stringify(baseForm.events || [])) }));
+    } else if (fieldKey === 'cover_image') {
+      setFormData((prev) => ({
+        ...prev,
+        cover_image: baseForm.cover_image,
+        couple_photo: baseForm.couple_photo,
+      }));
+    } else if (fieldKey === 'gallery') {
+      setFormData((prev) => ({ ...prev, gallery: JSON.parse(JSON.stringify(baseForm.gallery || [])) }));
+    } else if (fieldKey === 'quote') {
+      setFormData((prev) => ({ ...prev, quote: baseForm.quote }));
+    } else if (fieldKey === 'quote_source') {
+      setFormData((prev) => ({ ...prev, quote_source: baseForm.quote_source }));
+    } else if (fieldKey === 'love_story') {
+      setFormData((prev) => ({ ...prev, love_story: JSON.parse(JSON.stringify(baseForm.love_story || [])) }));
+    } else if (fieldKey === 'banks') {
+      setFormData((prev) => ({
+        ...prev,
+        banks: JSON.parse(JSON.stringify(baseForm.banks || [])),
+        bank_accounts: JSON.parse(JSON.stringify(baseForm.banks || [])),
+      }));
+    } else if (fieldKey === 'qris_url') {
+      setFormData((prev) => ({ ...prev, qris_url: baseForm.qris_url }));
+    } else if (fieldKey === 'gift_address') {
+      setFormData((prev) => ({ ...prev, gift_address: baseForm.gift_address }));
+    } else if (fieldKey === 'slug') {
+      setFormData((prev) => ({ ...prev, slug: baseForm.slug }));
+    } else if (fieldKey === 'hashtag') {
+      setFormData((prev) => ({ ...prev, hashtag: baseForm.hashtag }));
+    } else if (fieldKey === 'streaming_url') {
+      setFormData((prev) => ({ ...prev, streaming_url: baseForm.streaming_url }));
+    } else if (fieldKey === 'music_url') {
+      setFormData((prev) => ({ ...prev, music_url: baseForm.music_url }));
+      if (setThemeConfig) {
+        setThemeConfig((prev) => ({ ...prev, music_url: baseTheme.music_url }));
+      }
+    } else if (fieldKey.startsWith('anim.')) {
+      const prop = fieldKey.replace('anim.', '');
+      if (setThemeConfig) {
+        setThemeConfig((prev) => ({
+          ...prev,
+          animation_config: {
+            ...prev.animation_config,
+            [prop]: (baseTheme.animation_config as any)?.[prop],
+          } as any,
+        }));
+      }
+    } else if (fieldKey === 'theme.primary_color') {
+      if (setThemeConfig) {
+        setThemeConfig((prev) => ({ ...prev, primary_color: baseTheme.primary_color }));
+      }
+    }
+
+    setSaveToast({
+      show: true,
+      message: 'Perubahan field berhasil dibatalkan',
+      type: 'info',
+    });
+  }, [setFormData, setThemeConfig, setSaveToast]);
 
   // 3. Manual Explicit Save with User Templates Synchronization & Visual Toast Feedback
   const handleManualSave = async () => {
@@ -249,8 +459,13 @@ export function useDashboardSave({
         }
       }
 
+      baselineSnapshotRef.current = {
+        formData: JSON.parse(JSON.stringify(formData)),
+        themeConfig: JSON.parse(JSON.stringify(themeConfig)),
+      };
       setHasUnsavedChanges(false);
       setUnsavedCount(0);
+      setAuditTrail({ count: 0, changes: [], hasChanges: false });
       localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
       setLastSaved(new Date());
 
@@ -365,9 +580,14 @@ export function useDashboardSave({
         });
       }
 
+      baselineSnapshotRef.current = {
+        formData: JSON.parse(JSON.stringify(draftContent)),
+        themeConfig: JSON.parse(JSON.stringify(themeConfig)),
+      };
       setFormData(draftContent);
       setHasUnsavedChanges(false);
       setUnsavedCount(0);
+      setAuditTrail({ count: 0, changes: [], hasChanges: false });
       localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
       setLastSaved(new Date());
 
@@ -403,6 +623,9 @@ export function useDashboardSave({
     setHasUnsavedChanges,
     unsavedCount,
     setUnsavedCount,
+    auditTrail,
+    handleRevertAll,
+    handleRevertField,
     handleManualSave,
     handleSaveDraft,
   };

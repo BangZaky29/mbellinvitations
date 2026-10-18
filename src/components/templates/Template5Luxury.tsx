@@ -25,6 +25,9 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
     toastMessage,
     toastType,
     showToast,
+    coverSwipeProps,
+    renderSwipeHint,
+    renderBrandFooter,
   } = useTemplateState({
     data,
     theme,
@@ -158,7 +161,8 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
             {/* -------------------------------------------------------- */}
             {!isOpen && (
               <section
-                className={`relative w-full h-full min-h-[100dvh] flex flex-col justify-between items-center text-center p-5 sm:p-7 overflow-hidden z-20 transition-all duration-700 ${
+                {...coverSwipeProps}
+                className={`relative w-full h-full min-h-[100dvh] flex flex-col justify-between items-center text-center p-5 sm:p-7 overflow-hidden z-20 transition-all duration-700 cursor-grab active:cursor-grabbing ${
                   isOpening ? 'animate-cover-exit pointer-events-none' : ''
                 }`}
                 id="cover-gate"
@@ -237,6 +241,9 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
                       arrow_downward
                     </span>
                   </button>
+
+                  {/* Interaktif Petunjuk Usap ke Atas */}
+                  {renderSwipeHint({ variant: 'gold' })}
                 </div>
               </section>
             )}
@@ -950,7 +957,7 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
                 {/* ---------------------------------------------------- */}
                 {/* SECTION 8: LIVE WISHES WALL & GRATITUDE              */}
                 {/* ---------------------------------------------------- */}
-                <section className="w-full px-margin pt-10 pb-28 flex flex-col items-center z-10" id="wishes">
+                <section className="w-full px-margin pt-10 pb-6 flex flex-col items-center z-10" id="wishes">
                   <div className="text-center mb-7">
                     <span className="font-label-eyebrow text-primary tracking-[0.25em] text-[10px] uppercase block mb-1">
                       Untaian Doa &amp; Ucapan
@@ -1050,6 +1057,9 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
                     </h3>
                   </div>
                 </section>
+
+                {/* Dynamic mbell Invitations Brand Signature Footer */}
+                {renderBrandFooter({ themeId: 'luxury' })}
               </div>
             )}
           </div>

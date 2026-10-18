@@ -90,27 +90,18 @@ export default async function handler(req: Request) {
     try {
       let record: any = null;
 
-      // Coba tabel invitations
-      const invRes = await fetch(
-        `${SUPABASE_URL}/rest/v1/invitations?slug=eq.${encodeURIComponent(slug)}&select=*`,
-        {
-          headers: {
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          },
-        }
-      );
-
-      if (invRes.ok) {
-        const invRows = await invRes.json();
-        if (Array.isArray(invRows) && invRows.length > 0) {
-          record = invRows[0];
-        }
-      }
-
-      // Coba user_templates jika invitations belum ada atau kosong
-      if (!record || !record.content) {
-        const utRes = await fetch(
+      // Dual-fetch: invitations dan user_templates secara paralel
+      const [invRes, utRes] = await Promise.all([
+        fetch(
+          `${SUPABASE_URL}/rest/v1/invitations?slug=eq.${encodeURIComponent(slug)}&select=*`,
+          {
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            },
+          }
+        ).catch(() => null),
+        fetch(
           `${SUPABASE_URL}/rest/v1/user_templates?slug=eq.${encodeURIComponent(slug)}&select=*&order=updated_at.desc&limit=1`,
           {
             headers: {
@@ -118,14 +109,32 @@ export default async function handler(req: Request) {
               Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
             },
           }
-        );
+        ).catch(() => null),
+      ]);
 
-        if (utRes.ok) {
-          const utRows = await utRes.json();
-          if (Array.isArray(utRows) && utRows.length > 0) {
-            record = utRows[0];
-          }
+      let invRecord: any = null;
+      if (invRes && invRes.ok) {
+        const invRows = await invRes.json();
+        if (Array.isArray(invRows) && invRows.length > 0) {
+          invRecord = invRows[0];
         }
+      }
+
+      let utRecord: any = null;
+      if (utRes && utRes.ok) {
+        const utRows = await utRes.json();
+        if (Array.isArray(utRows) && utRows.length > 0) {
+          utRecord = utRows[0];
+        }
+      }
+
+      // Pilih record yang paling mutakhir (newest updated_at) agar foto sampul live selalu sinkron
+      if (invRecord && utRecord) {
+        const invTime = invRecord.updated_at ? new Date(invRecord.updated_at).getTime() : 0;
+        const utTime = utRecord.updated_at ? new Date(utRecord.updated_at).getTime() : 0;
+        record = utTime >= invTime ? utRecord : invRecord;
+      } else {
+        record = invRecord || utRecord;
       }
 
       // Ekstraksi data konten undangan

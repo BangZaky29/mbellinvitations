@@ -328,14 +328,14 @@ export function useUniversalScrollAnimation(
     ];
 
     if (!disableAutoScan) {
-      // Auto-scan elemen semantik pada template undangan
+      // Auto-scan elemen semantik pada template undangan (kecuali cover dan hero/pembuka)
       TARGET_SELECTORS.push(
-        'section:not(#cover):not(#sampul):not(#hero):not(.no-anim)',
-        'section:not(#cover):not(#sampul):not(#hero) > div.max-w-sm:not(.no-anim)',
-        'section:not(#cover):not(#sampul):not(#hero) h2:not(.no-anim)',
-        'section:not(#cover):not(#sampul):not(#hero) blockquote:not(.no-anim)',
-        'section:not(#cover):not(#sampul):not(#hero) .rounded-2xl:not(.no-anim)',
-        'section:not(#cover):not(#sampul):not(#hero) .rounded-3xl:not(.no-anim)'
+        'section:not(#cover):not(#sampul):not(#cover-gate):not(#hero):not(#hero-section):not(#pawarta):not(#salam):not(#hero-countdown):not(#doaMempelai):not(.no-anim)',
+        'section:not(#cover):not(#sampul):not(#cover-gate):not(#hero):not(#hero-section):not(#pawarta):not(#salam):not(#hero-countdown):not(#doaMempelai) > div.max-w-sm:not(.no-anim)',
+        'section:not(#cover):not(#sampul):not(#cover-gate):not(#hero):not(#hero-section):not(#pawarta):not(#salam):not(#hero-countdown):not(#doaMempelai) h2:not(.no-anim)',
+        'section:not(#cover):not(#sampul):not(#cover-gate):not(#hero):not(#hero-section):not(#pawarta):not(#salam):not(#hero-countdown):not(#doaMempelai) blockquote:not(.no-anim)',
+        'section:not(#cover):not(#sampul):not(#cover-gate):not(#hero):not(#hero-section):not(#pawarta):not(#salam):not(#hero-countdown):not(#doaMempelai) .rounded-2xl:not(.no-anim)',
+        'section:not(#cover):not(#sampul):not(#cover-gate):not(#hero):not(#hero-section):not(#pawarta):not(#salam):not(#hero-countdown):not(#doaMempelai) .rounded-3xl:not(.no-anim)'
       );
     }
 
@@ -411,11 +411,14 @@ export function useUniversalScrollAnimation(
       if (rootElement && (!isDashboardMode || rootElement.closest('[data-phone-preview="true"]'))) {
         candidates = Array.from(rootElement.querySelectorAll(COMBINED_SELECTOR));
       } else if (isDashboardMode) {
-        // HANYA ambil elemen di dalam Phone Preview Scroll Container
-        const phoneScroll = document.querySelector('[data-phone-scroll="true"]') as HTMLElement | null
-          || document.querySelector('#phone-screen-scroll-container') as HTMLElement | null;
-        if (phoneScroll) {
-          candidates = Array.from(phoneScroll.querySelectorAll(COMBINED_SELECTOR));
+        // HANYA ambil elemen di dalam seluruh Phone Preview Scroll Container (termasuk modal preview & desktop aside)
+        const allPhoneScrolls = Array.from(
+          document.querySelectorAll('[data-phone-scroll="true"], #phone-screen-scroll-container')
+        ) as HTMLElement[];
+        if (allPhoneScrolls.length > 0) {
+          allPhoneScrolls.forEach((ps) => {
+            candidates.push(...Array.from(ps.querySelectorAll(COMBINED_SELECTOR)));
+          });
         } else {
           phoneContainers.forEach((pc) => {
             const scrollable = pc.querySelector('[data-phone-scroll="true"]') || pc;
@@ -447,11 +450,19 @@ export function useUniversalScrollAnimation(
           }
         }
 
-        // Abaikan elemen cover pembuka di atas
+        // Abaikan elemen cover pembuka & hero top section agar SELALU langsung tampil (tidak pernah hilang/blank)
         if (
           el.closest('#cover') ||
           el.closest('#sampul') ||
+          el.closest('#cover-gate') ||
+          el.closest('#cover-overlay') ||
           el.closest('[data-cover="true"]') ||
+          el.closest('#hero') ||
+          el.closest('#hero-section') ||
+          el.closest('#pawarta') ||
+          el.closest('#salam') ||
+          el.closest('#hero-countdown') ||
+          el.closest('#doaMempelai') ||
           el.classList.contains('no-anim')
         ) {
           markRevealed(el);
@@ -581,9 +592,11 @@ export function useUniversalScrollAnimation(
     }
     window.addEventListener('resize', handlePassiveScroll, { passive: true });
 
-    // Dengarkan scroll container di dalam phone preview jika ada
-    phoneContainers.forEach((c) => {
-      const scrollable = c.querySelector('.overflow-y-auto') || c;
+    // Dengarkan scroll container di dalam seluruh phone preview jika ada
+    const allPhoneScrollables = Array.from(
+      document.querySelectorAll('[data-phone-scroll="true"], #phone-screen-scroll-container, [data-phone-preview="true"] .overflow-y-auto')
+    ) as HTMLElement[];
+    allPhoneScrollables.forEach((scrollable) => {
       scrollable.addEventListener('scroll', handlePassiveScroll, { passive: true });
     });
 

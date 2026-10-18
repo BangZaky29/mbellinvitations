@@ -72,9 +72,9 @@ const THEME_OPTIONS: ThemeOption[] = [
     styleTag: 'Botanical Earthy',
     coupleSample: 'Romeo & Juliet',
     badge: 'Populer',
-    accentColor: '#556B2F',
+    accentColor: '#8C4E2D',
     icon: 'local_florist',
-    bgClass: 'bg-[#F2EFE9] text-[#162a1f] border-emerald-200',
+    bgClass: 'bg-gradient-to-b from-[#FBF9F5] to-[#EFE8DE] text-[#1E2E22] border-[#DECFBD]',
     category: 'casual',
   },
   {
@@ -130,15 +130,16 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
     return map[id] || id;
   };
 
-  const handleSelect = (id: string) => {
-    const semanticId = toSemanticId(id);
-    onThemeSelect?.(semanticId);
-    onSelectTheme?.(semanticId);
-  };
-
   const effectiveActive = toTemplateId(activeThemeId);
   const activeSemantic = toSemanticId(activeThemeId);
   const currentOption = THEME_OPTIONS.find((t) => t.id === effectiveActive) || THEME_OPTIONS[0];
+
+  const handleSelect = (id: string) => {
+    const semanticId = toSemanticId(id);
+    if (semanticId === activeSemantic) return;
+    onThemeSelect?.(semanticId);
+    onSelectTheme?.(semanticId);
+  };
 
   const filteredOptions =
     selectedCategory === 'all'
@@ -218,7 +219,10 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
           return (
             <div
               key={theme.id}
-              onClick={() => handleSelect(theme.id)}
+              onClick={() => {
+                if (isActive) return;
+                handleSelect(theme.id);
+              }}
               className={`group rounded-2xl p-4 space-y-3.5 relative transition-all duration-200 cursor-pointer border ${
                 isActive
                   ? 'border-stone-900 bg-stone-50/60 ring-2 ring-stone-900/10 shadow-md'
