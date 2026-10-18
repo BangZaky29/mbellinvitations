@@ -37,7 +37,9 @@ export const CoverSwipeHint: React.FC<CoverSwipeHintProps> = ({
       className={`flex flex-col items-center justify-center gap-0.5 mt-3 select-none pointer-events-none transition-all duration-300 ${className}`}
       data-testid="cover-swipe-hint"
     >
-      <span className={`material-symbols-outlined text-[22px] leading-none animate-swipe-bounce drop-shadow-sm ${iconColor}`}>
+      {/* Subtle Drag Handle Pill Indicator */}
+      <div className={`w-10 h-1 rounded-full opacity-40 mb-1 ${iconColor.replace('text-', 'bg-')} drop-shadow-xs`} />
+      <span className={`material-symbols-outlined text-[20px] leading-none animate-swipe-bounce drop-shadow-sm ${iconColor}`}>
         keyboard_double_arrow_up
       </span>
       <span className={`text-[10px] sm:text-[11px] font-sans tracking-[0.22em] uppercase font-medium drop-shadow-xs ${textColor}`}>

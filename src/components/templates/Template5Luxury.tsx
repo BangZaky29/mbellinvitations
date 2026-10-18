@@ -5,6 +5,7 @@ import { FloatingDock } from '../common/FloatingDock';
 import { SleekToast } from '../common/SleekToast';
 import { VenueMapEmbed } from '../common/VenueMapEmbed';
 import { GalleryLightbox } from '../common/GalleryLightbox';
+import { DraggableCoverSheet } from '../common/DraggableCoverSheet';
 
 export const Template5Luxury: React.FC<InvitationProps> = ({
   data,
@@ -25,7 +26,6 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
     toastMessage,
     toastType,
     showToast,
-    coverSwipeProps,
     renderSwipeHint,
     renderBrandFooter,
   } = useTemplateState({
@@ -151,7 +151,9 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
         {/* MAIN BODY                                                    */}
         {/* ============================================================ */}
         <main className={`flex-1 flex flex-col relative w-full ${isOpen ? 'pt-safe pb-safe' : 'p-0'} bg-surface`}>
-          <div className="flex flex-col w-full relative overflow-x-hidden selection:bg-primary-container/30 selection:text-on-surface h-full flex-1">
+          <div className={`flex flex-col w-full relative selection:bg-primary-container/30 selection:text-on-surface ${
+            !isOpen ? (isPreview ? 'h-full overflow-hidden' : 'h-[100dvh] overflow-hidden') : 'min-h-screen overflow-visible'
+          }`}>
             {/* Ambient Golden Ray Backdrops */}
             <div className="pointer-events-none fixed -top-40 -left-40 w-96 h-96 rounded-full bg-primary-container/5 blur-3xl z-0"></div>
             <div className="pointer-events-none fixed top-1/2 -right-40 w-96 h-96 rounded-full bg-primary/5 blur-3xl z-0"></div>
@@ -159,13 +161,14 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
             {/* -------------------------------------------------------- */}
             {/* SECTION 1: COVER GATE OVERLAY                            */}
             {/* -------------------------------------------------------- */}
-            {!isOpen && (
+            <DraggableCoverSheet
+              isOpen={isOpen}
+              isOpening={isOpening}
+              onOpenInvitation={handleOpenInvitation}
+            >
               <section
-                {...coverSwipeProps}
-                className={`relative w-full h-full min-h-[100dvh] flex flex-col justify-between items-center text-center p-5 sm:p-7 overflow-hidden z-20 transition-all duration-700 cursor-grab active:cursor-grabbing ${
-                  isOpening ? 'animate-cover-exit pointer-events-none' : ''
-                }`}
                 id="cover-gate"
+                className="relative w-full h-full min-h-full flex flex-col justify-between items-center text-center p-5 sm:p-7 overflow-hidden bg-surface"
               >
                 <div className="absolute inset-0 z-0">
                   <img
@@ -246,13 +249,12 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
                   {renderSwipeHint({ variant: 'gold' })}
                 </div>
               </section>
-            )}
+            </DraggableCoverSheet>
 
             {/* -------------------------------------------------------- */}
-            {/* INNER CONTENT (Tampil jika sudah Buka atau Mode Preview) */}
+            {/* INNER CONTENT (Tersedia di bawah cover & interaktif)     */}
             {/* -------------------------------------------------------- */}
-            {isOpen && (
-              <div className="flex flex-col w-full animate-page-enter">
+            <div className={`flex flex-col w-full ${!isOpen ? 'pointer-events-none select-none max-h-screen overflow-hidden' : 'animate-page-enter'}`}>
                 {/* ---------------------------------------------------- */}
                 {/* SECTION 2: HERO & COUNTDOWN                          */}
                 {/* ---------------------------------------------------- */}
@@ -1061,7 +1063,6 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
                 {/* Dynamic mbell Invitations Brand Signature Footer */}
                 {renderBrandFooter({ themeId: 'luxury' })}
               </div>
-            )}
           </div>
         </main>
 

@@ -5,6 +5,7 @@ import { FloatingDock } from '../common/FloatingDock';
 import { SleekToast } from '../common/SleekToast';
 import { VenueMapEmbed } from '../common/VenueMapEmbed';
 import { GalleryLightbox } from '../common/GalleryLightbox';
+import { DraggableCoverSheet } from '../common/DraggableCoverSheet';
 import { MOCK_JAWA_DATA } from '../../data/mock/jawaData';
 
 export const Template3Jawa: React.FC<InvitationProps> = ({
@@ -37,7 +38,6 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
     firstPerson,
     secondPerson,
     isSectionActive,
-    coverSwipeProps,
     renderSwipeHint,
     renderBrandFooter,
   } = useTemplateState({
@@ -97,17 +97,20 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
         />
 
         <main className={`flex flex-col relative w-full bg-[#14100D] min-h-screen flex-1`}>
-          <div className="flex flex-col w-full relative select-none h-full flex-1">
+          <div className={`flex flex-col w-full relative ${
+            !isOpen ? (isPreview ? 'h-full overflow-hidden' : 'h-[100dvh] overflow-hidden') : 'min-h-screen overflow-visible'
+          }`}>
             {/* ========================================== */}
             {/* SECTION 1: COVER GATE OVERLAY              */}
             {/* ========================================== */}
-            {!isOpen && (
+            <DraggableCoverSheet
+              isOpen={isOpen}
+              isOpening={isOpening}
+              onOpenInvitation={handleOpenInvitation}
+            >
               <section
                 id="sampul"
-                {...coverSwipeProps}
-                className={`relative w-full h-full min-h-[100dvh] flex flex-col justify-between items-center text-center p-5 sm:p-7 z-30 overflow-hidden bg-[#14100D] transition-all duration-700 cursor-grab active:cursor-grabbing ${
-                  isOpening ? 'animate-cover-exit pointer-events-none' : ''
-                }`}
+                className="relative w-full h-full min-h-full flex flex-col justify-between items-center text-center p-5 sm:p-7 overflow-hidden bg-[#14100D]"
               >
                 {/* Traditional Javanese Kawung lattice geometric decorative background */}
                 <div className="absolute inset-0 pointer-events-none opacity-15 bg-[radial-gradient(#F3D068_1px,transparent_1px)] [background-size:18px_18px]"></div>
@@ -222,13 +225,12 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
                   {renderSwipeHint({ variant: 'jawa' })}
                 </div>
               </section>
-            )}
+            </DraggableCoverSheet>
 
             {/* ========================================== */}
-            {/* INNER CONTENT (Tampil jika sudah Buka atau Mode Preview) */}
+            {/* INNER CONTENT (Tersedia di bawah cover & interaktif) */}
             {/* ========================================== */}
-            {isOpen && (
-              <div className="flex flex-col w-full animate-page-enter">
+            <div className={`flex flex-col w-full ${!isOpen ? 'pointer-events-none select-none max-h-screen overflow-hidden' : 'animate-page-enter'}`}>
                 {/* ========================================== */}
                 {/* SECTION 2: HERO & COUNTDOWN                */}
                 {/* ========================================== */}
@@ -983,7 +985,6 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
             )}
 
               </div>
-            )}
 
           </div>
         </main>

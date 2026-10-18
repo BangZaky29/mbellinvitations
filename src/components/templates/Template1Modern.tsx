@@ -5,6 +5,7 @@ import { FloatingDock } from '../common/FloatingDock';
 import { SleekToast } from '../common/SleekToast';
 import { VenueMapEmbed } from '../common/VenueMapEmbed';
 import { GalleryLightbox } from '../common/GalleryLightbox';
+import { DraggableCoverSheet } from '../common/DraggableCoverSheet';
 
 export const Template1Modern: React.FC<InvitationProps> = ({
   data,
@@ -46,7 +47,6 @@ export const Template1Modern: React.FC<InvitationProps> = ({
     firstPersonRole,
     secondPersonRole,
     isSectionActive,
-    coverSwipeProps,
     renderSwipeHint,
     renderBrandFooter,
   } = useTemplateState({
@@ -73,18 +73,21 @@ export const Template1Modern: React.FC<InvitationProps> = ({
       />
 
       {/* Mobile Viewport Container (Max 430px) */}
-      <div className="relative w-full max-w-[430px] h-full min-h-screen bg-alabaster shadow-2xl overflow-x-clip border-x border-[#E2DDD3] flex flex-col no-scrollbar">
+      <div className={`relative w-full max-w-[430px] bg-alabaster shadow-2xl overflow-x-clip border-x border-[#E2DDD3] flex flex-col no-scrollbar ${
+        !isOpen ? (isPreview ? 'h-full overflow-hidden' : 'h-[100dvh] overflow-hidden') : 'h-full min-h-screen overflow-visible'
+      }`}>
 
         {/* ========================================== */}
-        {/* 1. COVER GATE OVERLAY (Full-screen)        */}
+        {/* 1. PHYSICAL DRAGGABLE COVER SHEET OVERLAY  */}
         {/* ========================================== */}
-        {!isOpen && (
+        <DraggableCoverSheet
+          isOpen={isOpen}
+          isOpening={isOpening}
+          onOpenInvitation={handleOpenInvitation}
+        >
           <section
             id="cover-overlay"
-            {...coverSwipeProps}
-            className={`relative w-full h-full min-h-[100dvh] flex flex-col justify-between items-center text-center p-5 sm:p-7 z-30 transition-all duration-700 cursor-grab active:cursor-grabbing ${
-              isOpening ? 'animate-cover-exit pointer-events-none' : ''
-            }`}
+            className="relative w-full h-full min-h-full flex flex-col justify-between items-center text-center p-5 sm:p-7 overflow-hidden"
           >
             {/* Background Image with Dark Vignette */}
             <div className="absolute inset-0 z-0 overflow-hidden">
@@ -166,16 +169,15 @@ export const Template1Modern: React.FC<InvitationProps> = ({
               {renderSwipeHint({ variant: 'light' })}
             </div>
           </section>
-        )}
+        </DraggableCoverSheet>
 
         {/* ========================================== */}
         {/* Main Invitation Content Wrapper            */}
         {/* ========================================== */}
-        {isOpen && (
-          <main
-            id="main-content"
-            className="relative z-20 pb-6 animate-page-enter"
-          >
+        <main
+          id="main-content"
+          className={`relative z-20 pb-6 ${!isOpen ? 'pointer-events-none select-none max-h-screen overflow-hidden' : 'animate-page-enter'}`}
+        >
           {/* ========================================== */}
           {/* 2. HERO & COUNTDOWN SECTION                */}
           {/* ========================================== */}
@@ -1005,7 +1007,6 @@ export const Template1Modern: React.FC<InvitationProps> = ({
             </section>
           )}
         </main>
-      )}
 
       {/* ========================================== */}
       {/* FLOATING AUDIO CONTROLLER BUBBLE           */}

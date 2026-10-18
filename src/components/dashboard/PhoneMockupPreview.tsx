@@ -62,8 +62,16 @@ export const PhoneMockupPreview: React.FC<PhoneMockupPreviewProps> = ({
     };
 
     window.addEventListener('mbell_replay_preview', handleReplayEvent);
+
+    // Sinkronisasi status preview saat cover dibuka (drag to open atau klik buka)
+    const handleCoverOpenedEvent = () => {
+      setIsCoverOpen(true);
+    };
+    window.addEventListener('mbell_cover_opened', handleCoverOpenedEvent);
+
     return () => {
       window.removeEventListener('mbell_replay_preview', handleReplayEvent);
+      window.removeEventListener('mbell_cover_opened', handleCoverOpenedEvent);
     };
   }, []);
 

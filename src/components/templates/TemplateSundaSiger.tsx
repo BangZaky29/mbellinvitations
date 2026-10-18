@@ -5,6 +5,7 @@ import { FloatingDock } from '../common/FloatingDock';
 import { SleekToast } from '../common/SleekToast';
 import { VenueMapEmbed } from '../common/VenueMapEmbed';
 import { GalleryLightbox } from '../common/GalleryLightbox';
+import { DraggableCoverSheet } from '../common/DraggableCoverSheet';
 import { MOCK_SUNDA_DATA } from '../../data/mock/sundaData';
 
 // Component: Subtle Floating Jasmine Petals in the Background (Ronce Melati Pasundan)
@@ -134,7 +135,6 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
     firstPerson,
     secondPerson,
     isSectionActive,
-    coverSwipeProps,
     renderSwipeHint,
     renderBrandFooter,
   } = useTemplateState({
@@ -192,18 +192,21 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
       {/* Main Container Phone Frame Max-Width 430px */}
       <div className="w-full max-w-[430px] min-h-screen flex flex-col relative bg-[#fbf9f6] shadow-[0_20px_50px_rgba(119,90,25,0.08)] overflow-x-clip no-scrollbar border-x border-[#ede9e1]/80">
         <main className="flex-1 flex flex-col w-full bg-[#fbf9f6] relative">
-          <div className="flex flex-col w-full text-[#1b1c1a]">
+          <div className={`flex flex-col w-full text-[#1b1c1a] relative ${
+            !isOpen ? (isPreview ? 'h-full overflow-hidden' : 'h-[100dvh] overflow-hidden') : 'min-h-screen overflow-visible'
+          }`}>
 
             {/* ============================================================ */}
-            {/* 1. COVER GATE OVERLAY SECTION                                */}
+            {/* 1. PHYSICAL DRAGGABLE COVER SHEET OVERLAY                    */}
             {/* ============================================================ */}
-            {!isOpen && (
+            <DraggableCoverSheet
+              isOpen={isOpen}
+              isOpening={isOpening}
+              onOpenInvitation={handleOpenInvitation}
+            >
               <section
                 id="sampul"
-                {...coverSwipeProps}
-                className={`w-full relative flex flex-col items-center justify-between px-6 pt-10 pb-12 text-center bg-gradient-to-b from-[#fbf9f6] via-[#f7f4ed] to-[#ede7dc] transition-all duration-700 min-h-[100dvh] z-30 overflow-hidden cursor-grab active:cursor-grabbing ${
-                  isOpening ? 'animate-cover-exit pointer-events-none' : 'opacity-100'
-                }`}
+                className="w-full h-full min-h-full relative flex flex-col items-center justify-between px-6 pt-8 pb-10 text-center bg-gradient-to-b from-[#fbf9f6] via-[#f7f4ed] to-[#ede7dc] overflow-hidden"
               >
                 {/* Ambient Sundanese Backdrop using Cover Photo if present */}
                 {(data.cover_image || data.couple_photo) && (
@@ -301,13 +304,12 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                   {renderSwipeHint({ variant: 'gold' })}
                 </div>
               </section>
-            )}
+            </DraggableCoverSheet>
 
             {/* ============================================================ */}
-            {/* INNER CONTENT (Tampil jika sudah Buka atau Mode Preview)     */}
+            {/* 2. INNER CONTENT (Tersedia di bawah cover & interaktif)      */}
             {/* ============================================================ */}
-            {isOpen && (
-              <div className="flex flex-col w-full animate-page-enter">
+            <div className={`flex flex-col w-full ${!isOpen ? 'pointer-events-none select-none max-h-screen overflow-hidden' : 'animate-page-enter'}`}>
 
                 {/* ============================================================ */}
                 {/* 2. HERO SCRIPTURE & LIVE COUNTDOWN                           */}
@@ -1015,7 +1017,6 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                 </footer>
 
               </div>
-            )}
 
           </div>
         </main>

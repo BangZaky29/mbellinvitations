@@ -18,47 +18,61 @@ export const PreviewToolbar: React.FC<PreviewToolbarProps> = ({
   setDeviceMode,
   onRefresh,
 }) => {
+  const handleOpenContent = () => {
+    setIsCoverOpen(true);
+    setTimeout(() => {
+      const scrollables = document.querySelectorAll(
+        '[data-phone-scroll="true"], #phone-screen-scroll-container, [data-phone-preview="true"] .overflow-y-auto'
+      );
+      scrollables.forEach((s) => {
+        s.scrollTop = 0;
+      });
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('mbell_cover_opened'));
+      }
+    }, 40);
+  };
+
   return (
     <div
-      className={`w-full max-w-[340px] xl:max-w-[360px] flex items-center justify-between mb-3 px-3 py-1.5 rounded-2xl transition-all ${
+      className={`w-full max-w-[370px] sm:max-w-[390px] xl:max-w-[400px] h-11 flex items-center justify-between mb-3 px-2 sm:px-2.5 rounded-2xl transition-all select-none ${
         onClose
-          ? 'bg-neutral-900/90 text-white border border-white/20 shadow-2xl backdrop-blur-md'
-          : 'bg-white shadow-xs border border-stone-200/80 text-stone-900'
+          ? 'bg-neutral-900/95 text-white border border-white/15 shadow-2xl backdrop-blur-xl'
+          : 'bg-white/95 shadow-xs border border-stone-200/90 text-stone-900 backdrop-blur-md'
       }`}
     >
-      <div className="flex items-center gap-1.5">
-        {onClose ? (
+      {/* BAGIAN KIRI: TOMBOL KEMBALI & SEGMENTED NAV */}
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        {onClose && (
           <button
             type="button"
             onClick={onClose}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium text-xs transition-all active:scale-95 cursor-pointer border border-white/10 shrink-0"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer border border-white/10 shrink-0"
             title="Kembali ke Dashboard Editor"
           >
             <span className="material-symbols-outlined text-[15px]">arrow_back</span>
-            <span>Kembali</span>
           </button>
-        ) : (
-          <span className="font-label-sm text-xs text-stone-500 font-medium">Tampilan:</span>
         )}
 
+        {/* SEGMENTED TAB: SAMPUL VS ISI UNDANGAN */}
         <div
-          className={`flex items-center p-0.5 rounded-xl border ${
+          className={`flex items-center p-0.5 rounded-xl border shrink-0 ${
             onClose
-              ? 'bg-neutral-800 border-white/10'
-              : 'bg-stone-100 border-stone-200/70'
+              ? 'bg-neutral-800/90 border-white/10'
+              : 'bg-stone-100/90 border-stone-200/80'
           }`}
         >
           <button
             type="button"
             onClick={() => setIsCoverOpen(false)}
-            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+            className={`px-2 sm:px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer flex items-center justify-center leading-none ${
               !isCoverOpen
                 ? onClose
-                  ? 'bg-white text-stone-950 font-bold shadow-xs'
-                  : 'bg-stone-900 text-white font-semibold shadow-xs'
+                  ? 'bg-white text-neutral-950 font-bold shadow-xs'
+                  : 'bg-stone-900 text-white font-bold shadow-xs'
                 : onClose
-                ? 'text-neutral-300 hover:text-white'
-                : 'text-stone-600 hover:text-stone-900'
+                ? 'text-neutral-400 hover:text-white'
+                : 'text-stone-500 hover:text-stone-900'
             }`}
             title="Lihat Sampul Pembuka (Cover Gate)"
           >
@@ -66,28 +80,15 @@ export const PreviewToolbar: React.FC<PreviewToolbarProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => {
-              setIsCoverOpen(true);
-              setTimeout(() => {
-                const scrollables = document.querySelectorAll(
-                  '[data-phone-scroll="true"], #phone-screen-scroll-container, [data-phone-preview="true"] .overflow-y-auto'
-                );
-                scrollables.forEach((s) => {
-                  s.scrollTop = 0;
-                });
-                if (typeof window !== 'undefined') {
-                  window.dispatchEvent(new CustomEvent('mbell_cover_opened'));
-                }
-              }, 40);
-            }}
-            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+            onClick={handleOpenContent}
+            className={`px-2 sm:px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer flex items-center justify-center leading-none ${
               isCoverOpen
                 ? onClose
-                  ? 'bg-white text-stone-950 font-bold shadow-xs'
-                  : 'bg-stone-900 text-white font-semibold shadow-xs'
+                  ? 'bg-white text-neutral-950 font-bold shadow-xs'
+                  : 'bg-stone-900 text-white font-bold shadow-xs'
                 : onClose
-                ? 'text-neutral-300 hover:text-white'
-                : 'text-stone-600 hover:text-stone-900'
+                ? 'text-neutral-400 hover:text-white'
+                : 'text-stone-500 hover:text-stone-900'
             }`}
             title="Lihat Isi Lengkap Undangan"
           >
@@ -96,72 +97,80 @@ export const PreviewToolbar: React.FC<PreviewToolbarProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => setDeviceMode('ios')}
-          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-            deviceMode === 'ios'
-              ? onClose
-                ? 'text-white bg-white/20 font-bold'
-                : 'text-stone-900 bg-stone-100 font-bold'
-              : onClose
-              ? 'text-neutral-400 hover:text-white'
-              : 'text-stone-500 hover:text-stone-800'
+      {/* BAGIAN KANAN: DEVICE SWITCHER, PLAY ANIMATION & REFRESH */}
+      <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 ml-2">
+        {/* Device Mode Toggle Pill */}
+        <div
+          className={`flex items-center p-0.5 rounded-lg border ${
+            onClose
+              ? 'bg-neutral-800/80 border-white/10'
+              : 'bg-stone-100/80 border-stone-200/70'
           }`}
-          title="iOS View"
         >
-          <span className="material-symbols-outlined text-[17px]">phone_iphone</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setDeviceMode('android')}
-          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-            deviceMode === 'android'
-              ? onClose
-                ? 'text-white bg-white/20 font-bold'
-                : 'text-stone-900 bg-stone-100 font-bold'
-              : onClose
-              ? 'text-neutral-400 hover:text-white'
-              : 'text-stone-500 hover:text-stone-800'
-          }`}
-          title="Android View"
-        >
-          <span className="material-symbols-outlined text-[17px]">smartphone</span>
-        </button>
-        <span className={`w-px h-3.5 mx-0.5 ${onClose ? 'bg-white/20' : 'bg-stone-200'}`} />
+          <button
+            type="button"
+            onClick={() => setDeviceMode('ios')}
+            className={`w-6 h-6 rounded-md transition-all cursor-pointer flex items-center justify-center ${
+              deviceMode === 'ios'
+                ? onClose
+                  ? 'bg-white/20 text-white shadow-xs'
+                  : 'bg-white text-stone-900 shadow-xs border border-stone-200/60'
+                : onClose
+                ? 'text-neutral-400 hover:text-white'
+                : 'text-stone-400 hover:text-stone-700'
+            }`}
+            title="Tampilan iOS (Dynamic Island)"
+          >
+            <span className="material-symbols-outlined text-[15px]">phone_iphone</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setDeviceMode('android')}
+            className={`w-6 h-6 rounded-md transition-all cursor-pointer flex items-center justify-center ${
+              deviceMode === 'android'
+                ? onClose
+                  ? 'bg-white/20 text-white shadow-xs'
+                  : 'bg-white text-stone-900 shadow-xs border border-stone-200/60'
+                : onClose
+                ? 'text-neutral-400 hover:text-white'
+                : 'text-stone-400 hover:text-stone-700'
+            }`}
+            title="Tampilan Android (Punch Hole)"
+          >
+            <span className="material-symbols-outlined text-[15px]">smartphone</span>
+          </button>
+        </div>
+
+        {/* Separator Divider */}
+        <span className={`w-px h-3.5 mx-0.5 ${onClose ? 'bg-white/15' : 'bg-stone-200'}`} />
+
+        {/* Play / Replay Animation */}
         <button
           type="button"
           onClick={() => replayUniversalScrollAnimation()}
-          className={`p-1.5 rounded-lg transition-colors active:scale-90 cursor-pointer ${
-            onClose ? 'text-neutral-400 hover:text-white' : 'text-stone-500 hover:text-stone-800'
+          className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg transition-all active:scale-90 cursor-pointer flex items-center justify-center ${
+            onClose
+              ? 'text-neutral-300 hover:text-white hover:bg-white/10'
+              : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100'
           }`}
-          title="Kembalikan ke Sampul & Putar Ulang Animasi"
+          title="Putar Ulang Efek Animasi"
         >
-          <span className="material-symbols-outlined text-[17px]">play_circle</span>
+          <span className="material-symbols-outlined text-[16px]">play_circle</span>
         </button>
 
+        {/* Refresh Preview */}
         <button
           type="button"
           onClick={onRefresh}
-          className={`p-1.5 rounded-lg transition-colors active:rotate-180 cursor-pointer ${
-            onClose ? 'text-neutral-400 hover:text-white' : 'text-stone-500 hover:text-stone-800'
+          className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg transition-all active:rotate-180 cursor-pointer flex items-center justify-center ${
+            onClose
+              ? 'text-neutral-300 hover:text-white hover:bg-white/10'
+              : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100'
           }`}
-          title="Muat Ulang Preview dari Awal"
+          title="Muat Ulang Pratinjau dari Awal"
         >
-          <span className="material-symbols-outlined text-[17px]">refresh</span>
+          <span className="material-symbols-outlined text-[16px]">refresh</span>
         </button>
-
-        {onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-7 h-7 ml-1 rounded-full bg-white/10 hover:bg-red-500 text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 shrink-0"
-            title="Tutup Pratinjau"
-          >
-            <span className="material-symbols-outlined text-[15px]">close</span>
-          </button>
-        )}
       </div>
     </div>
   );

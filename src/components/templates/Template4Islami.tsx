@@ -5,6 +5,7 @@ import { FloatingDock } from '../common/FloatingDock';
 import { SleekToast } from '../common/SleekToast';
 import { VenueMapEmbed } from '../common/VenueMapEmbed';
 import { GalleryLightbox } from '../common/GalleryLightbox';
+import { DraggableCoverSheet } from '../common/DraggableCoverSheet';
 
 export const Template4Islami: React.FC<InvitationProps> = ({
   data,
@@ -25,7 +26,6 @@ export const Template4Islami: React.FC<InvitationProps> = ({
     toastMessage,
     toastType,
     showToast,
-    coverSwipeProps,
     renderSwipeHint,
     renderBrandFooter,
   } = useTemplateState({
@@ -184,17 +184,20 @@ export const Template4Islami: React.FC<InvitationProps> = ({
         {/* MAIN BODY                                                    */}
         {/* ============================================================ */}
         <main className={`flex-1 flex flex-col relative w-full bg-surface ${isOpen ? 'pt-16 pb-6' : 'p-0'}`}>
-          <div className="flex flex-col w-full text-on-surface h-full flex-1">
+          <div className={`flex flex-col w-full text-on-surface relative ${
+            !isOpen ? (isPreview ? 'h-full overflow-hidden' : 'h-[100dvh] overflow-hidden') : 'min-h-screen overflow-visible'
+          }`}>
             {/* -------------------------------------------------------- */}
             {/* SECTION 1: Cover Gate Overlay (Sampul & Opening Gate)   */}
             {/* -------------------------------------------------------- */}
-            {!isOpen && (
+            <DraggableCoverSheet
+              isOpen={isOpen}
+              isOpening={isOpening}
+              onOpenInvitation={handleOpenInvitation}
+            >
               <section
-                {...coverSwipeProps}
-                className={`relative w-full h-full min-h-[100dvh] flex flex-col justify-between items-center text-center p-5 sm:p-7 z-30 overflow-hidden transition-all duration-700 cursor-grab active:cursor-grabbing ${
-                  isOpening ? 'animate-cover-exit pointer-events-none' : ''
-                }`}
                 id="sampul"
+                className="relative w-full h-full min-h-full flex flex-col justify-between items-center text-center p-5 sm:p-7 overflow-hidden"
               >
                 {/* Ambient Islamic Backdrop using Cover Photo if present */}
                 {(data.cover_image || data.couple_photo) && (
@@ -276,13 +279,12 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                   {renderSwipeHint({ variant: 'gold' })}
                 </div>
               </section>
-            )}
+            </DraggableCoverSheet>
 
             {/* -------------------------------------------------------- */}
-            {/* INNER CONTENT (Tampil jika sudah Buka atau Mode Preview) */}
+            {/* INNER CONTENT (Tersedia di bawah cover & interaktif)     */}
             {/* -------------------------------------------------------- */}
-            {isOpen && (
-              <div className="flex flex-col w-full animate-page-enter">
+            <div className={`flex flex-col w-full ${!isOpen ? 'pointer-events-none select-none max-h-screen overflow-hidden' : 'animate-page-enter'}`}>
                 {/* ---------------------------------------------------- */}
                 {/* SECTION 2: Hero & Countdown (Salam & Hitung Mundur)  */}
                 {/* ---------------------------------------------------- */}
@@ -1239,7 +1241,6 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                 {/* Dynamic mbell Invitations Brand Signature Footer */}
                 {renderBrandFooter({ themeId: 'islami' })}
               </div>
-            )}
           </div>
         </main>
 

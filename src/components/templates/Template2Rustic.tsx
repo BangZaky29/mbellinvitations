@@ -5,6 +5,7 @@ import { FloatingDock } from '../common/FloatingDock';
 import { SleekToast } from '../common/SleekToast';
 import { VenueMapEmbed } from '../common/VenueMapEmbed';
 import { GalleryLightbox } from '../common/GalleryLightbox';
+import { DraggableCoverSheet } from '../common/DraggableCoverSheet';
 import { MOCK_RUSTIC_DATA } from '../../data/mock/rusticData';
 
 export const Template2Rustic: React.FC<InvitationProps> = ({
@@ -42,7 +43,6 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
     firstPerson,
     secondPerson,
     isSectionActive,
-    coverSwipeProps,
     renderSwipeHint,
     renderBrandFooter,
   } = useTemplateState({
@@ -84,17 +84,21 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
 
         {/* Main Content Area */}
         <main className={`flex flex-col relative w-full ${isOpen ? 'pt-4 pb-28 px-margin' : 'p-0'} bg-[#FAF8F5] min-h-screen flex-1`}>
-          <div className="flex flex-col w-full text-[#1E2E22] h-full flex-1">
+          <div className={`flex flex-col w-full text-[#1E2E22] relative ${
+            !isOpen ? (isPreview ? 'h-full overflow-hidden' : 'h-[100dvh] overflow-hidden') : 'min-h-screen overflow-visible'
+          }`}>
 
             {/* ========================================== */}
             {/* SECTION 1: COVER GATE OVERLAY              */}
             {/* ========================================== */}
-            {!isOpen && (
+            <DraggableCoverSheet
+              isOpen={isOpen}
+              isOpening={isOpening}
+              onOpenInvitation={handleOpenInvitation}
+            >
               <section
                 id="sampul"
-                {...coverSwipeProps}
-                className={`relative w-full h-full min-h-[100dvh] flex flex-col justify-between items-center text-center p-4 sm:p-6 z-30 overflow-hidden transition-all duration-700 bg-gradient-to-b from-[#F9F6F0] via-[#F4EFEB] to-[#ECE3D5] cursor-grab active:cursor-grabbing ${isOpening ? 'animate-cover-exit pointer-events-none' : ''
-                  }`}
+                className="relative w-full h-full min-h-full flex flex-col justify-between items-center text-center p-4 sm:p-6 overflow-hidden bg-gradient-to-b from-[#F9F6F0] via-[#F4EFEB] to-[#ECE3D5]"
               >
                 {/* Ambient Rustic Backdrop using Cover Photo if present */}
                 {(data.cover_image || data.couple_photo) && (
@@ -220,13 +224,12 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                   {renderSwipeHint({ variant: 'rustic' })}
                 </div>
               </section>
-            )}
+            </DraggableCoverSheet>
 
             {/* ========================================== */}
-            {/* INNER CONTENT (Tampil jika sudah Buka atau Mode Preview) */}
+            {/* INNER CONTENT (Tersedia di bawah cover & interaktif) */}
             {/* ========================================== */}
-            {isOpen && (
-              <div className="flex flex-col w-full animate-page-enter">
+            <div className={`flex flex-col w-full ${!isOpen ? 'pointer-events-none select-none max-h-screen overflow-hidden' : 'animate-page-enter'}`}>
                 {/* ========================================== */}
                 {/* SECTION 2: HERO & LIVE COUNTDOWN           */}
                 {/* ========================================== */}
@@ -1083,7 +1086,6 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                 {/* Dynamic mbell Invitations Brand Signature Footer */}
                 {renderBrandFooter()}
               </div>
-            )}
 
           </div>
         </main>
