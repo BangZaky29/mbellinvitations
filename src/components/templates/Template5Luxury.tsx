@@ -254,7 +254,7 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
             {/* -------------------------------------------------------- */}
             {/* INNER CONTENT (Tersedia di bawah cover & interaktif)     */}
             {/* -------------------------------------------------------- */}
-            <div className={`flex flex-col w-full ${!isOpen ? 'pointer-events-none select-none max-h-screen overflow-hidden' : 'animate-page-enter'}`}>
+            <div className={`flex flex-col w-full ${!isOpen ? 'pointer-events-none select-none max-h-screen overflow-hidden' : ''}`}>
                 {/* ---------------------------------------------------- */}
                 {/* SECTION 2: HERO & COUNTDOWN                          */}
                 {/* ---------------------------------------------------- */}

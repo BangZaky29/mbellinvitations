@@ -176,7 +176,7 @@ export const Template1Modern: React.FC<InvitationProps> = ({
         {/* ========================================== */}
         <main
           id="main-content"
-          className={`relative z-20 pb-6 ${!isOpen ? 'pointer-events-none select-none max-h-screen overflow-hidden' : 'animate-page-enter'}`}
+          className={`relative z-20 pb-6 ${!isOpen ? 'pointer-events-none select-none max-h-screen overflow-hidden' : ''}`}
         >
           {/* ========================================== */}
           {/* 2. HERO & COUNTDOWN SECTION                */}

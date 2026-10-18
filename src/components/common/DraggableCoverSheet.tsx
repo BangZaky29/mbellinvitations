@@ -61,6 +61,9 @@ export const DraggableCoverSheet: React.FC<DraggableCoverSheetProps> = ({
     }
   }, []);
 
+  // Ref untuk melacak perubahan status isOpen sebelumnya (mencegah pembatalan animasi yang tidak disengaja)
+  const prevIsOpenRef = useRef<boolean>(isOpen);
+
   // Simulator Fisika Pegas (Spring Physics Solver)
   const runSpringAnimation = useCallback(
     (
@@ -79,6 +82,10 @@ export const DraggableCoverSheet: React.FC<DraggableCoverSheetProps> = ({
       const damping = 26;    // Hambatan peredam
       const mass = 1.0;
 
+      const containerHeight =
+        sheetRef.current?.getBoundingClientRect().height ||
+        (typeof window !== 'undefined' ? window.innerHeight : 800);
+
       const step = (now: number) => {
         const dt = Math.min((now - lastTime) / 1000, 0.032); // Max delta time 32ms untuk stabilitas
         lastTime = now;
@@ -93,13 +100,26 @@ export const DraggableCoverSheet: React.FC<DraggableCoverSheetProps> = ({
 
         applyTransform(currentY);
 
+        // Jika cover meluncur ke atas dan sudah melewati batas atas layar (-containerHeight - 80px),
+        // langsung selesaikan dan dismiss agar tidak meninggalkan bayangan/garis batas sama sekali
+        if (targetY < 0 && currentY <= -containerHeight - 80) {
+          applyTransform(targetY);
+          animFrameRef.current = null;
+          setIsDismissed(true);
+          if (onComplete) onComplete();
+          return;
+        }
+
         // Kriteria konvergensi (selesai saat posisi & kecepatan mendekati 0)
         const isSettled =
-          Math.abs(currentY - targetY) < 0.5 && Math.abs(currentVelocity) < 8;
+          Math.abs(currentY - targetY) < 1.0 && Math.abs(currentVelocity) < 12;
 
         if (isSettled) {
           applyTransform(targetY);
           animFrameRef.current = null;
+          if (targetY < 0) {
+            setIsDismissed(true);
+          }
           if (onComplete) onComplete();
         } else {
           animFrameRef.current = requestAnimationFrame(step);
@@ -116,35 +136,41 @@ export const DraggableCoverSheet: React.FC<DraggableCoverSheetProps> = ({
     (customVelocity?: number) => {
       const containerHeight =
         sheetRef.current?.getBoundingClientRect().height ||
-        (typeof window !== 'undefined' ? window.innerHeight : 700);
+        (typeof window !== 'undefined' ? window.innerHeight : 800);
 
-      const targetY = -containerHeight - 20; // Keluar layar atas
+      // Pastikan target Y cukup jauh di atas layar (-containerHeight - 200px)
+      // agar tidak ada teks, tombol, maupun bayangan (box-shadow) yang tertinggal
+      const targetY = -Math.max(containerHeight + 200, 1000);
       const v = customVelocity !== undefined ? customVelocity : -600;
 
-      onOpenInvitation();
+      if (!isOpen && !isOpening) {
+        onOpenInvitation();
+      }
 
       runSpringAnimation(targetY, v, () => {
         setIsDismissed(true);
       });
     },
-    [onOpenInvitation, runSpringAnimation]
+    [isOpen, isOpening, onOpenInvitation, runSpringAnimation]
   );
 
-  // Sinkronisasi status isOpen eksternal (misal saat toggle "Sampul" di preview)
+  // Hanya reset posisi jika sebelumnya terbuka (isOpen === true) lalu ditutup kembali (isOpen === false)
+  // Ini mencegah pembatalan loop animasi saat isOpening berubah menjadi true
   useEffect(() => {
-    if (!isOpen) {
+    if (prevIsOpenRef.current && !isOpen) {
       stopAnimation();
       setIsDismissed(false);
       applyTransform(0);
     } else if (isOpen && !isOpening) {
       setIsDismissed(true);
     }
+    prevIsOpenRef.current = isOpen;
   }, [isOpen, isOpening, stopAnimation, applyTransform]);
 
   // Listener bila dibuka via tombol "Buka Undangan"
   useEffect(() => {
-    if (isOpening && !isDismissed && currentYRef.current === 0) {
-      triggerSlideUp(-500);
+    if (isOpening && !isDismissed) {
+      triggerSlideUp(-600);
     }
   }, [isOpening, isDismissed, triggerSlideUp]);
 
@@ -242,7 +268,7 @@ export const DraggableCoverSheet: React.FC<DraggableCoverSheetProps> = ({
   };
 
   // Jangan render di DOM setelah cover selesai dibuka dan dismissed
-  if (isOpen && isDismissed) {
+  if (isDismissed) {
     return null;
   }
 

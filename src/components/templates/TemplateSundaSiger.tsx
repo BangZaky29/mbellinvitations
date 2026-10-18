@@ -309,7 +309,7 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
             {/* ============================================================ */}
             {/* 2. INNER CONTENT (Tersedia di bawah cover & interaktif)      */}
             {/* ============================================================ */}
-            <div className={`flex flex-col w-full ${!isOpen ? 'pointer-events-none select-none max-h-screen overflow-hidden' : 'animate-page-enter'}`}>
+            <div className={`flex flex-col w-full ${!isOpen ? 'pointer-events-none select-none max-h-screen overflow-hidden' : ''}`}>
 
                 {/* ============================================================ */}
                 {/* 2. HERO SCRIPTURE & LIVE COUNTDOWN                           */}

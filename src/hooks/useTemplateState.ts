@@ -116,11 +116,10 @@ export function useTemplateState({
     setTimeout(() => {
       setIsOpen(true);
       setIsOpening(false);
-      window.scrollTo({ top: 0, behavior: 'instant' });
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('mbell_cover_opened'));
       }
-    }, 700);
+    }, 500);
   };
 
   // Touch & Pointer gesture tracking for swipe-up cover opening
