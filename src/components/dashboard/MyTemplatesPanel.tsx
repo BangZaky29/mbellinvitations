@@ -13,7 +13,6 @@ import {
 } from './my-templates/types';
 import { ActiveDraftCard } from './my-templates/ActiveDraftCard';
 import { TemplateCard } from './my-templates/TemplateCard';
-import { ThemeShowcase } from './my-templates/ThemeShowcase';
 import { DeleteTemplateModal } from './my-templates/DeleteTemplateModal';
 import { NewTemplateModal } from './my-templates/NewTemplateModal';
 import { SleekToast } from '../common/SleekToast';
@@ -160,11 +159,20 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
     return true;
   });
 
-  // Hanya tampilkan draft box khusus jika user benar-benar belum memiliki template tersimpan di DB
+  // Jangan tampilkan sisa residu akun sebelumnya saat status belum login
+  const isStaleResidue = !currentUserId && Boolean(
+    currentFormData?.id ||
+    currentFormData?.status === 'published' ||
+    currentFormData?.slug === 'zaky-bella'
+  );
+
   const hasValidNames =
-    (Boolean(currentFormData.groom?.name) && currentFormData.groom?.name !== 'Mempelai Pria') ||
-    (Boolean(currentFormData.bride?.name) && currentFormData.bride?.name !== 'Mempelai Wanita');
-  const showUnsavedDraft = cleanTemplates.length === 0 && hasValidNames;
+    !isStaleResidue &&
+    ((Boolean(currentFormData.groom?.name) && currentFormData.groom?.name !== 'Mempelai Pria') ||
+      (Boolean(currentFormData.bride?.name) && currentFormData.bride?.name !== 'Mempelai Wanita'));
+
+  // Hanya tampilkan draft box khusus jika user SUDAH login tetapi belum pernah simpan ke template record DB
+  const showUnsavedDraft = Boolean(currentUserId && cleanTemplates.length === 0 && hasValidNames);
 
   return (
     <div className="space-y-6">
@@ -218,34 +226,7 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
         </div>
       </div>
 
-      {/* 2. Guest Notice (If Not Logged In) */}
-      {!currentUserId && (
-        <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30 rounded-3xl p-6 sm:p-7 relative overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1.5 max-w-xl">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-amber-600 text-[22px]">lock</span>
-                <h3 className="font-serif font-bold text-base sm:text-lg text-stone-900">
-                  Simpan Template ke Akun Anda
-                </h3>
-              </div>
-              <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
-                Anda sedang mengedit sebagai tamu. Masuk atau Daftar gratis agar setiap template yang Anda simpan dapat diakses kembali dan dikelola secara mandiri kapan saja.
-              </p>
-            </div>
-
-            <button
-              onClick={onOpenAuthGate}
-              className="shrink-0 px-6 py-3 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs sm:text-sm shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span className="material-symbols-outlined text-[18px]">login</span>
-              <span>Masuk / Daftar Akun</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 3. Filter Tabs (If user has templates) */}
+      {/* 2. Filter Tabs (If user has templates and is logged in) */}
       {currentUserId && cleanTemplates.length > 0 && (
         <div className="flex items-center justify-between border-b border-stone-200/80 pb-3">
           <div className="flex items-center gap-2">
@@ -287,8 +268,33 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
         </div>
       )}
 
-      {/* 4. Daftar Template Pengguna (Clean, Simple, Terbaca Jelas & Tanpa Duplikasi) */}
-      {loading ? (
+      {/* 3. Daftar Template Pengguna */}
+      {!currentUserId ? (
+        /* Empty State untuk Tamu Belum Login */
+        <div className="bg-white rounded-3xl p-8 sm:p-10 text-center border border-stone-200/80 shadow-xs space-y-4">
+          <div className="w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/20 text-amber-700 flex items-center justify-center mx-auto">
+            <span className="material-symbols-outlined text-[32px]">folder_special</span>
+          </div>
+          <div className="max-w-md mx-auto space-y-1.5">
+            <h3 className="font-serif font-bold text-lg text-stone-900">
+              Belum Ada Template Tersimpan
+            </h3>
+            <p className="text-xs sm:text-sm text-stone-500 leading-relaxed">
+              Anda sedang mengedit sebagai tamu. Masuk atau Daftar akun gratis agar template undangan Anda dapat disimpan secara aman dan diakses kembali kapan saja.
+            </p>
+          </div>
+          <div className="pt-2 flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={onOpenAuthGate}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-all cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">login</span>
+              <span>Masuk / Daftar Akun</span>
+            </button>
+          </div>
+        </div>
+      ) : loading ? (
         <div className="py-16 flex flex-col items-center justify-center gap-3">
           <div className="w-8 h-8 border-3 border-stone-900 border-t-transparent rounded-full animate-spin" />
           <p className="text-xs text-stone-500">Memuat koleksi template Anda...</p>
@@ -388,9 +394,6 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
           </div>
         </div>
       ) : null}
-
-      {/* 6. Quick Start Theme Showcase (Presets) */}
-      <ThemeShowcase onAddNewTemplate={onAddNewTemplate} />
 
       {/* 7. Modal Konfirmasi Hapus */}
       <DeleteTemplateModal

@@ -35,27 +35,17 @@ export interface TemplateCardSelectorProps {
   badgeLabel?: string;
 }
 
-// Fallback template jika database belum termuat / offline
+// Fallback template jika database belum termuat / offline (hanya draf kosong standar)
 const FALLBACK_DEFAULT_TEMPLATES: TemplateSelectorItem[] = [
   {
-    id: 'tpl-zaky-bella',
-    title: 'Pernikahan Zaky & Bella',
-    slug: 'zaky-bella',
-    themeId: 'jawa',
-    status: 'draft',
-    groomName: 'Zaky',
-    brideName: 'Bella',
-    coupleNames: 'Zaky & Bella',
-  },
-  {
-    id: 'tpl-dimas-sarah',
-    title: 'Pernikahan Dimas & Sarah',
-    slug: 'dimas-sarah',
+    id: 'tpl-default-draft',
+    title: 'Draf Undangan Saya',
+    slug: 'undangan-baru',
     themeId: 'modern',
-    status: 'published',
-    groomName: 'Dimas',
-    brideName: 'Sarah',
-    coupleNames: 'Dimas & Sarah',
+    status: 'draft',
+    groomName: 'Mempelai Pria',
+    brideName: 'Mempelai Wanita',
+    coupleNames: 'Mempelai Pria & Mempelai Wanita',
   },
 ];
 
@@ -98,38 +88,43 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
       const list: TemplateSelectorItem[] = [];
       const seenSlugs = new Set<string>();
 
-      // 1. Ambil dari user_templates jika ada userId
-      if (userId) {
-        try {
-          const userTemplates = await fetchUserTemplates(userId);
-          for (const ut of userTemplates) {
-            if (!ut.slug || seenSlugs.has(ut.slug)) continue;
-            // Blokir template raditya-jessica
-            if (ut.slug === 'raditya-jessica' || (ut.title || '').toLowerCase().includes('raditya')) continue;
-            seenSlugs.add(ut.slug);
-
-            const { groom, bride, couple } = parseCouple(ut.content, ut.title);
-            list.push({
-              id: ut.id,
-              invitationRecordId: ut.id,
-              title: ut.title || couple,
-              slug: ut.slug,
-              themeId: String(ut.theme_id || ut.template_id || 'modern'),
-              status: (ut.status as any) || 'draft',
-              groomName: groom,
-              brideName: bride,
-              coupleNames: couple,
-              coverImage: ut.thumbnail_url || ut.content?.cover_image || null,
-              updatedAt: ut.updated_at || ut.created_at || null,
-              rawTemplate: ut,
-            });
-          }
-        } catch (e) {
-          console.warn('Gagal fetch user_templates:', e);
-        }
+      // 1. Jika user BELUM login (!userId):
+      // Kartu selector disembunyikan sepenuhnya (tidak ada pilihan template)
+      if (!userId) {
+        setItems([]);
+        return;
       }
 
-      // 2. Masukkan draft aktif dari editor saat ini HANYA jika list masih kosong atau slug benar-benar berbeda
+      // 2. Ambil dari user_templates jika ada userId
+      try {
+        const userTemplates = await fetchUserTemplates(userId);
+        for (const ut of userTemplates) {
+          if (!ut.slug || seenSlugs.has(ut.slug)) continue;
+          // Blokir template raditya-jessica
+          if (ut.slug === 'raditya-jessica' || (ut.title || '').toLowerCase().includes('raditya')) continue;
+          seenSlugs.add(ut.slug);
+
+          const { groom, bride, couple } = parseCouple(ut.content, ut.title);
+          list.push({
+            id: ut.id,
+            invitationRecordId: ut.id,
+            title: ut.title || couple,
+            slug: ut.slug,
+            themeId: String(ut.theme_id || ut.template_id || 'modern'),
+            status: (ut.status as any) || 'draft',
+            groomName: groom,
+            brideName: bride,
+            coupleNames: couple,
+            coverImage: ut.thumbnail_url || ut.content?.cover_image || null,
+            updatedAt: ut.updated_at || ut.created_at || null,
+            rawTemplate: ut,
+          });
+        }
+      } catch (e) {
+        console.warn('Gagal fetch user_templates:', e);
+      }
+
+      // 3. Masukkan draft aktif dari editor saat ini HANYA jika list masih kosong atau slug benar-benar berbeda
       if (currentFormData && list.length === 0) {
         const { groom, bride, couple } = parseCouple(currentFormData);
         const draftSlug = currentFormData.slug || '';
@@ -204,47 +199,50 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
     };
   }, [loadAllTemplates]);
 
+  // Sembunyikan total kartu selector jika user belum login atau belum memiliki koleksi template tersimpan di DB
+  if (!userId || items.length === 0) {
+    return null;
+  }
+
   return (
-    <div className="bg-white rounded-3xl p-5 sm:p-6 border border-stone-200/90 shadow-xs space-y-4">
-      {/* 1. Header Toolbar Pemilih Template */}
+    <div className="bg-white rounded-3xl p-4 sm:p-6 border border-stone-200/80 shadow-xs space-y-3.5">
+      {/* 1. Header Toolbar Pemilih Template (Sleek & Sejajar di Web dan Mobile) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-200/70">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-[22px]">dashboard_customize</span>
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 flex items-center justify-center shrink-0">
+            <span className="material-symbols-outlined text-[20px]">layers</span>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-serif font-bold text-base sm:text-lg text-stone-900">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-serif font-bold text-base sm:text-lg text-stone-900 tracking-tight">
                 {sectionTitle}
               </h3>
               {badgeLabel && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200/80">
                   {badgeLabel}
                 </span>
               )}
             </div>
-            <p className="text-xs text-stone-500 mt-0.5">
+            <p className="text-xs text-stone-500 mt-0.5 truncate hidden sm:block">
               {sectionSubtitle}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        {/* Action Buttons Toolbar Kanan */}
+        <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
           {loading && (
-            <span className="material-symbols-outlined text-[16px] text-amber-600 animate-spin" title="Memuat template...">
+            <span className="material-symbols-outlined text-[16px] text-amber-600 animate-spin mr-1" title="Memuat template...">
               progress_activity
             </span>
           )}
-          <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-stone-100 text-stone-600 border border-stone-200">
-            {items.length} Template Pilihan
-          </span>
           {onOpenMyTemplates && (
             <button
               type="button"
               onClick={onOpenMyTemplates}
-              className="px-3 py-1.5 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-700 text-xs font-medium flex items-center gap-1 transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-700 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
             >
-              <span className="material-symbols-outlined text-[15px]">folder_special</span>
+              <span className="material-symbols-outlined text-[16px] text-stone-500">folder_open</span>
               <span>Template Saya</span>
             </button>
           )}
@@ -252,17 +250,17 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
             <button
               type="button"
               onClick={onGoToEditor}
-              className="px-3 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold flex items-center gap-1 shadow-xs transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold flex items-center gap-1 shadow-2xs transition-all cursor-pointer active:scale-95"
             >
               <span className="material-symbols-outlined text-[15px]">add</span>
-              <span>+ Buat Baru</span>
+              <span>Buat Baru</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* 2. Grid Card Pilihan Template (Compact Row Cards) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+      {/* 2. Grid Card Pilihan Template (Clean, Ergonomic & Responsive) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {items.map((item) => {
           const isSelected = selectedTemplate?.id === item.id || selectedTemplate?.slug === item.slug;
           const themeStyle = THEME_BANNER_COLORS[item.themeId] || THEME_BANNER_COLORS.modern;
@@ -271,15 +269,15 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
             <div
               key={item.id}
               onClick={() => onSelectTemplate(item)}
-              className={`group rounded-2xl border p-3 flex items-center justify-between gap-3 transition-all cursor-pointer text-left relative ${
+              className={`group rounded-2xl border p-3 sm:p-3.5 flex items-center justify-between gap-3 transition-all cursor-pointer text-left relative ${
                 isSelected
-                  ? 'border-emerald-500 ring-2 ring-emerald-500/30 bg-emerald-50/20 shadow-xs'
-                  : 'border-stone-200/90 bg-white hover:border-amber-400 hover:shadow-xs'
+                  ? 'border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/30 shadow-xs'
+                  : 'border-stone-200/80 bg-white hover:border-amber-400 hover:shadow-2xs'
               }`}
             >
               {/* Visual Thumbnail Mini Tema */}
               <div
-                className={`w-11 h-11 rounded-xl bg-gradient-to-br ${themeStyle.bg} text-white flex flex-col items-center justify-center shrink-0 shadow-xs relative overflow-hidden`}
+                className={`w-11 h-11 rounded-xl bg-gradient-to-br ${themeStyle.bg} text-white flex flex-col items-center justify-center shrink-0 shadow-2xs relative overflow-hidden`}
               >
                 <span className="material-symbols-outlined text-[18px]">
                   {themeStyle.label.toLowerCase().includes('sunda') || themeStyle.label.toLowerCase().includes('rustic')
@@ -323,7 +321,7 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
               {/* Action Tombol Kanan */}
               <div className="flex items-center gap-1.5 shrink-0">
                 {isSelected ? (
-                  <span className="px-2.5 py-1 rounded-xl bg-emerald-600 text-white text-[11px] font-bold flex items-center gap-1 shadow-xs">
+                  <span className="px-2.5 py-1 rounded-xl bg-emerald-600 text-white text-[11px] font-bold flex items-center gap-1 shadow-2xs">
                     <span className="material-symbols-outlined text-[14px]">check</span>
                     <span>Aktif</span>
                   </span>
@@ -334,7 +332,7 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
                       e.stopPropagation();
                       onSelectTemplate(item);
                     }}
-                    className="px-2.5 py-1 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-[11px] font-semibold transition-all cursor-pointer"
+                    className="px-2.5 py-1 rounded-xl bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 text-[11px] font-semibold transition-all cursor-pointer shadow-2xs"
                   >
                     Pilih
                   </button>
@@ -345,8 +343,8 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="p-1.5 rounded-xl border border-stone-200 hover:bg-stone-100 text-stone-600 transition-colors"
-                  title="Buka Halaman Live"
+                  className="p-1.5 rounded-xl border border-stone-200 hover:bg-stone-100 text-stone-500 hover:text-stone-900 transition-colors"
+                  title={item.status === 'published' ? 'Buka Undangan Live di Tab Baru' : 'Buka Pratinjau Draf di Tab Baru'}
                 >
                   <span className="material-symbols-outlined text-[15px] block">open_in_new</span>
                 </a>
@@ -355,36 +353,6 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
           );
         })}
       </div>
-
-      {/* 3. Banner Konfirmasi Template Terpilih */}
-      {selectedTemplate && (
-        <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-2.5">
-            <span className="material-symbols-outlined text-emerald-700 text-[20px]">check_circle</span>
-            <span className="text-emerald-900">
-              Menampilkan data untuk:{' '}
-              <strong className="font-serif font-bold text-emerald-950 text-sm">
-                {selectedTemplate.coupleNames}
-              </strong>{' '}
-              (Tautan:{' '}
-              <span className="font-mono font-bold text-emerald-800">
-                {getInvitationDisplayUrl(selectedTemplate.slug)}
-              </span>
-              )
-            </span>
-          </div>
-
-          <a
-            href={`/${selectedTemplate.slug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-emerald-800 hover:text-emerald-950 font-bold underline underline-offset-2 shrink-0"
-          >
-            <span>Lihat Halaman Live</span>
-            <span className="material-symbols-outlined text-[14px]">open_in_new</span>
-          </a>
-        </div>
-      )}
     </div>
   );
 };

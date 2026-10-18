@@ -91,6 +91,11 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const liveDisplayName = publishedThemeId ? getTemplateDisplayName(publishedThemeId) : '';
   const currentDisplayName = currentThemeId ? getTemplateDisplayName(currentThemeId) : (liveDisplayName || 'Modern Minimalist');
 
+  // Hanya tampilkan tautan link publik di header (mobile & desktop) jika user SUDAH LOGIN dan memiliki template yang diterbitkan (published)
+  const shouldShowPublicLink = Boolean(
+    (userEmail || userName) && (isAlreadyPublished || (publishedThemeId && (status === 'published' || isPublished)))
+  );
+
   return (
     <>
       <header className="h-16 shrink-0 z-40 bg-[#F5F2EB]/95 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.03)] px-3 sm:px-6 flex items-center justify-between border-b border-stone-200/80">
@@ -114,104 +119,95 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             />
           </Link>
 
-          {/* MOBILE ONLY: Live Published Theme Interactive Link Pill Button */}
-          <div className="sm:hidden flex items-center min-w-0">
-            {isAlreadyPublished ? (
-              <a
-                href={`/${slug}`}
-                target="_blank"
-                rel="noreferrer"
-                title={`Buka Undangan Live: ${getInvitationDisplayUrl(slug)}`}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-[11px] font-bold shadow-2xs truncate max-w-[155px] active:scale-95 transition-all"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse shrink-0" />
-                <span className="truncate">/{slug}</span>
-                <span className="material-symbols-outlined text-[13px] shrink-0 text-emerald-700">open_in_new</span>
-              </a>
-            ) : (
-              <a
-                href={`/${slug}`}
-                target="_blank"
-                rel="noreferrer"
-                title={`Lihat Pratinjau Draf: ${getInvitationDisplayUrl(slug)}`}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-300 text-[11px] font-semibold shrink-0 active:scale-95 transition-all max-w-[155px]"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                <span className="truncate">/{slug}</span>
-                <span className="material-symbols-outlined text-[13px] shrink-0 text-stone-500">open_in_new</span>
-              </a>
-            )}
-          </div>
-
-          {/* DESKTOP ONLY: Public Slug URL Pill with Live & Draft Theme Indicators */}
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 border border-stone-200/90 shadow-2xs text-stone-700 min-w-0">
-            {/* Live / Draft Status Badge dengan Nama Tema */}
-            {isSamePublishedTheme ? (
-              <span
-                title={`Undangan live publik saat ini menayangkan tema ${liveDisplayName}`}
-                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold shrink-0 shadow-2xs"
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-                <span>LIVE: {liveDisplayName}</span>
-              </span>
-            ) : isTemplateChanged ? (
-              <div className="flex items-center gap-1 shrink-0">
-                <span
-                  title={`Tema yang saat ini live ditayangkan ke publik: ${liveDisplayName}`}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold shadow-2xs"
+          {/* Tautan Link Publik: Hanya tampil jika pengguna sudah memiliki template yang sudah diterbitkan (published) */}
+          {shouldShowPublicLink && (
+            <>
+              {/* MOBILE ONLY: Live Published Theme Interactive Link Pill Button */}
+              <div className="sm:hidden flex items-center min-w-0">
+                <a
+                  href={`/${slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={`Buka Undangan Live: ${getInvitationDisplayUrl(slug)}`}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-[11px] font-bold shadow-2xs truncate max-w-[155px] active:scale-95 transition-all"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-                  <span>LIVE: {liveDisplayName}</span>
-                </span>
-                <span
-                  title={`Anda sedang mengedit / mencoba tema: ${currentDisplayName} (belum terbit)`}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold shadow-2xs"
-                >
-                  <span className="material-symbols-outlined text-[11px]">edit</span>
-                  <span>Draf: {currentDisplayName}</span>
-                </span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse shrink-0" />
+                  <span className="truncate">/{slug}</span>
+                  <span className="material-symbols-outlined text-[13px] shrink-0 text-emerald-700">open_in_new</span>
+                </a>
               </div>
-            ) : (
-              <span
-                title="Undangan masih dalam status draf (belum live)"
-                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-300 text-[10px] font-bold shrink-0 shadow-2xs"
-              >
-                <span className="w-2 h-2 rounded-full bg-stone-400" />
-                <span>DRAF • {currentDisplayName}</span>
-              </span>
-            )}
 
-            {/* Link Text */}
-            <span
-              title={`Tautan aktif: ${getInvitationDisplayUrl(slug)}`}
-              className="font-mono text-xs font-bold text-stone-900 select-all truncate max-w-[130px] md:max-w-[190px]"
-            >
-              {getInvitationDisplayUrl(slug)}
-            </span>
+              {/* DESKTOP ONLY: Public Slug URL Pill with Live & Draft Theme Indicators */}
+              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 border border-stone-200/90 shadow-2xs text-stone-700 min-w-0">
+                {/* Live / Draft Status Badge dengan Nama Tema */}
+                {isSamePublishedTheme ? (
+                  <span
+                    title={`Undangan live publik saat ini menayangkan tema ${liveDisplayName}`}
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold shrink-0 shadow-2xs"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                    <span>LIVE: {liveDisplayName}</span>
+                  </span>
+                ) : isTemplateChanged ? (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span
+                      title={`Tema yang saat ini live ditayangkan ke publik: ${liveDisplayName}`}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold shadow-2xs"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                      <span>LIVE: {liveDisplayName}</span>
+                    </span>
+                    <span
+                      title={`Anda sedang mengedit / mencoba tema: ${currentDisplayName} (belum terbit)`}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold shadow-2xs"
+                    >
+                      <span className="material-symbols-outlined text-[11px]">edit</span>
+                      <span>Draf: {currentDisplayName}</span>
+                    </span>
+                  </div>
+                ) : (
+                  <span
+                    title="Undangan masih dalam status draf (belum live)"
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-300 text-[10px] font-bold shrink-0 shadow-2xs"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-stone-400" />
+                    <span>DRAF • {currentDisplayName}</span>
+                  </span>
+                )}
 
-            {/* Button: Copy Link */}
-            <button
-              onClick={handleCopyLink}
-              className="p-1 rounded-md hover:bg-stone-100 text-stone-500 hover:text-stone-900 transition-colors cursor-pointer"
-              title="Salin Link Undangan"
-              type="button"
-            >
-              <span className="material-symbols-outlined text-[16px]">
-                {copied ? 'check' : 'content_copy'}
-              </span>
-            </button>
+                {/* Link Text */}
+                <span
+                  title={`Tautan aktif: ${getInvitationDisplayUrl(slug)}`}
+                  className="font-mono text-xs font-bold text-stone-900 select-all truncate max-w-[130px] md:max-w-[190px]"
+                >
+                  {getInvitationDisplayUrl(slug)}
+                </span>
 
-            {/* Button: Open in New Tab */}
-            <a
-              href={`/${slug}`}
-              target="_blank"
-              rel="noreferrer"
-              className="p-1 rounded-md hover:bg-stone-100 text-stone-500 hover:text-stone-900 transition-colors"
-              title="Buka Undangan Live di Tab Baru"
-            >
-              <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-            </a>
-          </div>
+                {/* Button: Copy Link */}
+                <button
+                  onClick={handleCopyLink}
+                  className="p-1 rounded-md hover:bg-stone-100 text-stone-500 hover:text-stone-900 transition-colors cursor-pointer"
+                  title="Salin Link Undangan"
+                  type="button"
+                >
+                  <span className="material-symbols-outlined text-[16px]">
+                    {copied ? 'check' : 'content_copy'}
+                  </span>
+                </button>
+
+                {/* Button: Open in New Tab */}
+                <a
+                  href={`/${slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="p-1 rounded-md hover:bg-stone-100 text-stone-500 hover:text-stone-900 transition-colors"
+                  title="Buka Undangan Live di Tab Baru"
+                >
+                  <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                </a>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Right: Autosave Status, Auth State (Login/Daftar or Avatar Dropdown), Publish Action */}
@@ -389,8 +385,29 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         </div>
       </header>
 
-      {/* Sub-Strip Bar: Muncul saat undangan sudah published dan user sedang mencoba tema lain */}
-      {isAlreadyPublished && isTemplateChanged && Boolean(publishedThemeId) && (
+      {/* Minimalist Guest Notice Strip: Tampil di bawah header mobile & web saat user belum login */}
+      {!(userEmail || userName) && (
+        <div className="w-full bg-[#FAF7F2] border-b border-amber-500/25 px-3 sm:px-6 py-1.5 flex items-center justify-between gap-2 text-stone-700 animate-in fade-in duration-200 shrink-0 z-30">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 animate-pulse" />
+            <span className="material-symbols-outlined text-[16px] text-amber-700 shrink-0">edit_note</span>
+            <span className="text-[11px] sm:text-xs text-stone-600 truncate">
+              Anda sedang mengedit sebagai <strong className="font-semibold text-stone-900">tamu</strong>
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onLoginClick || onRegisterClick}
+            className="text-[11px] sm:text-xs font-semibold text-amber-800 hover:text-amber-950 underline underline-offset-2 shrink-0 cursor-pointer flex items-center gap-1 transition-colors"
+          >
+            <span>Masuk / Daftar</span>
+            <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
+          </button>
+        </div>
+      )}
+
+      {/* Sub-Strip Bar: Muncul saat user login, undangan sudah published dan user sedang mencoba tema lain */}
+      {(userEmail || userName) && isAlreadyPublished && isTemplateChanged && Boolean(publishedThemeId) && (
         <div className="w-full bg-gradient-to-r from-amber-50 via-amber-100/70 to-amber-50 border-b border-amber-200/90 px-3 sm:px-6 py-1.5 flex items-center justify-between gap-3 text-xs text-amber-950 shadow-2xs animate-fade-in shrink-0 z-30">
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="material-symbols-outlined text-[16px] text-amber-700 shrink-0">info</span>

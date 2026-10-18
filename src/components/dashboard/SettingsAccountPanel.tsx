@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { supabase } from '../../lib/supabaseClient';
 import { getInvitationDisplayUrl } from '../../utils/urlHelper';
 
 interface SettingsAccountPanelProps {
@@ -28,12 +27,9 @@ export const SettingsAccountPanel: React.FC<SettingsAccountPanelProps> = ({
   const displayName = userName || userEmail?.split('@')[0] || 'Pengguna Mbell';
   const initialLetter = (displayName.trim()[0] || 'U').toUpperCase();
 
-  const handleLogoutAction = async () => {
-    await supabase.auth.signOut();
+  const handleLogoutAction = () => {
     if (onLogout) {
       onLogout();
-    } else {
-      window.location.reload();
     }
   };
 

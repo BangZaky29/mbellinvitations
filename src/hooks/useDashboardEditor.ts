@@ -307,6 +307,26 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
           if (guestDraftStr) {
             try {
               const parsedGuest = JSON.parse(guestDraftStr);
+
+              // Jika draft lokal terdeteksi merupakan sisa data akun sebelumnya:
+              const isAccountResidue = Boolean(
+                parsedGuest.id ||
+                parsedGuest.status === 'published' ||
+                parsedGuest.slug === 'zaky-bella' ||
+                parsedGuest.paid_template_id
+              );
+
+              if (isAccountResidue) {
+                localStorage.removeItem('mbell_pending_draft_formData');
+                localStorage.removeItem('mbell_pending_draft_themeConfig');
+                localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
+                localStorage.removeItem('mbell_active_template_id');
+                setFormData(INITIAL_BLANK_DRAFT);
+                setThemeConfig(DEFAULT_THEME_CONFIGS['modern']);
+                setLoading(false);
+                return;
+              }
+
               const gName = (parsedGuest.groom?.name || '').trim();
               const bName = (parsedGuest.bride?.name || '').trim();
               const coupleSlug = computeCoupleSlug(gName, bName);
@@ -317,8 +337,9 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
               setFormData((prev) => ({
                 ...prev,
                 ...parsedGuest,
+                id: '',
                 slug: effectiveSlug,
-                status: (parsedGuest.status || 'draft') as any,
+                status: 'draft',
               }));
               if (guestThemeStr) {
                 setThemeConfig(JSON.parse(guestThemeStr));
@@ -698,6 +719,7 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
     currentTemplateRecordId,
     setCurrentTemplateRecordId,
     activeStep,
+    setActiveStep,
     loading,
     showFullscreenModal,
     setShowFullscreenModal,

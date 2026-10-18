@@ -47,6 +47,19 @@ export const parseSupabaseUser = (u: any): DashboardUser | null => {
 // Helper universal simpan draf lokal
 export const preserveDraftToLocalStorage = (formData?: InvitationData, themeConfig?: ThemeConfig) => {
   if (!formData || !themeConfig) return;
+  // Jangan simpan jika data masih kosong/default atau merupakan data akun tersimpan
+  const isDefaultBlank =
+    (!formData.groom?.name || formData.groom.name === 'Mempelai Pria' || formData.groom.name === '') &&
+    (!formData.bride?.name || formData.bride.name === 'Mempelai Wanita' || formData.bride.name === '') &&
+    (!formData.slug || formData.slug === 'undangan-baru' || formData.slug === '');
+
+  if (isDefaultBlank) return;
+
+  // Jangan simpan sebagai draf tamu jika memiliki id database atau berstatus published dari akun user
+  if (formData.id || formData.status === 'published' || formData.slug === 'zaky-bella') {
+    return;
+  }
+
   try {
     localStorage.setItem('mbell_pending_draft_formData', JSON.stringify(formData));
     localStorage.setItem('mbell_pending_draft_themeConfig', JSON.stringify(themeConfig));
@@ -82,15 +95,17 @@ export function useDashboardAuth(options?: UseDashboardAuthOptions) {
       setUser(u ? parseSupabaseUser(u) : null);
     });
 
-    return () => {
+  return () => {
       authListener.subscription.unsubscribe();
     };
   }, []);
 
-  // Auto-persist draf lokal saat user belum login
+  // Auto-persist draf lokal saat user belum login HANYA jika form merupakan draf tamu murni
   useEffect(() => {
     if (!user && formData && themeConfig) {
-      preserveDraftToLocalStorage(formData, themeConfig);
+      if (!formData.id && formData.status !== 'published' && formData.slug !== 'zaky-bella') {
+        preserveDraftToLocalStorage(formData, themeConfig);
+      }
     }
   }, [formData, themeConfig, user]);
 

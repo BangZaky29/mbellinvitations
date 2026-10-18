@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { supabase, type UserTemplateRecord } from '../../lib/supabaseClient';
 import type { InvitationData } from '../../types/invitation';
 import { TemplateCardSelector, type TemplateSelectorItem } from './common/TemplateCardSelector';
-import { MOCK_THEME_WISHES_MAP, MOCK_MODERN_WISHES } from '../../data/mockInvitation';
 import { getInvitationFullUrl, getInvitationDisplayUrl } from '../../utils/urlHelper';
 
 interface WishEntry {
@@ -41,7 +40,10 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
   const [wishes, setWishes] = useState<WishEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [attendanceFilter, setAttendanceFilter] = useState<'all' | 'hadir' | 'mendoakan'>('all');
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [hasCopied, setHasCopied] = useState(false);
+  const [copiedWishId, setCopiedWishId] = useState<string | null>(null);
   const [wishToDelete, setWishToDelete] = useState<WishEntry | null>(null);
   const [isDeletingWish, setIsDeletingWish] = useState(false);
 
@@ -62,21 +64,14 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
   useEffect(() => {
     const fetchWishes = async () => {
       setIsLoading(true);
-      const themeKey = selectedTemplate?.themeId || 'modern';
-      const defaultMocks: WishEntry[] = ((MOCK_THEME_WISHES_MAP as any)[themeKey] || MOCK_MODERN_WISHES).map(
-        (m: any, i: number) => ({
-          id: `wish-${themeKey}-${i}`,
-          guest_name: m.guest_name,
-          message: m.message,
-          attendance: m.attendance,
-          created_at: m.created_at || new Date().toISOString(),
-        })
-      );
 
       try {
         if (!userId) {
-          setWishes(defaultMocks);
+          setWishes([]);
           setIsLoading(false);
+          window.dispatchEvent(
+            new CustomEvent('mbell_wishes_count_changed', { detail: { count: 0 } })
+          );
           return;
         }
 
@@ -125,19 +120,22 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
               new CustomEvent('mbell_wishes_count_changed', { detail: { count: wishesData.length } })
             );
           } else {
-            setWishes(defaultMocks);
+            setWishes([]);
             window.dispatchEvent(
               new CustomEvent('mbell_wishes_count_changed', { detail: { count: 0 } })
             );
           }
         } else {
-          setWishes(defaultMocks);
+          setWishes([]);
           window.dispatchEvent(
             new CustomEvent('mbell_wishes_count_changed', { detail: { count: 0 } })
           );
         }
       } catch {
-        setWishes(defaultMocks);
+        setWishes([]);
+        window.dispatchEvent(
+          new CustomEvent('mbell_wishes_count_changed', { detail: { count: 0 } })
+        );
       } finally {
         setIsLoading(false);
       }
@@ -151,6 +149,21 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
     navigator.clipboard.writeText(url);
     setHasCopied(true);
     setTimeout(() => setHasCopied(false), 2500);
+  };
+
+  const handleShareWa = () => {
+    const url = getInvitationFullUrl(effectiveSlug);
+    const text = encodeURIComponent(
+      `Halo! Kami mengundang Anda untuk memberikan doa restu pernikahan kami melalui tautan berikut:\n${url}`
+    );
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+  };
+
+  const handleCopyWishMessage = (wish: WishEntry) => {
+    const text = `"${wish.message}" — ${wish.guest_name}`;
+    navigator.clipboard.writeText(text);
+    setCopiedWishId(wish.id);
+    setTimeout(() => setCopiedWishId(null), 2500);
   };
 
   const handleConfirmDeleteWish = async () => {
@@ -176,62 +189,161 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
     }
   };
 
-  const filteredWishes = wishes.filter(
-    (w) =>
-      !searchQuery ||
-      w.guest_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      w.message.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Hitung metrik kehadiran
+  const attendingCount = wishes.filter(
+    (w) => w.attendance === 'attending' || w.attendance === 'hadir'
+  ).length;
+  const remoteCount = wishes.length - attendingCount;
+
+  // Filter & Urutan
+  const filteredWishes = wishes
+    .filter((w) => {
+      // 1. Text filter
+      const q = searchQuery.toLowerCase().trim();
+      const matchQuery =
+        !q ||
+        w.guest_name.toLowerCase().includes(q) ||
+        w.message.toLowerCase().includes(q);
+      if (!matchQuery) return false;
+
+      // 2. Attendance category filter
+      const isAttending = w.attendance === 'attending' || w.attendance === 'hadir';
+      if (attendanceFilter === 'hadir') return isAttending;
+      if (attendanceFilter === 'mendoakan') return !isAttending;
+      return true;
+    })
+    .sort((a, b) => {
+      const timeA = new Date(a.created_at).getTime();
+      const timeB = new Date(b.created_at).getTime();
+      return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
+    });
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* 0. SELECTOR KARTU TEMPLATE UNDANGAN */}
-      <TemplateCardSelector
-        userId={userId}
-        currentFormData={currentFormData}
-        activeTemplateId={activeTemplateId}
-        activeSlug={effectiveSlug}
-        selectedTemplate={selectedTemplate}
-        onSelectTemplate={handleSelectTemplate}
-        onGoToEditor={onGoToEditor}
-        onOpenMyTemplates={onOpenMyTemplates}
-        onOpenAuthGate={onOpenAuthGate}
-        sectionTitle="Pilih Template Undangan Yang Dikelola"
-        sectionSubtitle="Pilih kartu undangan di bawah untuk melihat pesan doa & ucapan khusus undangan tersebut:"
-        badgeLabel="Ucapan Masuk"
-      />
+      {/* 0. SELECTOR KARTU TEMPLATE UNDANGAN (Hanya tampil jika user sudah login) */}
+      {userId && (
+        <TemplateCardSelector
+          userId={userId}
+          currentFormData={currentFormData}
+          activeTemplateId={activeTemplateId}
+          activeSlug={effectiveSlug}
+          selectedTemplate={selectedTemplate}
+          onSelectTemplate={handleSelectTemplate}
+          onGoToEditor={onGoToEditor}
+          onOpenMyTemplates={onOpenMyTemplates}
+          onOpenAuthGate={onOpenAuthGate}
+          sectionTitle="Pilih Template Undangan Yang Dikelola"
+          sectionSubtitle="Pilih kartu undangan di bawah untuk melihat pesan doa & ucapan khusus undangan tersebut:"
+          badgeLabel="Ucapan Masuk"
+        />
+      )}
 
-      {/* HEADER PANEL UCAPAN */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200/80">
-        <div>
-          <div className="flex items-center gap-2">
-            <h2 className="font-serif font-bold text-2xl text-stone-900">
-              Ucapan &amp; Doa Restu Masuk
+      {/* 1. HEADER PANEL UCAPAN */}
+      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-stone-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div className="space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="font-serif font-bold text-xl sm:text-2xl text-stone-900 tracking-tight">
+              Ucapan &amp; Doa Restu
             </h2>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-200">
               {effectiveCouple}
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-stone-500 mt-0.5">
-            Kumpulan doa dan ucapan selamat dari keluarga serta sahabat tercinta untuk tautan{' '}
-            <span className="font-mono text-stone-700 font-semibold">{getInvitationDisplayUrl(effectiveSlug)}</span>.
+          <p className="text-xs sm:text-sm text-stone-500">
+            Koleksi pesan selamat dan doa tulus untuk tautan{' '}
+            <strong className="font-mono text-stone-800 font-semibold">{getInvitationDisplayUrl(effectiveSlug)}</strong>
           </p>
         </div>
 
-        <button
-          onClick={handleCopyLink}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer shrink-0"
-        >
-          <span className="material-symbols-outlined text-[16px]">
-            {hasCopied ? 'done' : 'content_copy'}
-          </span>
-          <span>{hasCopied ? 'Tautan Tersalin!' : 'Bagikan Link Undangan'}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleShareWa}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
+            title="Bagikan link ke WhatsApp untuk minta doa restu"
+          >
+            <span className="material-symbols-outlined text-[16px]">share</span>
+            <span className="hidden sm:inline">Bagikan ke WA</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleCopyLink}
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95 shrink-0"
+          >
+            <span className="material-symbols-outlined text-[16px]">
+              {hasCopied ? 'done' : 'content_copy'}
+            </span>
+            <span>{hasCopied ? 'Tersalin!' : 'Salin Link'}</span>
+          </button>
+        </div>
       </div>
 
-      {/* Bar Pencarian & Total Badge */}
+      {/* 2. INTERACTIVE SENTIMENT STATS (3 KARTU METRIK) */}
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
+        {/* Total Doa */}
+        <div
+          onClick={() => setAttendanceFilter('all')}
+          className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer text-left relative overflow-hidden ${
+            attendanceFilter === 'all'
+              ? 'bg-amber-50/80 border-amber-400 ring-2 ring-amber-400/20 shadow-xs'
+              : 'bg-white border-stone-200/90 hover:border-amber-300'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[11px] sm:text-xs font-medium text-stone-500 truncate">Total Doa</span>
+            <span className="material-symbols-outlined text-[18px] text-amber-600">mail</span>
+          </div>
+          <div className="text-lg sm:text-2xl font-serif font-bold text-stone-900">
+            {wishes.length}
+          </div>
+          <span className="text-[10px] text-stone-400 mt-0.5 block truncate">Semua ucapan masuk</span>
+        </div>
+
+        {/* Konfirmasi Hadir */}
+        <div
+          onClick={() => setAttendanceFilter('hadir')}
+          className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer text-left relative overflow-hidden ${
+            attendanceFilter === 'hadir'
+              ? 'bg-emerald-50/80 border-emerald-400 ring-2 ring-emerald-400/20 shadow-xs'
+              : 'bg-white border-stone-200/90 hover:border-emerald-300'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[11px] sm:text-xs font-medium text-emerald-800 truncate">Konfirmasi Hadir</span>
+            <span className="material-symbols-outlined text-[18px] text-emerald-600">event_available</span>
+          </div>
+          <div className="text-lg sm:text-2xl font-serif font-bold text-emerald-900">
+            {attendingCount}
+          </div>
+          <span className="text-[10px] text-emerald-700/80 mt-0.5 block truncate">
+            {wishes.length > 0 ? `${Math.round((attendingCount / wishes.length) * 100)}% dari total` : '0%'}
+          </span>
+        </div>
+
+        {/* Mendoakan dari Jauh */}
+        <div
+          onClick={() => setAttendanceFilter('mendoakan')}
+          className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer text-left relative overflow-hidden ${
+            attendanceFilter === 'mendoakan'
+              ? 'bg-stone-100 border-stone-400 ring-2 ring-stone-400/20 shadow-xs'
+              : 'bg-white border-stone-200/90 hover:border-stone-300'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[11px] sm:text-xs font-medium text-stone-600 truncate">Mendoakan</span>
+            <span className="material-symbols-outlined text-[18px] text-stone-500">volunteer_activism</span>
+          </div>
+          <div className="text-lg sm:text-2xl font-serif font-bold text-stone-900">
+            {remoteCount}
+          </div>
+          <span className="text-[10px] text-stone-400 mt-0.5 block truncate">Izin berhalangan</span>
+        </div>
+      </div>
+
+      {/* 3. TOOLBAR PENCARIAN & FILTER PILLS */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="relative flex-1 max-w-sm">
+        {/* Search Input dengan Tombol Clear */}
+        <div className="relative flex-1 max-w-md">
           <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-[18px]">
             search
           </span>
@@ -239,110 +351,223 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={`Cari pengirim atau ucapan untuk ${effectiveCouple}...`}
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-white border border-stone-200 text-xs sm:text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 shadow-2xs"
+            placeholder={`Cari pengirim atau pesan doa...`}
+            className="w-full pl-10 pr-9 py-2.5 rounded-xl bg-white border border-stone-200 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 shadow-2xs transition-all"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[16px]">close</span>
+            </button>
+          )}
         </div>
 
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-semibold self-start sm:self-auto">
-          <span className="material-symbols-outlined text-[16px] text-amber-600">volunteer_activism</span>
-          <span>Total {wishes.length} Doa Diterima</span>
+        {/* Filter Pills & Sort Toggle */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+          <div className="inline-flex items-center p-1 rounded-xl bg-stone-100 border border-stone-200 text-xs shrink-0">
+            <button
+              type="button"
+              onClick={() => setAttendanceFilter('all')}
+              className={`px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                attendanceFilter === 'all'
+                  ? 'bg-white text-stone-900 font-bold shadow-2xs'
+                  : 'text-stone-600 hover:text-stone-900'
+              }`}
+            >
+              Semua ({wishes.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setAttendanceFilter('hadir')}
+              className={`px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                attendanceFilter === 'hadir'
+                  ? 'bg-emerald-600 text-white font-bold shadow-2xs'
+                  : 'text-stone-600 hover:text-stone-900'
+              }`}
+            >
+              Hadir ({attendingCount})
+            </button>
+            <button
+              type="button"
+              onClick={() => setAttendanceFilter('mendoakan')}
+              className={`px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                attendanceFilter === 'mendoakan'
+                  ? 'bg-stone-900 text-white font-bold shadow-2xs'
+                  : 'text-stone-600 hover:text-stone-900'
+              }`}
+            >
+              Mendoakan ({remoteCount})
+            </button>
+          </div>
+
+          {/* Sort Button Toggle */}
+          <button
+            type="button"
+            onClick={() => setSortOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'))}
+            className="p-2 sm:px-3 sm:py-1.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-600 text-xs font-medium flex items-center gap-1 shadow-2xs transition-colors shrink-0 cursor-pointer"
+            title={sortOrder === 'desc' ? 'Urutan: Terbaru ke Terlama' : 'Urutan: Terlama ke Terbaru'}
+          >
+            <span className="material-symbols-outlined text-[16px]">
+              {sortOrder === 'desc' ? 'arrow_downward' : 'arrow_upward'}
+            </span>
+            <span className="hidden sm:inline">{sortOrder === 'desc' ? 'Terbaru' : 'Terlama'}</span>
+          </button>
         </div>
       </div>
 
-      {/* Grid Kartu Ucapan */}
+      {/* 4. GRID KARTU UCAPAN (LOVE NOTE CARDS) */}
       {isLoading ? (
-        <div className="py-16 text-center text-stone-400">
+        <div className="py-20 text-center text-stone-400">
           <span className="material-symbols-outlined text-3xl animate-spin text-stone-600">
             progress_activity
           </span>
           <p className="text-xs mt-2 font-medium">Memuat ucapan dan doa restu...</p>
         </div>
       ) : filteredWishes.length === 0 ? (
-        <div className="bg-white rounded-2xl p-10 border border-stone-200/80 text-center space-y-3">
-          <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center mx-auto text-amber-600">
-            <span className="material-symbols-outlined text-2xl">mark_email_read</span>
+        <div className="bg-white rounded-3xl p-10 sm:p-12 border border-stone-200/90 text-center space-y-4 shadow-xs">
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-amber-700">
+            <span className="material-symbols-outlined text-3xl">volunteer_activism</span>
           </div>
-          <h4 className="font-semibold text-stone-800 text-sm">
-            {wishes.length === 0
-              ? `Belum Ada Ucapan dan Doa untuk ${effectiveCouple}`
-              : 'Tidak Ada Ucapan yang Sesuai dengan Pencarian'}
-          </h4>
-          <p className="text-xs text-stone-500 max-w-sm mx-auto">
-            {wishes.length === 0
-              ? `Bagikan tautan ${getInvitationDisplayUrl(effectiveSlug)} ke keluarga & sahabat untuk mulai menerima pesan doa restu pada template ini.`
-              : 'Silakan gunakan kata kunci lain untuk mencari ucapan tertentu.'}
-          </p>
-          {wishes.length === 0 && (
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[16px]">share</span>
-                <span>Salin Link Undangan Ini</span>
-              </button>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-          {filteredWishes.map((wish) => (
-            <div
-              key={wish.id}
-              className="p-4 rounded-2xl bg-white border border-stone-200/90 shadow-2xs hover:shadow-xs transition-all space-y-2 flex flex-col justify-between"
-            >
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-stone-900 text-white font-bold text-xs flex items-center justify-center shrink-0">
-                      {wish.guest_name ? wish.guest_name.charAt(0).toUpperCase() : 'T'}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-stone-900 text-xs sm:text-sm">
-                        {wish.guest_name}
-                      </h4>
-                      {wish.attendance && (
-                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200">
-                          {wish.attendance === 'attending' || wish.attendance === 'hadir'
-                            ? 'Konfirmasi Hadir'
-                            : 'Mendoakan dari Jauh'}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-stone-400 font-mono">
-                    {new Date(wish.created_at).toLocaleDateString('id-ID', {
-                      day: 'numeric',
-                      month: 'short',
-                    })}
-                  </span>
-                </div>
+          <div className="max-w-md mx-auto space-y-1">
+            <h4 className="font-serif font-bold text-stone-900 text-base sm:text-lg">
+              {wishes.length === 0
+                ? `Belum Ada Ucapan untuk ${effectiveCouple}`
+                : 'Tidak Ada Ucapan yang Sesuai Filter'}
+            </h4>
+            <p className="text-xs sm:text-sm text-stone-500 leading-relaxed">
+              {wishes.length === 0
+                ? `Bagikan tautan ${getInvitationDisplayUrl(effectiveSlug)} ke keluarga & sahabat untuk mulai menerima pesan doa restu online.`
+                : 'Coba ubah kata kunci pencarian atau reset filter kehadiran untuk melihat ucapan lainnya.'}
+            </p>
+          </div>
 
-                <p className="text-xs sm:text-sm text-stone-700 leading-relaxed italic bg-stone-50/70 p-3 rounded-xl border border-stone-100">
-                  "{wish.message}"
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-[10px] text-stone-400 font-medium">
-                <span>Diterima via /{effectiveSlug}</span>
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-2.5">
+            {wishes.length === 0 ? (
+              <>
                 <button
                   type="button"
-                  onClick={() => setWishToDelete(wish)}
-                  className="px-2 py-1 rounded-lg border border-stone-200 hover:border-rose-300 hover:bg-rose-50 text-stone-400 hover:text-rose-600 transition-colors cursor-pointer flex items-center gap-1"
-                  title="Hapus ucapan ini"
+                  onClick={handleShareWa}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
                 >
-                  <span className="material-symbols-outlined text-[13px]">delete</span>
-                  <span>Hapus</span>
+                  <span className="material-symbols-outlined text-[16px]">share</span>
+                  <span>Bagikan Link via WhatsApp</span>
                 </button>
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-800 text-xs font-semibold shadow-xs transition-all cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                  <span>Salin Tautan</span>
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setAttendanceFilter('all');
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition-all cursor-pointer shadow-xs"
+              >
+                <span className="material-symbols-outlined text-[15px]">restart_alt</span>
+                <span>Reset Pencarian &amp; Filter</span>
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredWishes.map((wish) => {
+            const isAttending = wish.attendance === 'attending' || wish.attendance === 'hadir';
+            const isCopied = copiedWishId === wish.id;
+
+            return (
+              <div
+                key={wish.id}
+                className="p-5 rounded-2xl bg-white border border-stone-200/90 hover:border-amber-300 hover:shadow-xs transition-all space-y-3.5 flex flex-col justify-between relative group"
+              >
+                {/* Decorative Watermark Quote Icon */}
+                <span className="material-symbols-outlined text-[36px] text-stone-200/50 absolute right-4 top-4 select-none pointer-events-none group-hover:text-amber-200/60 transition-colors">
+                  format_quote
+                </span>
+
+                <div className="space-y-3">
+                  {/* Top Bar: Avatar, Nama, Status RSVP, Tanggal */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-stone-950 font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                        {wish.guest_name ? wish.guest_name.charAt(0).toUpperCase() : 'T'}
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="font-serif font-bold text-stone-900 text-sm truncate">
+                          {wish.guest_name}
+                        </h4>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          {isAttending ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                              <span className="material-symbols-outlined text-[11px]">event_available</span>
+                              <span>Konfirmasi Hadir</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-stone-700 bg-stone-100 px-2 py-0.5 rounded-md border border-stone-200">
+                              <span className="material-symbols-outlined text-[11px]">volunteer_activism</span>
+                              <span>Mendoakan dari Jauh</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <span className="text-[10px] text-stone-400 font-mono shrink-0">
+                      {new Date(wish.created_at).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </span>
+                  </div>
+
+                  {/* Isi Pesan Doa Restu */}
+                  <div className="bg-[#FAF8F5] p-3.5 rounded-xl border border-stone-200/70 text-xs sm:text-[13px] text-stone-800 leading-relaxed font-sans relative">
+                    <p className="italic whitespace-pre-line">"{wish.message}"</p>
+                  </div>
+                </div>
+
+                {/* Footer Micro-Actions: Salin & Hapus */}
+                <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-[11px] text-stone-400">
+                  <button
+                    type="button"
+                    onClick={() => handleCopyWishMessage(wish)}
+                    className="text-stone-500 hover:text-stone-900 transition-colors flex items-center gap-1 cursor-pointer font-medium"
+                    title="Salin ucapan ini untuk repost di media sosial"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">
+                      {isCopied ? 'done' : 'content_copy'}
+                    </span>
+                    <span>{isCopied ? 'Doa Disalin!' : 'Salin Doa'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setWishToDelete(wish)}
+                    className="p-1 rounded-lg text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer flex items-center gap-1"
+                    title="Hapus doa ini"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">delete</span>
+                    <span>Hapus</span>
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* MODAL KONFIRMASI PERINGATAN HAPUS UCAPAN */}
+      {/* MODAL KONFIRMASI HAPUS UCAPAN */}
       {wishToDelete && (
         <div className="fixed inset-0 z-[300] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-stone-200 space-y-4">

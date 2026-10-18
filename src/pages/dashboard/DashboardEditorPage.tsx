@@ -13,12 +13,14 @@ import {
   TOTAL_EXCLUSIVE_THEMES,
   CANONICAL_THEMES,
   isTemplateUnlocked,
+  DEFAULT_THEME_CONFIGS,
 } from './constants/themeMapping';
 import { computeCoupleSlug } from './helpers/computeCoupleSlug';
 import { getInvitationDisplayUrl } from '../../utils/urlHelper';
 import { EditorStepContent } from './components/EditorStepContent';
 import { EditorBottomBar } from './components/EditorBottomBar';
 import { ConfirmPublishModal } from './components/ConfirmPublishModal';
+import { ConfirmLogoutModal } from './components/ConfirmLogoutModal';
 import { UnpurchasedThemeModal } from './components/UnpurchasedThemeModal';
 import { SaveToastNotification } from './components/SaveToastNotification';
 
@@ -40,7 +42,7 @@ import {
   parseSupabaseUser,
   preserveDraftToLocalStorage,
 } from '../../hooks/useDashboardAuth';
-import { useDashboardEditor } from '../../hooks/useDashboardEditor';
+import { useDashboardEditor, INITIAL_BLANK_DRAFT } from '../../hooks/useDashboardEditor';
 import { useDashboardSave } from '../../hooks/useDashboardSave';
 import { useDashboardPublish } from '../../hooks/useDashboardPublish';
 
@@ -138,16 +140,56 @@ export const DashboardEditorPage: React.FC = () => {
     }
   };
 
-  // Handler Logout
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    save.setSaveToast({
-      show: true,
-      message: 'Berhasil keluar akun',
-      type: 'info',
-      isError: false,
-    });
+  // State modal konfirmasi logout
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  // Trigger buka modal konfirmasi keluar akun
+  const handleRequestLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  // Eksekusi pembersihan total & keluar akun setelah dikonfirmasi
+  const handleConfirmLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await supabase.auth.signOut();
+
+      // 1. Bersihkan seluruh penyimpanan lokal draf & template akun sebelumnya
+      try {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && (k.startsWith('mbell_') || k.startsWith('sb-'))) {
+            keysToRemove.push(k);
+          }
+        }
+        keysToRemove.forEach((k) => localStorage.removeItem(k));
+        sessionStorage.clear();
+      } catch (e) {
+        console.warn('Storage purge error:', e);
+      }
+
+      // 2. Kembalikan semua state ke kondisi default awal bawaan (INITIAL_BLANK_DRAFT)
+      setUser(null);
+      editor.setFormData(INITIAL_BLANK_DRAFT);
+      editor.setThemeConfig(DEFAULT_THEME_CONFIGS['modern']);
+      editor.setCurrentTemplateRecordId(null);
+      editor.setPublishedThemeId(null);
+      editor.setActiveTab('edit-undangan');
+      editor.setActiveStep(1);
+      setRealWishesCount(0);
+      setRealGuestsCount(0);
+      setShowLogoutModal(false);
+
+      // 3. Muat ulang halaman ke /dashboard agar seluruh state, hook, dan cache bersih 100%
+      window.location.href = '/dashboard';
+    } catch (err) {
+      console.error('Logout error:', err);
+      window.location.href = '/dashboard';
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   // State modal peringatan ketika user mencoba menyimpan saat tema baru belum dibeli
@@ -359,7 +401,7 @@ export const DashboardEditorPage: React.FC = () => {
             onOpenSettings={() => editor.setActiveTab('pengaturan')}
             onOpenMyTemplates={() => editor.setActiveTab('template-saya')}
             onReplayOpening={() => editor.setShowOpeningSplash(true)}
-            onLogout={handleLogout}
+            onLogout={handleRequestLogout}
             onPublish={publish.handleRequestPublish}
             onOpenPreview={() => editor.setShowFullscreenModal(true)}
           />
@@ -467,10 +509,7 @@ export const DashboardEditorPage: React.FC = () => {
                     invitationSlug={currentSlug}
                     onGoToEditor={() => editor.setActiveTab('edit-undangan')}
                     onOpenAuthGate={() => editor.setShowAuthGateModal(true)}
-                    onLogout={() => {
-                      setUser(null);
-                      editor.setActiveTab('edit-undangan');
-                    }}
+                    onLogout={handleRequestLogout}
                   />
                 )}
               </div>
@@ -489,13 +528,13 @@ export const DashboardEditorPage: React.FC = () => {
 
           {/* MOBILE FLOATING PILL BUTTON "Preview" (Hanya tampil di luar tab editor karena di tab editor sudah sebaris di EditorBottomBar) */}
           {editor.activeTab !== 'edit-undangan' && (
-            <div className="fixed bottom-[74px] right-4 sm:right-6 z-30 xl:hidden">
+            <div className="fixed bottom-[72px] right-3 sm:right-6 z-30 xl:hidden">
               <button
                 type="button"
                 onClick={() => editor.setShowFullscreenModal(true)}
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-stone-900 text-white font-label-md text-xs sm:text-sm shadow-2xl hover:bg-stone-800 transition-all active:scale-95 cursor-pointer border border-white/20 backdrop-blur-md"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-stone-900 text-white font-semibold text-xs shadow-xl hover:bg-stone-800 transition-all active:scale-95 cursor-pointer border border-white/20 backdrop-blur-md"
               >
-                <span className="material-symbols-outlined text-[18px]">visibility</span>
+                <span className="material-symbols-outlined text-[17px]">visibility</span>
                 <span>Preview</span>
               </button>
             </div>
@@ -561,6 +600,16 @@ export const DashboardEditorPage: React.FC = () => {
             onProceedToCheckout={handleProceedToThemePayment}
             onKeepPublishedThemeAndSave={handleSaveDraftContentOnly}
             onRevertToOriginalTheme={handleRevertToLiveTheme}
+          />
+
+          {/* MODAL POPUP: KONFIRMASI KELUAR AKUN (LOGOUT) */}
+          <ConfirmLogoutModal
+            isOpen={showLogoutModal}
+            isLoggingOut={isLoggingOut}
+            userName={user?.full_name}
+            userEmail={user?.email}
+            onCancel={() => setShowLogoutModal(false)}
+            onConfirm={handleConfirmLogout}
           />
 
           {/* FLOATING TOAST NOTIFICATION */}

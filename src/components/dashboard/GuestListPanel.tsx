@@ -33,6 +33,7 @@ export const GuestListPanel: React.FC<GuestListPanelProps> = ({
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [showSingleModal, setShowSingleModal] = useState(false);
   const [showContactNoticeModal, setShowContactNoticeModal] = useState(false);
+  const [guestTab, setGuestTab] = useState<'database' | 'quick-link'>('database');
 
   // State template undangan yang sedang dipilih
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateSelectorItem | null>(null);
@@ -170,36 +171,67 @@ export const GuestListPanel: React.FC<GuestListPanelProps> = ({
         onChange={gl.handleFileUpload}
       />
 
-      {/* 0. SELECTOR KARTU TEMPLATE UNDANGAN */}
-      <TemplateCardSelector
-        userId={userId}
-        currentFormData={currentFormData}
-        activeTemplateId={activeTemplateId}
-        activeSlug={effectiveSlug}
-        selectedTemplate={selectedTemplate}
-        onSelectTemplate={handleSelectTemplate}
-        onGoToEditor={onGoToEditor}
-        onOpenMyTemplates={onOpenMyTemplates}
-        onOpenAuthGate={onOpenAuthGate}
-        sectionTitle="Pilih Template Undangan Yang Dikelola"
-        sectionSubtitle="Pilih kartu undangan di bawah untuk melihat & mengelola buku tamu khusus undangan tersebut:"
-        badgeLabel="Daftar Tamu"
-      />
+      {/* 0. SELECTOR KARTU TEMPLATE UNDANGAN (Hanya tampil jika user sudah login) */}
+      {userId && (
+        <TemplateCardSelector
+          userId={userId}
+          currentFormData={currentFormData}
+          activeTemplateId={activeTemplateId}
+          activeSlug={effectiveSlug}
+          selectedTemplate={selectedTemplate}
+          onSelectTemplate={handleSelectTemplate}
+          onGoToEditor={onGoToEditor}
+          onOpenMyTemplates={onOpenMyTemplates}
+          onOpenAuthGate={onOpenAuthGate}
+          sectionTitle="Pilih Template Undangan Yang Dikelola"
+          sectionSubtitle="Pilih kartu undangan di bawah untuk melihat & mengelola buku tamu khusus undangan tersebut:"
+          badgeLabel="Daftar Tamu"
+        />
+      )}
 
-      {/* KARTU 1: GENERATOR LINK CEPAT & GRUP WA */}
-      <QuickLinkGenerator
-        invitationSlug={effectiveSlug}
-        coupleNames={effectiveCouple}
-        waTemplate={wa.waTemplate}
-        showToast={showToast}
-      />
+      {/* MODE TABS SWITCHER: BUKU TAMU vs LINK CEPAT */}
+      <div className="flex items-center gap-2 p-1.5 bg-stone-100 rounded-2xl max-w-md w-full border border-stone-200/80">
+        <button
+          type="button"
+          onClick={() => setGuestTab('database')}
+          className={`flex-1 py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            guestTab === 'database'
+              ? 'bg-white text-stone-900 shadow-xs'
+              : 'text-stone-500 hover:text-stone-900'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[18px]">group</span>
+          <span>Buku Tamu ({gl.guests.length})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setGuestTab('quick-link')}
+          className={`flex-1 py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            guestTab === 'quick-link'
+              ? 'bg-white text-stone-900 shadow-xs'
+              : 'text-stone-500 hover:text-stone-900'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[18px]">share</span>
+          <span>Link Cepat &amp; WA Grup</span>
+        </button>
+      </div>
 
-      {/* HEADER SECTION & ACTION BUTTONS BAR */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2">
-        <div>
-          <h2 className="font-serif font-bold text-2xl text-stone-900">
-            Daftar Tamu &amp; Sebar Undangan
-          </h2>
+      {guestTab === 'quick-link' ? (
+        <QuickLinkGenerator
+          invitationSlug={effectiveSlug}
+          coupleNames={effectiveCouple}
+          waTemplate={wa.waTemplate}
+          showToast={showToast}
+        />
+      ) : (
+        <>
+          {/* HEADER SECTION & ACTION BUTTONS BAR */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2">
+            <div>
+              <h2 className="font-serif font-bold text-2xl text-stone-900">
+                Daftar Tamu &amp; Sebar Undangan
+              </h2>
           <p className="text-xs sm:text-sm text-stone-500 mt-0.5">
             Tambah ratusan tamu dalam 1-klik, buat link personal unik, dan lacak status kirim WhatsApp.
           </p>
@@ -381,7 +413,8 @@ export const GuestListPanel: React.FC<GuestListPanelProps> = ({
         </div>
       ) : (
         <div className="bg-white rounded-3xl border border-stone-200/90 shadow-2xs overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* DESKTOP TABLE VIEW */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-stone-50/90 border-b border-stone-200 text-[11px] font-bold text-stone-600 uppercase tracking-wider">
@@ -411,6 +444,121 @@ export const GuestListPanel: React.FC<GuestListPanelProps> = ({
             </table>
           </div>
 
+          {/* MOBILE CARDS VIEW */}
+          <div className="md:hidden divide-y divide-stone-100 p-3 space-y-3">
+            {gl.filteredGuests.map((guest, idx) => {
+              const isSent = Boolean(guest.is_sent || wa.sentGuestIds.has(guest.id));
+              return (
+                <div key={guest.id} className="p-3.5 rounded-2xl bg-stone-50/80 border border-stone-200/70 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[10px] text-stone-400">#{idx + 1}</span>
+                        <h4 className="font-bold text-stone-900 text-sm">{guest.name}</h4>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="px-2 py-0.5 rounded-md bg-white border border-stone-200 text-stone-600 text-[10px] font-medium">
+                          {guest.category || 'Reguler'}
+                        </span>
+                        {guest.pax_allocated && guest.pax_allocated > 1 && (
+                          <span className="px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-[10px]">
+                            {guest.pax_allocated} Pax
+                          </span>
+                        )}
+                        <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md bg-stone-200/70 text-stone-700 font-mono text-[10px]">
+                          <span className="material-symbols-outlined text-[12px]">qr_code</span>
+                          {guest.guest_code}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteGuest(guest.id, guest.name)}
+                      className="p-1.5 text-stone-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
+                      title="Hapus"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                  </div>
+
+                  {/* Phone & RSVP status */}
+                  <div className="flex items-center justify-between text-xs pt-1 border-t border-stone-200/60">
+                    <div>
+                      {guest.phone_number ? (
+                        <div className="font-mono text-xs text-stone-700 flex items-center gap-1">
+                          <span className="material-symbols-outlined text-emerald-600 text-[14px]">call</span>
+                          <span>{guest.phone_number}</span>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] text-stone-400 italic">Tanpa Nomor</span>
+                      )}
+                    </div>
+                    <div>
+                      {guest.rsvp_status === 'hadir' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          Hadir ({guest.rsvp_pax || 1})
+                        </span>
+                      ) : guest.rsvp_status === 'tidak_hadir' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 text-rose-800 border border-rose-200 text-[10px] font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                          Berhalangan
+                        </span>
+                      ) : guest.rsvp_status === 'ragu' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                          Ragu
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full bg-stone-200/60 text-stone-500 text-[10px]">
+                          Menunggu
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Bottom Action buttons */}
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => wa.toggleSentStatus(guest.id)}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold transition-all cursor-pointer ${
+                        isSent
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300/50'
+                          : 'bg-white text-stone-600 border border-stone-200'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[14px]">
+                        {isSent ? 'check_circle' : 'pending'}
+                      </span>
+                      <span>{isSent ? 'Terkirim ✔️' : 'Belum Kirim'}</span>
+                    </button>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => wa.handleCopyPersonalLink(guest)}
+                        className="px-2.5 py-1.5 rounded-xl bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-xs font-semibold inline-flex items-center gap-1 shadow-2xs"
+                      >
+                        <span className="material-symbols-outlined text-[15px]">link</span>
+                        <span>Link</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => wa.handleSendWhatsApp(guest)}
+                        className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold inline-flex items-center gap-1 shadow-2xs active:scale-95"
+                      >
+                        <span className="material-symbols-outlined text-[15px]">chat</span>
+                        <span>Kirim WA</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
           {/* Footer Bar: Ekspor & Template Download */}
           <div className="p-4 bg-stone-50/80 border-t border-stone-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
             <span className="text-stone-500">
@@ -435,6 +583,8 @@ export const GuestListPanel: React.FC<GuestListPanelProps> = ({
           </div>
         </div>
       )}
+    </>
+  )}
 
       {/* MODAL 1: QUICK BULK PASTE */}
       <BulkPasteModal
