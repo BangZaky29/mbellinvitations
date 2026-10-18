@@ -168,9 +168,9 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
                     alt="Cover Wedding Portrait"
                     className="w-full h-full object-cover object-top filter brightness-[0.72] contrast-[1.08]"
                     src={
-                      data.couple_photo ||
                       data.cover_image ||
-                      'https://lh3.googleusercontent.com/aida-public/AB6AXuAyyV8nYnWx2tEy7LxLdEPijzUQ2lkIshsrFjKYWD-tNhUs38wKz_untFwzYcIsu_NefUSV9tF1RgMhUS20kKyhra-0O76kwWMBZ1ffHnOhSwWov-uD4wkM5HmVLdVENobwnjuIzZ7fA63bQ9wacLZHJwGse9Fgnz4NRkTLd0fhnZ12nesIAdenQ-acjOcQhtncKgj5t-ndrKTTg8xT-MicB-xM2ZlycPDmo7r8XlBPTaO2n0YPvhMZ'
+                      data.couple_photo ||
+                      'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=1200'
                     }
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/60 to-surface/30"></div>
@@ -280,8 +280,8 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
                   {/* Date Badge */}
                   <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-container-high/80 backdrop-blur-md mb-8 border border-white/5">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
-                    <span className="font-label-md text-on-surface text-xs tracking-wider">
-                      24 . 10 . 2026 • JAKARTA
+                    <span className="font-label-md text-on-surface text-xs tracking-wider uppercase">
+                      {data.wedding_date_display || '24 . 10 . 2026'} • {data.events?.[0]?.venue_city || data.events?.[0]?.venue_name || 'JAKARTA'}
                     </span>
                   </div>
 

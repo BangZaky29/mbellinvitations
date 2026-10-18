@@ -5,6 +5,7 @@ import { FloatingDock } from '../common/FloatingDock';
 import { SleekToast } from '../common/SleekToast';
 import { VenueMapEmbed } from '../common/VenueMapEmbed';
 import { GalleryLightbox } from '../common/GalleryLightbox';
+import { MOCK_JAWA_DATA } from '../../data/mock/jawaData';
 
 export const Template3Jawa: React.FC<InvitationProps> = ({
   data,
@@ -78,11 +79,11 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
 
   return (
     <div
-      className="theme-jawa dark bg-[#1a110d] min-h-screen font-body-md text-body-md text-[#f1dfd6] antialiased flex justify-center no-scrollbar"
-      style={{ backgroundColor: '#1a110d', color: '#f1dfd6' }}
+      className="theme-jawa dark bg-[#120E0B] min-h-screen font-body-md text-body-md text-[#FAF6F0] antialiased flex justify-center no-scrollbar"
+      style={{ backgroundColor: '#120E0B', color: '#FAF6F0' }}
     >
       {/* Mobile Viewport Container (Max 430px) */}
-      <div className="w-full max-w-[430px] min-h-screen bg-[#1a110d] relative flex flex-col shadow-[0_12px_40px_rgba(10,6,4,0.9)] overflow-x-clip border-x border-[#322822]/60 no-scrollbar">
+      <div className="w-full max-w-[430px] min-h-screen bg-[#14100D] relative flex flex-col shadow-[0_12px_40px_rgba(0,0,0,0.95)] overflow-x-clip border-x border-[#D4AF37]/25 no-scrollbar">
         
         {/* Sleek Universal Toast Notification */}
         <SleekToast
@@ -92,7 +93,7 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
           isInsideMockup={isPreview}
         />
 
-        <main className={`flex flex-col relative w-full bg-surface min-h-screen flex-1`}>
+        <main className={`flex flex-col relative w-full bg-[#14100D] min-h-screen flex-1`}>
           <div className="flex flex-col w-full relative select-none h-full flex-1">
             {/* ========================================== */}
             {/* SECTION 1: COVER GATE OVERLAY              */}
@@ -100,72 +101,76 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
             {!isOpen && (
               <section
                 id="sampul"
-                className={`relative w-full h-full min-h-[100dvh] flex flex-col justify-between items-center text-center p-5 sm:p-7 z-30 overflow-hidden bg-surface-container-low transition-all duration-700 ${
+                className={`relative w-full h-full min-h-[100dvh] flex flex-col justify-between items-center text-center p-5 sm:p-7 z-30 overflow-hidden bg-[#14100D] transition-all duration-700 ${
                   isOpening ? 'animate-cover-exit pointer-events-none' : ''
                 }`}
               >
                 {/* Traditional Javanese Kawung lattice geometric decorative background */}
-                <div className="absolute inset-0 pointer-events-none opacity-10 bg-[radial-gradient(#f2ca50_1px,transparent_1px)] [background-size:18px_18px]"></div>
+                <div className="absolute inset-0 pointer-events-none opacity-15 bg-[radial-gradient(#F3D068_1px,transparent_1px)] [background-size:18px_18px]"></div>
+
+                {/* Traditional Royal Backdrop using Cover Photo if present */}
+                {(data.cover_image || data.couple_photo) && (
+                  <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                    <img
+                      src={data.cover_image || data.couple_photo}
+                      alt="Cover Background"
+                      className="w-full h-full object-cover opacity-25 filter blur-[0.5px] scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#14100D]/90 via-[#14100D]/80 to-[#14100D]"></div>
+                  </div>
+                )}
 
                 {/* Top Notch-Safe Ornamental Motif & Royal Title */}
                 <div className="relative z-10 pt-10 sm:pt-12 shrink-0 flex flex-col items-center">
-                  <div className="flex items-center space-x-2 mb-2 opacity-75">
-                    <span className="w-8 h-[1px] bg-secondary-container"></span>
-                    <span className="material-symbols-outlined text-primary text-sm">spa</span>
-                    <span className="w-8 h-[1px] bg-secondary-container"></span>
+                  <div className="flex items-center space-x-2 mb-2 opacity-80">
+                    <span className="w-8 h-[1px] bg-[#D4AF37]"></span>
+                    <span className="material-symbols-outlined text-[#F3D068] text-sm">spa</span>
+                    <span className="w-8 h-[1px] bg-[#D4AF37]"></span>
                   </div>
-                  <span className="font-label-lg text-xs sm:text-sm uppercase tracking-widest text-[#edc155] font-medium">
+                  <span className="text-xs sm:text-sm uppercase tracking-[0.25em] text-[#FFE082] font-semibold drop-shadow-sm">
                     The Royal Wedding Of
                   </span>
                 </div>
 
-                {/* Middle Tier: Gunungan Wayang & Couple Names */}
+                {/* Middle Tier: Royal Arched Photo Frame / Gunungan Wayang & Couple Names */}
                 <div className="relative z-10 flex-1 flex flex-col items-center justify-center py-2">
-                  <div className="relative w-20 h-24 sm:w-24 sm:h-28 flex items-center justify-center mb-3">
-                    <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl"></div>
-                    <svg
-                      className="w-full h-full text-primary drop-shadow-[0_4px_16px_rgba(242,202,80,0.35)]"
-                      fill="none"
-                      viewBox="0 0 100 135"
-                    >
-                      <path
-                        d="M50 4 C48 18 18 60 18 90 C18 116 34 130 50 130 C66 130 82 116 82 90 C82 60 52 18 50 4 Z"
-                        stroke="currentColor"
-                        strokeLinejoin="round"
-                        strokeWidth="2.2"
-                      ></path>
-                      <path
-                        d="M50 16 C48 30 26 68 26 92 C26 112 38 122 50 122 C62 122 74 112 74 92 C74 68 52 30 50 16 Z"
-                        stroke="currentColor"
-                        strokeDasharray="3 3"
-                        strokeWidth="1.2"
-                      ></path>
-                      <path
-                        d="M50 36 C42 45 42 58 50 66 C58 58 58 45 50 36 Z"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                      ></path>
-                      <path
-                        d="M50 62 C34 72 34 90 50 98 C66 90 66 72 50 62 Z"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                      ></path>
-                      <path
-                        d="M50 94 C38 102 38 116 50 122 C62 116 62 102 50 94 Z"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                      ></path>
-                      <circle cx="50" cy="4" fill="currentColor" r="3"></circle>
-                      <rect height="18" rx="2" stroke="currentColor" strokeWidth="1.4" width="12" x="44" y="104"></rect>
-                    </svg>
-                  </div>
+                  {(data.cover_image || data.couple_photo) ? (
+                    <div className="relative w-32 h-40 sm:w-36 sm:h-44 rounded-t-full rounded-b-xl overflow-hidden p-1.5 bg-gradient-to-b from-[#F3D068] via-[#D4AF37]/40 to-[#14100D] shadow-2xl shadow-black/90 mb-4 border border-[#F3D068]/60">
+                      <div className="relative w-full h-full rounded-t-full rounded-b-lg overflow-hidden bg-[#14100D]">
+                        <img
+                          src={data.cover_image || data.couple_photo}
+                          alt={`${firstPerson.name} & ${secondPerson.name}`}
+                          className="w-full h-full object-cover object-top"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#14100D]/70 via-transparent to-transparent pointer-events-none"></div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative w-20 h-24 sm:w-24 sm:h-28 flex items-center justify-center mb-3">
+                      <div className="absolute inset-0 rounded-full bg-[#F3D068]/15 blur-xl"></div>
+                      <svg
+                        className="w-full h-full text-[#F3D068] drop-shadow-[0_4px_16px_rgba(243,208,104,0.35)]"
+                        fill="none"
+                        viewBox="0 0 100 135"
+                      >
+                        <path
+                          d="M50 4 C48 18 18 60 18 90 C18 116 34 130 50 130 C66 130 82 116 82 90 C82 60 52 18 50 4 Z"
+                          stroke="currentColor"
+                          strokeLinejoin="round"
+                          strokeWidth="2.2"
+                        ></path>
+                        <circle cx="50" cy="4" fill="currentColor" r="3"></circle>
+                        <rect height="18" rx="2" stroke="currentColor" strokeWidth="1.4" width="12" x="44" y="104"></rect>
+                      </svg>
+                    </div>
+                  )}
 
                   <div className="space-y-0.5 text-center">
-                    <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#f2ca50] tracking-wide drop-shadow-sm">
+                    <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#FFE082] tracking-wide drop-shadow-md">
                       {firstPerson.name}
                     </h1>
-                    <p className="font-serif italic text-sm text-[#d0c5af] my-0.5">&amp;</p>
-                    <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#f2ca50] tracking-wide drop-shadow-sm">
+                    <p className="font-serif italic text-base text-[#D4AF37] my-0.5">&amp;</p>
+                    <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#FFE082] tracking-wide drop-shadow-md">
                       {secondPerson.name}
                     </h2>
                   </div>
@@ -173,30 +178,29 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
 
                 {/* Bottom Tier: Undangan Kepada Card & CTA Button Anchored Bottom */}
                 <div className="relative z-10 w-full max-w-[340px] pb-6 sm:pb-8 flex flex-col items-center space-y-3 shrink-0 mt-auto">
-                  <div className="w-full bg-surface-container rounded-2xl p-3.5 sm:p-4 shadow-lg shadow-surface-container-lowest relative overflow-hidden border border-[#3e322d]">
-                    <div className="absolute -top-6 -right-6 w-16 h-16 rounded-full bg-primary/10 blur-md pointer-events-none"></div>
-                    <div className="flex items-center justify-between mb-1.5 opacity-60">
-                      <span className="material-symbols-outlined text-xs text-primary">filter_vintage</span>
-                      <span className="font-label-md text-[11px] sm:text-xs text-on-surface-variant uppercase tracking-wider">
+                  <div className="w-full bg-[#1C1612]/95 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-2xl border border-[#F3D068]/35 text-center">
+                    <div className="flex items-center justify-between mb-1.5 opacity-80">
+                      <span className="material-symbols-outlined text-xs text-[#F3D068]">filter_vintage</span>
+                      <span className="text-[11px] sm:text-xs text-[#FFE082] uppercase tracking-widest font-semibold">
                         Serat Katur Dhumateng
                       </span>
-                      <span className="material-symbols-outlined text-xs text-primary">filter_vintage</span>
+                      <span className="material-symbols-outlined text-xs text-[#F3D068]">filter_vintage</span>
                     </div>
-                    <p className="font-body-md text-xs text-on-surface font-medium">
+                    <p className="text-xs text-[#FAF6F0]/90 font-medium">
                       Kepada Yth. Bapak/Ibu/Saudara/i:
                     </p>
-                    <div className="my-1.5 py-1.5 px-3 bg-surface-container-lowest/70 rounded-lg">
-                      <p className="font-title-lg text-base sm:text-lg text-primary tracking-wide font-bold line-clamp-1">
-                        {data.guest_name || 'Tamu Undangan'}
+                    <div className="my-2 py-2 px-3 bg-[#14100D] rounded-xl border border-[#F3D068]/20">
+                      <p className="font-serif text-lg sm:text-xl text-[#FFE082] font-bold line-clamp-1">
+                        {data.guest_name || 'Tamu Undangan Kinasih'}
                       </p>
                     </div>
                     {(Boolean(data.guest_code) || isPreview) && (
-                      <div className="mt-1 mb-1 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-primary font-label-md text-xs font-mono">
-                        <span className="material-symbols-outlined text-[13px]">qr_code</span>
-                        <span>CHECK-IN PASS: {data.guest_code || 'K8X9P'}</span>
+                      <div className="mt-1 mb-1 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#2A201A] border border-[#F3D068]/40 text-[#FFE082] text-xs font-mono font-semibold shadow-xs">
+                        <span className="material-symbols-outlined text-[14px]">qr_code_2</span>
+                        <span>CHECK-IN PASS: {data.guest_code || 'KRT-2025'}</span>
                       </div>
                     )}
-                    <p className="font-caption text-[10px] text-on-surface-variant/80 mt-1 italic">
+                    <p className="text-[10px] text-[#FAF6F0]/70 mt-1 italic">
                       Mohon maaf bila ada kesalahan penulisan nama/gelar
                     </p>
                   </div>
@@ -204,7 +208,7 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
                   <button
                     type="button"
                     onClick={handleOpenInvitation}
-                    className="w-full h-12 rounded-full bg-gradient-to-r from-[#e9c349] via-[#f2ca50] to-[#edc155] text-[#241a00] font-label-lg text-sm shadow-[0_8px_24px_rgba(242,202,80,0.35)] hover:brightness-105 active:scale-95 transition-all cursor-pointer font-bold tracking-wider flex items-center justify-center gap-2"
+                    className="w-full h-[50px] sm:h-[54px] rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3D068] to-[#C59B27] text-[#14100D] font-bold text-sm tracking-wider shadow-[0_8px_24px_rgba(243,208,104,0.35)] hover:brightness-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 ring-2 ring-[#FFE082]/30"
                   >
                     <span className="material-symbols-outlined text-lg">drafts</span>
                     <span>BUKA UNDANGAN</span>
@@ -245,63 +249,63 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
 
                 {/* Royal Date & Javanese Calendar */}
                 <div className="mb-4">
-                  <p className="font-headline-md text-headline-md text-primary">
+                  <p className="font-serif text-2xl sm:text-3xl font-bold text-[#FFE082] drop-shadow-sm">
                     {data.wedding_date_display}
                   </p>
-                  <p className="font-title-md text-title-md text-tertiary mt-1 italic">
+                  <p className="font-serif text-sm text-[#D4AF37] mt-1 italic">
                     Dinten Berkah • Windu Sancaya
                   </p>
                 </div>
 
                 {/* Philosophical Sacred Quote */}
-                <div className="w-full bg-surface-container-low/60 rounded-xl p-space-md mb-8 reveal delay-100">
-                  <p className="font-body-lg text-body-lg text-on-surface-variant italic leading-relaxed">
+                <div className="w-full bg-[#1C1612]/90 border border-[#F3D068]/30 rounded-2xl p-5 mb-8 shadow-xl text-center reveal delay-100">
+                  <p className="font-serif text-base sm:text-lg text-[#FAF6F0] italic leading-relaxed">
                     &ldquo;{data.quote}&rdquo;
                   </p>
                   <div className="mt-3 flex items-center justify-center gap-2">
-                    <span className="w-6 h-[1px] bg-secondary-container"></span>
-                    <span className="font-caption text-caption text-secondary tracking-widest uppercase">
+                    <span className="w-8 h-[1px] bg-[#D4AF37]/50"></span>
+                    <span className="text-xs uppercase tracking-widest text-[#FFE082] font-semibold">
                       {data.quote_source}
                     </span>
-                    <span className="w-6 h-[1px] bg-secondary-container"></span>
+                    <span className="w-8 h-[1px] bg-[#D4AF37]/50"></span>
                   </div>
                 </div>
 
                 {/* Royal Countdown Timer Cards */}
                 <div className="w-full reveal delay-200">
-                  <span className="font-label-md text-label-md uppercase tracking-widest text-secondary block mb-3">
+                  <span className="text-xs uppercase tracking-[0.2em] text-[#FFE082] font-semibold block mb-3 text-center">
                     Menghitung Waktu Berkah
                   </span>
-                  <div className="grid grid-cols-4 gap-2 w-full">
-                    <div className="bg-surface-container-high rounded-xl py-3 px-1 shadow-md flex flex-col items-center">
-                      <span className="font-headline-md text-headline-md text-primary font-bold">
+                  <div className="grid grid-cols-4 gap-2 sm:gap-2.5 w-full">
+                    <div className="bg-gradient-to-b from-[#251D18] to-[#16110D] border border-[#F3D068]/35 rounded-2xl py-3.5 px-1 shadow-xl flex flex-col items-center">
+                      <span className="text-2xl sm:text-3xl font-serif font-bold text-[#FFE082] tracking-wider drop-shadow-[0_2px_8px_rgba(243,208,104,0.3)]">
                         {days}
                       </span>
-                      <span className="font-label-md text-label-md text-on-surface-variant uppercase mt-1">
+                      <span className="text-[10px] sm:text-xs font-sans uppercase tracking-widest font-semibold text-[#E0D5C1] mt-1">
                         Hari
                       </span>
                     </div>
-                    <div className="bg-surface-container-high rounded-xl py-3 px-1 shadow-md flex flex-col items-center">
-                      <span className="font-headline-md text-headline-md text-primary font-bold">
+                    <div className="bg-gradient-to-b from-[#251D18] to-[#16110D] border border-[#F3D068]/35 rounded-2xl py-3.5 px-1 shadow-xl flex flex-col items-center">
+                      <span className="text-2xl sm:text-3xl font-serif font-bold text-[#FFE082] tracking-wider drop-shadow-[0_2px_8px_rgba(243,208,104,0.3)]">
                         {String(hours).padStart(2, '0')}
                       </span>
-                      <span className="font-label-md text-label-md text-on-surface-variant uppercase mt-1">
+                      <span className="text-[10px] sm:text-xs font-sans uppercase tracking-widest font-semibold text-[#E0D5C1] mt-1">
                         Jam
                       </span>
                     </div>
-                    <div className="bg-surface-container-high rounded-xl py-3 px-1 shadow-md flex flex-col items-center">
-                      <span className="font-headline-md text-headline-md text-primary font-bold">
+                    <div className="bg-gradient-to-b from-[#251D18] to-[#16110D] border border-[#F3D068]/35 rounded-2xl py-3.5 px-1 shadow-xl flex flex-col items-center">
+                      <span className="text-2xl sm:text-3xl font-serif font-bold text-[#FFE082] tracking-wider drop-shadow-[0_2px_8px_rgba(243,208,104,0.3)]">
                         {String(minutes).padStart(2, '0')}
                       </span>
-                      <span className="font-label-md text-label-md text-on-surface-variant uppercase mt-1">
+                      <span className="text-[10px] sm:text-xs font-sans uppercase tracking-widest font-semibold text-[#E0D5C1] mt-1">
                         Menit
                       </span>
                     </div>
-                    <div className="bg-surface-container-high rounded-xl py-3 px-1 shadow-md flex flex-col items-center">
-                      <span className="font-headline-md text-headline-md text-primary font-bold">
+                    <div className="bg-gradient-to-b from-[#251D18] to-[#16110D] border border-[#F3D068]/35 rounded-2xl py-3.5 px-1 shadow-xl flex flex-col items-center">
+                      <span className="text-2xl sm:text-3xl font-serif font-bold text-[#FFE082] tracking-wider drop-shadow-[0_2px_8px_rgba(243,208,104,0.3)]">
                         {String(seconds).padStart(2, '0')}
                       </span>
-                      <span className="font-label-md text-label-md text-on-surface-variant uppercase mt-1">
+                      <span className="text-[10px] sm:text-xs font-sans uppercase tracking-widest font-semibold text-[#E0D5C1] mt-1">
                         Detik
                       </span>
                     </div>
@@ -310,16 +314,16 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
 
                 {/* Optional Livestream Banner */}
                 {data.livestream_url && (
-                  <div className="mt-6 w-full p-4 rounded-xl bg-surface-container-low border border-primary/30 flex items-center justify-between text-left">
+                  <div className="mt-6 w-full p-4 rounded-2xl bg-[#1C1612] border border-[#F3D068]/30 flex items-center justify-between text-left shadow-xl">
                     <div className="flex items-center gap-3">
-                      <span className="material-symbols-outlined text-primary text-2xl animate-pulse">
+                      <span className="material-symbols-outlined text-[#F3D068] text-2xl animate-pulse">
                         videocam
                       </span>
                       <div>
-                        <p className="font-label-md text-label-md text-secondary uppercase tracking-widest">
+                        <p className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-semibold">
                           Siaran Langsung
                         </p>
-                        <h4 className="font-title-md text-title-md text-on-surface">
+                        <h4 className="font-serif text-sm font-bold text-[#FAF6F0]">
                           Pawiwahan Live Streaming
                         </h4>
                       </div>
@@ -328,7 +332,7 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
                       href={data.livestream_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-4 py-1.5 rounded-full bg-primary text-on-primary font-label-md text-label-md font-semibold hover:brightness-105"
+                      className="px-4 py-1.5 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3D068] text-[#14100D] text-xs font-bold shadow-md hover:brightness-105 active:scale-95"
                     >
                       Mirsani
                     </a>
@@ -343,44 +347,44 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
             {isSectionActive('couple') && (
               <section
                 id="mempelai"
-                className="relative w-full bg-surface-container-low px-margin py-space-xl flex flex-col items-center text-center"
+                className="relative w-full bg-[#14100D] px-margin py-space-xl flex flex-col items-center text-center"
               >
                 <div className="mb-6">
-                  <span className="font-label-md text-label-md uppercase tracking-widest text-secondary block mb-1">
+                  <span className="text-xs uppercase tracking-[0.2em] text-[#FFE082] font-semibold block mb-1">
                     Dhedhasaring Katresnan
                   </span>
-                  <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">
+                  <h2 className="font-serif text-3xl font-bold text-[#FAF6F0] drop-shadow-sm">
                     Mempelai Kekalih
                   </h2>
                   <div className="flex items-center justify-center gap-2 mt-2">
-                    <span className="w-10 h-[1px] bg-secondary-container"></span>
-                    <span className="material-symbols-outlined text-primary text-xs">local_florist</span>
-                    <span className="w-10 h-[1px] bg-secondary-container"></span>
+                    <span className="w-10 h-[1px] bg-[#D4AF37]/50"></span>
+                    <span className="material-symbols-outlined text-[#F3D068] text-xs">local_florist</span>
+                    <span className="w-10 h-[1px] bg-[#D4AF37]/50"></span>
                   </div>
                 </div>
 
                 {/* Person 1 Card */}
-                <div className="w-full bg-surface-container rounded-2xl p-space-md shadow-xl mb-4 flex flex-col items-center text-center reveal-left delay-100">
-                  <div className="relative w-28 h-28 rounded-full overflow-hidden shadow-lg shadow-surface-container-lowest mb-4">
+                <div className="w-full bg-[#1C1612] rounded-2xl p-6 shadow-2xl border border-[#F3D068]/35 mb-4 flex flex-col items-center text-center reveal-left delay-100">
+                  <div className="relative w-32 h-32 rounded-full overflow-hidden shadow-2xl ring-2 ring-[#F3D068]/70 p-1 bg-gradient-to-b from-[#F3D068]/40 to-transparent mb-4">
                     <img
                       src={firstPerson.photo_url || firstPerson.photo || data.couple_photo || data.cover_image}
                       alt={firstPerson.full_name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover rounded-full"
                     />
                   </div>
-                  <h3 className="font-title-lg text-title-lg text-primary">
+                  <h3 className="font-serif text-2xl font-bold text-[#FFE082] tracking-wide drop-shadow-sm">
                     {firstPerson.full_name}
                   </h3>
-                  <p className="font-body-md text-body-md text-on-surface-variant mt-2 leading-relaxed">
-                    {firstPerson.child_order} saking Bpk. {firstPerson.parent_father}
-                    <br />&amp; Ibu {firstPerson.parent_mother}
+                  <p className="font-sans text-xs text-[#FAF6F0] mt-2 leading-relaxed opacity-95">
+                    {firstPerson.child_order} saking Bpk. <span className="font-semibold text-[#FFE082]">{firstPerson.parent_father}</span>
+                    <br />&amp; Ibu <span className="font-semibold text-[#FFE082]">{firstPerson.parent_mother}</span>
                   </p>
                   {firstPerson.instagram && (
                     <a
                       href={`https://instagram.com/${firstPerson.instagram.replace('@', '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-4 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-surface-container-high text-primary hover:bg-surface-container-highest transition-colors font-label-md text-label-md"
+                      className="mt-4 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#2A201A] border border-[#F3D068]/40 text-[#FFE082] hover:bg-[#382B22] transition-colors font-sans text-xs font-semibold shadow-xs"
                     >
                       <span className="material-symbols-outlined text-sm">photo_camera</span>
                       <span>{firstPerson.instagram}</span>
@@ -390,33 +394,33 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
 
                 {/* Golden Ukiran Connector */}
                 <div className="my-2 flex items-center justify-center gap-3 reveal-scale delay-200">
-                  <div className="w-10 h-[1px] bg-gradient-to-r from-transparent to-primary"></div>
-                  <span className="font-headline-md text-headline-md text-primary italic font-serif">&amp;</span>
-                  <div className="w-10 h-[1px] bg-gradient-to-l from-transparent to-primary"></div>
+                  <div className="w-10 h-[1px] bg-gradient-to-r from-transparent to-[#F3D068]"></div>
+                  <span className="font-headline-md text-headline-md text-[#FFE082] italic font-serif">&amp;</span>
+                  <div className="w-10 h-[1px] bg-gradient-to-l from-transparent to-[#F3D068]"></div>
                 </div>
 
                 {/* Person 2 Card */}
-                <div className="w-full bg-surface-container rounded-2xl p-space-md shadow-xl flex flex-col items-center text-center reveal-right delay-300">
-                  <div className="relative w-28 h-28 rounded-full overflow-hidden shadow-lg shadow-surface-container-lowest mb-4">
+                <div className="w-full bg-[#1C1612] rounded-2xl p-6 shadow-2xl border border-[#F3D068]/35 flex flex-col items-center text-center reveal-right delay-300">
+                  <div className="relative w-32 h-32 rounded-full overflow-hidden shadow-2xl ring-2 ring-[#F3D068]/70 p-1 bg-gradient-to-b from-[#F3D068]/40 to-transparent mb-4">
                     <img
                       src={secondPerson.photo_url || secondPerson.photo || data.couple_photo || data.cover_image}
                       alt={secondPerson.full_name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover rounded-full"
                     />
                   </div>
-                  <h3 className="font-title-lg text-title-lg text-primary">
+                  <h3 className="font-serif text-2xl font-bold text-[#FFE082] tracking-wide drop-shadow-sm">
                     {secondPerson.full_name}
                   </h3>
-                  <p className="font-body-md text-body-md text-on-surface-variant mt-2 leading-relaxed">
-                    {secondPerson.child_order} saking Bpk. {secondPerson.parent_father}
-                    <br />&amp; Ibu {secondPerson.parent_mother}
+                  <p className="font-sans text-xs text-[#FAF6F0] mt-2 leading-relaxed opacity-95">
+                    {secondPerson.child_order} saking Bpk. <span className="font-semibold text-[#FFE082]">{secondPerson.parent_father}</span>
+                    <br />&amp; Ibu <span className="font-semibold text-[#FFE082]">{secondPerson.parent_mother}</span>
                   </p>
                   {secondPerson.instagram && (
                     <a
                       href={`https://instagram.com/${secondPerson.instagram.replace('@', '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-4 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-surface-container-high text-primary hover:bg-surface-container-highest transition-colors font-label-md text-label-md"
+                      className="mt-4 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#2A201A] border border-[#F3D068]/40 text-[#FFE082] hover:bg-[#382B22] transition-colors font-sans text-xs font-semibold shadow-xs"
                     >
                       <span className="material-symbols-outlined text-sm">photo_camera</span>
                       <span>{secondPerson.instagram}</span>
@@ -430,22 +434,22 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
             {/* SECTION 4: LOVE STORY TIMELINE             */}
             {/* ========================================== */}
             {theme.show_love_story !== false && isSectionActive('story') && data.love_story?.length > 0 && (
-              <section className="relative w-full bg-surface px-margin py-space-xl">
+              <section className="relative w-full bg-[#14100D] px-margin py-space-xl">
                 <div className="text-center mb-8">
-                  <span className="font-label-md text-label-md uppercase tracking-widest text-secondary block mb-1">
+                  <span className="text-xs uppercase tracking-[0.2em] text-[#FFE082] font-semibold block mb-1">
                     Cariyos Katresnan
                   </span>
-                  <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">
+                  <h2 className="font-serif text-3xl font-bold text-[#FAF6F0] drop-shadow-sm">
                     Lampahing Katresnan
                   </h2>
-                  <p className="font-body-md text-body-md text-on-surface-variant italic mt-1">
+                  <p className="text-xs text-[#D4AF37] italic mt-1 font-serif">
                     Jejak langkah takdir tumuju marang janji suci
                   </p>
                 </div>
 
                 <div className="relative pl-6 space-y-6">
                   {/* Golden connecting line */}
-                  <div className="absolute top-3 bottom-3 left-[11px] w-[2px] bg-gradient-to-b from-primary via-secondary-container to-primary/30"></div>
+                  <div className="absolute top-3 bottom-3 left-[11px] w-[2px] bg-gradient-to-b from-[#F3D068] via-[#D4AF37] to-[#F3D068]/20"></div>
 
                   {data.love_story.map((story, index) => {
                     const iconName =
@@ -463,25 +467,25 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
 
                     return (
                       <div key={index} className="relative flex flex-col">
-                        <div className="absolute -left-6 top-1 w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center shadow-md">
+                        <div className="absolute -left-6 top-1 w-6 h-6 rounded-full bg-[#1C1612] border border-[#F3D068] flex items-center justify-center shadow-md">
                           {index === 0 && (
-                            <span className="absolute w-3.5 h-3.5 rounded-full bg-primary/60 animate-ping pointer-events-none" />
+                            <span className="absolute w-3.5 h-3.5 rounded-full bg-[#F3D068]/60 animate-ping pointer-events-none" />
                           )}
-                          <span className="relative w-2.5 h-2.5 rounded-full bg-primary shrink-0" />
+                          <span className="relative w-2.5 h-2.5 rounded-full bg-[#F3D068] shrink-0" />
                         </div>
-                        <div className="bg-surface-container-low rounded-xl p-4 shadow-md ml-2">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="font-label-md text-label-md text-primary font-bold uppercase tracking-wider">
+                        <div className="bg-[#1C1612] rounded-2xl p-5 shadow-xl border border-[#F3D068]/30 ml-2 text-left">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-xs text-[#FFE082] font-bold uppercase tracking-wider">
                               {story.year} • {story.title}
                             </span>
-                            <span className="material-symbols-outlined text-xs text-secondary">
+                            <span className="material-symbols-outlined text-xs text-[#F3D068]">
                               {iconName}
                             </span>
                           </div>
-                          <h4 className="font-title-md text-title-md text-on-surface">
+                          <h4 className="font-serif text-lg font-bold text-white mt-1">
                             {story.subtitle}
                           </h4>
-                          <p className="font-body-md text-body-md text-on-surface-variant mt-2 leading-relaxed">
+                          <p className="font-sans text-xs text-[#FAF6F0]/90 mt-2 leading-relaxed">
                             {story.description}
                           </p>
                         </div>
@@ -787,64 +791,97 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
               )}
 
               {/* Tanda Kasih / Digital Envelope */}
-              {theme.show_gift !== false && isSectionActive('gift') && (
+              {(theme.show_gift !== false && (isSectionActive('gift') || isPreview)) && (
                 <>
                   <div className="text-center mb-6">
-                    <span className="font-label-md text-label-md uppercase tracking-widest text-secondary block mb-1">
+                    <span className="text-xs uppercase tracking-[0.2em] text-[#FFE082] font-semibold block mb-1">
                       Tandha Asih
                     </span>
-                    <h3 className="font-headline-md text-headline-md text-on-surface">
+                    <h3 className="font-serif text-2xl font-bold text-[#FAF6F0] drop-shadow-sm">
                       Kado Digital &amp; Amplop
                     </h3>
-                    <p className="font-body-md text-body-md text-on-surface-variant italic mt-1">
+                    <p className="text-xs text-[#D4AF37] italic mt-1 font-serif">
                       Paring tandha tresna kagem kabingahan mempelai
                     </p>
                   </div>
 
-                  {(data.banks && data.banks.length > 0 ? data.banks : (data.bank_accounts || [])).map((bank, index) => {
-                    const isBca = bank.bank_name.toUpperCase().includes('BCA');
-                    return (
-                      <div
-                        key={index}
-                        className="w-full bg-gradient-to-br from-surface-container-high to-surface-container rounded-2xl p-space-md shadow-xl mb-4 relative overflow-hidden"
-                      >
-                        <div className="flex items-center justify-between mb-4">
-                          <span
-                            className={`font-title-lg text-title-lg font-bold tracking-wider ${
-                              isBca ? 'text-primary' : 'text-secondary'
-                            }`}
+                  {(() => {
+                    const effectiveBanks = (data.banks && data.banks.length > 0)
+                      ? data.banks
+                      : (data.bank_accounts && data.bank_accounts.length > 0)
+                      ? data.bank_accounts
+                      : (isPreview ? (MOCK_JAWA_DATA.bank_accounts || MOCK_JAWA_DATA.banks || []) : []);
+
+                    if (!effectiveBanks || effectiveBanks.length === 0) return null;
+
+                    return effectiveBanks.map((bank: any, index: number) => {
+                      const isBca = (bank.bank_name || '').toUpperCase().includes('BCA');
+                      return (
+                        <div
+                          key={bank.account_number || index}
+                          className="w-full bg-gradient-to-br from-[#251D18] via-[#1E1713] to-[#120E0B] border border-[#F3D068]/40 rounded-2xl p-5 shadow-2xl mb-4 relative overflow-hidden text-left"
+                        >
+                          <div className="flex items-center justify-between mb-4">
+                            <span className="font-serif text-lg font-bold tracking-wider text-[#FFE082]">
+                              BANK {bank.bank_name.toUpperCase()}
+                            </span>
+                            <span className="material-symbols-outlined text-[#F3D068] text-2xl">
+                              {isBca ? 'contactless' : 'credit_card'}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-[#FAF6F0]/70 uppercase tracking-widest mb-1">
+                            Nomor Rekening {bank.bank_name}
+                          </p>
+                          <p className="font-mono text-xl font-bold tracking-widest text-[#FAF6F0]">
+                            {bank.account_number}
+                          </p>
+                          <p className="text-xs text-[#FFE082] mt-1 mb-4 font-semibold break-words [overflow-wrap:anywhere]">
+                            a.n {bank.account_holder}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleCopy(
+                                bank.account_number_raw || bank.account_number,
+                                `Nomor Rekening ${bank.bank_name} tersalin di Clipboard!`
+                              )
+                            }
+                            className="w-full py-2.5 px-4 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3D068] text-[#14100D] font-bold text-xs tracking-wider shadow-md hover:brightness-105 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                           >
-                            BANK {bank.bank_name.toUpperCase()}
-                          </span>
-                          <span className="material-symbols-outlined text-secondary text-2xl">
-                            {isBca ? 'contactless' : 'credit_card'}
-                          </span>
+                            <span className="material-symbols-outlined text-sm">content_copy</span>
+                            <span>Salin No. Rekening</span>
+                          </button>
                         </div>
-                        <p className="font-caption text-caption text-on-surface-variant uppercase tracking-widest mb-1">
-                          Nomor Rekening {bank.bank_name}
-                        </p>
-                        <p className="font-headline-md text-headline-md text-primary font-mono tracking-widest">
-                          {bank.account_number}
-                        </p>
-                        <p className="font-body-md text-body-md text-on-surface mt-1 mb-4 break-words [overflow-wrap:anywhere]">
-                          a.n {bank.account_holder}
+                      );
+                    });
+                  })()}
+
+                  {/* Physical Gift Address */}
+                  {(() => {
+                    const effectiveAddress = data.gift_address || (isPreview ? (MOCK_JAWA_DATA.gift_address || '') : '');
+                    if (!effectiveAddress) return null;
+                    return (
+                      <div className="w-full bg-[#1C1612] rounded-2xl p-5 shadow-xl border border-[#F3D068]/30 flex flex-col items-center text-center mt-2">
+                        <div className="w-10 h-10 rounded-full bg-[#2A201A] text-[#FFE082] flex items-center justify-center mb-2 border border-[#F3D068]/30">
+                          <span className="material-symbols-outlined text-[20px]">inventory_2</span>
+                        </div>
+                        <h4 className="font-serif text-base text-[#FFE082] font-bold mb-1">
+                          Kirim Kado Fisik
+                        </h4>
+                        <p className="text-xs text-[#FAF6F0]/80 mb-3 leading-relaxed break-words [overflow-wrap:anywhere] max-w-xs">
+                          {effectiveAddress}
                         </p>
                         <button
                           type="button"
-                          onClick={() =>
-                            handleCopy(
-                              bank.account_number_raw || bank.account_number,
-                              `Nomor Rekening ${bank.bank_name} tersalin di Clipboard!`
-                            )
-                          }
-                          className="w-full py-2.5 px-4 rounded-lg bg-surface-container-lowest text-primary hover:bg-surface-bright font-label-md text-label-md font-semibold tracking-wider transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                          onClick={() => handleCopy(effectiveAddress, 'Alamat kado fisik disalin!')}
+                          className="px-5 py-2 rounded-full bg-[#2A201A] hover:bg-[#382B22] text-[#FFE082] border border-[#F3D068]/40 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                         >
-                          <span className="material-symbols-outlined text-sm">content_copy</span>
-                          <span>Salin No. Rekening</span>
+                          <span className="material-symbols-outlined text-[16px]">file_copy</span>
+                          <span>Salin Alamat</span>
                         </button>
                       </div>
                     );
-                  })}
+                  })()}
                 </>
               )}
             </section>

@@ -85,7 +85,7 @@ export const Template1Modern: React.FC<InvitationProps> = ({
             {/* Background Image with Dark Vignette */}
             <div className="absolute inset-0 z-0 overflow-hidden">
               <img
-                src={data.couple_photo || data.cover_image}
+                src={data.cover_image || data.couple_photo || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=1200'}
                 alt="Wedding Couple Cover"
                 className="w-full h-full object-cover filter brightness-[0.78]"
               />
@@ -193,7 +193,7 @@ export const Template1Modern: React.FC<InvitationProps> = ({
               <div className="relative w-full max-w-[280px] p-2 bg-white rounded-arch shadow-md border border-border-subtle mb-8 reveal-scale">
                 <div className="w-full h-[380px] arch-frame overflow-hidden relative">
                   <img
-                    src={data.couple_photo}
+                    src={data.couple_photo || data.cover_image || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800'}
                     alt={`${firstPerson.name} and ${secondPerson.name}`}
                     className="w-full h-full object-cover"
                   />

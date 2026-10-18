@@ -60,14 +60,21 @@ function findScrollContainer(element: Element | null): HTMLElement | Window {
   if (typeof window === 'undefined') return (null as any);
   if (!element) return window;
 
+  // 1. Cek langsung scroll container Phone Preview via data-phone-scroll
+  const phoneScroll = element.closest('[data-phone-scroll="true"]') as HTMLElement | null;
+  if (phoneScroll) return phoneScroll;
+
+  // 2. Fallback jika didalam container preview
   const phonePreview = element.closest('[data-phone-preview="true"]') as HTMLElement | null;
   if (phonePreview) {
-    const scrollable = phonePreview.querySelector('.overflow-y-auto') as HTMLElement | null;
+    const scrollable =
+      (phonePreview.querySelector('[data-phone-scroll="true"]') as HTMLElement | null) ||
+      (phonePreview.querySelector('#phone-screen-scroll-container') as HTMLElement | null) ||
+      (phonePreview.hasAttribute('data-phone-scroll') ? phonePreview : null);
     return scrollable || phonePreview;
   }
 
-  // Pada halaman publik atau standalone invitation (di luar dashboard PhoneMockup),
-  // scroll container 100% PASTI adalah Window!
+  // Pada halaman publik atau standalone invitation, scroll container 100% PASTI adalah Window!
   return window;
 }
 
@@ -404,11 +411,17 @@ export function useUniversalScrollAnimation(
       if (rootElement && (!isDashboardMode || rootElement.closest('[data-phone-preview="true"]'))) {
         candidates = Array.from(rootElement.querySelectorAll(COMBINED_SELECTOR));
       } else if (isDashboardMode) {
-        // HANYA ambil elemen di dalam Phone Preview
-        phoneContainers.forEach((pc) => {
-          const scrollable = pc.querySelector('.overflow-y-auto') || pc;
-          candidates.push(...Array.from(scrollable.querySelectorAll(COMBINED_SELECTOR)));
-        });
+        // HANYA ambil elemen di dalam Phone Preview Scroll Container
+        const phoneScroll = document.querySelector('[data-phone-scroll="true"]') as HTMLElement | null
+          || document.querySelector('#phone-screen-scroll-container') as HTMLElement | null;
+        if (phoneScroll) {
+          candidates = Array.from(phoneScroll.querySelectorAll(COMBINED_SELECTOR));
+        } else {
+          phoneContainers.forEach((pc) => {
+            const scrollable = pc.querySelector('[data-phone-scroll="true"]') || pc;
+            candidates.push(...Array.from(scrollable.querySelectorAll(COMBINED_SELECTOR)));
+          });
+        }
       } else {
         // Public Standalone Invitation: Ambil seluruh elemen template publik
         const scope = rootElement || document.querySelector('#invitation-root') || document;

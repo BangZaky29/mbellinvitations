@@ -1,4 +1,5 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
+import { convertImageToWebP } from '../../../utils/imageOptimizer';
 
 interface CoverImageUploaderProps {
   coverImage: string;
@@ -10,12 +11,32 @@ export const CoverImageUploader: React.FC<CoverImageUploaderProps> = ({
   onCoverChange,
 }) => {
   const coverFileInputRef = useRef<HTMLInputElement>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleLocalImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLocalImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const objectUrl = URL.createObjectURL(file);
-      onCoverChange(objectUrl);
+    if (!file) return;
+
+    try {
+      setIsProcessing(true);
+      // Kompres dan konversi foto menjadi WebP resolusi tinggi (~80-120KB)
+      // Format Data URL tersimpan permanen di Supabase dan dapat dibuka di semua perangkat (Desktop, HP Android/iOS, & WhatsApp)
+      const optimized = await convertImageToWebP(file, 0.82, 1280);
+      onCoverChange(optimized.dataUrl);
+    } catch (err: any) {
+      console.warn('WebP compression notice, falling back to FileReader:', err);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          onCoverChange(event.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setIsProcessing(false);
+      if (coverFileInputRef.current) {
+        coverFileInputRef.current.value = '';
+      }
     }
   };
 
@@ -63,11 +84,14 @@ export const CoverImageUploader: React.FC<CoverImageUploaderProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
+              disabled={isProcessing}
               onClick={() => coverFileInputRef.current?.click()}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-stone-300 hover:border-stone-400 hover:bg-stone-50 text-stone-800 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-stone-300 hover:border-stone-400 hover:bg-stone-50 disabled:opacity-60 text-stone-800 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm">upload</span>
-              Unggah Foto Sampul
+              <span className={`material-symbols-outlined text-sm ${isProcessing ? 'animate-spin' : ''}`}>
+                {isProcessing ? 'progress_activity' : 'upload'}
+              </span>
+              <span>{isProcessing ? 'Mengompres Foto...' : 'Unggah Foto Sampul'}</span>
             </button>
             <button
               type="button"

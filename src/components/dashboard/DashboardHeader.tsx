@@ -24,6 +24,8 @@ export interface DashboardHeaderProps {
   onLogout?: () => void;
   onReplayOpening?: () => void;
   accountStatus?: 'Gratis' | 'Pro' | 'Platinum';
+  hasUnsavedChanges?: boolean;
+  unsavedCount?: number;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -40,6 +42,8 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   userAvatar,
   userName,
   accountStatus = 'Gratis',
+  hasUnsavedChanges = false,
+  unsavedCount = 0,
   onLoginClick,
   onRegisterClick,
   onOpenSettings,
@@ -149,9 +153,9 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
       {/* Right: Autosave Status, Auth State (Login/Daftar or Avatar Dropdown), Publish Action */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {/* Autosave Status Indicator */}
+        {/* Save Status Indicator */}
         <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-surface-container-low">
-          {effectiveSaveStatus === 'saving' ? (
+          {effectiveSaveStatus === 'saving' || isSaving ? (
             <>
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
@@ -161,14 +165,18 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 Menyimpan...
               </span>
             </>
+          ) : hasUnsavedChanges ? (
+            <>
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+              <span className="font-label-sm text-label-sm text-amber-800 font-semibold hidden md:inline">
+                {unsavedCount > 0 ? `${unsavedCount} Perubahan belum disimpan` : 'Perubahan belum disimpan'}
+              </span>
+            </>
           ) : (
             <>
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
-              </span>
-              <span className="font-label-sm text-label-sm text-on-surface-variant hidden md:inline">
-                Tersimpan otomatis
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span className="font-label-sm text-label-sm text-stone-600 font-medium hidden md:inline">
+                Tersimpan di database
               </span>
             </>
           )}
@@ -320,11 +328,24 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           <button
             type="button"
             onClick={onSaveDraft}
-            className="px-3 sm:px-3.5 py-2 rounded-xl bg-white hover:bg-stone-50 text-stone-800 border border-stone-300 font-bold text-xs sm:text-sm transition-all shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5"
-            title="Simpan editan saat ini sebagai Draf / Checkpoint di Supabase"
+            className={`px-3 sm:px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5 ${
+              hasUnsavedChanges && unsavedCount > 0
+                ? 'bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-stone-950 border border-amber-400 ring-2 ring-amber-400/40 shadow-md shadow-amber-500/20 animate-pulse hover:brightness-105'
+                : 'bg-white hover:bg-stone-50 text-stone-700 border border-stone-300'
+            }`}
+            title="Simpan editan saat ini ke Supabase agar tersimpan permanen"
           >
-            <span className="material-symbols-outlined text-[17px] text-amber-700">bookmark_added</span>
+            <span className={`material-symbols-outlined text-[17px] ${
+              hasUnsavedChanges && unsavedCount > 0 ? 'text-stone-950 font-bold' : 'text-amber-700'
+            }`}>
+              {hasUnsavedChanges && unsavedCount > 0 ? 'save' : 'bookmark_added'}
+            </span>
             <span className="hidden sm:inline">Simpan Perubahan</span>
+            {hasUnsavedChanges && unsavedCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full bg-stone-950 text-amber-300 text-[10px] font-black tracking-tight shadow-xs">
+                +{unsavedCount}
+              </span>
+            )}
           </button>
         )}
 

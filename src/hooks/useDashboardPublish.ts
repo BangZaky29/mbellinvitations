@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { supabase, saveUserTemplate } from '../lib/supabaseClient';
 import type { InvitationData, ThemeConfig } from '../types/invitation';
 import { extractYouTubeId } from './useAudioPlayer';
-import { THEME_TO_TEMPLATE_ID, getSafeDbTemplateId } from '../pages/dashboard/constants/themeMapping';
+import { THEME_TO_TEMPLATE_ID, TEMPLATE_ID_TO_THEME, getSafeDbTemplateId } from '../pages/dashboard/constants/themeMapping';
 import type { DashboardUser } from './useDashboardAuth';
 import { computeCoupleSlug } from '../pages/dashboard/helpers/computeCoupleSlug';
 
@@ -35,24 +35,48 @@ export function useDashboardPublish({
   setShowAuthGateModal,
   setShowConfirmPublishModal,
   setShowPricingModal,
-  handleManualSave,
+  handleManualSave: _handleManualSave,
 }: UseDashboardPublishOptions) {
-  // Handler Meminta Terbitkan: Cek Status Autentikasi User Terlebih Dahulu
-  // - Jika BELUM login/register: Langsung tampilkan pop-up AuthGateModal (Login/Register Google 1-Klik)
-  //   karena data & URL live tidak dapat terhubung dan tersimpan tanpa akun user_id yang valid.
-  // - Jika SUDAH login: Tampilkan pop-up konfirmasi simpan & terbitkan.
+  const [publishedThemeId, setPublishedThemeId] = useState<string | null>(null);
+  const [isAlreadyPublished, setIsAlreadyPublished] = useState<boolean>(false);
+  const [isTemplateChanged, setIsTemplateChanged] = useState<boolean>(false);
+
+  // 1. Handler Meminta Terbitkan: Cek Auth, Deteksi Perubahan Template & Munculkan Pop-up Konfirmasi
   const handleRequestPublish = async () => {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const currentUser = sessionData?.session?.user || (user?.id ? user : null);
 
       if (!currentUser || !currentUser.id) {
-        // User belum terautentikasi -> Langsung tampilkan Pop-up Login / Register
         setShowAuthGateModal(true);
         return;
       }
 
-      // User sudah terautentikasi -> Tampilkan Pop-up Konfirmasi Yakin Simpan / Kembali
+      const coupleSlug = computeCoupleSlug(formData.groom?.name, formData.bride?.name);
+      const targetSlug = formData.slug || coupleSlug || 'undangan';
+
+      // Cek record yang tersimpan saat ini di Supabase untuk slug ini
+      const { data: invRow } = await supabase
+        .from('invitations')
+        .select('status, template_id, content')
+        .eq('slug', targetSlug)
+        .maybeSingle();
+
+      const isLive = invRow?.status === 'published' || formData.status === 'published';
+      const existingTheme = invRow?.content?.theme_id || (invRow?.template_id ? TEMPLATE_ID_TO_THEME[invRow.template_id] : null);
+      const currentTheme = formData.theme_id || 'sunda';
+
+      if (isLive && existingTheme) {
+        setPublishedThemeId(existingTheme);
+        setIsAlreadyPublished(true);
+        setIsTemplateChanged(existingTheme !== currentTheme);
+      } else {
+        setPublishedThemeId(null);
+        setIsAlreadyPublished(false);
+        setIsTemplateChanged(false);
+      }
+
+      // Wajib SELALU munculkan Pop-up Konfirmasi sebelum publikasi
       setShowConfirmPublishModal(true);
     } catch (err) {
       console.warn('Auth check error:', err);
@@ -60,38 +84,94 @@ export function useDashboardPublish({
     }
   };
 
-  // Handler Konfirmasi Simpan & Terbitkan: Simpan seluruh perubahan ke Supabase, lalu jalankan alur penerbitan
-  const handleConfirmSaveAndPublish = async () => {
+  // 2. Handler saat user mengonfirmasi publikasi untuk template yang SAMA (Free instant publish)
+  const handleConfirmSameTemplatePublish = async () => {
     setShowConfirmPublishModal(false);
-    await handleManualSave();
-    await handlePublish();
-  };
-
-  // Handler Publish: Cek Auth -> Jika belum login munculkan AuthGateModal, jika sudah munculkan PricingPaywallModal
-  const handlePublish = async () => {
+    setIsSaving(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const currentUser = sessionData?.session?.user;
+      const coupleSlug = computeCoupleSlug(formData.groom?.name, formData.bride?.name);
+      const targetSlug = formData.slug || coupleSlug || 'undangan-baru';
+      const coupleTitle = `Pernikahan ${formData.groom?.name || 'Mempelai Pria'} & ${formData.bride?.name || 'Mempelai Wanita'}`;
+      const template_id = THEME_TO_TEMPLATE_ID[formData.theme_id || 'sunda'] || 'template6';
+      const safeDbTemplateId = getSafeDbTemplateId(formData.theme_id);
+      const resolvedMusicUrl = formData.music_url || themeConfig.music_url || '';
+      const resolvedMusicType = Boolean(extractYouTubeId(resolvedMusicUrl)) ? 'youtube' : 'mp3';
 
-      if (!currentUser) {
-        // User belum terautentikasi -> Tampilkan Popup "Login / Register Dulu"
-        setShowAuthGateModal(true);
-        return;
+      const updatedContent = {
+        ...formData,
+        status: 'published' as const,
+      };
+
+      // 1. Simpan ke invitations dengan status published
+      const invPayload = {
+        user_id: user?.id || null,
+        template_id: safeDbTemplateId,
+        slug: targetSlug,
+        content: updatedContent,
+        theme_config: themeConfig,
+        status: 'published',
+        music_url: resolvedMusicUrl,
+        music_type: resolvedMusicType,
+        updated_at: new Date().toISOString(),
+      };
+
+      await supabase
+        .from('invitations')
+        .update(invPayload)
+        .eq('slug', targetSlug);
+
+      // 2. Simpan ke user_templates
+      if (user?.id) {
+        await saveUserTemplate({
+          id: currentTemplateRecordId || undefined,
+          user_id: user.id,
+          title: coupleTitle,
+          slug: targetSlug,
+          template_id,
+          theme_id: formData.theme_id || 'sunda',
+          status: 'published' as const,
+          content: updatedContent,
+          theme_config: themeConfig,
+          music_url: resolvedMusicUrl,
+          music_type: resolvedMusicType,
+          thumbnail_url: formData.cover_image || formData.couple_photo || null,
+        });
       }
 
-      // User sudah login -> Tampilkan Modal Menu Harga / Paywall
-      setShowPricingModal(true);
-    } catch (err) {
-      console.warn('Auth check notice:', err);
-      setShowAuthGateModal(true);
+      setFormData(updatedContent);
+      setPublishedThemeId(formData.theme_id || 'sunda');
+      setIsAlreadyPublished(true);
+      setIsTemplateChanged(false);
+      setLastSaved(new Date());
+      setSaveToast({
+        show: true,
+        message: `Undangan live berhasil diperbarui! Tautan tetap aktif di /${targetSlug}`,
+        type: 'success',
+        isError: false,
+      }, 4000);
+    } catch (err: any) {
+      console.error('Publish update error:', err);
+      setSaveToast({
+        show: true,
+        message: 'Gagal memperbarui publikasi: ' + (err.message || 'Coba lagi.'),
+        isError: true,
+      }, 3500);
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  // Handler Konfirmasi Pembayaran Paket & Menerbitkan Live ke Supabase
+  // 3. Handler saat diarahkan ke menu pembayaran (karena perubahan template / publikasi pertama)
+  const handleProceedToPayment = () => {
+    setShowConfirmPublishModal(false);
+    setShowPricingModal(true);
+  };
+
+  // 4. Handler Konfirmasi Pembayaran Paket & Menerbitkan Live ke Supabase
   const handleConfirmPublish = async (planId: string) => {
     setIsSaving(true);
     try {
-      const template_id = THEME_TO_TEMPLATE_ID[formData.theme_id || 'modern'] || 'template1';
+      const template_id = THEME_TO_TEMPLATE_ID[formData.theme_id || 'sunda'] || 'template6';
       const coupleSlug = computeCoupleSlug(formData.groom?.name, formData.bride?.name);
       const targetSlug = formData.slug || coupleSlug || 'undangan-baru';
       const coupleTitle = `Pernikahan ${formData.groom?.name || 'Mempelai Pria'} & ${formData.bride?.name || 'Mempelai Wanita'}`;
@@ -105,7 +185,7 @@ export function useDashboardPublish({
         is_paid: true,
       };
 
-      // 1. Simpan dan terbitkan ke tabel public.invitations (menggunakan safeDbTemplateId untuk mencegah 409 FK violation)
+      // 1. Simpan dan terbitkan ke tabel public.invitations (menggunakan safeDbTemplateId)
       const safeDbTemplateId = getSafeDbTemplateId(formData.theme_id);
       const payload = {
         user_id: user?.id || null,
@@ -142,7 +222,7 @@ export function useDashboardPublish({
           title: coupleTitle,
           slug: targetSlug,
           template_id,
-          theme_id: formData.theme_id || 'modern',
+          theme_id: formData.theme_id || 'sunda',
           status: 'published' as const,
           content: publishedContent,
           theme_config: themeConfig,
@@ -154,14 +234,20 @@ export function useDashboardPublish({
         const res = await saveUserTemplate(userTemplatePayload);
         if (res.success && res.data) {
           setCurrentTemplateRecordId(res.data.id);
+          localStorage.setItem('mbell_active_template_id', res.data.id);
+          window.dispatchEvent(new CustomEvent('mbell_templates_updated'));
         }
       }
 
       setFormData(publishedContent);
+      setPublishedThemeId(formData.theme_id || 'sunda');
+      setIsAlreadyPublished(true);
+      setIsTemplateChanged(false);
       setLastSaved(new Date());
       setSaveToast({
         show: true,
         message: 'Undangan berhasil diterbitkan live ke publik!',
+        type: 'success',
         isError: false,
       });
     } catch (err: any) {
@@ -177,9 +263,12 @@ export function useDashboardPublish({
   };
 
   return {
+    publishedThemeId,
+    isAlreadyPublished,
+    isTemplateChanged,
     handleRequestPublish,
-    handleConfirmSaveAndPublish,
-    handlePublish,
+    handleConfirmSameTemplatePublish,
+    handleProceedToPayment,
     handleConfirmPublish,
   };
 }

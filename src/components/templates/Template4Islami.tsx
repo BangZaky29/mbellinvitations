@@ -192,8 +192,20 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                 }`}
                 id="sampul"
               >
+                {/* Ambient Islamic Backdrop using Cover Photo if present */}
+                {(data.cover_image || data.couple_photo) && (
+                  <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                    <img
+                      src={data.cover_image || data.couple_photo}
+                      alt="Cover Background"
+                      className="w-full h-full object-cover opacity-20 filter blur-[0.8px] scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#5e2832]/85 via-[#fcf8f8]/85 to-[#fcf8f8]"></div>
+                  </div>
+                )}
+
                 {/* Top Notch-Safe Header */}
-                <div className="pt-10 sm:pt-12 shrink-0 flex flex-col items-center">
+                <div className="relative z-10 pt-10 sm:pt-12 shrink-0 flex flex-col items-center">
                   <div className="px-4 py-1 rounded-full bg-secondary-container/50 text-primary font-label-md text-xs sm:text-sm tracking-widest uppercase shadow-sm mb-1.5 font-medium">
                     Walimatul Ursy
                   </div>
@@ -206,16 +218,16 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                 </div>
 
                 {/* Middle Tier: Elegant Arch Photo Silhouette */}
-                <div className="flex-1 flex flex-col items-center justify-center py-2 relative w-full max-w-[260px]">
+                <div className="relative z-10 flex-1 flex flex-col items-center justify-center py-2 w-full max-w-[260px]">
                   <div className="relative w-36 h-48 sm:w-44 sm:h-56 rounded-t-full rounded-b-2xl overflow-hidden bg-gradient-to-b from-secondary-container/40 to-surface-container-low p-2 shadow-lg shadow-primary/10 border border-secondary-container/40">
                     <div className="relative w-full h-full rounded-t-full rounded-b-xl overflow-hidden bg-surface-container-high/60 shadow-inner">
                       <img
                         className="w-full h-full object-cover"
                         alt={`${data.groom.name} & ${data.bride.name}`}
                         src={
-                          data.couple_photo ||
                           data.cover_image ||
-                          'https://lh3.googleusercontent.com/aida-public/AB6AXuBR9L8ISRUM7mLqvnPG1IUud4itXFzYibGb-gsVdr2o8XOghzC2pdxs3o4Y2QQOZT5FDELCcHb1hQXs0m_y-Ug4bTBYR_zj1eXdzZ_EYzKQ5aJLGJsYRXpgssNhtGWT6egpeoVh-gBwyzuhPmyDGWnAET59APKBr1X9uYdaxY7TpdT6rg3zm48_6s4Va2AuaAL7-qkj_lnVIPqmYeb4KJVg6qBDlsZ1TKkNe3MGDcM_G9le8id4Vh3few'
+                          data.couple_photo ||
+                          'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&q=80&w=800'
                         }
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-primary/30 via-transparent to-transparent pointer-events-none"></div>
@@ -224,7 +236,7 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                 </div>
 
                 {/* Bottom Tier: Guest Card & CTA Button Anchored Bottom */}
-                <div className="w-full max-w-[340px] pb-6 sm:pb-8 flex flex-col items-center space-y-3 shrink-0 mt-auto">
+                <div className="relative z-10 w-full max-w-[340px] pb-6 sm:pb-8 flex flex-col items-center space-y-3 shrink-0 mt-auto">
                   <div className="w-full bg-surface-container-low/90 backdrop-blur-sm rounded-2xl p-3.5 sm:p-4 shadow-sm border border-secondary-container/30">
                     <span className="block font-label-sm text-[11px] sm:text-xs text-on-surface-variant uppercase tracking-wider mb-0.5">
                       Kepada Yth. Bapak/Ibu/Saudara/i:

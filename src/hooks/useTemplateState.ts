@@ -182,6 +182,10 @@ export function useTemplateState({
     return theme.active_sections.includes(sectionName);
   };
 
+  // Dynamic Cover & Couple Photo Resolution with seamless fallback
+  const resolvedCoverImage = data.cover_image || data.couple_photo || '';
+  const resolvedCouplePhoto = data.couple_photo || data.cover_image || '';
+
   return {
     isOpen,
     setIsOpen,
@@ -219,6 +223,8 @@ export function useTemplateState({
     firstPersonRole,
     secondPersonRole,
     isSectionActive,
+    resolvedCoverImage,
+    resolvedCouplePhoto,
     anim,
   };
 }

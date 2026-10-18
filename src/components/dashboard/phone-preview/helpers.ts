@@ -71,9 +71,17 @@ export function buildSafePreviewData(data: InvitationData): {
     guest_code: data.guest_code !== undefined ? data.guest_code : defaultThematicData.guest_code,
     events: data.events && data.events.length > 0 ? data.events : defaultThematicData.events,
     gallery: data.gallery && data.gallery.length > 0 ? data.gallery : defaultThematicData.gallery,
-    love_story: data.love_story && data.love_story.length > 0 ? data.love_story : defaultThematicData.love_story,
-    banks: (data.banks && data.banks.length > 0 ? data.banks : data.bank_accounts) || defaultThematicData.banks || [],
-    bank_accounts: (data.bank_accounts && data.bank_accounts.length > 0 ? data.bank_accounts : data.banks) || defaultThematicData.bank_accounts || [],
+    banks: (data.banks && data.banks.length > 0)
+      ? data.banks
+      : (data.bank_accounts && data.bank_accounts.length > 0)
+      ? data.bank_accounts
+      : defaultThematicData.banks || [],
+    bank_accounts: (data.bank_accounts && data.bank_accounts.length > 0)
+      ? data.bank_accounts
+      : (data.banks && data.banks.length > 0)
+      ? data.banks
+      : defaultThematicData.bank_accounts || [],
+    gift_address: data.gift_address || defaultThematicData.gift_address || '',
   };
 
   return { safeData, normalizedThemeId };
@@ -83,10 +91,23 @@ export function resolveEffectiveTheme(
   theme: ThemeConfig | undefined,
   normalizedThemeId: string
 ): ThemeConfig {
-  return (
-    theme ||
+  const defaultTheme =
     MOCK_THEME_CONFIG_MAP[normalizedThemeId] ||
     DEFAULT_THEMES[normalizedThemeId] ||
-    MOCK_MODERN_THEME
-  );
+    MOCK_MODERN_THEME;
+
+  if (!theme) return defaultTheme;
+
+  return {
+    ...defaultTheme,
+    ...theme,
+    active_sections:
+      theme.active_sections && theme.active_sections.length > 0
+        ? theme.active_sections
+        : defaultTheme.active_sections,
+    show_gift: theme.show_gift !== undefined ? theme.show_gift : defaultTheme.show_gift,
+    show_gallery: theme.show_gallery !== undefined ? theme.show_gallery : defaultTheme.show_gallery,
+    show_wishes: theme.show_wishes !== undefined ? theme.show_wishes : defaultTheme.show_wishes,
+    show_rsvp: theme.show_rsvp !== undefined ? theme.show_rsvp : defaultTheme.show_rsvp,
+  };
 }

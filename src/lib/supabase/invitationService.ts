@@ -45,11 +45,17 @@ export async function fetchInvitationBySlug(slug: string): Promise<SupabaseInvit
         ...(animConfig ? { animation_config: animConfig } : {}),
       };
 
+      const effectiveTheme = utData.theme_id || utData.content?.theme_id || invData?.content?.theme_id || '';
+      const resolvedTplId =
+        (effectiveTheme === 'sunda' || utData.template_id === 'template6' || utData.template_id === 'sunda')
+          ? 'template6'
+          : (utData.template_id || (effectiveTheme === 'jawa' ? 'template3' : effectiveTheme === 'rustic' ? 'template2' : effectiveTheme === 'islami' ? 'template4' : effectiveTheme === 'luxury' ? 'template5' : 'template1'));
+
       return {
         id: primaryId,
         alternate_id: altId,
         user_id: utData.user_id,
-        template_id: utData.template_id || 'template1',
+        template_id: resolvedTplId,
         slug: utData.slug,
         custom_domain: null,
         status: (utData.status as any) || 'published',
@@ -106,8 +112,15 @@ export async function fetchInvitationBySlug(slug: string): Promise<SupabaseInvit
     invData.theme_config.animation_config = animConfig;
   }
 
+  const effectiveTheme = invData.content?.theme_id || (invData as any).theme_id || '';
+  const resolvedTemplateId =
+    (effectiveTheme === 'sunda' || invData.template_id === 'template6' || invData.template_id === 'sunda')
+      ? 'template6'
+      : (invData.template_id || (effectiveTheme === 'jawa' ? 'template3' : effectiveTheme === 'rustic' ? 'template2' : effectiveTheme === 'islami' ? 'template4' : effectiveTheme === 'luxury' ? 'template5' : 'template1'));
+
   return {
     ...invData,
+    template_id: resolvedTemplateId,
     animation_config: animConfig,
   } as SupabaseInvitationRecord;
 }

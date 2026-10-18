@@ -5,6 +5,7 @@ import { FloatingDock } from '../common/FloatingDock';
 import { SleekToast } from '../common/SleekToast';
 import { VenueMapEmbed } from '../common/VenueMapEmbed';
 import { GalleryLightbox } from '../common/GalleryLightbox';
+import { MOCK_RUSTIC_DATA } from '../../data/mock/rusticData';
 
 export const Template2Rustic: React.FC<InvitationProps> = ({
   data,
@@ -92,8 +93,20 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                   isOpening ? 'animate-cover-exit pointer-events-none' : ''
                 }`}
               >
+                {/* Ambient Rustic Backdrop using Cover Photo if present */}
+                {(data.cover_image || data.couple_photo) && (
+                  <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                    <img
+                      src={data.cover_image || data.couple_photo}
+                      alt="Cover Background"
+                      className="w-full h-full object-cover opacity-25 filter blur-[0.8px] scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#2c4034]/75 via-[#fbf9f5]/80 to-[#fbf9f5]"></div>
+                  </div>
+                )}
+
                 {/* Atmospheric Botanical Vignette Background */}
-                <div className="absolute inset-0 pointer-events-none opacity-20 flex items-center justify-center">
+                <div className="absolute inset-0 pointer-events-none opacity-20 flex items-center justify-center z-1">
                   <svg className="w-full h-full text-primary" fill="none" viewBox="0 0 400 400">
                     <path
                       d="M200 40 C140 70 80 140 80 220 C80 290 130 350 200 370 C270 350 320 290 320 220 C320 140 260 70 200 40 Z"
@@ -106,7 +119,7 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                 </div>
 
                 {/* Top Notch-Safe Header */}
-                <div className="pt-10 sm:pt-12 shrink-0 flex flex-col items-center">
+                <div className="relative z-10 pt-10 sm:pt-12 shrink-0 flex flex-col items-center">
                   <span className="font-label-md text-xs sm:text-sm text-secondary tracking-widest uppercase font-semibold mb-1">
                     The Wedding Invitation Of
                   </span>
@@ -116,10 +129,10 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                 </div>
 
                 {/* Middle Tier: Wreath & Circle Couple Portrait */}
-                <div className="flex-1 flex flex-col justify-center items-center py-2 relative w-full max-w-[280px]">
+                <div className="relative z-10 flex-1 flex flex-col justify-center items-center py-2 w-full max-w-[280px]">
                   <div className="relative w-36 h-36 sm:w-44 sm:h-44 flex items-center justify-center">
                     <svg
-                      className="absolute inset-0 w-full h-full text-secondary animate-spin"
+                      className="absolute inset-0 w-full h-full text-[#855233]/70 animate-spin"
                       fill="none"
                       style={{ animationDuration: '40s' }}
                       viewBox="0 0 200 200"
@@ -130,14 +143,14 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                         strokeDasharray="6 6"
                         strokeWidth="1.5"
                       ></path>
-                      <circle cx="100" cy="14" fill="currentColor" r="3"></circle>
-                      <circle cx="186" cy="100" fill="currentColor" r="3"></circle>
-                      <circle cx="100" cy="186" fill="currentColor" r="3"></circle>
-                      <circle cx="14" cy="100" fill="currentColor" r="3"></circle>
+                      <circle cx="100" cy="14" fill="currentColor" r="3.5"></circle>
+                      <circle cx="186" cy="100" fill="currentColor" r="3.5"></circle>
+                      <circle cx="100" cy="186" fill="currentColor" r="3.5"></circle>
+                      <circle cx="14" cy="100" fill="currentColor" r="3.5"></circle>
                     </svg>
-                    <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-full overflow-hidden p-1 shadow-md bg-surface-bright border border-secondary/20">
+                    <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-full overflow-hidden p-1 shadow-xl bg-white border-2 border-[#855233]/30">
                       <img
-                        src={data.couple_photo || data.cover_image}
+                        src={data.couple_photo || data.cover_image || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800'}
                         alt={`${firstPerson.name} & ${secondPerson.name}`}
                         className="w-full h-full object-cover rounded-full"
                       />
@@ -145,22 +158,22 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                   </div>
                 </div>
 
-                {/* Bottom Tier: Frosted Guest Card & Sage Green CTA Button */}
+                {/* Bottom Tier: Frosted Guest Card & High-Contrast Pine Green CTA Button */}
                 <div className="w-full max-w-[340px] pb-6 sm:pb-8 flex flex-col items-center space-y-3 shrink-0 mt-auto">
-                  <div className="w-full rounded-2xl bg-surface-bright/85 backdrop-blur-md p-3.5 sm:p-4 shadow-sm border border-secondary/20 flex flex-col items-center">
-                    <span className="font-body-sm text-[11px] sm:text-xs text-on-surface-variant mb-0.5">
+                  <div className="w-full rounded-2xl bg-white/95 backdrop-blur-md p-4 sm:p-5 shadow-lg border border-[#2C4034]/15 flex flex-col items-center">
+                    <span className="text-[11px] sm:text-xs text-[#5C6F61] uppercase tracking-wider font-semibold mb-1">
                       Kepada Yth. Bapak/Ibu/Saudara/i:
                     </span>
-                    <div className="font-headline-sm text-lg sm:text-xl text-primary my-0.5 font-bold line-clamp-1">
-                      {data.guest_name || 'Tamu Undangan'}
+                    <div className="font-serif text-xl sm:text-2xl text-[#1B2A20] font-bold line-clamp-1 my-0.5">
+                      {data.guest_name || 'Tamu Undangan Kinasih'}
                     </div>
                     {(Boolean(data.guest_code) || isPreview) && (
-                      <div className="mt-1 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-md text-xs font-mono">
-                        <span className="material-symbols-outlined text-[14px]">qr_code</span>
-                        <span>CHECK-IN PASS: {data.guest_code || 'K8X9P'}</span>
+                      <div className="mt-1.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EFE8DE] text-[#855233] text-xs font-mono font-semibold border border-[#855233]/25 shadow-xs">
+                        <span className="material-symbols-outlined text-[14px]">qr_code_2</span>
+                        <span>CHECK-IN PASS: {data.guest_code || 'RST-2025'}</span>
                       </div>
                     )}
-                    <p className="font-body-sm text-[10px] sm:text-xs text-outline text-center mt-1">
+                    <p className="text-[10px] sm:text-[11px] text-[#78887D] text-center mt-2 italic">
                       Mohon maaf bila ada kesalahan penulisan nama/gelar
                     </p>
                   </div>
@@ -168,9 +181,9 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                   <button
                     type="button"
                     onClick={handleOpenInvitation}
-                    className="w-full h-[48px] sm:h-[52px] rounded-full bg-primary-container text-on-primary font-label-lg text-sm sm:text-base flex items-center justify-center gap-space-sm shadow-md hover:bg-primary transition-all active:scale-95 group cursor-pointer"
+                    className="w-full h-[50px] sm:h-[54px] rounded-full bg-[#2C4034] text-white font-semibold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-[#2C4034]/25 hover:bg-[#1E2D24] active:scale-95 transition-all cursor-pointer ring-2 ring-[#2C4034]/20 group"
                   >
-                    <span className="material-symbols-outlined text-[20px] text-secondary-fixed group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-[20px] text-amber-200 group-hover:scale-110 transition-transform">
                       mail
                     </span>
                     <span>Buka Undangan</span>
@@ -191,66 +204,66 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                 {isSectionActive('hero') && (
                   <section id="hero-section" className="flex flex-col items-center pt-space-xl pb-space-lg text-center">
                 {/* Wedding Date Badge */}
-                <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#855233] text-white font-label-md text-xs uppercase tracking-wider mb-space-md shadow-sm">
+                <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#855233] text-white font-label-md text-xs uppercase tracking-wider mb-space-md shadow-sm">
                   <span className="material-symbols-outlined text-[16px]">calendar_today</span>
                   <span>{data.wedding_date_display || (data.wedding_date_iso ? new Date(data.wedding_date_iso).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'Sabtu, 24 Oktober 2026')}</span>
                 </div>
 
                 {/* Arch Framed Couple Photo */}
-                <div className="relative w-full max-w-xs h-96 rounded-t-full rounded-b-2xl overflow-hidden shadow-lg mb-space-md bg-[#eae8e4] border-4 border-white/80 reveal-scale">
+                <div className="relative w-full max-w-xs h-96 rounded-t-full rounded-b-2xl overflow-hidden shadow-xl mb-space-md bg-[#eae8e4] border-4 border-white reveal-scale">
                   <img
-                    src={data.couple_photo || data.cover_image}
+                    src={data.couple_photo || data.cover_image || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800'}
                     alt={`${firstPerson.name} & ${secondPerson.name}`}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary/60 via-transparent to-transparent flex items-end justify-center p-space-md">
-                    <span className="font-script-accent text-script-accent text-surface-bright italic">
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#2C4034]/70 via-transparent to-transparent flex items-end justify-center p-space-md">
+                    <span className="font-serif text-lg text-white italic drop-shadow-sm">
                       {data.hashtag || '#RusticWeddingForever'}
                     </span>
                   </div>
                 </div>
 
                 {/* Romantic Quote Card */}
-                <div className="bg-surface-container-low rounded-lg p-space-lg shadow-sm max-w-sm mb-space-lg reveal delay-100">
-                  <p className="font-headline-sm text-headline-sm text-primary italic font-normal mb-2 leading-relaxed">
+                <div className="bg-white/95 border border-[#2C4034]/15 rounded-2xl p-5 shadow-sm max-w-sm mb-space-lg reveal delay-100">
+                  <p className="font-serif text-base sm:text-lg text-[#1B2A20] italic font-normal mb-2 leading-relaxed">
                     &ldquo;{data.quote}&rdquo;
                   </p>
-                  <span className="font-label-md text-label-md text-secondary font-semibold uppercase tracking-wider">
+                  <span className="text-xs uppercase tracking-wider font-semibold text-[#855233]">
                     — {data.quote_source}
                   </span>
                 </div>
 
                 {/* Countdown Timer 4 Cards */}
-                <div className="w-full grid grid-cols-4 gap-2 mb-space-lg px-2 reveal delay-200" id="countdownGrid">
-                  <div className="bg-primary-container text-on-primary rounded-xl p-2.5 flex flex-col items-center shadow-sm">
-                    <span className="font-headline-md text-headline-md font-semibold text-surface-bright">
+                <div className="w-full grid grid-cols-4 gap-2 sm:gap-2.5 mb-space-lg px-2 reveal delay-200" id="countdownGrid">
+                  <div className="bg-[#2C4034] text-white rounded-2xl p-3 flex flex-col items-center shadow-md border border-[#2C4034]/20">
+                    <span className="text-2xl sm:text-3xl font-bold font-serif text-[#F4E3CA]">
                       {days}
                     </span>
-                    <span className="font-label-md text-label-md text-secondary-fixed uppercase tracking-wider mt-0.5">
+                    <span className="text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-stone-200 mt-1">
                       Hari
                     </span>
                   </div>
-                  <div className="bg-primary-container text-on-primary rounded-xl p-2.5 flex flex-col items-center shadow-sm">
-                    <span className="font-headline-md text-headline-md font-semibold text-surface-bright">
+                  <div className="bg-[#2C4034] text-white rounded-2xl p-3 flex flex-col items-center shadow-md border border-[#2C4034]/20">
+                    <span className="text-2xl sm:text-3xl font-bold font-serif text-[#F4E3CA]">
                       {String(hours).padStart(2, '0')}
                     </span>
-                    <span className="font-label-md text-label-md text-secondary-fixed uppercase tracking-wider mt-0.5">
+                    <span className="text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-stone-200 mt-1">
                       Jam
                     </span>
                   </div>
-                  <div className="bg-primary-container text-on-primary rounded-xl p-2.5 flex flex-col items-center shadow-sm">
-                    <span className="font-headline-md text-headline-md font-semibold text-surface-bright">
+                  <div className="bg-[#2C4034] text-white rounded-2xl p-3 flex flex-col items-center shadow-md border border-[#2C4034]/20">
+                    <span className="text-2xl sm:text-3xl font-bold font-serif text-[#F4E3CA]">
                       {String(minutes).padStart(2, '0')}
                     </span>
-                    <span className="font-label-md text-label-md text-secondary-fixed uppercase tracking-wider mt-0.5">
+                    <span className="text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-stone-200 mt-1">
                       Menit
                     </span>
                   </div>
-                  <div className="bg-primary-container text-on-primary rounded-xl p-2.5 flex flex-col items-center shadow-sm">
-                    <span className="font-headline-md text-headline-md font-semibold text-surface-bright">
+                  <div className="bg-[#2C4034] text-white rounded-2xl p-3 flex flex-col items-center shadow-md border border-[#2C4034]/20">
+                    <span className="text-2xl sm:text-3xl font-bold font-serif text-[#F4E3CA]">
                       {String(seconds).padStart(2, '0')}
                     </span>
-                    <span className="font-label-md text-label-md text-secondary-fixed uppercase tracking-wider mt-0.5">
+                    <span className="text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-stone-200 mt-1">
                       Detik
                     </span>
                   </div>
@@ -306,28 +319,28 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                 </div>
 
                 {/* Person 1 Card */}
-                <div className="w-full rounded-xl bg-surface-bright p-space-lg shadow-sm flex flex-col items-center text-center relative overflow-hidden mb-space-md reveal-left delay-100">
-                  <div className="w-32 h-32 rounded-full overflow-hidden p-1 shadow-inner bg-surface-container mb-space-md">
+                <div className="w-full rounded-2xl bg-white p-6 shadow-md border border-[#2C4034]/15 flex flex-col items-center text-center relative overflow-hidden mb-space-md reveal-left delay-100">
+                  <div className="w-32 h-32 rounded-full overflow-hidden p-1 shadow-md bg-white border-2 border-[#855233]/30 mb-4">
                     <img
                       src={firstPerson.photo_url || firstPerson.photo || data.couple_photo || data.cover_image}
                       alt={firstPerson.full_name}
                       className="w-full h-full object-cover rounded-full"
                     />
                   </div>
-                  <h4 className="font-headline-md text-headline-md text-primary font-medium">
+                  <h4 className="font-serif text-2xl text-[#2C4034] font-bold">
                     {firstPerson.full_name}
                   </h4>
-                  <p className="font-body-md text-body-md text-on-surface-variant mt-1 mb-space-md max-w-xs">
+                  <p className="text-xs text-[#4D5E53] mt-2 mb-4 max-w-xs leading-relaxed">
                     {firstPerson.child_order} <br />
-                    <span className="font-semibold text-primary">{firstPerson.parent_father}</span> &amp;{' '}
-                    <span className="font-semibold text-primary">{firstPerson.parent_mother}</span>
+                    <span className="font-semibold text-[#2C4034]">{firstPerson.parent_father}</span> &amp;{' '}
+                    <span className="font-semibold text-[#2C4034]">{firstPerson.parent_mother}</span>
                   </p>
                   {firstPerson.instagram && (
                     <a
                       href={`https://instagram.com/${firstPerson.instagram.replace('@', '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container text-primary font-label-md text-label-md hover:bg-secondary hover:text-on-secondary transition-all"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#F2EDE4] text-[#2C4034] text-xs font-semibold hover:bg-[#2C4034] hover:text-white transition-all shadow-2xs"
                     >
                       <span className="material-symbols-outlined text-[16px]">photo_camera</span>
                       <span>{firstPerson.instagram}</span>
@@ -336,35 +349,35 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                 </div>
 
                 {/* Connecting Floral Knot */}
-                <div className="my-1 text-secondary flex items-center justify-center gap-2 reveal-scale delay-200">
-                  <div className="w-12 h-px bg-secondary-fixed"></div>
+                <div className="my-1 text-[#855233] flex items-center justify-center gap-2 reveal-scale delay-200">
+                  <div className="w-12 h-px bg-[#855233]/30"></div>
                   <span className="material-symbols-outlined text-[26px]">all_inclusive</span>
-                  <div className="w-12 h-px bg-secondary-fixed"></div>
+                  <div className="w-12 h-px bg-[#855233]/30"></div>
                 </div>
 
                 {/* Person 2 Card */}
-                <div className="w-full rounded-xl bg-surface-bright p-space-lg shadow-sm flex flex-col items-center text-center relative overflow-hidden mt-space-md reveal-right delay-300">
-                  <div className="w-32 h-32 rounded-full overflow-hidden p-1 shadow-inner bg-surface-container mb-space-md">
+                <div className="w-full rounded-2xl bg-white p-6 shadow-md border border-[#2C4034]/15 flex flex-col items-center text-center relative overflow-hidden mt-space-md reveal-right delay-300">
+                  <div className="w-32 h-32 rounded-full overflow-hidden p-1 shadow-md bg-white border-2 border-[#855233]/30 mb-4">
                     <img
                       src={secondPerson.photo_url || secondPerson.photo || data.couple_photo || data.cover_image}
                       alt={secondPerson.full_name}
                       className="w-full h-full object-cover rounded-full"
                     />
                   </div>
-                  <h4 className="font-headline-md text-headline-md text-primary font-medium">
+                  <h4 className="font-serif text-2xl text-[#2C4034] font-bold">
                     {secondPerson.full_name}
                   </h4>
-                  <p className="font-body-md text-body-md text-on-surface-variant mt-1 mb-space-md max-w-xs">
+                  <p className="text-xs text-[#4D5E53] mt-2 mb-4 max-w-xs leading-relaxed">
                     {secondPerson.child_order} <br />
-                    <span className="font-semibold text-primary">{secondPerson.parent_father}</span> &amp;{' '}
-                    <span className="font-semibold text-primary">{secondPerson.parent_mother}</span>
+                    <span className="font-semibold text-[#2C4034]">{secondPerson.parent_father}</span> &amp;{' '}
+                    <span className="font-semibold text-[#2C4034]">{secondPerson.parent_mother}</span>
                   </p>
                   {secondPerson.instagram && (
                     <a
                       href={`https://instagram.com/${secondPerson.instagram.replace('@', '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container text-primary font-label-md text-label-md hover:bg-secondary hover:text-on-secondary transition-all"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#F2EDE4] text-[#2C4034] text-xs font-semibold hover:bg-[#2C4034] hover:text-white transition-all shadow-2xs"
                     >
                       <span className="material-symbols-outlined text-[16px]">photo_camera</span>
                       <span>{secondPerson.instagram}</span>
@@ -771,29 +784,29 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
               )}
 
               {/* Part B: Digital Envelope (Tanda Kasih) */}
-              {theme.show_gift !== false && isSectionActive('gift') && (
-                <div className="bg-surface-bright rounded-xl p-space-lg shadow-sm">
-                  <div className="text-center mb-space-md">
-                    <span className="font-label-md text-label-md text-secondary uppercase tracking-widest font-semibold">
+              {(theme.show_gift !== false && (isSectionActive('gift') || isPreview)) && (
+                <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-md border border-[#2C4034]/15">
+                  <div className="text-center mb-5">
+                    <span className="font-label-md text-xs text-[#855233] uppercase tracking-widest font-semibold">
                       Wedding Gift
                     </span>
-                    <h3 className="font-headline-md text-headline-md text-primary mt-1">
+                    <h3 className="font-serif text-2xl text-[#2C4034] font-bold mt-1">
                       Tanda Kasih
                     </h3>
-                    <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                    <p className="text-xs text-[#5C6F61] max-w-xs mx-auto mt-1 leading-relaxed">
                       Doa restu Anda merupakan karunia terindah bagi kami. Namun jika ingin memberikan tanda kasih secara digital, Anda dapat melalui:
                     </p>
                   </div>
 
                   {/* Tabs Switch */}
-                  <div className="flex rounded-full bg-surface-container p-1 mb-space-md">
+                  <div className="flex rounded-full bg-[#F2EDE4] p-1 mb-5">
                     <button
                       type="button"
                       onClick={() => setActiveGiftTab('transfer')}
-                      className={`flex-1 py-2 rounded-full font-label-md text-label-md transition-all cursor-pointer ${
+                      className={`flex-1 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                         activeGiftTab === 'transfer'
-                          ? 'bg-primary text-on-primary font-semibold'
-                          : 'text-on-surface-variant'
+                          ? 'bg-[#2C4034] text-white shadow-xs'
+                          : 'text-[#5C6F61] hover:text-[#2C4034]'
                       }`}
                     >
                       Transfer Bank
@@ -801,10 +814,10 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                     <button
                       type="button"
                       onClick={() => setActiveGiftTab('kado')}
-                      className={`flex-1 py-2 rounded-full font-label-md text-label-md transition-all cursor-pointer ${
+                      className={`flex-1 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                         activeGiftTab === 'kado'
-                          ? 'bg-primary text-on-primary font-semibold'
-                          : 'text-on-surface-variant'
+                          ? 'bg-[#2C4034] text-white shadow-xs'
+                          : 'text-[#5C6F61] hover:text-[#2C4034]'
                       }`}
                     >
                       Kirim Kado
@@ -813,108 +826,103 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
 
                   {/* Tab 1: Bank Transfer Content */}
                   {activeGiftTab === 'transfer' && (
-                    <div className="flex flex-col gap-3">
-                      {(data.banks && data.banks.length > 0 ? data.banks : (data.bank_accounts || [])).map((bank, index) => {
-                        const isPrimary = index % 2 === 0;
-                        return (
-                          <div
-                            key={index}
-                            className={`rounded-lg p-space-md shadow-sm relative overflow-hidden ${
-                              isPrimary
-                                ? 'bg-primary-container text-on-primary'
-                                : 'bg-surface-container text-primary'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <span
-                                className={`font-headline-sm text-headline-sm font-semibold tracking-wider ${
-                                  isPrimary ? 'text-surface-bright' : 'text-primary'
-                                }`}
-                              >
-                                {bank.bank_name}
-                              </span>
-                              <span
-                                className={`material-symbols-outlined text-[24px] ${
-                                  isPrimary ? 'text-secondary-fixed' : 'text-secondary'
-                                }`}
-                              >
-                                {isPrimary ? 'credit_card' : 'account_balance'}
-                              </span>
-                            </div>
-                            <div
-                              className={`font-headline-md text-headline-md font-semibold tracking-widest my-1 break-words [overflow-wrap:anywhere] ${
-                                isPrimary ? 'text-surface-bright' : 'text-primary'
-                              }`}
-                            >
-                              {bank.account_number}
-                            </div>
-                            <div
-                              className={`font-body-sm text-body-sm mb-3 break-words [overflow-wrap:anywhere] ${
-                                isPrimary ? 'text-on-primary-container' : 'text-on-surface-variant'
-                              }`}
-                            >
-                              a.n. {bank.account_holder}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleCopy(
-                                  bank.account_number_raw || bank.account_number,
-                                  `No. Rekening ${bank.bank_name} ${bank.account_holder} disalin`
-                                )
-                              }
-                              className={`h-9 px-4 rounded-full font-label-md text-label-md inline-flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer ${
-                                isPrimary
-                                  ? 'bg-surface-bright text-primary'
-                                  : 'bg-primary text-on-primary'
-                              }`}
-                            >
-                              <span className="material-symbols-outlined text-[16px]">
-                                content_copy
-                              </span>
-                              <span>Salin No. Rekening</span>
-                            </button>
-                          </div>
-                        );
-                      })}
+                    <div className="flex flex-col gap-4">
+                      {(() => {
+                        const effectiveBanks = (data.banks && data.banks.length > 0)
+                          ? data.banks
+                          : (data.bank_accounts && data.bank_accounts.length > 0)
+                          ? data.bank_accounts
+                          : (isPreview ? (MOCK_RUSTIC_DATA.banks || []) : []);
 
+                        if (!effectiveBanks || effectiveBanks.length === 0) return null;
+
+                        return effectiveBanks.map((bank: any, index: number) => {
+                          const isPrimary = index % 2 === 0;
+                          return (
+                            <div
+                              key={bank.account_number || index}
+                              className={`rounded-2xl p-5 shadow-lg relative overflow-hidden text-left ${
+                                isPrimary
+                                  ? 'bg-gradient-to-br from-[#2C4034] via-[#24352B] to-[#18241D] text-white border border-[#2C4034]/30'
+                                  : 'bg-gradient-to-br from-[#855233] via-[#744528] to-[#553018] text-white border border-[#855233]/30'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="font-serif text-lg font-bold tracking-wider text-white">
+                                  {bank.bank_name}
+                                </span>
+                                <span className={`material-symbols-outlined text-[24px] ${isPrimary ? 'text-amber-300' : 'text-amber-200'}`}>
+                                  credit_card
+                                </span>
+                              </div>
+                              <div className={`font-mono text-xl font-bold tracking-widest my-1 break-words [overflow-wrap:anywhere] ${
+                                isPrimary ? 'text-[#F4E3CA]' : 'text-[#FBEEDC]'
+                              }`}>
+                                {bank.account_number}
+                              </div>
+                              <div className="text-xs uppercase tracking-wider text-white/80 mb-3 break-words [overflow-wrap:anywhere]">
+                                a.n. {bank.account_holder}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleCopy(
+                                    bank.account_number_raw || bank.account_number,
+                                    `No. Rekening ${bank.bank_name} ${bank.account_holder} disalin`
+                                  )
+                                }
+                                className={`w-full py-2.5 rounded-full font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer bg-white ${
+                                  isPrimary ? 'text-[#2C4034] hover:bg-stone-100' : 'text-[#855233] hover:bg-stone-100'
+                                }`}
+                              >
+                                <span className="material-symbols-outlined text-[16px]">
+                                  content_copy
+                                </span>
+                                <span>Salin No. Rekening</span>
+                              </button>
+                            </div>
+                          );
+                        });
+                      })()}
                     </div>
                   )}
 
                   {/* Tab 2: Physical Gift Content */}
                   {activeGiftTab === 'kado' && (
                     <div className="flex flex-col gap-3">
-                      <div className="bg-surface-container rounded-lg p-space-md">
-                        <div className="flex items-center gap-2 text-primary font-headline-sm text-headline-sm mb-1">
-                          <span className="material-symbols-outlined text-secondary">
-                            home_pin
-                          </span>
-                          <span>Alamat Pengiriman Kado</span>
-                        </div>
-                        <div className="font-body-md text-body-md font-semibold text-primary break-words [overflow-wrap:anywhere]">
-                          {firstPerson.name} &amp; {secondPerson.name} Sanctuary Residence
-                        </div>
-                        <p className="font-body-sm text-body-sm text-on-surface-variant my-1 break-words [overflow-wrap:anywhere]">
-                          {data.gift_address ||
-                            'Villa Pine Sanctuary Blok B7, Jl. Maribaya No. 120, Kayuambon, Kec. Lembang, Kabupaten Bandung Barat, Jawa Barat 40391'}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleCopy(
-                              data.gift_address ||
-                                'Villa Pine Sanctuary Blok B7, Jl. Maribaya No. 120, Kayuambon, Lembang, Bandung Barat 40391',
-                              'Alamat pengiriman berhasil disalin'
-                            )
-                          }
-                          className="h-9 px-4 mt-2 rounded-full bg-primary text-on-primary font-label-md text-label-md inline-flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
-                        >
-                          <span className="material-symbols-outlined text-[16px]">
-                            content_copy
-                          </span>
-                          <span>Salin Alamat Lengkap</span>
-                        </button>
-                      </div>
+                      {(() => {
+                        const effectiveAddress = data.gift_address || (isPreview ? (MOCK_RUSTIC_DATA.gift_address || '') : '');
+                        return (
+                          <div className="bg-[#FAF7F2] rounded-2xl p-5 border border-[#855233]/20 shadow-sm flex flex-col items-center text-center">
+                            <div className="w-10 h-10 rounded-full bg-[#EFE8DE] text-[#855233] flex items-center justify-center mb-2">
+                              <span className="material-symbols-outlined text-[20px]">
+                                home_pin
+                              </span>
+                            </div>
+                            <div className="font-serif text-base font-bold text-[#2C4034] mb-1">
+                              Alamat Pengiriman Kado
+                            </div>
+                            <p className="text-xs text-[#5C6F61] my-1 leading-relaxed break-words [overflow-wrap:anywhere] max-w-xs">
+                              {effectiveAddress || 'Villa Pine Sanctuary Blok B7, Jl. Maribaya No. 120, Kayuambon, Kec. Lembang, Kabupaten Bandung Barat, Jawa Barat 40391'}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleCopy(
+                                  effectiveAddress || 'Villa Pine Sanctuary Blok B7, Jl. Maribaya No. 120, Kayuambon, Lembang, Bandung Barat 40391',
+                                  'Alamat pengiriman berhasil disalin'
+                                )
+                              }
+                              className="px-5 py-2.5 mt-2 rounded-full bg-[#855233] hover:bg-[#6F4125] text-white text-xs font-semibold inline-flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">
+                                content_copy
+                              </span>
+                              <span>Salin Alamat Lengkap</span>
+                            </button>
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>

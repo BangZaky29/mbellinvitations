@@ -17,7 +17,7 @@ import {
   MOCK_THEME_WISHES_MAP,
 } from '../data/mockInvitation';
 import { DEFAULT_ANIMATION_CONFIG } from '../types/invitation';
-import { TEMPLATE_ID_TO_THEME } from '../pages/dashboard/constants/themeMapping';
+import { TEMPLATE_ID_TO_THEME, THEME_TO_TEMPLATE_ID } from '../pages/dashboard/constants/themeMapping';
 import { applyAnimationConfigStyles } from '../utils/scrollAnimationEngine';
 
 export interface UseInvitationRealtimeOptions {
@@ -79,7 +79,12 @@ export function useInvitationRealtime({
 
         if (inv && isMounted) {
           setInvitationRecord(inv);
-          setTemplateId(inv.template_id || 'template1');
+          const effectiveTheme = (inv.content?.theme_id || (inv as any).theme_id || '') as string;
+          const resolvedTemplateId =
+            (effectiveTheme === 'sunda' || inv.template_id === 'template6' || inv.template_id === 'sunda')
+              ? 'template6'
+              : inv.template_id || THEME_TO_TEMPLATE_ID[effectiveTheme] || 'template1';
+          setTemplateId(resolvedTemplateId);
 
           // Merge content with guest name & code
           const mergedData: InvitationData = {
@@ -205,9 +210,12 @@ export function useInvitationRealtime({
           const updated = payload.new as SupabaseInvitationRecord;
           if (updated) {
             setInvitationRecord(updated);
-            if (updated.template_id) {
-              setTemplateId(updated.template_id);
-            }
+            const effectiveTheme = (updated.content?.theme_id || (updated as any).theme_id || '') as string;
+            const resolvedTemplateId =
+              (effectiveTheme === 'sunda' || updated.template_id === 'template6' || updated.template_id === 'sunda')
+                ? 'template6'
+                : updated.template_id || THEME_TO_TEMPLATE_ID[effectiveTheme] || 'template1';
+            setTemplateId(resolvedTemplateId);
             if (updated.content && typeof updated.content === 'object') {
               setInvitationData((prev) => ({
                 ...prev,

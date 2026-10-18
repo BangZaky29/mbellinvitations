@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useInvitationRealtime } from '../hooks/useInvitationRealtime';
 import { Template1Modern } from '../components/templates/Template1Modern';
@@ -7,7 +7,6 @@ import { Template3Jawa } from '../components/templates/Template3Jawa';
 import { Template4Islami } from '../components/templates/Template4Islami';
 import { Template5Luxury } from '../components/templates/Template5Luxury';
 import { TemplateSundaSiger } from '../components/templates/TemplateSundaSiger';
-import { SleekToast } from '../components/common/SleekToast';
 
 export const PublicInvitationPage: React.FC = () => {
   const { slug = 'raditya-jessica' } = useParams<{ slug: string }>();
@@ -31,9 +30,6 @@ export const PublicInvitationPage: React.FC = () => {
     codeParam,
   });
 
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [toastType, setToastType] = useState<'success' | 'info' | 'error' | 'copy'>('success');
-
   // Dynamic Browser Tab Title
   useEffect(() => {
     const groomName = invitationData.groom?.name || '';
@@ -47,26 +43,12 @@ export const PublicInvitationPage: React.FC = () => {
     }
   }, [invitationData.groom?.name, invitationData.bride?.name, invitationData.is_bride_first]);
 
-  const showToast = (msg: string, type: 'success' | 'info' | 'error' | 'copy' = 'success') => {
-    setToastMessage(msg);
-    setToastType(type);
-    setTimeout(() => setToastMessage(null), 2400);
-  };
-
   const onSubmitWish = async (name: string, message: string) => {
-    const res = await handleSendWish(name, message);
-    if (res.success) {
-      showToast('Ucapan berhasil dikirim', 'success');
-    }
+    return await handleSendWish(name, message);
   };
 
   const onSubmitRsvp = async (name: string, status: string, pax: number) => {
-    const res = await handleSendRsvp(name, status, pax);
-    if (res.success) {
-      showToast('Konfirmasi kehadiran terkirim', 'success');
-    } else {
-      showToast('Gagal menyimpan konfirmasi', 'error');
-    }
+    return await handleSendRsvp(name, status, pax);
   };
 
   if (loading) {
@@ -82,6 +64,15 @@ export const PublicInvitationPage: React.FC = () => {
 
   const isPublished = invitationData.status === 'published';
   const showDemoPill = slug === 'demo' && !isPublished;
+
+  // Resolusi template secara defensif agar tidak salah template jika template_id ambigu
+  const activeTheme = invitationData?.theme_id;
+  const isSunda = templateId === 'template6' || templateId === 'sunda' || activeTheme === 'sunda';
+  const isJawa = !isSunda && (templateId === 'template3' || templateId === 'jawa' || activeTheme === 'jawa');
+  const isRustic = !isSunda && !isJawa && (templateId === 'template2' || templateId === 'rustic' || activeTheme === 'rustic');
+  const isIslami = !isSunda && !isJawa && !isRustic && (templateId === 'template4' || templateId === 'islami' || activeTheme === 'islami');
+  const isLuxury = !isSunda && !isJawa && !isRustic && !isIslami && (templateId === 'template5' || templateId === 'luxury' || activeTheme === 'luxury');
+  const isModern = !isSunda && !isJawa && !isRustic && !isIslami && !isLuxury;
 
   return (
     <div id="invitation-root" data-public-invitation="true" className="relative w-full min-h-screen no-scrollbar">
@@ -104,16 +95,8 @@ export const PublicInvitationPage: React.FC = () => {
         </div>
       )}
 
-      {/* Sleek Universal Toast Notification */}
-      <SleekToast
-        show={Boolean(toastMessage)}
-        message={toastMessage || ''}
-        type={toastType}
-        onClose={() => setToastMessage(null)}
-      />
-
-      {/* Render Template Sesuai template_id dari Supabase */}
-      {templateId === 'template1' && (
+      {/* Render Template Sesuai template_id & activeTheme */}
+      {isModern && (
         <Template1Modern
           invitationId={slug}
           data={invitationData}
@@ -124,7 +107,7 @@ export const PublicInvitationPage: React.FC = () => {
         />
       )}
 
-      {templateId === 'template2' && (
+      {isRustic && (
         <Template2Rustic
           invitationId={slug}
           data={invitationData}
@@ -135,7 +118,7 @@ export const PublicInvitationPage: React.FC = () => {
         />
       )}
 
-      {templateId === 'template3' && (
+      {isJawa && (
         <Template3Jawa
           invitationId={slug}
           data={invitationData}
@@ -146,7 +129,7 @@ export const PublicInvitationPage: React.FC = () => {
         />
       )}
 
-      {templateId === 'template4' && (
+      {isIslami && (
         <Template4Islami
           invitationId={slug}
           data={invitationData}
@@ -157,7 +140,7 @@ export const PublicInvitationPage: React.FC = () => {
         />
       )}
 
-      {templateId === 'template5' && (
+      {isLuxury && (
         <Template5Luxury
           invitationId={slug}
           data={invitationData}
@@ -168,7 +151,7 @@ export const PublicInvitationPage: React.FC = () => {
         />
       )}
 
-      {(templateId === 'template6' || templateId === 'sunda') && (
+      {isSunda && (
         <TemplateSundaSiger
           invitationId={slug}
           data={invitationData}

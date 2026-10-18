@@ -166,8 +166,12 @@ export default async function handler(req: Request) {
 
         // Cover foto pasangan jika ada
         const rawCover = content?.cover_image || content?.couple_photo || record.thumbnail_url;
-        if (rawCover && typeof rawCover === 'string' && rawCover.startsWith('http')) {
-          customCover = rawCover;
+        if (rawCover && typeof rawCover === 'string') {
+          if (rawCover.startsWith('http://') || rawCover.startsWith('https://')) {
+            customCover = rawCover;
+          } else if (rawCover.startsWith('data:image/')) {
+            customCover = `${origin}/api/cover?slug=${encodeURIComponent(slug)}&v=${record?.updated_at ? new Date(record.updated_at).getTime() : Date.now()}`;
+          }
         }
       } else {
         // Fallback jika slug tidak ditemukan di database, parsing nama dari format slug (misal: "zaky-bella")
@@ -182,9 +186,9 @@ export default async function handler(req: Request) {
     }
   }
 
-  // Tentukan gambar OG: Prioritas 1 Foto Pengantin Asli, Prioritas 2 Banner Nuansa Tema
+  // Tentukan gambar OG: Prioritas 1 Foto Pengantin Asli via /api/cover, Prioritas 2 Banner Nuansa Tema
   const themeBannerRel = THEME_BANNER_MAP[themeId] || '/og-banners/og-modern.jpg';
-  const resolvedOgImage = customCover || `${origin}${themeBannerRel}`;
+  const resolvedOgImage = customCover || (slug ? `${origin}/api/cover?slug=${encodeURIComponent(slug)}` : `${origin}${themeBannerRel}`);
 
   const themeSubtitle = THEME_SUBTITLE_MAP[themeId] || 'Undangan Pernikahan Eksklusif';
   const pageTitle = `The Wedding of ${coupleTitle} — ${themeSubtitle} | mbell invitations`;

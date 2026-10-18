@@ -71,14 +71,31 @@ export async function saveUserTemplate(
         .select()
         .single();
     } else {
-      result = await supabase
+      // Periksa apakah sudah ada template dengan slug & user_id yang sama sebelum insert baru
+      const { data: existingRows } = await supabase
         .from('user_templates')
-        .insert({
-          ...record,
-          created_at: now,
-        })
-        .select()
-        .single();
+        .select('id')
+        .eq('user_id', payload.user_id)
+        .eq('slug', payload.slug)
+        .limit(1);
+
+      if (existingRows && existingRows.length > 0) {
+        result = await supabase
+          .from('user_templates')
+          .update(record)
+          .eq('id', existingRows[0].id)
+          .select()
+          .single();
+      } else {
+        result = await supabase
+          .from('user_templates')
+          .insert({
+            ...record,
+            created_at: now,
+          })
+          .select()
+          .single();
+      }
     }
 
     if (result.error) {

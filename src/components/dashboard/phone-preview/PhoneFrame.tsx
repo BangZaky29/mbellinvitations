@@ -43,7 +43,9 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
           {/* PHONE SCREEN SCROLLABLE CONTENT */}
           <div
             key={previewKey}
+            id="phone-screen-scroll-container"
             data-phone-preview="true"
+            data-phone-scroll="true"
             className="w-full h-full overflow-y-auto overflow-x-hidden no-scrollbar relative text-left flex flex-col"
             style={{
               scrollbarWidth: 'none',

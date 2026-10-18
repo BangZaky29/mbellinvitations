@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabase, fetchUserTemplates, type UserTemplateRecord } from '../../../lib/supabaseClient';
+import { fetchUserTemplates, type UserTemplateRecord } from '../../../lib/supabaseClient';
 import type { InvitationData } from '../../../types/invitation';
 import { THEME_BANNER_COLORS } from '../my-templates/types';
 
@@ -103,6 +103,8 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
           const userTemplates = await fetchUserTemplates(userId);
           for (const ut of userTemplates) {
             if (!ut.slug || seenSlugs.has(ut.slug)) continue;
+            // Blokir template raditya-jessica
+            if (ut.slug === 'raditya-jessica' || (ut.title || '').toLowerCase().includes('raditya')) continue;
             seenSlugs.add(ut.slug);
 
             const { groom, bride, couple } = parseCouple(ut.content, ut.title);
@@ -124,49 +126,21 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
         } catch (e) {
           console.warn('Gagal fetch user_templates:', e);
         }
-
-        // 2. Cek juga dari tabel invitations
-        try {
-          const { data: invRows } = await supabase
-            .from('invitations')
-            .select('id, slug, status, template_id, content, theme_config, updated_at')
-            .eq('user_id', userId);
-
-          for (const inv of invRows || []) {
-            if (!inv.slug || seenSlugs.has(inv.slug)) continue;
-            seenSlugs.add(inv.slug);
-
-            const { groom, bride, couple } = parseCouple(inv.content);
-            list.push({
-              id: inv.id,
-              invitationRecordId: inv.id,
-              title: couple,
-              slug: inv.slug,
-              themeId: String(inv.template_id || 'modern'),
-              status: (inv.status as any) || 'published',
-              groomName: groom,
-              brideName: bride,
-              coupleNames: couple,
-              coverImage: inv.content?.cover_image || null,
-              updatedAt: inv.updated_at || null,
-            });
-          }
-        } catch (e) {
-          console.warn('Gagal fetch invitations:', e);
-        }
       }
 
-      // 3. Masukkan draft aktif dari editor saat ini jika ada
-      if (currentFormData) {
+      // 2. Masukkan draft aktif dari editor saat ini HANYA jika list masih kosong atau slug benar-benar berbeda
+      if (currentFormData && list.length === 0) {
         const { groom, bride, couple } = parseCouple(currentFormData);
         const draftSlug = currentFormData.slug || '';
-        const alreadyInList = draftSlug && seenSlugs.has(draftSlug);
+        const isNotPlaceholder =
+          (currentFormData.groom?.name && currentFormData.groom.name !== 'Mempelai Pria') ||
+          (currentFormData.bride?.name && currentFormData.bride.name !== 'Mempelai Wanita');
 
-        if (!alreadyInList) {
-          list.unshift({
+        if (isNotPlaceholder && (!draftSlug || !seenSlugs.has(draftSlug))) {
+          list.push({
             id: currentFormData.id || 'current-editor-draft',
             invitationRecordId: currentFormData.id || null,
-            title: `${couple} (Draf Editor)`,
+            title: `${couple}`,
             slug: draftSlug || 'undangan-baru',
             themeId: String(currentFormData.theme_id || 'modern'),
             status: (currentFormData.status as any) || 'draft',

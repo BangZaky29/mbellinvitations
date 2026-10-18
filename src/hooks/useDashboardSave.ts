@@ -38,7 +38,7 @@ async function syncInvitationsRow(
   try {
     const { data: existingRows, error: selectError } = await supabase
       .from('invitations')
-      .select('id, user_id, status')
+      .select('id, user_id, status, template_id, content')
       .eq('slug', targetSlug);
 
     if (selectError) {
@@ -52,9 +52,26 @@ async function syncInvitationsRow(
       const existing = existingRows[0];
       const canUpdate = !existing.user_id || existing.user_id === payload.user_id || !payload.user_id;
       if (canUpdate) {
+        // Jika undangan SUDAH LIVE (status: published), tetapi user sedang mengedit template lain di editor
+        // dan belum mempublikasikan/membayar template baru tersebut:
+        // Pertahankan template_id live agar link publik tidak berubah template sebelum user klik Publikasikan.
+        const existingTheme = existing.content?.theme_id;
+        const newTheme = payload.content?.theme_id;
+        const isThemeChanged = Boolean(existingTheme && newTheme && existingTheme !== newTheme);
+
+        const activeLiveTemplateId =
+          existing.status === 'published' && isThemeChanged
+            ? existing.template_id
+            : safeTemplateId;
+
+        const liveContent =
+          existing.status === 'published' && isThemeChanged
+            ? { ...payload.content, theme_id: existingTheme }
+            : payload.content;
+
         const updatePayload: any = {
-          template_id: safeTemplateId,
-          content: payload.content,
+          template_id: activeLiveTemplateId,
+          content: liveContent,
           theme_config: payload.theme_config,
           music_url: payload.music_url,
           music_type: payload.music_type,
@@ -132,7 +149,10 @@ export function useDashboardSave({
     }, duration);
   }, []);
 
-  // 2. Debounced Autosave (800ms) to Supabase
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [unsavedCount, setUnsavedCount] = useState(0);
+
+  // 2. Local Draft Caching (DO NOT mutate public live invitation until user clicks 'Simpan Perubahan' or 'Publikasikan')
   const isInitialMount = useRef(true);
   useEffect(() => {
     if (isInitialMount.current) {
@@ -140,78 +160,18 @@ export function useDashboardSave({
       return;
     }
 
-    setIsSaving(true);
-    const timer = setTimeout(async () => {
-      try {
-        const coupleSlug = computeCoupleSlug(formData.groom?.name, formData.bride?.name);
-        const targetSlug = formData.slug || coupleSlug;
-        // JANGAN autosave ke Supabase jika slug masih kosong / belum ada mempelai
-        if (!targetSlug) {
-          setIsSaving(false);
-          return;
-        }
+    setHasUnsavedChanges(true);
+    setUnsavedCount((prev) => prev + 1);
 
-        // Blokir permanen penyimpanan raditya-jessica agar tidak pernah hidup kembali di database
-        const isRadityaJessica =
-          targetSlug === 'raditya-jessica' ||
-          ((formData.groom?.name || '').toLowerCase().includes('raditya') &&
-            (formData.bride?.name || '').toLowerCase().includes('jessica'));
-
-        if (isRadityaJessica) {
-          setIsSaving(false);
-          return;
-        }
-
-        const template_id = THEME_TO_TEMPLATE_ID[formData.theme_id || 'modern'] || 'template1';
-        const coupleTitle = `Pernikahan ${formData.groom?.name || 'Mempelai Pria'} & ${formData.bride?.name || 'Mempelai Wanita'}`;
-        const resolvedMusicUrl = formData.music_url || themeConfig.music_url || '';
-        const resolvedMusicType = Boolean(extractYouTubeId(resolvedMusicUrl)) ? 'youtube' : 'mp3';
-
-        const effectiveStatus = (formData.status || 'draft') as any;
-
-        // 1. Simpan ke public.invitations secara aman
-        await syncInvitationsRow(targetSlug, {
-          user_id: user?.id || null,
-          template_id,
-          content: formData,
-          theme_config: themeConfig,
-          status: effectiveStatus,
-          music_url: resolvedMusicUrl,
-          music_type: resolvedMusicType,
-        });
-
-        // 2. Autosave ke public.user_templates jika user login
-        if (user?.id) {
-          const res = await saveUserTemplate({
-            id: currentTemplateRecordId || undefined,
-            user_id: user.id,
-            title: coupleTitle,
-            slug: targetSlug,
-            template_id,
-            theme_id: formData.theme_id || 'modern',
-            status: effectiveStatus,
-            content: formData,
-            theme_config: themeConfig,
-            music_url: resolvedMusicUrl,
-            music_type: resolvedMusicType,
-            thumbnail_url: formData.cover_image || formData.couple_photo || null,
-          });
-          if (res.success && res.data && !currentTemplateRecordId) {
-            setCurrentTemplateRecordId(res.data.id);
-            localStorage.setItem('mbell_active_template_id', res.data.id);
-          }
-        }
-
-        setLastSaved(new Date());
-      } catch (error) {
-        console.error('Autosave error exception:', error);
-      } finally {
-        setIsSaving(false);
-      }
-    }, 800);
-
-    return () => clearTimeout(timer);
-  }, [formData, themeConfig, user]);
+    // Simpan editan lokal ke localStorage sebagai cadangan offline aman
+    try {
+      localStorage.setItem('mbell_pending_draft_formData', JSON.stringify(formData));
+      localStorage.setItem('mbell_pending_draft_themeConfig', JSON.stringify(themeConfig));
+      localStorage.setItem('mbell_pending_draft_hasUnsavedEdits', 'true');
+    } catch (e) {
+      console.warn('Draft local cache warning:', e);
+    }
+  }, [formData, themeConfig]);
 
   // 3. Manual Explicit Save with User Templates Synchronization & Visual Toast Feedback
   const handleManualSave = async () => {
@@ -254,7 +214,15 @@ export function useDashboardSave({
         music_type: resolvedMusicType,
       });
 
-      // 2. Jika user terautentikasi (login), simpan/upsert ke tabel public.user_templates
+      // 2. Simpan ke localStorage sebagai cadangan offline
+      try {
+        localStorage.setItem('mbell_pending_draft_formData', JSON.stringify(formData));
+        localStorage.setItem('mbell_pending_draft_themeConfig', JSON.stringify(themeConfig));
+      } catch (e) {
+        console.warn('Manual save local cache notice:', e);
+      }
+
+      // 3. Jika user terautentikasi (login), simpan/upsert ke tabel public.user_templates
       if (user?.id) {
         const userTemplatePayload = {
           id: currentTemplateRecordId || undefined,
@@ -274,17 +242,25 @@ export function useDashboardSave({
         const res = await saveUserTemplate(userTemplatePayload);
         if (res.success && res.data) {
           setCurrentTemplateRecordId(res.data.id);
+          localStorage.setItem('mbell_active_template_id', res.data.id);
           window.dispatchEvent(new CustomEvent('mbell_templates_updated'));
         } else if (res.error) {
           console.warn('User template save notice:', res.error);
         }
       }
 
+      setHasUnsavedChanges(false);
+      setUnsavedCount(0);
+      localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
       setLastSaved(new Date());
+
+      const isLiveAlready = formData.status === 'published';
       setSaveToast({
         show: true,
-        message: user?.id
-          ? 'Berhasil Disimpan! Perubahan tersimpan ke koleksi Template Saya.'
+        message: isLiveAlready
+          ? 'Perubahan berhasil disimpan & langsung aktif di tautan live!'
+          : user?.id
+          ? 'Perubahan berhasil disimpan ke database!'
           : 'Berhasil Disimpan! Perubahan template telah tersimpan.',
         isError: false,
       }, 3500);
@@ -307,7 +283,7 @@ export function useDashboardSave({
       const template_id = THEME_TO_TEMPLATE_ID[formData.theme_id || 'modern'] || 'template1';
       // Pastikan slug mengikuti nama kedua mempelai secara dinamis
       const coupleSlug = computeCoupleSlug(formData.groom?.name, formData.bride?.name);
-      const targetSlug = coupleSlug || formData.slug || 'undangan-baru';
+      const targetSlug = formData.slug || coupleSlug || 'undangan-baru';
 
       // Blokir permanen raditya-jessica agar tidak pernah disimpan kembali
       const isRadityaJessica =
@@ -325,14 +301,18 @@ export function useDashboardSave({
         return;
       }
 
-      const coupleTitle = `Draf Pernikahan ${formData.groom?.name || 'Mempelai Pria'} & ${formData.bride?.name || 'Mempelai Wanita'}`;
+      const isCurrentlyPublished = formData.status === 'published';
+      const effectiveStatus = (isCurrentlyPublished ? 'published' : 'draft') as any;
+      const coupleTitle = isCurrentlyPublished
+        ? `Pernikahan ${formData.groom?.name || 'Mempelai Pria'} & ${formData.bride?.name || 'Mempelai Wanita'}`
+        : `Draf Pernikahan ${formData.groom?.name || 'Mempelai Pria'} & ${formData.bride?.name || 'Mempelai Wanita'}`;
       const resolvedMusicUrl = formData.music_url || themeConfig.music_url || '';
       const resolvedMusicType = Boolean(extractYouTubeId(resolvedMusicUrl)) ? 'youtube' : 'mp3';
 
       const draftContent: InvitationData = {
         ...formData,
         slug: targetSlug,
-        status: 'draft',
+        status: effectiveStatus,
       };
 
       // 1. Simpan selalu ke localStorage sebagai cadangan offline & guest
@@ -347,10 +327,7 @@ export function useDashboardSave({
       // 2. Simpan ke Supabase jika user sudah login
       let recordId = currentTemplateRecordId;
       if (user?.id) {
-        // Jika template aktif saat ini berstatus 'published', buat checkpoint baru (id: undefined)
-        // agar template published yang sedang tayang tetap ada dan draf baru tersimpan di tab Draft!
-        const isCurrentlyPublished = formData.status === 'published';
-        const targetRecordId = isCurrentlyPublished ? undefined : (recordId || undefined);
+        const targetRecordId = recordId || undefined;
 
         // Simpan / update di public.user_templates
         const res = await saveUserTemplate({
@@ -360,7 +337,7 @@ export function useDashboardSave({
           slug: targetSlug,
           template_id,
           theme_id: formData.theme_id || 'modern',
-          status: 'draft',
+          status: effectiveStatus,
           content: draftContent,
           theme_config: themeConfig,
           music_url: resolvedMusicUrl,
@@ -376,21 +353,22 @@ export function useDashboardSave({
           window.dispatchEvent(new CustomEvent('mbell_templates_updated'));
         }
 
-        // Jangan merusak status public.invitations menjadi 'draft' jika template live sudah terbit!
-        if (!isCurrentlyPublished) {
-          await syncInvitationsRow(targetSlug, {
-            user_id: user.id,
-            template_id,
-            content: draftContent,
-            theme_config: themeConfig,
-            status: 'draft',
-            music_url: resolvedMusicUrl,
-            music_type: resolvedMusicType,
-          });
-        }
+        // Sinkronisasi selalu ke public.invitations
+        await syncInvitationsRow(targetSlug, {
+          user_id: user.id,
+          template_id,
+          content: draftContent,
+          theme_config: themeConfig,
+          status: effectiveStatus,
+          music_url: resolvedMusicUrl,
+          music_type: resolvedMusicType,
+        });
       }
 
       setFormData(draftContent);
+      setHasUnsavedChanges(false);
+      setUnsavedCount(0);
+      localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
       setLastSaved(new Date());
 
       setSaveToast({
@@ -421,6 +399,10 @@ export function useDashboardSave({
     setLastSaved,
     saveToast,
     setSaveToast,
+    hasUnsavedChanges,
+    setHasUnsavedChanges,
+    unsavedCount,
+    setUnsavedCount,
     handleManualSave,
     handleSaveDraft,
   };

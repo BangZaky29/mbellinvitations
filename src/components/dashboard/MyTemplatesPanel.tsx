@@ -152,19 +152,18 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
     return true;
   });
 
-  // Template lainnya (selain yang sedang aktif di editor agar TIDAK DOUBLE)
-  const otherTemplates = cleanTemplates
-    .filter((t) => !isTemplateActive(t))
-    .filter((t) => {
-      if (filter === 'published') return t.status === 'published';
-      if (filter === 'draft') return t.status === 'draft';
-      return true;
-    });
+  // Filter berdasarkan status tab (Semua, Published, Draft)
+  const filteredTemplates = cleanTemplates.filter((t) => {
+    if (filter === 'published') return t.status === 'published';
+    if (filter === 'draft') return t.status === 'draft';
+    return true;
+  });
 
-  const showActiveCard =
-    filter === 'all' ||
-    (filter === 'published' && (currentFormData.status === 'published' || activeRecord?.status === 'published')) ||
-    (filter === 'draft' && currentFormData.status !== 'published');
+  // Hanya tampilkan draft box khusus jika user benar-benar belum memiliki template tersimpan di DB
+  const hasValidNames =
+    (Boolean(currentFormData.groom?.name) && currentFormData.groom?.name !== 'Mempelai Pria') ||
+    (Boolean(currentFormData.bride?.name) && currentFormData.bride?.name !== 'Mempelai Wanita');
+  const showUnsavedDraft = cleanTemplates.length === 0 && hasValidNames;
 
   return (
     <div className="space-y-6">
@@ -287,34 +286,22 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
         </div>
       )}
 
-      {/* 4. Active Current Draft Card (Hanya Tampil Sekali di Kontainer Garis Putus-Putus) */}
-      {showActiveCard && (
-        <ActiveDraftCard
-          currentFormData={currentFormData}
-          activeRecord={activeRecord}
-          copiedSlug={copiedSlug}
-          onCopyLink={handleCopyLink}
-          onImplementActiveTemplate={onImplementActiveTemplate}
-          onDeleteClick={(id) => setDeleteConfirmId(id)}
-        />
-      )}
-
-      {/* 5. User Saved Templates Grid (Hanya Menampilkan Koleksi Lainnya Agar Tidak Duplikat) */}
+      {/* 4. Daftar Template Pengguna (Clean, Simple, Terbaca Jelas & Tanpa Duplikasi) */}
       {loading ? (
         <div className="py-16 flex flex-col items-center justify-center gap-3">
           <div className="w-8 h-8 border-3 border-stone-900 border-t-transparent rounded-full animate-spin" />
           <p className="text-xs text-stone-500">Memuat koleksi template Anda...</p>
         </div>
-      ) : otherTemplates.length > 0 ? (
-        <div className="space-y-3">
+      ) : filteredTemplates.length > 0 ? (
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-serif font-bold text-sm sm:text-base text-stone-900 flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-amber-600">collections_bookmark</span>
-              <span>Koleksi Template Lainnya ({otherTemplates.length})</span>
+              <span>Daftar Template Undangan ({filteredTemplates.length})</span>
             </h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {otherTemplates.map((item) => (
+          <div className="space-y-3.5">
+            {filteredTemplates.map((item) => (
               <TemplateCard
                 key={item.id}
                 item={item}
@@ -328,6 +315,26 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
             ))}
           </div>
         </div>
+      ) : cleanTemplates.length > 0 && filteredTemplates.length === 0 ? (
+        <div className="bg-white rounded-3xl p-8 text-center border border-stone-200/80 shadow-xs space-y-2">
+          <p className="text-stone-600 text-sm">Tidak ada template dengan status <strong>{filter}</strong>.</p>
+          <button
+            type="button"
+            onClick={() => setFilter('all')}
+            className="text-xs text-amber-700 font-semibold hover:underline cursor-pointer"
+          >
+            Tampilkan semua template ({cleanTemplates.length})
+          </button>
+        </div>
+      ) : showUnsavedDraft ? (
+        <ActiveDraftCard
+          currentFormData={currentFormData}
+          activeRecord={activeRecord}
+          copiedSlug={copiedSlug}
+          onCopyLink={handleCopyLink}
+          onImplementActiveTemplate={onImplementActiveTemplate}
+          onDeleteClick={(id) => setDeleteConfirmId(id)}
+        />
       ) : cleanTemplates.length === 0 && currentUserId ? (
         /* Empty State for Logged In User jika benar-benar belum ada data */
         <div className="bg-white rounded-3xl p-10 text-center border border-stone-200/80 shadow-xs space-y-4">

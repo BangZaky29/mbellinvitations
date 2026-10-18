@@ -1,5 +1,6 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import type { CoupleInfo } from '../../../types/invitation';
+import { convertImageToWebP } from '../../../utils/imageOptimizer';
 
 interface PersonFormSectionProps {
   title: string;
@@ -29,12 +30,31 @@ export const PersonFormSection: React.FC<PersonFormSectionProps> = ({
   orderPlaceholder,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleLocalImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLocalImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const objectUrl = URL.createObjectURL(file);
-      onChange({ ...person, photo: objectUrl, photo_url: objectUrl });
+    if (!file) return;
+
+    try {
+      setIsProcessing(true);
+      const optimized = await convertImageToWebP(file, 0.82, 1080);
+      onChange({ ...person, photo: optimized.dataUrl, photo_url: optimized.dataUrl });
+    } catch (err: any) {
+      console.warn('WebP optimize error, using FileReader fallback:', err);
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        if (evt.target?.result) {
+          const fallbackUrl = evt.target.result as string;
+          onChange({ ...person, photo: fallbackUrl, photo_url: fallbackUrl });
+        }
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setIsProcessing(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -89,11 +109,14 @@ export const PersonFormSection: React.FC<PersonFormSectionProps> = ({
         <div>
           <button
             type="button"
+            disabled={isProcessing}
             onClick={() => fileInputRef.current?.click()}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border border-stone-300 hover:border-stone-400 text-stone-800 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border border-stone-300 hover:border-stone-400 disabled:opacity-60 text-stone-800 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
           >
-            <span className="material-symbols-outlined text-xs">photo_camera</span>
-            Ganti Foto
+            <span className={`material-symbols-outlined text-xs ${isProcessing ? 'animate-spin' : ''}`}>
+              {isProcessing ? 'progress_activity' : 'photo_camera'}
+            </span>
+            <span>{isProcessing ? 'Mengompres...' : 'Ganti Foto'}</span>
           </button>
           <p className="text-[11px] text-stone-500 mt-1">Foto wajah close-up jernih (maks. 5MB)</p>
         </div>

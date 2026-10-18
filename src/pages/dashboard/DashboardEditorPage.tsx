@@ -167,9 +167,11 @@ export const DashboardEditorPage: React.FC = () => {
             status={editor.formData.status || 'published'}
             isPublished={editor.formData.status === 'published'}
             suggestedSlug={computeCoupleSlug(editor.formData.groom?.name, editor.formData.bride?.name)}
-            onSaveDraft={save.handleSaveDraft}
+            onSaveDraft={save.handleManualSave}
             isSaving={save.isSaving}
             lastSaved={save.lastSaved}
+            hasUnsavedChanges={save.hasUnsavedChanges}
+            unsavedCount={save.unsavedCount}
             userEmail={user?.email || null}
             userAvatar={user?.avatar_url || null}
             userName={user?.full_name || null}
@@ -223,7 +225,9 @@ export const DashboardEditorPage: React.FC = () => {
                     <EditorBottomBar
                       activeStep={editor.activeStep}
                       isSaving={save.isSaving}
-                      onSaveDraft={save.handleSaveDraft}
+                      hasUnsavedChanges={save.hasUnsavedChanges}
+                      unsavedCount={save.unsavedCount}
+                      onSaveDraft={save.handleManualSave}
                       onPrevStep={editor.handlePrevStep}
                       onNextStep={editor.handleNextStep}
                       onRequestPublish={publish.handleRequestPublish}
@@ -315,8 +319,15 @@ export const DashboardEditorPage: React.FC = () => {
           <ConfirmPublishModal
             isOpen={editor.showConfirmPublishModal}
             slug={currentSlug}
+            coupleName={`${editor.formData.groom?.name || 'Mempelai Pria'} & ${editor.formData.bride?.name || 'Mempelai Wanita'}`}
+            currentThemeId={editor.formData.theme_id || 'sunda'}
+            publishedThemeId={publish.publishedThemeId}
+            isAlreadyPublished={publish.isAlreadyPublished}
+            isTemplateChanged={publish.isTemplateChanged}
+            isSaving={save.isSaving}
             onClose={() => editor.setShowConfirmPublishModal(false)}
-            onConfirm={publish.handleConfirmSaveAndPublish}
+            onConfirmSameTemplatePublish={publish.handleConfirmSameTemplatePublish}
+            onProceedToPayment={publish.handleProceedToPayment}
           />
 
           {/* MODAL POPUP: AUTH GATE */}

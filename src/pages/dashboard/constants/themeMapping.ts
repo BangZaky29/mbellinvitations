@@ -30,7 +30,132 @@ export const KNOWN_DB_TEMPLATE_IDS = new Set([
   'template3',
   'template4',
   'template5',
+  'template6',
+  'sunda',
+  'jawa',
+  'modern',
+  'rustic',
+  'islami',
+  'luxury',
 ]);
+
+/**
+ * Nama-nama display resmi untuk setiap template undangan
+ */
+export const THEME_NAMES: Record<string, string> = {
+  sunda: 'Adat Sunda Siger',
+  template6: 'Adat Sunda Siger',
+  jawa: 'Adat Jawa',
+  template3: 'Adat Jawa',
+  modern: 'Modern Arch',
+  template1: 'Modern Arch',
+  rustic: 'Rustic Floral',
+  template2: 'Rustic Floral',
+  islami: 'Islami Kubah',
+  template4: 'Islami Kubah',
+  luxury: 'Luxury Emerald',
+  template5: 'Luxury Emerald',
+};
+
+export interface ThemeMetaInfo {
+  name: string;
+  tag: string;
+  icon: string;
+  accentColor: string;
+}
+
+export const THEME_META: Record<string, ThemeMetaInfo> = {
+  sunda: {
+    name: 'Adat Sunda Siger',
+    tag: 'Tradisi Parahyangan & Ronce Melati',
+    icon: 'local_florist',
+    accentColor: '#C5A059',
+  },
+  template6: {
+    name: 'Adat Sunda Siger',
+    tag: 'Tradisi Parahyangan & Ronce Melati',
+    icon: 'local_florist',
+    accentColor: '#C5A059',
+  },
+  jawa: {
+    name: 'Adat Jawa',
+    tag: 'Klasik Keraton & Gunungan',
+    icon: 'architecture',
+    accentColor: '#C5A059',
+  },
+  template3: {
+    name: 'Adat Jawa',
+    tag: 'Klasik Keraton & Gunungan',
+    icon: 'architecture',
+    accentColor: '#C5A059',
+  },
+  modern: {
+    name: 'Modern Arch',
+    tag: 'Editorial Minimalist Luxury',
+    icon: 'palette',
+    accentColor: '#4A3B32',
+  },
+  template1: {
+    name: 'Modern Arch',
+    tag: 'Editorial Minimalist Luxury',
+    icon: 'palette',
+    accentColor: '#4A3B32',
+  },
+  rustic: {
+    name: 'Rustic Floral',
+    tag: 'Botanical & Natural Warmth',
+    icon: 'nature_people',
+    accentColor: '#8C6D58',
+  },
+  template2: {
+    name: 'Rustic Floral',
+    tag: 'Botanical & Natural Warmth',
+    icon: 'nature_people',
+    accentColor: '#8C6D58',
+  },
+  islami: {
+    name: 'Islami Kubah',
+    tag: 'Sacred Mosque & Maroko',
+    icon: 'mosque',
+    accentColor: '#93335B',
+  },
+  template4: {
+    name: 'Islami Kubah',
+    tag: 'Sacred Mosque & Maroko',
+    icon: 'mosque',
+    accentColor: '#93335B',
+  },
+  luxury: {
+    name: 'Luxury Emerald',
+    tag: 'Gold Foil & Royal Obsidian',
+    icon: 'diamond',
+    accentColor: '#10B981',
+  },
+  template5: {
+    name: 'Luxury Emerald',
+    tag: 'Gold Foil & Royal Obsidian',
+    icon: 'diamond',
+    accentColor: '#10B981',
+  },
+};
+
+export function getTemplateDisplayName(themeOrTemplateId?: string): string {
+  if (!themeOrTemplateId) return 'Adat Sunda Siger';
+  return THEME_NAMES[themeOrTemplateId] || THEME_NAMES[THEME_TO_TEMPLATE_ID[themeOrTemplateId]] || themeOrTemplateId;
+}
+
+export function getTemplateMeta(themeOrTemplateId?: string): ThemeMetaInfo {
+  const key = themeOrTemplateId || 'sunda';
+  return (
+    THEME_META[key] ||
+    THEME_META[THEME_TO_TEMPLATE_ID[key]] || {
+      name: getTemplateDisplayName(key),
+      tag: 'Undangan Pernikahan Eksklusif',
+      icon: 'auto_awesome',
+      accentColor: '#C5A059',
+    }
+  );
+}
 
 /**
  * Mendapatkan ID template yang aman untuk tabel public.invitations
@@ -38,7 +163,7 @@ export const KNOWN_DB_TEMPLATE_IDS = new Set([
  * belum terdaftar di tabel master public.templates Supabase.
  */
 export function getSafeDbTemplateId(themeOrTemplateId?: string): string {
-  const mapped = THEME_TO_TEMPLATE_ID[themeOrTemplateId || 'modern'] || 'template1';
+  const mapped = THEME_TO_TEMPLATE_ID[themeOrTemplateId || 'modern'] || themeOrTemplateId || 'template1';
   return KNOWN_DB_TEMPLATE_IDS.has(mapped) ? mapped : 'template1';
 }
 
