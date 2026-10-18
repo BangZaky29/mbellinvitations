@@ -7,6 +7,8 @@ import { Template3Jawa } from '../components/templates/Template3Jawa';
 import { Template4Islami } from '../components/templates/Template4Islami';
 import { Template5Luxury } from '../components/templates/Template5Luxury';
 import { TemplateSundaSiger } from '../components/templates/TemplateSundaSiger';
+import { DraftNoticeScreen } from '../components/common/DraftNoticeScreen';
+import { isTemplateUnlocked, TEMPLATE_ID_TO_THEME } from './dashboard/constants/themeMapping';
 
 export const PublicInvitationPage: React.FC = () => {
   const { slug = 'raditya-jessica' } = useParams<{ slug: string }>();
@@ -51,18 +53,41 @@ export const PublicInvitationPage: React.FC = () => {
     return await handleSendRsvp(name, status, pax);
   };
 
-  if (loading) {
+  const isPublished = invitationData.status === 'published';
+  const isDemoSlug =
+    slug === 'demo' ||
+    slug === 'raditya-jessica' ||
+    slug.startsWith('demo-') ||
+    slug.includes('demo');
+
+  // Proteksi Route Publik Ganda:
+  // 1. Verifikasi status publikasi ('published')
+  // 2. Verifikasi kepemilikan template (harus sudah dibeli / unlocked untuk desain undangan ini)
+  const currentActiveTheme = TEMPLATE_ID_TO_THEME[templateId] || invitationData?.theme_id || templateId;
+  const isThemeOwned =
+    isPublished ||
+    isTemplateUnlocked(
+      currentActiveTheme,
+      invitationData.unlocked_templates,
+      invitationData.paid_template_id,
+      invitationData.is_paid
+    );
+
+  // Jika undangan berstatus 'draft' ATAU tema yang terpasang belum dibeli,
+  // tampilkan layar pemberitahuan elegan bahwa undangan sedang disiapkan oleh calon pengantin.
+  // PENTING: Lakukan evaluasi ini hanya setelah status jaringan terkonfirmasi (!loading)
+  // sehingga tamu langsung melihat cover template tanpa terpotong loading hitam
+  if (!loading && (!isPublished || !isThemeOwned) && !isDemoSlug) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#121212] text-white">
-        <div className="w-12 h-12 rounded-full border-3 border-amber-500/30 border-t-amber-400 animate-spin mb-4"></div>
-        <p className="font-serif tracking-widest text-sm text-neutral-400 uppercase animate-pulse">
-          Memuat Undangan Pernikahan...
-        </p>
-      </div>
+      <DraftNoticeScreen
+        slug={slug}
+        groomName={invitationData.groom?.name}
+        brideName={invitationData.bride?.name}
+        coverImage={invitationData.cover_image || invitationData.couple_photo}
+      />
     );
   }
 
-  const isPublished = invitationData.status === 'published';
   const showDemoPill = slug === 'demo' && !isPublished;
 
   // Resolusi template secara defensif agar tidak salah template jika template_id ambigu

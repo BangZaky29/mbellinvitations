@@ -46,6 +46,9 @@ export const EditorStepContent: React.FC<EditorStepContentProps> = ({
       {activeStep === 1 && (
         <ThemePickerCard
           activeThemeId={formData.theme_id || 'modern'}
+          unlockedTemplates={formData.unlocked_templates}
+          paidTemplateId={formData.paid_template_id}
+          isPaid={formData.is_paid}
           onSelectTheme={onThemeChange}
           onThemeSelect={onThemeChange}
           onApplyPreset={onApplyPreset}

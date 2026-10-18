@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
 import type { GuestItem } from '../components/dashboard/guest-list/types';
 import { DEFAULT_WA_TEMPLATE } from '../components/dashboard/guest-list/constants';
+import { getInvitationFullUrl } from '../utils/urlHelper';
 
 interface UseWaBlastOptions {
   invitationSlug?: string;
   coupleNames?: string;
+  onUpdateWaStatus?: (guestId: string, isSent: boolean) => Promise<void> | void;
   showToast: (msg: string) => void;
 }
 
 export function useWaBlast({
   invitationSlug = 'undangan-baru',
   coupleNames = 'Mempelai Pria & Mempelai Wanita',
+  onUpdateWaStatus,
   showToast,
 }: UseWaBlastOptions) {
   const sentStorageKey = `mbell_sent_guests_${invitationSlug}`;
@@ -70,41 +73,60 @@ export function useWaBlast({
   };
 
   const getPersonalLink = (name: string, code: string) => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://mbell.id';
-    return `${origin}/${invitationSlug}?to=${encodeURIComponent(name)}&g=${encodeURIComponent(code)}`;
+    const baseUrl = getInvitationFullUrl(invitationSlug);
+    return `${baseUrl}?to=${encodeURIComponent(name)}&g=${encodeURIComponent(code)}`;
   };
 
-  const markAsSent = (guestId: string) => {
-    setSentGuestIds((prev) => new Set(prev).add(guestId));
-  };
-
-  const toggleSentStatus = (guestId: string) => {
+  const syncSentIds = (ids: string[]) => {
+    if (!ids || ids.length === 0) return;
     setSentGuestIds((prev) => {
       const next = new Set(prev);
-      if (next.has(guestId)) {
-        next.delete(guestId);
-      } else {
-        next.add(guestId);
-      }
+      ids.forEach((id) => next.add(id));
       return next;
     });
   };
 
-  const handleCopyPersonalLink = (guest: GuestItem) => {
+  const markAsSent = async (guestId: string) => {
+    setSentGuestIds((prev) => new Set(prev).add(guestId));
+    if (onUpdateWaStatus) {
+      await onUpdateWaStatus(guestId, true);
+    }
+  };
+
+  const toggleSentStatus = async (guestId: string) => {
+    const isCurrentlySent = sentGuestIds.has(guestId);
+    const nextSent = !isCurrentlySent;
+
+    setSentGuestIds((prev) => {
+      const next = new Set(prev);
+      if (nextSent) {
+        next.add(guestId);
+      } else {
+        next.delete(guestId);
+      }
+      return next;
+    });
+
+    if (onUpdateWaStatus) {
+      await onUpdateWaStatus(guestId, nextSent);
+    }
+  };
+
+  const handleCopyPersonalLink = async (guest: GuestItem) => {
     const link = getPersonalLink(guest.name, guest.guest_code);
     navigator.clipboard.writeText(link);
-    markAsSent(guest.id);
+    await markAsSent(guest.id);
     showToast(`📋 Link unik untuk "${guest.name}" tersalin! Ditandai: Sudah Dikirim ✔️`);
   };
 
-  const handleSendWhatsApp = (guest: GuestItem) => {
+  const handleSendWhatsApp = async (guest: GuestItem) => {
     const link = getPersonalLink(guest.name, guest.guest_code);
     const message = waTemplate
       .replace(/{nama_tamu}/g, guest.name)
       .replace(/{nama_mempelai}/g, coupleNames)
       .replace(/{link_undangan}/g, link);
 
-    markAsSent(guest.id);
+    await markAsSent(guest.id);
 
     const encodedMsg = encodeURIComponent(message);
     const phone = guest.phone_number ? guest.phone_number.replace(/[^0-9]/g, '') : '';
@@ -119,6 +141,7 @@ export function useWaBlast({
   return {
     sentGuestIds,
     setSentGuestIds,
+    syncSentIds,
     waTemplate,
     setWaTemplate,
     showTemplateEditor,

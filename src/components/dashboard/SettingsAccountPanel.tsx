@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import { getInvitationDisplayUrl } from '../../utils/urlHelper';
 
 interface SettingsAccountPanelProps {
   userId?: string | null;
@@ -121,7 +122,7 @@ export const SettingsAccountPanel: React.FC<SettingsAccountPanelProps> = ({
           <div className="p-3.5 rounded-xl bg-stone-50/80 border border-stone-200/70">
             <span className="text-stone-400 block text-[11px] mb-1 font-medium">Tautan Undangan Aktif</span>
             <div className="font-semibold text-stone-800 font-mono truncate">
-              mbell.id/{invitationSlug}
+              {getInvitationDisplayUrl(invitationSlug)}
             </div>
           </div>
         </div>

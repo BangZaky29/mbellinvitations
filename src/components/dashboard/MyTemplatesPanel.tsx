@@ -17,6 +17,7 @@ import { ThemeShowcase } from './my-templates/ThemeShowcase';
 import { DeleteTemplateModal } from './my-templates/DeleteTemplateModal';
 import { NewTemplateModal } from './my-templates/NewTemplateModal';
 import { SleekToast } from '../common/SleekToast';
+import { getInvitationFullUrl, getInvitationDisplayUrl } from '../../utils/urlHelper';
 
 // Re-export types and presets for external consumers
 export type { ThemePresetItem, MyTemplatesPanelProps };
@@ -73,10 +74,10 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
   }, [currentUserId, activeTemplateId]);
 
   const handleCopyLink = (slug: string) => {
-    const fullUrl = `${window.location.origin}/${slug}`;
+    const fullUrl = getInvitationFullUrl(slug);
     navigator.clipboard.writeText(fullUrl);
     setCopiedSlug(slug);
-    setToastMsg(`Tautan mbell.id/${slug} berhasil disalin!`);
+    setToastMsg(`Tautan ${getInvitationDisplayUrl(slug)} berhasil disalin!`);
     setTimeout(() => setCopiedSlug(null), 2500);
   };
 

@@ -57,13 +57,38 @@ export async function saveUserTemplate(
     }
 
     const now = new Date().toISOString();
-    const record = {
+    const record: any = {
       ...payload,
+      unlocked_templates: payload.unlocked_templates || (payload.content as any)?.unlocked_templates || [],
+      is_paid: payload.is_paid ?? (payload.content as any)?.is_paid ?? false,
+      paid_template_id: payload.paid_template_id || (payload.content as any)?.paid_template_id || null,
       updated_at: now,
     };
 
     let result;
     if (payload.id) {
+      // Proteksi permanen: Template yang sudah live 'published' tidak boleh tertimpa menjadi 'draft'
+      const { data: curr } = await supabase
+        .from('user_templates')
+        .select('status, is_paid, paid_template_id, unlocked_templates')
+        .eq('id', payload.id)
+        .maybeSingle();
+
+      if (curr) {
+        if (curr.status === 'published' && payload.status === 'draft') {
+          record.status = 'published';
+        }
+        if (curr.is_paid) {
+          record.is_paid = true;
+        }
+        if (curr.paid_template_id && !record.paid_template_id) {
+          record.paid_template_id = curr.paid_template_id;
+        }
+        if (Array.isArray(curr.unlocked_templates) && curr.unlocked_templates.length > 0) {
+          record.unlocked_templates = Array.from(new Set([...curr.unlocked_templates, ...(record.unlocked_templates || [])]));
+        }
+      }
+
       result = await supabase
         .from('user_templates')
         .update(record)
@@ -74,12 +99,26 @@ export async function saveUserTemplate(
       // Periksa apakah sudah ada template dengan slug & user_id yang sama sebelum insert baru
       const { data: existingRows } = await supabase
         .from('user_templates')
-        .select('id')
+        .select('id, status, is_paid, paid_template_id, unlocked_templates')
         .eq('user_id', payload.user_id)
         .eq('slug', payload.slug)
         .limit(1);
 
       if (existingRows && existingRows.length > 0) {
+        const curr = existingRows[0];
+        if (curr.status === 'published' && payload.status === 'draft') {
+          record.status = 'published';
+        }
+        if (curr.is_paid) {
+          record.is_paid = true;
+        }
+        if (curr.paid_template_id && !record.paid_template_id) {
+          record.paid_template_id = curr.paid_template_id;
+        }
+        if (Array.isArray(curr.unlocked_templates) && curr.unlocked_templates.length > 0) {
+          record.unlocked_templates = Array.from(new Set([...curr.unlocked_templates, ...(record.unlocked_templates || [])]));
+        }
+
         result = await supabase
           .from('user_templates')
           .update(record)

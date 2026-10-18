@@ -13,6 +13,7 @@ import {
   resolveEffectiveTheme,
 } from './phone-preview/helpers';
 import { computeCoupleSlug } from '../../pages/dashboard/helpers/computeCoupleSlug';
+import { getInvitationDisplayUrl } from '../../utils/urlHelper';
 
 export interface PhoneMockupPreviewProps {
   data: InvitationData;
@@ -113,7 +114,7 @@ export const PhoneMockupPreview: React.FC<PhoneMockupPreviewProps> = ({
   };
 
   const currentSlug = data.slug || computeCoupleSlug(data.groom?.name, data.bride?.name) || 'undangan-baru';
-  const displayUrl = previewUrl || `mbell.id/${currentSlug}`;
+  const displayUrl = previewUrl || getInvitationDisplayUrl(currentSlug);
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-full select-none py-2">

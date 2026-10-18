@@ -3,6 +3,7 @@ import { supabase, type UserTemplateRecord } from '../../lib/supabaseClient';
 import type { InvitationData } from '../../types/invitation';
 import { TemplateCardSelector, type TemplateSelectorItem } from './common/TemplateCardSelector';
 import { MOCK_THEME_WISHES_MAP, MOCK_MODERN_WISHES } from '../../data/mockInvitation';
+import { getInvitationFullUrl, getInvitationDisplayUrl } from '../../utils/urlHelper';
 
 interface WishEntry {
   id: string;
@@ -120,11 +121,20 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
 
           if (!error && wishesData && wishesData.length > 0) {
             setWishes(wishesData as WishEntry[]);
+            window.dispatchEvent(
+              new CustomEvent('mbell_wishes_count_changed', { detail: { count: wishesData.length } })
+            );
           } else {
             setWishes(defaultMocks);
+            window.dispatchEvent(
+              new CustomEvent('mbell_wishes_count_changed', { detail: { count: 0 } })
+            );
           }
         } else {
           setWishes(defaultMocks);
+          window.dispatchEvent(
+            new CustomEvent('mbell_wishes_count_changed', { detail: { count: 0 } })
+          );
         }
       } catch {
         setWishes(defaultMocks);
@@ -137,7 +147,7 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
   }, [userId, effectiveId, effectiveSlug]);
 
   const handleCopyLink = () => {
-    const url = `https://mbell.id/${effectiveSlug}`;
+    const url = getInvitationFullUrl(effectiveSlug);
     navigator.clipboard.writeText(url);
     setHasCopied(true);
     setTimeout(() => setHasCopied(false), 2500);
@@ -150,7 +160,14 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
       if (!wishToDelete.id.startsWith('wish-')) {
         await supabase.from('wishes').delete().eq('id', wishToDelete.id);
       }
-      setWishes((prev) => prev.filter((w) => w.id !== wishToDelete.id));
+      setWishes((prev) => {
+        const next = prev.filter((w) => w.id !== wishToDelete.id);
+        const realCount = next.filter((w) => !w.id.startsWith('wish-')).length;
+        window.dispatchEvent(
+          new CustomEvent('mbell_wishes_count_changed', { detail: { count: realCount } })
+        );
+        return next;
+      });
       setWishToDelete(null);
     } catch (e) {
       console.error('Gagal menghapus pesan ucapan:', e);
@@ -197,7 +214,7 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
           </div>
           <p className="text-xs sm:text-sm text-stone-500 mt-0.5">
             Kumpulan doa dan ucapan selamat dari keluarga serta sahabat tercinta untuk tautan{' '}
-            <span className="font-mono text-stone-700 font-semibold">mbell.id/{effectiveSlug}</span>.
+            <span className="font-mono text-stone-700 font-semibold">{getInvitationDisplayUrl(effectiveSlug)}</span>.
           </p>
         </div>
 
@@ -253,7 +270,7 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
           </h4>
           <p className="text-xs text-stone-500 max-w-sm mx-auto">
             {wishes.length === 0
-              ? `Bagikan tautan mbell.id/${effectiveSlug} ke keluarga & sahabat untuk mulai menerima pesan doa restu pada template ini.`
+              ? `Bagikan tautan ${getInvitationDisplayUrl(effectiveSlug)} ke keluarga & sahabat untuk mulai menerima pesan doa restu pada template ini.`
               : 'Silakan gunakan kata kunci lain untuk mencari ucapan tertentu.'}
           </p>
           {wishes.length === 0 && (
@@ -309,7 +326,7 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-[10px] text-stone-400 font-medium">
-                <span>Diterima via mbell.id/{effectiveSlug}</span>
+                <span>Diterima via /{effectiveSlug}</span>
                 <button
                   type="button"
                   onClick={() => setWishToDelete(wish)}

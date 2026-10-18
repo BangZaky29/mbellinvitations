@@ -1,5 +1,6 @@
 import React from 'react';
-import { getTemplateDisplayName, getTemplateMeta } from '../constants/themeMapping';
+import { getTemplateDisplayName, getTemplateMeta, getTemplatePriceInfo } from '../constants/themeMapping';
+import { getInvitationDisplayUrl } from '../../../utils/urlHelper';
 
 export interface ConfirmPublishModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ export interface ConfirmPublishModalProps {
   publishedThemeId?: string | null;
   isAlreadyPublished?: boolean;
   isTemplateChanged?: boolean;
+  isUnlocked?: boolean;
   isSaving?: boolean;
   onClose: () => void;
   onConfirmSameTemplatePublish: () => void;
@@ -23,6 +25,7 @@ export const ConfirmPublishModal: React.FC<ConfirmPublishModalProps> = ({
   publishedThemeId = null,
   isAlreadyPublished = false,
   isTemplateChanged = false,
+  isUnlocked = false,
   isSaving = false,
   onClose,
   onConfirmSameTemplatePublish,
@@ -33,6 +36,10 @@ export const ConfirmPublishModal: React.FC<ConfirmPublishModalProps> = ({
   const currentMeta = getTemplateMeta(currentThemeId);
   const currentDisplayName = getTemplateDisplayName(currentThemeId);
   const publishedDisplayName = publishedThemeId ? getTemplateDisplayName(publishedThemeId) : null;
+  const priceInfo = getTemplatePriceInfo(currentThemeId);
+
+  // Periksa apakah template ini bebas biaya terbit (sudah dibeli atau tema sama dengan yang live)
+  const isFreeToPublish = isUnlocked || (isAlreadyPublished && !isTemplateChanged);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto">
@@ -80,9 +87,17 @@ export const ConfirmPublishModal: React.FC<ConfirmPublishModalProps> = ({
                 <span className="material-symbols-outlined text-2xl">{currentMeta.icon}</span>
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100/90 px-2 py-0.5 rounded-full inline-block mb-1">
-                  Template Akan Diterbitkan
-                </span>
+                <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100/90 px-2 py-0.5 rounded-full inline-block">
+                    Template Akan Diterbitkan
+                  </span>
+                  {isUnlocked && (
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full inline-flex items-center gap-0.5">
+                      <span className="material-symbols-outlined text-[12px]">check</span>
+                      <span>Sudah Dibeli</span>
+                    </span>
+                  )}
+                </div>
                 <h4 className="text-base font-bold text-stone-900 truncate">
                   {currentDisplayName}
                 </h4>
@@ -100,47 +115,70 @@ export const ConfirmPublishModal: React.FC<ConfirmPublishModalProps> = ({
             </div>
             <div className="flex items-center gap-1.5 font-mono text-[11px] bg-white/90 px-2.5 py-1 rounded-lg border border-stone-200 text-stone-700">
               <span className="material-symbols-outlined text-[14px] text-amber-600">link</span>
-              <span className="truncate">{typeof window !== 'undefined' ? `${window.location.host}/${slug}` : `mbell.id/${slug}`}</span>
+              <span className="truncate">{getInvitationDisplayUrl(slug)}</span>
             </div>
           </div>
         </div>
 
-        {/* CONDITIONAL BANNER: STATUS PERUBAHAN TEMPLATE */}
-        {isTemplateChanged ? (
-          /* KASUS 1: ADA PERUBAHAN TEMPLATE */
-          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-400/50 mb-6 text-stone-800 text-xs leading-relaxed space-y-2">
-            <div className="flex items-center gap-2 font-bold text-amber-900">
-              <span className="material-symbols-outlined text-[18px] text-amber-600">notification_important</span>
-              <span>Perubahan Desain Template Terdeteksi</span>
-            </div>
-            <p>
-              Template undangan sebelumnya adalah <span className="font-bold text-stone-900">{publishedDisplayName || 'Template Lama'}</span>, dan Anda saat ini memilih <span className="font-bold text-stone-900">{currentDisplayName}</span>.
-            </p>
-            <p className="text-stone-600 text-[11px]">
-              Menerbitkan perubahan desain template baru memerlukan aktivasi paket pembayaran. Anda akan diarahkan otomatis ke menu pembayaran.
-            </p>
-          </div>
-        ) : isAlreadyPublished ? (
-          /* KASUS 2: TEMPLATE SAMA DENGAN YANG SUDAH TERBIT */
+        {/* CONDITIONAL BANNER: STATUS KEPEMILIKAN / PERUBAHAN TEMPLATE */}
+        {isFreeToPublish ? (
+          /* KASUS 1: GRATIS - TEMPLATE SAMA DENGAN LIVE ATAU SUDAH PERNAH DIBELI */
           <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-400/40 mb-6 text-stone-800 text-xs leading-relaxed space-y-2">
             <div className="flex items-center gap-2 font-bold text-emerald-900">
               <span className="material-symbols-outlined text-[18px] text-emerald-600">verified</span>
-              <span>Template Aktif Sama (Pembaruan Gratis)</span>
+              <span>
+                {isAlreadyPublished && !isTemplateChanged
+                  ? 'Template Aktif Sama (Pembaruan Gratis)'
+                  : 'Template Sudah Dimiliki (Aktivasi Gratis)'}
+              </span>
             </div>
             <p>
-              Undangan sudah aktif dengan template <span className="font-bold text-stone-900">{currentDisplayName}</span>. Seluruh pembaruan konten, jam acara, foto &amp; amplop digital akan langsung diperbarui ke tautan publik tanpa biaya tambahan!
+              {isAlreadyPublished && !isTemplateChanged
+                ? `Undangan sudah aktif dengan template ${currentDisplayName}. Seluruh pembaruan konten, jam acara, foto & amplop digital akan langsung diperbarui ke tautan publik tanpa biaya tambahan!`
+                : `Template ${currentDisplayName} sudah dibeli untuk desain undangan ini. Anda dapat langsung menerbitkan pembaruan ke tautan publik tanpa biaya tambahan!`}
             </p>
           </div>
         ) : (
-          /* KASUS 3: PUBLIKASI PERTAMA KALI (DRAF) */
-          <div className="p-4 rounded-2xl bg-stone-100 border border-stone-200/90 mb-6 text-stone-800 text-xs leading-relaxed space-y-2">
-            <div className="flex items-center gap-2 font-bold text-stone-900">
-              <span className="material-symbols-outlined text-[18px] text-amber-600">rocket_launch</span>
-              <span>Publikasi Pertama Kali</span>
+          /* KASUS 2: PERLU PEMBELIAN SATU KALI PER TEMPLATE (PAY-PER-TEMPLATE) */
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-400/50 mb-6 text-stone-800 text-xs leading-relaxed space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 font-bold text-amber-900">
+                <span className="material-symbols-outlined text-[18px] text-amber-600">
+                  {isTemplateChanged ? 'notification_important' : 'rocket_launch'}
+                </span>
+                <span>
+                  {isTemplateChanged ? 'Perubahan Desain Template Terdeteksi' : 'Aktivasi Publikasi Perdana'}
+                </span>
+              </div>
+              <div className="flex items-center gap-1 bg-amber-100/90 border border-amber-300 px-2 py-0.5 rounded-md">
+                <span className="text-[10px] text-stone-400 line-through">
+                  {priceInfo.originalPriceDisplay}
+                </span>
+                <span className="text-xs font-black text-amber-900">
+                  {priceInfo.priceDisplay}
+                </span>
+              </div>
             </div>
+
             <p>
-              Undangan akan diterbitkan perdana dengan template <span className="font-bold text-stone-900">{currentDisplayName}</span>. Anda akan diarahkan ke menu pembayaran untuk memilih paket aktivasi.
+              {isTemplateChanged ? (
+                <>
+                  Template undangan sebelumnya adalah <span className="font-bold text-stone-900">{publishedDisplayName || 'Template Lama'}</span>, dan Anda saat ini memilih <span className="font-bold text-stone-900">{currentDisplayName}</span>.
+                </>
+              ) : (
+                <>
+                  Undangan siap diterbitkan perdana dengan tema <span className="font-bold text-stone-900">{currentDisplayName}</span>.
+                </>
+              )}
             </p>
+
+            <div className="pt-2 border-t border-amber-200/80 flex items-center justify-between text-[11px] text-stone-600">
+              <span className="flex items-center gap-1 text-amber-800 font-semibold">
+                <span className="material-symbols-outlined text-[14px]">lock_open</span>
+                <span>Beli 1x Aktif Permanen (Tanpa Langganan)</span>
+              </span>
+              <span className="text-emerald-700 font-bold">Hemat Rp 40.000</span>
+            </div>
           </div>
         )}
 
@@ -155,7 +193,7 @@ export const ConfirmPublishModal: React.FC<ConfirmPublishModalProps> = ({
             Batal
           </button>
 
-          {isTemplateChanged || !isAlreadyPublished ? (
+          {!isFreeToPublish ? (
             <button
               type="button"
               onClick={onProceedToPayment}
@@ -163,7 +201,7 @@ export const ConfirmPublishModal: React.FC<ConfirmPublishModalProps> = ({
               className="w-full sm:w-2/3 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 text-xs sm:text-sm font-bold transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-[18px]">payments</span>
-              <span>{isTemplateChanged ? 'Lanjut ke Pembayaran' : 'Pilih Paket & Bayar'}</span>
+              <span>Lanjut ke Pembayaran ({priceInfo.priceDisplay})</span>
             </button>
           ) : (
             <button

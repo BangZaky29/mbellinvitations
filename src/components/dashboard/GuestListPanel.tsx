@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import type { GuestItem, GuestListPanelProps } from './guest-list/types';
 import { useWaBlast } from '../../hooks/useWaBlast';
 import { useGuestList } from '../../hooks/useGuestList';
@@ -53,10 +53,18 @@ export const GuestListPanel: React.FC<GuestListPanelProps> = ({
     }
   };
 
+  // Bridge ref untuk update status WA tamu ke database tanpa circular dependency
+  const updateWaStatusRef = useRef<((guestId: string, isSent: boolean) => Promise<void>) | null>(null);
+
   // 1. Hook WA Blast (Template, sent tracker, WhatsApp links)
   const wa = useWaBlast({
     invitationSlug: effectiveSlug,
     coupleNames: effectiveCouple,
+    onUpdateWaStatus: async (guestId, isSent) => {
+      if (updateWaStatusRef.current) {
+        await updateWaStatusRef.current(guestId, isSent);
+      }
+    },
     showToast,
   });
 
@@ -66,8 +74,11 @@ export const GuestListPanel: React.FC<GuestListPanelProps> = ({
     invitationId: effectiveId,
     invitationSlug: effectiveSlug,
     sentGuestIds: wa.sentGuestIds,
+    onSyncSentIds: wa.syncSentIds,
     showToast,
   });
+
+  updateWaStatusRef.current = gl.updateGuestWaStatusInList;
 
   // Handlers for modal interactions
   const handleBulkProcess = async (
@@ -389,7 +400,7 @@ export const GuestListPanel: React.FC<GuestListPanelProps> = ({
                     key={guest.id}
                     guest={guest}
                     index={idx}
-                    isSent={wa.sentGuestIds.has(guest.id)}
+                    isSent={Boolean(guest.is_sent || wa.sentGuestIds.has(guest.id))}
                     onToggleSentStatus={wa.toggleSentStatus}
                     onCopyPersonalLink={wa.handleCopyPersonalLink}
                     onSendWhatsApp={wa.handleSendWhatsApp}

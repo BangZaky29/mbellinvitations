@@ -4,4 +4,9 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    headers: {
+      'Permissions-Policy': 'compute-pressure=(self "https://www.youtube.com")',
+    },
+  },
 })

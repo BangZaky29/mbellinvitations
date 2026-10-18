@@ -73,9 +73,8 @@ export const Template1Modern: React.FC<InvitationProps> = ({
       />
 
       {/* Mobile Viewport Container (Max 430px) */}
-      <div className={`relative w-full max-w-[430px] bg-alabaster shadow-2xl overflow-x-clip border-x border-[#E2DDD3] flex flex-col no-scrollbar ${
-        !isOpen ? (isPreview ? 'h-full overflow-hidden' : 'h-[100dvh] overflow-hidden') : 'h-full min-h-screen overflow-visible'
-      }`}>
+      <div className={`relative w-full max-w-[430px] bg-alabaster shadow-2xl overflow-x-clip border-x border-[#E2DDD3] flex flex-col no-scrollbar ${!isOpen ? (isPreview ? 'h-full overflow-hidden' : 'h-[100dvh] overflow-hidden') : 'h-full min-h-screen overflow-visible'
+        }`}>
 
         {/* ========================================== */}
         {/* 1. PHYSICAL DRAGGABLE COVER SHEET OVERLAY  */}
@@ -176,7 +175,7 @@ export const Template1Modern: React.FC<InvitationProps> = ({
         {/* ========================================== */}
         <main
           id="main-content"
-          className={`relative z-20 pb-6 ${!isOpen ? 'pointer-events-none select-none max-h-screen overflow-hidden' : ''}`}
+          className={`relative z-20 pb-6 ${!isOpen ? 'pointer-events-none select-none max-h-screen overflow-hidden' : 'animate-page-enter'}`}
         >
           {/* ========================================== */}
           {/* 2. HERO & COUNTDOWN SECTION                */}
@@ -440,11 +439,10 @@ export const Template1Modern: React.FC<InvitationProps> = ({
                     <div key={index} className="relative group reveal delay-100">
                       {/* Timeline Pin */}
                       <div
-                        className={`absolute -left-6 top-1 w-6 h-6 rounded-full flex items-center justify-center ${
-                          isLast
-                            ? 'bg-gold-champagne text-white shadow-md'
-                            : 'bg-alabaster border-2 border-gold-champagne'
-                        }`}
+                        className={`absolute -left-6 top-1 w-6 h-6 rounded-full flex items-center justify-center ${isLast
+                          ? 'bg-gold-champagne text-white shadow-md'
+                          : 'bg-alabaster border-2 border-gold-champagne'
+                          }`}
                       >
                         {isLast ? (
                           <i className="fa-solid fa-check text-[10px]"></i>
@@ -455,20 +453,18 @@ export const Template1Modern: React.FC<InvitationProps> = ({
 
                       {/* Card */}
                       <div
-                        className={`bg-white border rounded-xl p-5 shadow-sm ${
-                          isLast ? 'border-gold-champagne/40' : 'border-border-subtle'
-                        }`}
+                        className={`bg-white border rounded-xl p-5 shadow-sm ${isLast ? 'border-gold-champagne/40' : 'border-border-subtle'
+                          }`}
                       >
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-[11px] font-semibold text-gold-champagne tracking-widest uppercase">
                             {story.title}
                           </span>
                           <span
-                            className={`text-[10px] tracking-wider px-2 py-0.5 rounded-full ${
-                              isLast
-                                ? 'bg-charcoal-dark text-white font-medium'
-                                : 'bg-alabaster border border-border-subtle text-charcoal-muted'
-                            }`}
+                            className={`text-[10px] tracking-wider px-2 py-0.5 rounded-full ${isLast
+                              ? 'bg-charcoal-dark text-white font-medium'
+                              : 'bg-alabaster border border-border-subtle text-charcoal-muted'
+                              }`}
                           >
                             {story.year}
                           </span>
@@ -525,11 +521,10 @@ export const Template1Modern: React.FC<InvitationProps> = ({
 
                       <div className="flex items-center space-x-2 text-gold-champagne mb-2">
                         <i
-                          className={`text-sm ${
-                            event.icon === 'champagne-glasses'
-                              ? 'fa-solid fa-champagne-glasses'
-                              : 'fa-solid fa-ring'
-                          }`}
+                          className={`text-sm ${event.icon === 'champagne-glasses'
+                            ? 'fa-solid fa-champagne-glasses'
+                            : 'fa-solid fa-ring'
+                            }`}
                         ></i>
                         <span className="text-[11px] tracking-[0.25em] uppercase font-semibold">
                           {event.name}
@@ -631,9 +626,8 @@ export const Template1Modern: React.FC<InvitationProps> = ({
                         <img
                           src={imgUrl}
                           alt={`Gallery ${idx * 2 + 1}`}
-                          className={`w-full object-cover group-hover:scale-105 transition-transform duration-500 ${
-                            idx % 2 === 0 ? 'h-64' : 'h-44'
-                          }`}
+                          className={`w-full object-cover group-hover:scale-105 transition-transform duration-500 ${idx % 2 === 0 ? 'h-64' : 'h-44'
+                            }`}
                         />
                       </div>
                     ))}
@@ -652,9 +646,8 @@ export const Template1Modern: React.FC<InvitationProps> = ({
                         <img
                           src={imgUrl}
                           alt={`Gallery ${idx * 2 + 2}`}
-                          className={`w-full object-cover group-hover:scale-105 transition-transform duration-500 ${
-                            idx % 2 === 0 ? 'h-44' : 'h-64'
-                          }`}
+                          className={`w-full object-cover group-hover:scale-105 transition-transform duration-500 ${idx % 2 === 0 ? 'h-44' : 'h-64'
+                            }`}
                         />
                       </div>
                     ))}
@@ -675,9 +668,8 @@ export const Template1Modern: React.FC<InvitationProps> = ({
                         : `Lihat Selengkapnya (${data.gallery.length - 4} Foto Lainnya)`}
                     </span>
                     <i
-                      className={`fa-solid ${
-                        showAllGallery ? 'fa-chevron-up' : 'fa-chevron-down'
-                      } text-xs text-gold-champagne`}
+                      className={`fa-solid ${showAllGallery ? 'fa-chevron-up' : 'fa-chevron-down'
+                        } text-xs text-gold-champagne`}
                     ></i>
                   </button>
                 </div>
@@ -812,11 +804,10 @@ export const Template1Modern: React.FC<InvitationProps> = ({
                     return (
                       <div
                         key={index}
-                        className={`relative w-full rounded-2xl p-5 text-white shadow-lg border overflow-hidden ${
-                          isEven
-                            ? 'bg-gradient-to-br from-[#1F1F1F] via-[#2A2A2A] to-[#141414] border-neutral-700'
-                            : 'bg-gradient-to-br from-[#8C713B] via-[#A88746] to-[#6E5728] border-amber-400/30'
-                        }`}
+                        className={`relative w-full rounded-2xl p-5 text-white shadow-lg border overflow-hidden ${isEven
+                          ? 'bg-gradient-to-br from-[#1F1F1F] via-[#2A2A2A] to-[#141414] border-neutral-700'
+                          : 'bg-gradient-to-br from-[#8C713B] via-[#A88746] to-[#6E5728] border-amber-400/30'
+                          }`}
                       >
                         <div className="flex justify-between items-start mb-6">
                           <span className="font-editorial italic text-base tracking-widest text-gold-champagne font-light">
@@ -836,13 +827,12 @@ export const Template1Modern: React.FC<InvitationProps> = ({
                             <button
                               type="button"
                               onClick={() => handleCopyAccount(bank.account_number_raw || bank.account_number, index)}
-                              className={`px-3 py-1.5 rounded-full text-[10px] tracking-wider uppercase font-medium transition-colors flex items-center space-x-1 cursor-pointer ${
-                                isCopied
-                                  ? 'bg-emerald-600 text-white'
-                                  : isEven
+                              className={`px-3 py-1.5 rounded-full text-[10px] tracking-wider uppercase font-medium transition-colors flex items-center space-x-1 cursor-pointer ${isCopied
+                                ? 'bg-emerald-600 text-white'
+                                : isEven
                                   ? 'bg-white/15 hover:bg-gold-champagne text-white'
                                   : 'bg-black/30 hover:bg-charcoal-dark text-white'
-                              }`}
+                                }`}
                             >
                               <i className={`text-xs ${isCopied ? 'fa-solid fa-check' : 'fa-regular fa-copy'}`}></i>
                               <span>{isCopied ? 'Tersalin' : 'Salin'}</span>
@@ -954,11 +944,11 @@ export const Template1Modern: React.FC<InvitationProps> = ({
                 {wishes.map((wish) => {
                   const initials = wish.guest_name
                     ? wish.guest_name
-                        .split(' ')
-                        .map((n) => n[0])
-                        .slice(0, 2)
-                        .join('')
-                        .toUpperCase()
+                      .split(' ')
+                      .map((n) => n[0])
+                      .slice(0, 2)
+                      .join('')
+                      .toUpperCase()
                     : 'TM';
 
                   return (
@@ -1008,30 +998,29 @@ export const Template1Modern: React.FC<InvitationProps> = ({
           )}
         </main>
 
-      {/* ========================================== */}
-      {/* FLOATING AUDIO CONTROLLER BUBBLE           */}
-      {/* ========================================== */}
-      <FloatingDock isPreview={isPreview}>
-        {/* Floating Audio Toggle Button (Pojok Kanan Bawah) */}
-        {isOpen && (
-          <div className={`${isPreview ? 'absolute' : 'fixed'} bottom-5 right-5 z-40 pointer-events-auto`}>
-            <button
-              id="music-btn"
-              type="button"
-              onClick={toggleMusic}
-              className="w-11 h-11 rounded-full glass-button border border-border-subtle shadow-lg flex items-center justify-center text-gold-champagne hover:scale-105 active:scale-95 transition-transform cursor-pointer"
-              title="Putar / Hentikan Musik"
-            >
-              <i
-                id="music-icon"
-                className={`fa-solid fa-compact-disc text-xl animate-spin-slow ${
-                  !isPlaying ? 'paused' : ''
-                }`}
-              ></i>
-            </button>
-          </div>
-        )}
-      </FloatingDock>
+        {/* ========================================== */}
+        {/* FLOATING AUDIO CONTROLLER BUBBLE           */}
+        {/* ========================================== */}
+        <FloatingDock isPreview={isPreview}>
+          {/* Floating Audio Toggle Button (Pojok Kanan Bawah) */}
+          {isOpen && (
+            <div className={`${isPreview ? 'absolute' : 'fixed'} bottom-5 right-5 z-40 pointer-events-auto`}>
+              <button
+                id="music-btn"
+                type="button"
+                onClick={toggleMusic}
+                className="w-11 h-11 rounded-full glass-button border border-border-subtle shadow-lg flex items-center justify-center text-gold-champagne hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+                title="Putar / Hentikan Musik"
+              >
+                <i
+                  id="music-icon"
+                  className={`fa-solid fa-compact-disc text-xl animate-spin-slow ${!isPlaying ? 'paused' : ''
+                    }`}
+                ></i>
+              </button>
+            </div>
+          )}
+        </FloatingDock>
 
         {/* Universal Gallery Lightbox (Terkunci sejajar layar di HP Preview maupun Web PC) */}
         <GalleryLightbox

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { updateGuestWaStatus } from '../lib/supabase/guestService';
 import type { GuestItem } from '../components/dashboard/guest-list/types';
 import { generateGuestCode, normalizePhoneNumber } from '../components/dashboard/guest-list/helpers';
 
@@ -8,6 +9,7 @@ interface UseGuestListOptions {
   invitationId?: string | null;
   invitationSlug?: string;
   sentGuestIds: Set<string>;
+  onSyncSentIds?: (sentIds: string[]) => void;
   showToast: (msg: string) => void;
 }
 
@@ -16,6 +18,7 @@ export function useGuestList({
   invitationId,
   invitationSlug = 'undangan-baru',
   sentGuestIds,
+  onSyncSentIds,
   showToast,
 }: UseGuestListOptions) {
   const [guests, setGuests] = useState<GuestItem[]>([]);
@@ -81,7 +84,12 @@ export function useGuestList({
           const { data: guestsData, error } = await query.order('created_at', { ascending: false });
 
           if (!error && guestsData) {
-            setGuests(guestsData as GuestItem[]);
+            const casted = guestsData as GuestItem[];
+            setGuests(casted);
+            const dbSentIds = casted.filter((g) => g.is_sent).map((g) => g.id);
+            if (dbSentIds.length > 0 && onSyncSentIds) {
+              onSyncSentIds(dbSentIds);
+            }
           } else {
             setGuests([]);
           }
@@ -97,6 +105,16 @@ export function useGuestList({
 
     fetchGuests();
   }, [userId, invitationId, invitationSlug]);
+
+  // Sinkronisasi dinamis jumlah tamu ke sidebar dan mobile navigation
+  useEffect(() => {
+    if (!isLoading) {
+      const realGuests = guests.filter((g) => !g.id.startsWith('local-'));
+      window.dispatchEvent(
+        new CustomEvent('mbell_guests_count_changed', { detail: { count: realGuests.length } })
+      );
+    }
+  }, [guests, isLoading]);
 
   // BULK PASTE HANDLER
   const addBulkGuests = async (parsed: { name: string; phoneNumber?: string }[], bulkCategory: string) => {
@@ -314,6 +332,32 @@ export function useGuestList({
     document.body.removeChild(link);
   };
 
+  // UPDATE GUEST WA STATUS IN LIST & SUPABASE
+  const updateGuestWaStatusInList = async (guestId: string, isSent: boolean) => {
+    const timestamp = isSent ? new Date().toISOString() : null;
+    setGuests((prev) =>
+      prev.map((g) =>
+        g.id === guestId
+          ? {
+              ...g,
+              is_sent: isSent,
+              sent_at: timestamp,
+            }
+          : g
+      )
+    );
+
+    if (
+      activeInvId &&
+      !guestId.startsWith('local-') &&
+      !guestId.startsWith('single-') &&
+      !guestId.startsWith('contact-') &&
+      !guestId.startsWith('csv-')
+    ) {
+      await updateGuestWaStatus(guestId, isSent);
+    }
+  };
+
   // EXPORT GUESTS TO CSV
   const exportGuestsToCsv = (getPersonalLink: (name: string, code: string) => string) => {
     if (guests.length === 0) {
@@ -323,7 +367,7 @@ export function useGuestList({
 
     let csv = 'Nama Tamu,Nomor WhatsApp,Kategori,Kode Pass,Status RSVP,Pax,Status Kirim,Link Undangan\n';
     for (const g of guests) {
-      const isSent = sentGuestIds.has(g.id) ? 'Sudah Dikirim' : 'Belum Dikirim';
+      const isSent = Boolean(g.is_sent || sentGuestIds.has(g.id)) ? 'Sudah Dikirim' : 'Belum Dikirim';
       const link = getPersonalLink(g.name, g.guest_code);
       csv += `"${g.name}","${g.phone_number || ''}","${g.category || 'Reguler'}","${g.guest_code}","${g.rsvp_status}","${g.rsvp_pax || 1}","${isSent}","${link}"\n`;
     }
@@ -347,9 +391,10 @@ export function useGuestList({
 
     if (!matchesSearch) return false;
 
+    const isGuestSent = Boolean(g.is_sent || sentGuestIds.has(g.id));
     if (filterStatus === 'all') return true;
-    if (filterStatus === 'sent') return sentGuestIds.has(g.id);
-    if (filterStatus === 'unsent') return !sentGuestIds.has(g.id);
+    if (filterStatus === 'sent') return isGuestSent;
+    if (filterStatus === 'unsent') return !isGuestSent;
     return g.rsvp_status === filterStatus;
   });
 
@@ -360,7 +405,7 @@ export function useGuestList({
   const totalPaxHadir = guests
     .filter((g) => g.rsvp_status === 'hadir')
     .reduce((acc, curr) => acc + (curr.rsvp_pax || 1), 0);
-  const totalSent = guests.filter((g) => sentGuestIds.has(g.id)).length;
+  const totalSent = guests.filter((g) => Boolean(g.is_sent || sentGuestIds.has(g.id))).length;
 
   return {
     guests,
@@ -384,5 +429,6 @@ export function useGuestList({
     deleteGuest,
     downloadCsvTemplate,
     exportGuestsToCsv,
+    updateGuestWaStatusInList,
   };
 }

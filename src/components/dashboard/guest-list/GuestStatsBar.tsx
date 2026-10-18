@@ -28,7 +28,9 @@ export const GuestStatsBar: React.FC<GuestStatsBarProps> = ({
       <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 shadow-2xs">
         <span className="text-[11px] font-medium text-emerald-700 uppercase tracking-wider">Sudah Dikirim</span>
         <p className="text-2xl font-bold text-emerald-900 mt-1">{totalSent}</p>
-        <span className="text-[11px] text-emerald-600 font-semibold">Tersampaikan ✔️</span>
+        <span className="text-[11px] text-emerald-600 font-semibold">
+          {totalGuests > 0 ? `${Math.round((totalSent / totalGuests) * 100)}% Tersampaikan ✔️` : 'Tersampaikan ✔️'}
+        </span>
       </div>
 
       <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 shadow-2xs">

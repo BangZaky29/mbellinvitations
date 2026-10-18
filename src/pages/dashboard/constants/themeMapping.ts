@@ -24,6 +24,12 @@ export const THEME_TO_TEMPLATE_ID: Record<string, string> = {
   template6: 'template6',
 };
 
+/**
+ * Daftar tema eksklusif resmi yang tersedia di Wedding Studio
+ */
+export const CANONICAL_THEMES = ['sunda', 'jawa', 'islami', 'modern', 'rustic', 'luxury'] as const;
+export const TOTAL_EXCLUSIVE_THEMES = CANONICAL_THEMES.length; // 6 Tema Eksklusif
+
 export const KNOWN_DB_TEMPLATE_IDS = new Set([
   'template1',
   'template2',
@@ -206,3 +212,198 @@ export const DEMO_KEYWORDS = [
   'rayhan', 'yasmin', 'al-fatih', 'anbiya',
   'bagas', 'citra', 'anindita', 'pratama'
 ];
+
+// =========================================================================
+// SKEMA HARGA PAY-PER-TEMPLATE (Migrasi price.sql)
+// =========================================================================
+export interface TemplatePriceInfo {
+  price: number;
+  originalPrice: number;
+  priceDisplay: string;
+  originalPriceDisplay: string;
+  badgePrice: string;
+  category: 'adat' | 'casual';
+  categoryLabel: string;
+}
+
+export const TEMPLATE_PRICING: Record<string, TemplatePriceInfo> = {
+  // Kelompok 1: Adat Nusantara (Harga: Rp 59.000, Coret: Rp 99.000)
+  sunda: {
+    price: 59000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 59.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 59rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  template6: {
+    price: 59000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 59.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 59rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  jawa: {
+    price: 59000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 59.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 59rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  template3: {
+    price: 59000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 59.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 59rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  islami: {
+    price: 59000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 59.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 59rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  template4: {
+    price: 59000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 59.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 59rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+
+  // Kelompok 2: Modern & Casual (Harga: Rp 39.000, Coret: Rp 79.000)
+  modern: {
+    price: 39000,
+    originalPrice: 79000,
+    priceDisplay: 'Rp 39.000',
+    originalPriceDisplay: 'Rp 79.000',
+    badgePrice: 'Rp 39rb',
+    category: 'casual',
+    categoryLabel: 'Modern & Casual',
+  },
+  template1: {
+    price: 39000,
+    originalPrice: 79000,
+    priceDisplay: 'Rp 39.000',
+    originalPriceDisplay: 'Rp 79.000',
+    badgePrice: 'Rp 39rb',
+    category: 'casual',
+    categoryLabel: 'Modern & Casual',
+  },
+  rustic: {
+    price: 39000,
+    originalPrice: 79000,
+    priceDisplay: 'Rp 39.000',
+    originalPriceDisplay: 'Rp 79.000',
+    badgePrice: 'Rp 39rb',
+    category: 'casual',
+    categoryLabel: 'Modern & Casual',
+  },
+  template2: {
+    price: 39000,
+    originalPrice: 79000,
+    priceDisplay: 'Rp 39.000',
+    originalPriceDisplay: 'Rp 79.000',
+    badgePrice: 'Rp 39rb',
+    category: 'casual',
+    categoryLabel: 'Modern & Casual',
+  },
+  luxury: {
+    price: 39000,
+    originalPrice: 79000,
+    priceDisplay: 'Rp 39.000',
+    originalPriceDisplay: 'Rp 79.000',
+    badgePrice: 'Rp 39rb',
+    category: 'casual',
+    categoryLabel: 'Modern & Casual',
+  },
+  template5: {
+    price: 39000,
+    originalPrice: 79000,
+    priceDisplay: 'Rp 39.000',
+    originalPriceDisplay: 'Rp 79.000',
+    badgePrice: 'Rp 39rb',
+    category: 'casual',
+    categoryLabel: 'Modern & Casual',
+  },
+};
+
+export function getTemplatePriceInfo(themeOrTemplateId?: string): TemplatePriceInfo {
+  const key = themeOrTemplateId || 'modern';
+  return (
+    TEMPLATE_PRICING[key] ||
+    TEMPLATE_PRICING[THEME_TO_TEMPLATE_ID[key]] || {
+      price: 39000,
+      originalPrice: 79000,
+      priceDisplay: 'Rp 39.000',
+      originalPriceDisplay: 'Rp 79.000',
+      badgePrice: 'Rp 39rb',
+      category: 'casual',
+      categoryLabel: 'Modern & Casual',
+    }
+  );
+}
+
+/**
+ * Memeriksa apakah sebuah template sudah dibeli/diaktivasi untuk DESAIN UNDANGAN INI.
+ * Aturan Bisnis:
+ * - Pembelian bersifat terikat per-desain undangan (1x beli = 1x desain undangan).
+ * - Jika user membuat desain undangan baru (meski memakai template tema yang sama),
+ *   desain baru tersebut memiliki status belum dibeli dan harus diaktivasi saat publish.
+ */
+export function isTemplateUnlocked(
+  templateOrThemeId: string | undefined | null,
+  unlockedTemplates?: string[] | null,
+  paidTemplateId?: string | null,
+  isPaid?: boolean
+): boolean {
+  if (!templateOrThemeId) return false;
+
+  const technicalId = THEME_TO_TEMPLATE_ID[templateOrThemeId] || templateOrThemeId;
+  const semanticId = TEMPLATE_ID_TO_THEME[templateOrThemeId] || templateOrThemeId;
+
+  // 1. Cek pada daftar unlocked_templates milik desain undangan ini
+  if (Array.isArray(unlockedTemplates) && unlockedTemplates.length > 0) {
+    const found = unlockedTemplates.some((item) => {
+      const itemTech = THEME_TO_TEMPLATE_ID[item] || item;
+      const itemSem = TEMPLATE_ID_TO_THEME[item] || item;
+      return (
+        item === templateOrThemeId ||
+        item === technicalId ||
+        item === semanticId ||
+        itemTech === technicalId ||
+        itemSem === semanticId
+      );
+    });
+    if (found) return true;
+  }
+
+  // 2. Cek jika paid_template_id cocok dan is_paid true pada desain undangan ini
+  if (isPaid && paidTemplateId) {
+    const paidTech = THEME_TO_TEMPLATE_ID[paidTemplateId] || paidTemplateId;
+    const paidSem = TEMPLATE_ID_TO_THEME[paidTemplateId] || paidTemplateId;
+    if (
+      paidTemplateId === templateOrThemeId ||
+      paidTemplateId === technicalId ||
+      paidTemplateId === semanticId ||
+      paidTech === technicalId ||
+      paidSem === semanticId
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}

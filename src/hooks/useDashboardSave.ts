@@ -2,7 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase, saveUserTemplate } from '../lib/supabaseClient';
 import type { InvitationData, ThemeConfig } from '../types/invitation';
 import { extractYouTubeId } from './useAudioPlayer';
-import { THEME_TO_TEMPLATE_ID, getSafeDbTemplateId } from '../pages/dashboard/constants/themeMapping';
+import {
+  THEME_TO_TEMPLATE_ID,
+  TEMPLATE_ID_TO_THEME,
+  getSafeDbTemplateId,
+  isTemplateUnlocked,
+} from '../pages/dashboard/constants/themeMapping';
 import type { DashboardUser } from './useDashboardAuth';
 
 import { computeCoupleSlug } from '../pages/dashboard/helpers/computeCoupleSlug';
@@ -47,7 +52,7 @@ async function syncInvitationsRow(
   try {
     const { data: existingRows, error: selectError } = await supabase
       .from('invitations')
-      .select('id, user_id, status, template_id, content')
+      .select('id, user_id, status, template_id, content, theme_config, is_paid, paid_template_id, unlocked_templates')
       .eq('slug', targetSlug);
 
     if (selectError) {
@@ -58,32 +63,47 @@ async function syncInvitationsRow(
     const safeTemplateId = getSafeDbTemplateId(payload.template_id);
 
     if (existingRows && existingRows.length > 0) {
-      const existing = existingRows[0];
+      const existing: any = existingRows[0];
       const canUpdate = !existing.user_id || existing.user_id === payload.user_id || !payload.user_id;
       if (canUpdate) {
-        // Jika undangan SUDAH LIVE (status: published), tetapi user sedang mengedit template lain di editor
-        // dan belum mempublikasikan/membayar template baru tersebut:
-        // Pertahankan template_id live agar link publik tidak berubah template sebelum user klik Publikasikan.
-        const existingTheme = existing.content?.theme_id;
-        const newTheme = payload.content?.theme_id;
-        const isThemeChanged = Boolean(existingTheme && newTheme && existingTheme !== newTheme);
+        // Ambil tema yang sah dari data existing live di Supabase
+        const existingTheme =
+          existing.content?.theme_id ||
+          TEMPLATE_ID_TO_THEME[existing.template_id] ||
+          existing.template_id ||
+          'sunda';
+        const newTheme = payload.content?.theme_id || TEMPLATE_ID_TO_THEME[payload.template_id] || 'sunda';
 
-        const activeLiveTemplateId =
-          existing.status === 'published' && isThemeChanged
-            ? existing.template_id
-            : safeTemplateId;
+        // Cek apakah newTheme sudah dibeli untuk desain undangan ini
+        const isNewThemeUnlocked = isTemplateUnlocked(
+          newTheme,
+          payload.content?.unlocked_templates || existing.content?.unlocked_templates,
+          payload.content?.paid_template_id || existing.content?.paid_template_id,
+          payload.content?.is_paid ?? existing.content?.is_paid
+        );
 
-        const liveContent =
-          existing.status === 'published' && isThemeChanged
-            ? { ...payload.content, theme_id: existingTheme }
-            : payload.content;
+        // Jika status undangan SUDAH LIVE (published), dan user sedang mencoba tema baru yang BELUM DIBELI:
+        // Tautan publik WAJIB TETAP mempertahankan template live yang sah (existing.template_id & existingTheme)
+        const isAttemptingUnpaidThemeOnLive =
+          existing.status === 'published' && !isNewThemeUnlocked;
+
+        const activeLiveTemplateId = isAttemptingUnpaidThemeOnLive
+          ? existing.template_id
+          : safeTemplateId;
+
+        const liveContent = isAttemptingUnpaidThemeOnLive
+          ? { ...payload.content, theme_id: existingTheme }
+          : payload.content;
 
         const updatePayload: any = {
           template_id: activeLiveTemplateId,
           content: liveContent,
-          theme_config: payload.theme_config,
+          theme_config: isAttemptingUnpaidThemeOnLive ? (existing.content?.theme_config || (existing as any).theme_config || payload.theme_config) : payload.theme_config,
           music_url: payload.music_url,
           music_type: payload.music_type,
+          is_paid: existing.is_paid ?? payload.content?.is_paid ?? (existing.status === 'published'),
+          paid_template_id: payload.content?.paid_template_id || existing.paid_template_id || (existing.status === 'published' ? activeLiveTemplateId : null),
+          unlocked_templates: payload.content?.unlocked_templates || existing.unlocked_templates || [],
           updated_at: new Date().toISOString(),
         };
         if (existing.status !== 'published') {
@@ -434,15 +454,33 @@ export function useDashboardSave({
 
       // 3. Jika user terautentikasi (login), simpan/upsert ke tabel public.user_templates
       if (user?.id) {
+        const isThemeUnlocked = isTemplateUnlocked(
+          formData.theme_id,
+          formData.unlocked_templates,
+          formData.paid_template_id,
+          formData.is_paid
+        );
+
+        // Jika status undangan adalah published, dan user sedang memilih tema yang belum dibeli:
+        // Simpan tema yang sudah terbit di kolom utama agar rute publik tetap aman
+        const isUnpaidPreviewOnLive = effectiveStatus === 'published' && !isThemeUnlocked;
+        const resolvedDbTheme = isUnpaidPreviewOnLive
+          ? (baselineSnapshotRef.current?.formData?.theme_id || 'jawa')
+          : (formData.theme_id || 'modern');
+        const resolvedDbTemplateId = getSafeDbTemplateId(resolvedDbTheme);
+
         const userTemplatePayload = {
           id: currentTemplateRecordId || undefined,
           user_id: user.id,
           title: coupleTitle,
           slug: targetSlug,
-          template_id,
-          theme_id: formData.theme_id || 'modern',
+          template_id: resolvedDbTemplateId,
+          theme_id: resolvedDbTheme,
           status: effectiveStatus,
-          content: formData,
+          is_paid: formData.is_paid ?? (effectiveStatus === 'published'),
+          paid_template_id: formData.paid_template_id || (effectiveStatus === 'published' ? resolvedDbTemplateId : null),
+          unlocked_templates: formData.unlocked_templates || [],
+          content: isUnpaidPreviewOnLive ? { ...formData, theme_id: resolvedDbTheme } : formData,
           theme_config: themeConfig,
           music_url: resolvedMusicUrl,
           music_type: resolvedMusicType,
@@ -467,6 +505,13 @@ export function useDashboardSave({
       setUnsavedCount(0);
       setAuditTrail({ count: 0, changes: [], hasChanges: false });
       localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
+      try {
+        localStorage.setItem(`mbell_cached_inv_${targetSlug}`, JSON.stringify({
+          templateId: template_id,
+          invitationData: formData,
+          themeConfig,
+        }));
+      } catch (e) {}
       setLastSaved(new Date());
 
       const isLiveAlready = formData.status === 'published';
@@ -544,16 +589,28 @@ export function useDashboardSave({
       if (user?.id) {
         const targetRecordId = recordId || undefined;
 
+        const isThemeUnlocked = isTemplateUnlocked(
+          formData.theme_id,
+          formData.unlocked_templates,
+          formData.paid_template_id,
+          formData.is_paid
+        );
+        const isUnpaidPreviewOnLive = effectiveStatus === 'published' && !isThemeUnlocked;
+        const resolvedDbTheme = isUnpaidPreviewOnLive
+          ? (baselineSnapshotRef.current?.formData?.theme_id || 'jawa')
+          : (formData.theme_id || 'modern');
+        const resolvedDbTemplateId = getSafeDbTemplateId(resolvedDbTheme);
+
         // Simpan / update di public.user_templates
         const res = await saveUserTemplate({
           id: targetRecordId,
           user_id: user.id,
           title: coupleTitle,
           slug: targetSlug,
-          template_id,
-          theme_id: formData.theme_id || 'modern',
+          template_id: resolvedDbTemplateId,
+          theme_id: resolvedDbTheme,
           status: effectiveStatus,
-          content: draftContent,
+          content: isUnpaidPreviewOnLive ? { ...draftContent, theme_id: resolvedDbTheme } : draftContent,
           theme_config: themeConfig,
           music_url: resolvedMusicUrl,
           music_type: resolvedMusicType,
@@ -589,6 +646,13 @@ export function useDashboardSave({
       setUnsavedCount(0);
       setAuditTrail({ count: 0, changes: [], hasChanges: false });
       localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
+      try {
+        localStorage.setItem(`mbell_cached_inv_${targetSlug}`, JSON.stringify({
+          templateId: template_id,
+          invitationData: draftContent,
+          themeConfig,
+        }));
+      } catch (e) {}
       setLastSaved(new Date());
 
       setSaveToast({

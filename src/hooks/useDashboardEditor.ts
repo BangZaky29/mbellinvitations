@@ -109,6 +109,7 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
   const [showAuthGateModal, setShowAuthGateModal] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [showOpeningSplash, setShowOpeningSplash] = useState(true);
+  const [publishedThemeId, setPublishedThemeId] = useState<string | null>(null);
 
   // 1. Initial Load: Auth check and fetch invitation from Supabase
   useEffect(() => {
@@ -133,7 +134,131 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
         }
 
         if (currentUser) {
-          // 🌟 FITUR 3.3: SEAMLESS DRAFT PRESERVATION (AUTO-RESTORE & AUTO-UPSERT SETELAH LOGIN)
+          // 1. Cek terlebih dahulu apakah ada template tersimpan di user_templates milik user ini
+          const savedActiveId = localStorage.getItem('mbell_active_template_id');
+          let userTemplateQuery = supabase
+            .from('user_templates')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .neq('slug', 'raditya-jessica');
+
+          if (savedActiveId) {
+            userTemplateQuery = userTemplateQuery.eq('id', savedActiveId);
+          } else {
+            userTemplateQuery = userTemplateQuery.order('updated_at', { ascending: false }).limit(1);
+          }
+
+          const { data: userTemplateData } = await userTemplateQuery.maybeSingle();
+
+          // KASUS A: User SUDAH memiliki template tersimpan di database
+          if (
+            userTemplateData &&
+            userTemplateData.slug !== 'raditya-jessica' &&
+            !(userTemplateData.title || '').toLowerCase().includes('raditya')
+          ) {
+            setCurrentTemplateRecordId(userTemplateData.id);
+            localStorage.setItem('mbell_active_template_id', userTemplateData.id);
+
+            const isDbPublished = userTemplateData.status === 'published';
+            const dbPublishedTheme = (userTemplateData.theme_id ||
+              userTemplateData.content?.theme_id ||
+              (userTemplateData.template_id ? TEMPLATE_ID_TO_THEME[userTemplateData.template_id] : null) ||
+              'modern') as any;
+
+            // Jika status di database adalah published, WAJIB pertahankan status LIVE dan tema live-nya
+            if (isDbPublished) {
+              setPublishedThemeId(dbPublishedTheme);
+            } else {
+              setPublishedThemeId(null);
+            }
+
+            const loadedContent = (userTemplateData.content && typeof userTemplateData.content === 'object')
+              ? userTemplateData.content
+              : {};
+            const gName = (loadedContent.groom?.name || '').trim();
+            const bName = (loadedContent.bride?.name || '').trim();
+            const coupleSlug = computeCoupleSlug(gName, bName);
+            const effectiveSlug = userTemplateData.slug || loadedContent.slug || coupleSlug || 'undangan-baru';
+
+            // Cek apakah ada perubahan belum disimpan di localStorage (misal user sedang coba preview tema lain)
+            const hasUnsavedDraft = localStorage.getItem('mbell_pending_draft_hasUnsavedEdits') === 'true';
+            const savedDraftFormDataStr = localStorage.getItem('mbell_pending_draft_formData');
+            const savedDraftThemeConfigStr = localStorage.getItem('mbell_pending_draft_themeConfig');
+
+            if (hasUnsavedDraft && savedDraftFormDataStr) {
+              try {
+                const pendingFormData: InvitationData = JSON.parse(savedDraftFormDataStr);
+                const pendingThemeConfig: ThemeConfig = savedDraftThemeConfigStr
+                  ? JSON.parse(savedDraftThemeConfigStr)
+                  : (userTemplateData.theme_config || themeConfig);
+
+                const effectiveUnlocked = Array.from(
+                  new Set([
+                    ...(Array.isArray(userTemplateData.unlocked_templates) ? userTemplateData.unlocked_templates : []),
+                    ...(Array.isArray(loadedContent.unlocked_templates) ? loadedContent.unlocked_templates : []),
+                    ...(Array.isArray(pendingFormData.unlocked_templates) ? pendingFormData.unlocked_templates : []),
+                    userTemplateData.paid_template_id,
+                    loadedContent.paid_template_id,
+                  ].filter(Boolean))
+                );
+                const effectiveIsPaid = Boolean(userTemplateData.is_paid ?? loadedContent.is_paid ?? isDbPublished);
+                const effectivePaidTplId = userTemplateData.paid_template_id || loadedContent.paid_template_id || (isDbPublished ? dbPublishedTheme : null);
+
+                // Muat ke state form editor agar perubahan tidak hilang, tapi status publikasi database TETAP AMAN
+                setFormData({
+                  ...MOCK_MODERN_DATA,
+                  ...pendingFormData,
+                  slug: effectiveSlug,
+                  status: isDbPublished ? 'published' : (userTemplateData.status || 'draft'),
+                  // Jika tema di draft berbeda, biarkan editor menampilkan preview tema tersebut
+                  theme_id: pendingFormData.theme_id || dbPublishedTheme,
+                  unlocked_templates: effectiveUnlocked,
+                  is_paid: effectiveIsPaid,
+                  paid_template_id: effectivePaidTplId,
+                });
+                setThemeConfig(pendingThemeConfig);
+                setLoading(false);
+                return;
+              } catch (err) {
+                console.warn('Gagal mem-parse unsaved draft:', err);
+              }
+            }
+
+            const effectiveUnlocked = Array.from(
+              new Set([
+                ...(Array.isArray(userTemplateData.unlocked_templates) ? userTemplateData.unlocked_templates : []),
+                ...(Array.isArray(loadedContent.unlocked_templates) ? loadedContent.unlocked_templates : []),
+                userTemplateData.paid_template_id,
+                loadedContent.paid_template_id,
+              ].filter(Boolean))
+            );
+            const effectiveIsPaid = Boolean(userTemplateData.is_paid ?? loadedContent.is_paid ?? isDbPublished);
+            const effectivePaidTplId = userTemplateData.paid_template_id || loadedContent.paid_template_id || (isDbPublished ? dbPublishedTheme : null);
+
+            // Jika tidak ada unsaved draft atau parse gagal, gunakan data resmi dari database
+            setFormData({
+              ...MOCK_MODERN_DATA,
+              ...loadedContent,
+              slug: effectiveSlug,
+              status: isDbPublished ? 'published' : (userTemplateData.status || 'draft'),
+              theme_id: dbPublishedTheme,
+              unlocked_templates: effectiveUnlocked,
+              is_paid: effectiveIsPaid,
+              paid_template_id: effectivePaidTplId,
+              ...(userTemplateData.music_url ? { music_url: userTemplateData.music_url } : {}),
+            });
+
+            if (userTemplateData.theme_config && typeof userTemplateData.theme_config === 'object') {
+              setThemeConfig({
+                ...userTemplateData.theme_config,
+                ...(userTemplateData.music_url ? { music_url: userTemplateData.music_url } : {}),
+              });
+            }
+            setLoading(false);
+            return;
+          }
+
+          // KASUS B: User baru pertama kali login dan BELUM memiliki template di database sama sekali
           const hasUnsavedDraft = localStorage.getItem('mbell_pending_draft_hasUnsavedEdits') === 'true';
           const savedDraftFormDataStr = localStorage.getItem('mbell_pending_draft_formData');
           const savedDraftThemeConfigStr = localStorage.getItem('mbell_pending_draft_themeConfig');
@@ -148,7 +273,6 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
               setFormData(pendingFormData);
               if (pendingThemeConfig) setThemeConfig(pendingThemeConfig);
 
-              // Auto-upsert ke Supabase di bawah currentUser.id
               const saveResult = await saveUserTemplate({
                 user_id: currentUser.id,
                 slug: pendingFormData.slug || computeCoupleSlug(pendingFormData.groom?.name, pendingFormData.bride?.name) || 'undangan-baru',
@@ -168,98 +292,11 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
               }
 
               localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
-
-              if (setSaveToast) {
-                setSaveToast({
-                  show: true,
-                  message: 'Draf otomatis tersimpan ke akun',
-                  type: 'success',
-                });
-              }
               setLoading(false);
               return;
             } catch (err) {
-              console.warn('Gagal memproses draf pending setelah login:', err);
+              console.warn('Gagal memproses draf awal setelah login:', err);
             }
-          }
-
-          // Cek apakah ada template tersimpan di user_templates milik user ini (selain raditya-jessica)
-          const savedActiveId = localStorage.getItem('mbell_active_template_id');
-          let userTemplateQuery = supabase
-            .from('user_templates')
-            .select('*')
-            .eq('user_id', currentUser.id)
-            .neq('slug', 'raditya-jessica');
-
-          if (savedActiveId) {
-            userTemplateQuery = userTemplateQuery.eq('id', savedActiveId);
-          } else {
-            userTemplateQuery = userTemplateQuery.order('updated_at', { ascending: false }).limit(1);
-          }
-
-          const { data: userTemplateData } = await userTemplateQuery.maybeSingle();
-          if (
-            userTemplateData &&
-            userTemplateData.slug !== 'raditya-jessica' &&
-            !(userTemplateData.title || '').toLowerCase().includes('raditya')
-          ) {
-            setCurrentTemplateRecordId(userTemplateData.id);
-            if (userTemplateData.content && typeof userTemplateData.content === 'object') {
-              const loadedContent = userTemplateData.content;
-              const gName = (loadedContent.groom?.name || '').trim();
-              const bName = (loadedContent.bride?.name || '').trim();
-              const coupleSlug = computeCoupleSlug(gName, bName);
-
-              let effectiveSlug = userTemplateData.slug || loadedContent.slug || coupleSlug || '';
-              if (!effectiveSlug && coupleSlug) {
-                effectiveSlug = coupleSlug;
-                // Sinkronkan perbaikan slug otomatis ini langsung ke Supabase
-                (async () => {
-                  try {
-                    await saveUserTemplate({
-                      id: userTemplateData.id,
-                      user_id: currentUser.id,
-                      slug: coupleSlug,
-                      content: { ...loadedContent, slug: coupleSlug },
-                    });
-
-                    const safeDbTemplateId = getSafeDbTemplateId(userTemplateData.theme_id || loadedContent.theme_id);
-                    const { error: syncInvError } = await supabase.from('invitations').upsert({
-                      user_id: currentUser.id,
-                      template_id: safeDbTemplateId,
-                      slug: coupleSlug,
-                      content: { ...loadedContent, slug: coupleSlug },
-                      theme_config: userTemplateData.theme_config || themeConfig,
-                      status: userTemplateData.status || 'draft',
-                      updated_at: new Date().toISOString(),
-                    }, { onConflict: 'slug' });
-
-                    if (syncInvError) {
-                      console.warn('Sync invitations notice:', syncInvError.message);
-                    }
-                  } catch (syncErr) {
-                    console.warn('Sync slug error:', syncErr);
-                  }
-                })();
-              }
-
-              setFormData({
-                ...MOCK_MODERN_DATA,
-                ...loadedContent,
-                slug: effectiveSlug,
-                status: (userTemplateData.status || loadedContent.status || 'draft') as any,
-                theme_id: (userTemplateData.theme_id || loadedContent.theme_id || 'modern') as any,
-                ...(userTemplateData.music_url ? { music_url: userTemplateData.music_url } : {}),
-              });
-            }
-            if (userTemplateData.theme_config && typeof userTemplateData.theme_config === 'object') {
-              setThemeConfig({
-                ...userTemplateData.theme_config,
-                ...(userTemplateData.music_url ? { music_url: userTemplateData.music_url } : {}),
-              });
-            }
-            setLoading(false);
-            return;
           }
         }
 
@@ -311,6 +348,7 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
       setFormData(INITIAL_BLANK_DRAFT);
       setThemeConfig(DEFAULT_THEME_CONFIGS['modern']);
       setCurrentTemplateRecordId(null);
+      setPublishedThemeId(null);
       setActiveStep(1);
       localStorage.removeItem('mbell_active_template_id');
       localStorage.removeItem('mbell_pending_draft_formData');
@@ -328,6 +366,15 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
     setCurrentTemplateRecordId(template.id);
     localStorage.setItem('mbell_active_template_id', template.id);
 
+    const isPublishedTemplate = template.status === 'published';
+    const effectiveTheme = (template.theme_id || template.content?.theme_id || (template.template_id ? TEMPLATE_ID_TO_THEME[template.template_id] : null) || 'modern') as any;
+
+    if (isPublishedTemplate) {
+      setPublishedThemeId(effectiveTheme);
+    } else {
+      setPublishedThemeId(null);
+    }
+
     let loadedFormData: InvitationData = formData;
     if (template.content && typeof template.content === 'object') {
       const gName = (template.content.groom?.name || '').trim();
@@ -342,7 +389,7 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
         ...template.content,
         slug: effectiveSlug,
         status: (template.status || template.content.status || 'draft') as any,
-        theme_id: (template.theme_id || template.content.theme_id || 'modern') as any,
+        theme_id: effectiveTheme,
       };
       if (template.music_url) {
         mergedContent.music_url = template.music_url;
@@ -559,7 +606,7 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
       if (setSaveToast) {
         setSaveToast({
           show: true,
-          message: `Alamat tautan berhasil diubah & disinkronkan: mbell.id/${cleanSlug}`,
+          message: `Alamat tautan berhasil diubah & disinkronkan: /${cleanSlug}`,
           isError: false,
         });
       }
@@ -568,7 +615,7 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
       if (setSaveToast) {
         setSaveToast({
           show: true,
-          message: `Alamat tautan diubah ke: mbell.id/${cleanSlug}`,
+          message: `Alamat tautan diubah ke: /${cleanSlug}`,
           isError: false,
         });
       }
@@ -662,6 +709,8 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
     setShowPricingModal,
     showOpeningSplash,
     setShowOpeningSplash,
+    publishedThemeId,
+    setPublishedThemeId,
     // Handlers
     handleSelectSavedTemplate,
     handleImplementActiveTemplate,

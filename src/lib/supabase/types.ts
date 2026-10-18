@@ -1,5 +1,24 @@
 import type { InvitationData, ThemeConfig, AnimationConfig } from '../../types/invitation';
 
+export interface SupabaseTemplateRecord {
+  id: string;
+  slug: string;
+  name: string;
+  category: 'adat' | 'casual' | string;
+  description?: string | null;
+  thumbnail_url?: string | null;
+  preview_badge?: string | null;
+  accent_color?: string;
+  default_audio_url?: string | null;
+  is_active: boolean;
+  is_premium: boolean;
+  default_theme: ThemeConfig;
+  price: number;
+  original_price: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface SupabaseInvitationRecord {
   id: string;
   user_id: string | null;
@@ -13,6 +32,13 @@ export interface SupabaseInvitationRecord {
   animation_config?: AnimationConfig;
   views_count: number;
   alternate_id?: string;
+  // Kolom Pembayaran Pay-Per-Template (Migrasi price.sql)
+  is_paid: boolean;
+  paid_template_id: string | null;
+  unlocked_templates: string[];
+  paid_at: string | null;
+  payment_method: string | null;
+  amount_paid: number;
   created_at: string;
   updated_at: string;
 }
@@ -31,6 +57,9 @@ export interface SupabaseGuestRecord {
   rsvp_at: string | null;
   is_checked_in: boolean;
   checked_in_at: string | null;
+  // Kolom Tracker WA Permanen (Migrasi price.sql)
+  is_sent: boolean;
+  sent_at: string | null;
 }
 
 export interface UserTemplateRecord {
@@ -47,6 +76,13 @@ export interface UserTemplateRecord {
   thumbnail_url: string | null;
   music_url?: string | null;
   music_type?: string;
+  // Kolom Pembayaran Pay-Per-Template (Migrasi price.sql)
+  is_paid?: boolean;
+  paid_template_id?: string | null;
+  unlocked_templates?: string[];
+  paid_at?: string | null;
+  payment_method?: string | null;
+  amount_paid?: number;
   created_at?: string;
   updated_at?: string;
 }

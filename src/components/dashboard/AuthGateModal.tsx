@@ -146,7 +146,7 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({
               Masuk atau Daftar Akun
             </h3>
             <p className="text-xs text-stone-500 font-medium">
-              Amankan draf <span className="font-semibold text-stone-800">mbell.id/{invitationSlug}</span>
+              Amankan draf <span className="font-semibold text-stone-800">/{invitationSlug}</span>
             </p>
           </div>
         </div>

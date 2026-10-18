@@ -62,7 +62,7 @@ export const RegisterPage: React.FC = () => {
           <div className="flex items-start gap-2.5">
             <span className="material-symbols-outlined text-emerald-600 text-[18px] shrink-0 mt-0.5">palette</span>
             <p className="font-body-sm text-xs text-stone-700">
-              <strong>5 Tema Eksklusif:</strong> Desain Modern, Rustic, Jawa Tradisional, Islami, dan Luxury.
+              <strong>6 Tema Eksklusif:</strong> Desain Adat Sunda Siger, Adat Jawa, Islami Kubah, Modern Arch, Rustic Floral, dan Luxury Glamour.
             </p>
           </div>
           <div className="flex items-start gap-2.5">

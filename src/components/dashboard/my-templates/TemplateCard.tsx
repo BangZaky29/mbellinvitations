@@ -2,6 +2,7 @@ import React from 'react';
 import type { UserTemplateRecord } from '../../../lib/supabaseClient';
 import type { InvitationData } from '../../../types/invitation';
 import { THEME_BANNER_COLORS } from './types';
+import { getInvitationDisplayUrl } from '../../../utils/urlHelper';
 
 interface TemplateCardProps {
   item: UserTemplateRecord;
@@ -135,7 +136,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
 
           <div className="flex items-center gap-2 text-stone-500 text-xs flex-wrap">
             <span className="font-mono text-xs font-semibold text-stone-800 select-all">
-              mbell.id/{itemEffectiveSlug}
+              {getInvitationDisplayUrl(itemEffectiveSlug)}
             </span>
             <button
               type="button"

@@ -10,6 +10,9 @@ export interface GuestItem {
   rsvp_pax?: number;
   rsvp_notes?: string;
   created_at: string;
+  // Kolom Tracker WA Permanen (Migrasi price.sql)
+  is_sent?: boolean;
+  sent_at?: string | null;
 }
 
 import type { InvitationData } from '../../../types/invitation';

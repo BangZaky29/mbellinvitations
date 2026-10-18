@@ -77,6 +77,14 @@ export interface InvitationData {
   title?: string;
   theme_id?: TemplateThemeId | string;
 
+  // --- Payment & Template Ownership (Pay-Per-Template on Publish) ---
+  is_paid?: boolean;
+  paid_template_id?: string | null;
+  unlocked_templates?: string[];
+  paid_at?: string | null;
+  payment_method?: string | null;
+  amount_paid?: number;
+
   // --- Couple ---
   groom: CoupleInfo;
   bride: CoupleInfo;

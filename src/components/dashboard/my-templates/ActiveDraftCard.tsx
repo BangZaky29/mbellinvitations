@@ -1,6 +1,7 @@
 import React from 'react';
 import type { InvitationData } from '../../../types/invitation';
 import type { UserTemplateRecord } from '../../../lib/supabaseClient';
+import { getInvitationDisplayUrl } from '../../../utils/urlHelper';
 
 interface ActiveDraftCardProps {
   currentFormData: InvitationData;
@@ -89,7 +90,7 @@ export const ActiveDraftCard: React.FC<ActiveDraftCardProps> = ({
               <p className="text-xs text-stone-500 flex items-center gap-1.5">
                 <span>Tautan:</span>
                 <span className="font-mono text-stone-900 font-bold select-all">
-                  mbell.id/{currentEffectiveSlug}
+                  {getInvitationDisplayUrl(currentEffectiveSlug)}
                 </span>
               </p>
               {onCopyLink && (

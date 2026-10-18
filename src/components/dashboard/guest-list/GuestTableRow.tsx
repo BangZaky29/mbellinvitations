@@ -92,21 +92,31 @@ export const GuestTableRow: React.FC<GuestTableRowProps> = ({
 
       {/* Tracker Kirim WA Badge (Bisa di-toggle manual) */}
       <td className="py-3.5 px-4 text-center">
-        <button
-          type="button"
-          onClick={() => onToggleSentStatus(guest.id)}
-          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all cursor-pointer ${
-            isSent
-              ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
-              : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-          }`}
-          title="Klik untuk mengubah status manual"
-        >
-          <span className="material-symbols-outlined text-[13px]">
-            {isSent ? 'check_circle' : 'pending'}
-          </span>
-          <span>{isSent ? 'Sudah Dikirim ✔️' : 'Belum Dikirim'}</span>
-        </button>
+        <div className="flex flex-col items-center justify-center gap-0.5">
+          <button
+            type="button"
+            onClick={() => onToggleSentStatus(guest.id)}
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all cursor-pointer ${
+              isSent
+                ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300/50'
+                : 'bg-stone-100 text-stone-500 hover:bg-stone-200 border border-stone-200'
+            }`}
+            title="Klik untuk mengubah status kirim WhatsApp"
+          >
+            <span className="material-symbols-outlined text-[13px]">
+              {isSent ? 'check_circle' : 'pending'}
+            </span>
+            <span>{isSent ? 'Sudah Dikirim ✔️' : 'Belum Dikirim'}</span>
+          </button>
+          {isSent && guest.sent_at && (
+            <span
+              className="text-[9px] text-stone-400 font-mono tracking-tight"
+              title={`Waktu kirim: ${new Date(guest.sent_at).toLocaleString('id-ID')}`}
+            >
+              {new Date(guest.sent_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+            </span>
+          )}
+        </div>
       </td>
 
       {/* Tombol Aksi: Salin Link, Kirim WA, Hapus */}

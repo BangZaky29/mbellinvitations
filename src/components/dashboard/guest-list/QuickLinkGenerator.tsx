@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getInvitationFullUrl } from '../../../utils/urlHelper';
 
 interface QuickLinkGeneratorProps {
   invitationSlug?: string;
@@ -17,11 +18,11 @@ export const QuickLinkGenerator: React.FC<QuickLinkGeneratorProps> = ({
   const [quickCopied, setQuickCopied] = useState(false);
 
   const getQuickGroupLink = () => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://mbell.id';
+    const baseUrl = getInvitationFullUrl(invitationSlug);
     if (!quickGroupName.trim()) {
-      return `${origin}/${invitationSlug}`;
+      return baseUrl;
     }
-    return `${origin}/${invitationSlug}?to=${encodeURIComponent(quickGroupName.trim())}`;
+    return `${baseUrl}?to=${encodeURIComponent(quickGroupName.trim())}`;
   };
 
   const handleCopyQuickGroupLink = () => {

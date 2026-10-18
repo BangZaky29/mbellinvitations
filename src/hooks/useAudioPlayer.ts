@@ -62,6 +62,24 @@ export function useAudioPlayer(musicUrl: string): AudioPlayerResult {
       document.body.appendChild(container);
     }
 
+    // Pasang observer agar iframe yang dibuat oleh YouTube API langsung memiliki izin compute-pressure
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        m.addedNodes.forEach((node) => {
+          if (node instanceof HTMLIFrameElement) {
+            const currentAllow = node.getAttribute('allow') || '';
+            if (!currentAllow.includes('compute-pressure')) {
+              node.setAttribute(
+                'allow',
+                (currentAllow ? currentAllow + '; ' : '') + 'autoplay; encrypted-media; compute-pressure *'
+              );
+            }
+          }
+        });
+      }
+    });
+    observer.observe(container, { childList: true, subtree: true });
+
     const initYT = () => {
       if (!window.YT || !window.YT.Player) return;
 
@@ -83,6 +101,20 @@ export function useAudioPlayer(musicUrl: string): AudioPlayerResult {
             playsinline: 1,
           },
           events: {
+            onReady: (event: any) => {
+              try {
+                const iframe = event.target?.getIframe?.();
+                if (iframe && iframe.setAttribute) {
+                  const currAllow = iframe.getAttribute('allow') || '';
+                  if (!currAllow.includes('compute-pressure')) {
+                    iframe.setAttribute(
+                      'allow',
+                      (currAllow ? currAllow + '; ' : '') + 'autoplay; encrypted-media; compute-pressure *'
+                    );
+                  }
+                }
+              } catch (_) {}
+            },
             onStateChange: (event: any) => {
               if (!isMounted) return;
               // 1 = PLAYING, 2 = PAUSED, 0 = ENDED
@@ -125,6 +157,7 @@ export function useAudioPlayer(musicUrl: string): AudioPlayerResult {
 
     return () => {
       isMounted = false;
+      observer.disconnect();
       if (ytPlayerRef.current) {
         try {
           ytPlayerRef.current.destroy();

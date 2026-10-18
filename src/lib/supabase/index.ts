@@ -3,6 +3,7 @@ export { supabase } from './client';
 
 // Types
 export type {
+  SupabaseTemplateRecord,
   SupabaseInvitationRecord,
   SupabaseGuestRecord,
   UserTemplateRecord,
@@ -10,7 +11,7 @@ export type {
 
 // Services
 export { fetchInvitationBySlug } from './invitationService';
-export { fetchGuestInfo } from './guestService';
+export { fetchGuestInfo, updateGuestWaStatus } from './guestService';
 export { fetchWishes, submitWish } from './wishService';
 export { submitRsvp } from './rsvpService';
 export {

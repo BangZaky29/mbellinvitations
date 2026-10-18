@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { fetchUserTemplates, type UserTemplateRecord } from '../../../lib/supabaseClient';
 import type { InvitationData } from '../../../types/invitation';
 import { THEME_BANNER_COLORS } from '../my-templates/types';
+import { getInvitationDisplayUrl } from '../../../utils/urlHelper';
 
 export interface TemplateSelectorItem {
   id: string;
@@ -314,7 +315,7 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
                 </div>
                 <div className="flex items-center gap-2 text-stone-500 text-xs">
                   <span className="font-mono text-[11px] text-stone-500 truncate">
-                    mbell.id/{item.slug}
+                    {getInvitationDisplayUrl(item.slug)}
                   </span>
                 </div>
               </div>
@@ -367,7 +368,7 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
               </strong>{' '}
               (Tautan:{' '}
               <span className="font-mono font-bold text-emerald-800">
-                mbell.id/{selectedTemplate.slug}
+                {getInvitationDisplayUrl(selectedTemplate.slug)}
               </span>
               )
             </span>

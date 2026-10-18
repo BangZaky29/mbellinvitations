@@ -14,12 +14,12 @@ export const ThemeShowcase: React.FC<ThemeShowcaseProps> = ({ onAddNewTemplate }
             Pilihan Konsep Desain Tersedia
           </h3>
           <p className="text-xs text-stone-500">
-            Pilih salah satu dari 5 preset tema eksklusif untuk memulai desain undangan baru.
+            Pilih salah satu dari {THEME_PRESETS.length} preset tema eksklusif untuk memulai desain undangan baru.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
         {THEME_PRESETS.map((preset) => (
           <button
             key={preset.id}

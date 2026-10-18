@@ -26,27 +26,85 @@ export interface UseInvitationRealtimeOptions {
   codeParam?: string | null;   // dari ?g=Code
 }
 
+// Helper untuk inisialisasi state awal secara instan (zero-delay) dari cache atau URL slug
+function getInitialRealtimeState(slug: string, guestParam?: string | null, codeParam?: string | null) {
+  // 1. Coba dari cache lokal khusus slug ini
+  try {
+    const cachedStr = typeof window !== 'undefined' ? localStorage.getItem(`mbell_cached_inv_${slug}`) : null;
+    if (cachedStr) {
+      const parsed = JSON.parse(cachedStr);
+      if (parsed && (parsed.invitationData || parsed.content)) {
+        const rawContent = parsed.invitationData || parsed.content;
+        const effectiveTheme = rawContent.theme_id || parsed.theme_id || '';
+        const resolvedTplId =
+          parsed.templateId ||
+          (effectiveTheme === 'sunda' ? 'template6' : THEME_TO_TEMPLATE_ID[effectiveTheme]) ||
+          'template1';
+        return {
+          templateId: resolvedTplId,
+          invitationData: {
+            ...rawContent,
+            guest_name: guestParam || rawContent.guest_name || 'Tamu Undangan',
+            guest_code: codeParam || rawContent.guest_code || undefined,
+          },
+          themeConfig: parsed.themeConfig || parsed.theme_config || MOCK_MODERN_THEME,
+          wishes: parsed.wishes || MOCK_MODERN_WISHES,
+          invitationRecord: parsed.invitationRecord || null,
+        };
+      }
+    }
+  } catch (e) {}
+
+  // 2. Fallback cerdas: Ambil nama mempelai dari slug URL (contoh "zaky-bella" -> "Zaky" & "Bella")
+  let gName = MOCK_MODERN_DATA.groom?.name;
+  let bName = MOCK_MODERN_DATA.bride?.name;
+  if (slug && slug !== 'demo' && slug !== 'raditya-jessica') {
+    const parts = slug.split('-');
+    if (parts.length >= 2) {
+      const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+      gName = cap(parts[0]);
+      bName = cap(parts.slice(1).join(' '));
+    }
+  }
+
+  return {
+    templateId: 'template1',
+    invitationData: {
+      ...MOCK_MODERN_DATA,
+      groom: { ...MOCK_MODERN_DATA.groom, name: gName },
+      bride: { ...MOCK_MODERN_DATA.bride, name: bName },
+      guest_name: guestParam || 'Tamu Undangan',
+      guest_code: codeParam || undefined,
+    },
+    themeConfig: MOCK_MODERN_THEME,
+    wishes: MOCK_MODERN_WISHES,
+    invitationRecord: null,
+  };
+}
+
 export function useInvitationRealtime({
   slug = 'raditya-jessica',
   guestParam,
   codeParam,
 }: UseInvitationRealtimeOptions) {
+  const initial = getInitialRealtimeState(slug, guestParam, codeParam);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Invitation record & template ID
-  const [invitationRecord, setInvitationRecord] = useState<SupabaseInvitationRecord | null>(null);
-  const [templateId, setTemplateId] = useState<string>('template1');
-  const [invitationData, setInvitationData] = useState<InvitationData>(MOCK_MODERN_DATA);
-  const [themeConfig, setThemeConfig] = useState<ThemeConfig>(MOCK_MODERN_THEME);
+  const [invitationRecord, setInvitationRecord] = useState<SupabaseInvitationRecord | null>(initial.invitationRecord);
+  const [templateId, setTemplateId] = useState<string>(initial.templateId);
+  const [invitationData, setInvitationData] = useState<InvitationData>(initial.invitationData);
+  const [themeConfig, setThemeConfig] = useState<ThemeConfig>(initial.themeConfig);
 
   // Guest state (for personalized link and QR code)
   const [guestRecord, setGuestRecord] = useState<SupabaseGuestRecord | null>(null);
-  const [activeGuestName, setActiveGuestName] = useState<string>(guestParam || '');
+  const [activeGuestName, setActiveGuestName] = useState<string>(guestParam || initial.invitationData.guest_name || '');
   const [activeGuestCode, setActiveGuestCode] = useState<string>(codeParam || '');
 
   // Wishes state
-  const [wishes, setWishes] = useState<WishItem[]>(MOCK_MODERN_WISHES);
+  const [wishes, setWishes] = useState<WishItem[]>(initial.wishes);
   const [isSubmittingWish, setIsSubmittingWish] = useState(false);
   const [isSubmittingRsvp, setIsSubmittingRsvp] = useState(false);
 
@@ -86,10 +144,14 @@ export function useInvitationRealtime({
               : inv.template_id || THEME_TO_TEMPLATE_ID[effectiveTheme] || 'template1';
           setTemplateId(resolvedTemplateId);
 
-          // Merge content with guest name & code
+          // Merge content with guest name & code serta status dan kepemilikan template
           const mergedData: InvitationData = {
             ...inv.content,
-            guest_name: guestParam || inv.content.guest_name || 'Tamu Undangan',
+            status: inv.status || inv.content?.status || 'draft',
+            unlocked_templates: inv.unlocked_templates || inv.content?.unlocked_templates || [],
+            paid_template_id: inv.paid_template_id || inv.content?.paid_template_id || null,
+            is_paid: inv.is_paid ?? inv.content?.is_paid ?? false,
+            guest_name: guestParam || inv.content?.guest_name || 'Tamu Undangan',
             guest_code: codeParam || undefined,
           };
           setInvitationData(mergedData);
@@ -132,6 +194,17 @@ export function useInvitationRealtime({
           if (isMounted) {
             setWishes(liveWishes.length > 0 ? liveWishes : themeDefaultWishes);
           }
+
+          // Simpan ke cache lokal agar kunjungan berikutnya instan tanpa jeda
+          try {
+            localStorage.setItem(`mbell_cached_inv_${slug}`, JSON.stringify({
+              templateId: resolvedTemplateId,
+              invitationData: mergedData,
+              themeConfig: mergedTheme,
+              wishes: liveWishes.length > 0 ? liveWishes : themeDefaultWishes,
+              invitationRecord: inv,
+            }));
+          } catch (e) {}
         } else if (isMounted) {
           // Fallback to mock data if slug not yet inserted in Supabase
           console.info(`[Invitation] Slug "${slug}" not found in database, using graceful mock fallback.`);
