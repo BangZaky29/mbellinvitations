@@ -1,11 +1,40 @@
 import React from 'react';
-import type { CoupleSectionProps } from '../../types';
+import type { CoupleSectionProps, CoupleInfo } from '../../types';
 
 export const CoupleSection: React.FC<CoupleSectionProps> = ({
   data,
-  firstPerson,
-  secondPerson,
+  firstPerson: rawFirst,
+  secondPerson: rawSecond,
+  firstPersonRole,
+  secondPersonRole,
 }) => {
+  const isBrideFirst = Boolean(data?.is_bride_first);
+  const defaultFirst = isBrideFirst ? data?.bride : data?.groom;
+  const defaultSecond = isBrideFirst ? data?.groom : data?.bride;
+
+  const firstPerson: CoupleInfo = rawFirst || defaultFirst || {
+    name: isBrideFirst ? 'Mempelai Wanita' : 'Mempelai Pria',
+    full_name: isBrideFirst ? 'Mempelai Wanita' : 'Mempelai Pria',
+    child_order: isBrideFirst ? 'Putri kaping setunggal' : 'Putra kaping setunggal',
+    parent_father: 'Bapak',
+    parent_mother: 'Ibu',
+    parent_info: '',
+    instagram: '',
+  };
+
+  const secondPerson: CoupleInfo = rawSecond || defaultSecond || {
+    name: isBrideFirst ? 'Mempelai Pria' : 'Mempelai Wanita',
+    full_name: isBrideFirst ? 'Mempelai Pria' : 'Mempelai Wanita',
+    child_order: isBrideFirst ? 'Putra kaping setunggal' : 'Putri kaping setunggal',
+    parent_father: 'Bapak',
+    parent_mother: 'Ibu',
+    parent_info: '',
+    instagram: '',
+  };
+
+  const resolvedFirstRole = firstPersonRole || (isBrideFirst ? 'Sang Mempelai Putri' : 'Sang Mempelai Kakung');
+  const resolvedSecondRole = secondPersonRole || (isBrideFirst ? 'Sang Mempelai Kakung' : 'Sang Mempelai Putri');
+
   return (
     <section
       id="mempelai"
@@ -29,17 +58,36 @@ export const CoupleSection: React.FC<CoupleSectionProps> = ({
       <div className="w-full bg-[#1C1612] rounded-2xl p-6 shadow-2xl border border-[#F3D068]/35 mb-4 flex flex-col items-center text-center reveal-left delay-100">
         <div className="relative w-32 h-32 rounded-full overflow-hidden shadow-2xl ring-2 ring-[#F3D068]/70 p-1 bg-gradient-to-b from-[#F3D068]/40 to-transparent mb-4">
           <img
-            src={firstPerson.photo_url || firstPerson.photo || data.couple_photo || data.cover_image}
-            alt={firstPerson.full_name}
+            src={firstPerson.photo_url || firstPerson.photo || data?.couple_photo || data?.cover_image}
+            alt={firstPerson.full_name || firstPerson.name}
             className="w-full h-full object-cover rounded-full"
           />
         </div>
+        {resolvedFirstRole && (
+          <span className="text-xs uppercase tracking-[0.18em] text-[#D4AF37] font-medium block mb-1">
+            {resolvedFirstRole}
+          </span>
+        )}
         <h3 className="font-serif text-2xl font-bold text-[#FFE082] tracking-wide drop-shadow-sm">
-          {firstPerson.full_name}
+          {firstPerson.full_name || firstPerson.name}
         </h3>
         <p className="font-sans text-xs text-[#FAF6F0] mt-2 leading-relaxed opacity-95">
-          {firstPerson.child_order} saking Bpk. <span className="font-semibold text-[#FFE082]">{firstPerson.parent_father}</span>
-          <br />&amp; Ibu <span className="font-semibold text-[#FFE082]">{firstPerson.parent_mother}</span>
+          {firstPerson.child_order && (
+            <span>{firstPerson.child_order} </span>
+          )}
+          {firstPerson.parent_info ? (
+            <span className="font-semibold text-[#FFE082]">{firstPerson.parent_info}</span>
+          ) : (
+            <>
+              {firstPerson.parent_father && (
+                <>saking Bpk. <span className="font-semibold text-[#FFE082]">{firstPerson.parent_father}</span></>
+              )}
+              {firstPerson.parent_father && firstPerson.parent_mother && <br />}
+              {firstPerson.parent_mother && (
+                <>&amp; Ibu <span className="font-semibold text-[#FFE082]">{firstPerson.parent_mother}</span></>
+              )}
+            </>
+          )}
         </p>
         {firstPerson.instagram && (
           <a
@@ -65,17 +113,36 @@ export const CoupleSection: React.FC<CoupleSectionProps> = ({
       <div className="w-full bg-[#1C1612] rounded-2xl p-6 shadow-2xl border border-[#F3D068]/35 flex flex-col items-center text-center reveal-right delay-300">
         <div className="relative w-32 h-32 rounded-full overflow-hidden shadow-2xl ring-2 ring-[#F3D068]/70 p-1 bg-gradient-to-b from-[#F3D068]/40 to-transparent mb-4">
           <img
-            src={secondPerson.photo_url || secondPerson.photo || data.couple_photo || data.cover_image}
-            alt={secondPerson.full_name}
+            src={secondPerson.photo_url || secondPerson.photo || data?.couple_photo || data?.cover_image}
+            alt={secondPerson.full_name || secondPerson.name}
             className="w-full h-full object-cover rounded-full"
           />
         </div>
+        {resolvedSecondRole && (
+          <span className="text-xs uppercase tracking-[0.18em] text-[#D4AF37] font-medium block mb-1">
+            {resolvedSecondRole}
+          </span>
+        )}
         <h3 className="font-serif text-2xl font-bold text-[#FFE082] tracking-wide drop-shadow-sm">
-          {secondPerson.full_name}
+          {secondPerson.full_name || secondPerson.name}
         </h3>
         <p className="font-sans text-xs text-[#FAF6F0] mt-2 leading-relaxed opacity-95">
-          {secondPerson.child_order} saking Bpk. <span className="font-semibold text-[#FFE082]">{secondPerson.parent_father}</span>
-          <br />&amp; Ibu <span className="font-semibold text-[#FFE082]">{secondPerson.parent_mother}</span>
+          {secondPerson.child_order && (
+            <span>{secondPerson.child_order} </span>
+          )}
+          {secondPerson.parent_info ? (
+            <span className="font-semibold text-[#FFE082]">{secondPerson.parent_info}</span>
+          ) : (
+            <>
+              {secondPerson.parent_father && (
+                <>saking Bpk. <span className="font-semibold text-[#FFE082]">{secondPerson.parent_father}</span></>
+              )}
+              {secondPerson.parent_father && secondPerson.parent_mother && <br />}
+              {secondPerson.parent_mother && (
+                <>&amp; Ibu <span className="font-semibold text-[#FFE082]">{secondPerson.parent_mother}</span></>
+              )}
+            </>
+          )}
         </p>
         {secondPerson.instagram && (
           <a

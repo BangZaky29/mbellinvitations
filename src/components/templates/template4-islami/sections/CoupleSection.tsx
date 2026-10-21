@@ -1,7 +1,40 @@
 import React from 'react';
-import type { CoupleSectionProps } from '../../types';
+import type { CoupleSectionProps, CoupleInfo } from '../../types';
 
-export const CoupleSection: React.FC<CoupleSectionProps> = ({ data }) => {
+export const CoupleSection: React.FC<CoupleSectionProps> = ({
+  data,
+  firstPerson: rawFirst,
+  secondPerson: rawSecond,
+  firstPersonRole,
+  secondPersonRole,
+}) => {
+  const isBrideFirst = Boolean(data?.is_bride_first);
+  const defaultFirst = isBrideFirst ? data?.bride : data?.groom;
+  const defaultSecond = isBrideFirst ? data?.groom : data?.bride;
+
+  const firstPerson: CoupleInfo = rawFirst || defaultFirst || {
+    name: isBrideFirst ? 'Mempelai Wanita' : 'Mempelai Pria',
+    full_name: isBrideFirst ? 'Mempelai Wanita' : 'Mempelai Pria',
+    child_order: isBrideFirst ? 'Putri pertama' : 'Putra pertama',
+    parent_father: 'Bapak',
+    parent_mother: 'Ibu',
+    parent_info: '',
+    instagram: '',
+  };
+
+  const secondPerson: CoupleInfo = rawSecond || defaultSecond || {
+    name: isBrideFirst ? 'Mempelai Pria' : 'Mempelai Wanita',
+    full_name: isBrideFirst ? 'Mempelai Pria' : 'Mempelai Wanita',
+    child_order: isBrideFirst ? 'Putra pertama' : 'Putri pertama',
+    parent_father: 'Bapak',
+    parent_mother: 'Ibu',
+    parent_info: '',
+    instagram: '',
+  };
+
+  const resolvedFirstRole = firstPersonRole || (isBrideFirst ? 'Sang Mempelai Wanita' : 'Sang Mempelai Pria');
+  const resolvedSecondRole = secondPersonRole || (isBrideFirst ? 'Sang Mempelai Pria' : 'Sang Mempelai Wanita');
+
   return (
     <section
       className="px-margin py-space-xl flex flex-col items-center"
@@ -17,38 +50,59 @@ export const CoupleSection: React.FC<CoupleSectionProps> = ({ data }) => {
         <div className="w-12 h-0.5 bg-secondary mx-auto mt-2 rounded-full"></div>
       </div>
 
-      {/* Groom Card */}
+      {/* Person 1 Card */}
       <div className="w-full bg-surface-container-lowest rounded-t-full rounded-b-2xl p-5 shadow-lg shadow-primary/5 flex flex-col items-center text-center mb-6 border border-secondary-container/20 reveal-left delay-100">
         <div className="w-44 h-56 rounded-t-full rounded-b-xl overflow-hidden bg-surface-container mb-4 shadow-sm">
           <img
-            alt={data.groom.full_name}
+            alt={firstPerson.full_name || firstPerson.name}
             className="w-full h-full object-cover object-top"
             src={
-              data.groom.photo_url ||
-              (data.groom as any).photo ||
-              data.couple_photo ||
-              data.cover_image ||
+              firstPerson.photo_url ||
+              firstPerson.photo ||
+              data?.couple_photo ||
+              data?.cover_image ||
               'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80'
             }
           />
         </div>
+        {resolvedFirstRole && (
+          <span className="font-label-sm text-xs text-secondary uppercase font-semibold mb-1">
+            {resolvedFirstRole}
+          </span>
+        )}
         <h3 className="font-headline-sm text-headline-sm text-primary font-bold mb-1">
-          {data.groom.full_name}
+          {firstPerson.full_name || firstPerson.name}
         </h3>
         <p className="font-body-md text-body-md text-on-surface-variant max-w-[280px] mb-4">
-          {data.groom.child_order} <br />
-          <span className="font-semibold text-on-surface">
-            {data.groom.parent_father}
-          </span>{' '}
-          &amp; <br />
-          <span className="font-semibold text-on-surface">
-            {data.groom.parent_mother}
-          </span>
+          {firstPerson.child_order && (
+            <>
+              {firstPerson.child_order} <br />
+            </>
+          )}
+          {firstPerson.parent_info ? (
+            <span className="font-semibold text-on-surface">{firstPerson.parent_info}</span>
+          ) : (
+            <>
+              {firstPerson.parent_father && (
+                <span className="font-semibold text-on-surface">
+                  {firstPerson.parent_father}
+                </span>
+              )}
+              {firstPerson.parent_father && firstPerson.parent_mother && (
+                <> &amp; <br /></>
+              )}
+              {firstPerson.parent_mother && (
+                <span className="font-semibold text-on-surface">
+                  {firstPerson.parent_mother}
+                </span>
+              )}
+            </>
+          )}
         </p>
-        {data.groom.instagram && (
+        {firstPerson.instagram && (
           <a
             className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-surface-container text-primary font-label-md text-label-md hover:bg-secondary-container transition-colors shadow-sm"
-            href={`https://instagram.com/${data.groom.instagram.replace(
+            href={`https://instagram.com/${firstPerson.instagram.replace(
               '@',
               ''
             )}`}
@@ -58,7 +112,7 @@ export const CoupleSection: React.FC<CoupleSectionProps> = ({ data }) => {
             <span className="material-symbols-outlined text-[16px]">
               photo_camera
             </span>
-            <span>{data.groom.instagram}</span>
+            <span>{firstPerson.instagram}</span>
           </a>
         )}
       </div>
@@ -72,38 +126,59 @@ export const CoupleSection: React.FC<CoupleSectionProps> = ({ data }) => {
         </div>
       </div>
 
-      {/* Bride Card */}
+      {/* Person 2 Card */}
       <div className="w-full bg-surface-container-lowest rounded-t-full rounded-b-2xl p-5 shadow-lg shadow-primary/5 flex flex-col items-center text-center mt-4 border border-secondary-container/20 reveal-right delay-300">
         <div className="w-44 h-56 rounded-t-full rounded-b-xl overflow-hidden bg-surface-container mb-4 shadow-sm">
           <img
-            alt={data.bride.full_name}
+            alt={secondPerson.full_name || secondPerson.name}
             className="w-full h-full object-cover object-top"
             src={
-              data.bride.photo_url ||
-              (data.bride as any).photo ||
-              data.couple_photo ||
-              data.cover_image ||
+              secondPerson.photo_url ||
+              secondPerson.photo ||
+              data?.couple_photo ||
+              data?.cover_image ||
               'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'
             }
           />
         </div>
+        {resolvedSecondRole && (
+          <span className="font-label-sm text-xs text-secondary uppercase font-semibold mb-1">
+            {resolvedSecondRole}
+          </span>
+        )}
         <h3 className="font-headline-sm text-headline-sm text-primary font-bold mb-1">
-          {data.bride.full_name}
+          {secondPerson.full_name || secondPerson.name}
         </h3>
         <p className="font-body-md text-body-md text-on-surface-variant max-w-[280px] mb-4">
-          {data.bride.child_order} <br />
-          <span className="font-semibold text-on-surface">
-            {data.bride.parent_father}
-          </span>{' '}
-          &amp; <br />
-          <span className="font-semibold text-on-surface">
-            {data.bride.parent_mother}
-          </span>
+          {secondPerson.child_order && (
+            <>
+              {secondPerson.child_order} <br />
+            </>
+          )}
+          {secondPerson.parent_info ? (
+            <span className="font-semibold text-on-surface">{secondPerson.parent_info}</span>
+          ) : (
+            <>
+              {secondPerson.parent_father && (
+                <span className="font-semibold text-on-surface">
+                  {secondPerson.parent_father}
+                </span>
+              )}
+              {secondPerson.parent_father && secondPerson.parent_mother && (
+                <> &amp; <br /></>
+              )}
+              {secondPerson.parent_mother && (
+                <span className="font-semibold text-on-surface">
+                  {secondPerson.parent_mother}
+                </span>
+              )}
+            </>
+          )}
         </p>
-        {data.bride.instagram && (
+        {secondPerson.instagram && (
           <a
             className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-surface-container text-primary font-label-md text-label-md hover:bg-secondary-container transition-colors shadow-sm"
-            href={`https://instagram.com/${data.bride.instagram.replace(
+            href={`https://instagram.com/${secondPerson.instagram.replace(
               '@',
               ''
             )}`}
@@ -113,7 +188,7 @@ export const CoupleSection: React.FC<CoupleSectionProps> = ({ data }) => {
             <span className="material-symbols-outlined text-[16px]">
               photo_camera
             </span>
-            <span>{data.bride.instagram}</span>
+            <span>{secondPerson.instagram}</span>
           </a>
         )}
       </div>

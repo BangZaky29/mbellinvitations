@@ -191,6 +191,8 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
               {/* SECTION 3: COUPLE PROFILE */}
               <CoupleSection
                 data={data}
+                theme={theme}
+                isPreview={isPreview}
               />
 
               {/* SECTION 4: LOVE STORY */}

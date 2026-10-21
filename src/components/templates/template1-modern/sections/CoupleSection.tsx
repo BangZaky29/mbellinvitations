@@ -1,13 +1,40 @@
 import React from 'react';
-import type { CoupleSectionProps } from '../../types';
+import type { CoupleSectionProps, CoupleInfo } from '../../types';
 
 export const CoupleSection: React.FC<CoupleSectionProps> = ({
   data,
-  firstPerson,
-  secondPerson,
+  firstPerson: rawFirst,
+  secondPerson: rawSecond,
   firstPersonRole,
   secondPersonRole,
 }) => {
+  const isBrideFirst = Boolean(data?.is_bride_first);
+  const defaultFirst = isBrideFirst ? data?.bride : data?.groom;
+  const defaultSecond = isBrideFirst ? data?.groom : data?.bride;
+
+  const firstPerson: CoupleInfo = rawFirst || defaultFirst || {
+    name: isBrideFirst ? 'Mempelai Wanita' : 'Mempelai Pria',
+    full_name: isBrideFirst ? 'Mempelai Wanita' : 'Mempelai Pria',
+    child_order: isBrideFirst ? 'Putri pertama' : 'Putra pertama',
+    parent_father: '',
+    parent_mother: '',
+    parent_info: '',
+    instagram: '',
+  };
+
+  const secondPerson: CoupleInfo = rawSecond || defaultSecond || {
+    name: isBrideFirst ? 'Mempelai Pria' : 'Mempelai Wanita',
+    full_name: isBrideFirst ? 'Mempelai Pria' : 'Mempelai Wanita',
+    child_order: isBrideFirst ? 'Putra pertama' : 'Putri pertama',
+    parent_father: '',
+    parent_mother: '',
+    parent_info: '',
+    instagram: '',
+  };
+
+  const resolvedFirstRole = firstPersonRole || (isBrideFirst ? 'Sang Mempelai Wanita' : 'Sang Mempelai Pria');
+  const resolvedSecondRole = secondPersonRole || (isBrideFirst ? 'Sang Mempelai Pria' : 'Sang Mempelai Wanita');
+
   return (
     <section id="couple" className="py-12 px-6">
       <div className="text-center mb-10 reveal">
@@ -29,26 +56,42 @@ export const CoupleSection: React.FC<CoupleSectionProps> = ({
             <img
               src={
                 firstPerson.photo_url ||
-                (firstPerson as any).photo ||
-                data.couple_photo ||
-                data.cover_image ||
+                firstPerson.photo ||
+                data?.couple_photo ||
+                data?.cover_image ||
                 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80'
               }
-              alt={firstPerson.full_name}
+              alt={firstPerson.full_name || firstPerson.name}
               className="w-full h-full object-cover"
             />
           </div>
           <span className="text-[11px] tracking-[0.25em] text-gold-champagne uppercase font-medium">
-            {firstPersonRole}
+            {resolvedFirstRole}
           </span>
           <h3 className="font-editorial text-2xl text-charcoal-dark font-medium mt-1">
-            {firstPerson.full_name}
+            {firstPerson.full_name || firstPerson.name}
           </h3>
 
           <p className="text-xs text-charcoal-muted font-light mt-3 leading-relaxed">
-            {firstPerson.child_order}<br />
-            <span className="font-medium text-charcoal-dark">{firstPerson.parent_father}</span> &amp;<br />
-            <span className="font-medium text-charcoal-dark">{firstPerson.parent_mother}</span>
+            {firstPerson.child_order && (
+              <>
+                {firstPerson.child_order}
+                <br />
+              </>
+            )}
+            {firstPerson.parent_info ? (
+              <span className="font-medium text-charcoal-dark">{firstPerson.parent_info}</span>
+            ) : (
+              <>
+                {firstPerson.parent_father && (
+                  <span className="font-medium text-charcoal-dark">{firstPerson.parent_father}</span>
+                )}
+                {firstPerson.parent_father && firstPerson.parent_mother && ' & '}
+                {firstPerson.parent_mother && (
+                  <span className="font-medium text-charcoal-dark">{firstPerson.parent_mother}</span>
+                )}
+              </>
+            )}
           </p>
 
           {firstPerson.instagram && (
@@ -75,26 +118,42 @@ export const CoupleSection: React.FC<CoupleSectionProps> = ({
             <img
               src={
                 secondPerson.photo_url ||
-                (secondPerson as any).photo ||
-                data.couple_photo ||
-                data.cover_image ||
+                secondPerson.photo ||
+                data?.couple_photo ||
+                data?.cover_image ||
                 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'
               }
-              alt={secondPerson.full_name}
+              alt={secondPerson.full_name || secondPerson.name}
               className="w-full h-full object-cover"
             />
           </div>
           <span className="text-[11px] tracking-[0.25em] text-gold-champagne uppercase font-medium">
-            {secondPersonRole}
+            {resolvedSecondRole}
           </span>
           <h3 className="font-editorial text-2xl text-charcoal-dark font-medium mt-1">
-            {secondPerson.full_name}
+            {secondPerson.full_name || secondPerson.name}
           </h3>
 
           <p className="text-xs text-charcoal-muted font-light mt-3 leading-relaxed">
-            {secondPerson.child_order}<br />
-            <span className="font-medium text-charcoal-dark">{secondPerson.parent_father}</span> &amp;<br />
-            <span className="font-medium text-charcoal-dark">{secondPerson.parent_mother}</span>
+            {secondPerson.child_order && (
+              <>
+                {secondPerson.child_order}
+                <br />
+              </>
+            )}
+            {secondPerson.parent_info ? (
+              <span className="font-medium text-charcoal-dark">{secondPerson.parent_info}</span>
+            ) : (
+              <>
+                {secondPerson.parent_father && (
+                  <span className="font-medium text-charcoal-dark">{secondPerson.parent_father}</span>
+                )}
+                {secondPerson.parent_father && secondPerson.parent_mother && ' & '}
+                {secondPerson.parent_mother && (
+                  <span className="font-medium text-charcoal-dark">{secondPerson.parent_mother}</span>
+                )}
+              </>
+            )}
           </p>
 
           {secondPerson.instagram && (

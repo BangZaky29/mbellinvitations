@@ -3,12 +3,15 @@ import type { CoverSectionProps } from '../../types';
 
 export const CoverSection: React.FC<CoverSectionProps> = ({
   data,
-  firstPerson,
-  secondPerson,
+  firstPerson: rawFirst,
+  secondPerson: rawSecond,
   handleOpenInvitation,
   renderSwipeHint,
   isPreview,
 }) => {
+  const firstPerson = rawFirst || data.groom || { name: 'Mempelai Pria' };
+  const secondPerson = rawSecond || data.bride || { name: 'Mempelai Wanita' };
+
   return (
     <section
       id="cover-overlay"

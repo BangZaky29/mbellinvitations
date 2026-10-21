@@ -243,8 +243,6 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                 isPreview={isPreview}
                 firstPerson={firstPerson}
                 secondPerson={secondPerson}
-                firstPersonRole=""
-                secondPersonRole=""
               />
 
               {/* SECTION 4: Love Story Timeline */}

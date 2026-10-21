@@ -150,8 +150,6 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                   isPreview={isPreview}
                   firstPerson={firstPerson}
                   secondPerson={secondPerson}
-                  firstPersonRole=""
-                  secondPersonRole=""
                 />
               )}
 

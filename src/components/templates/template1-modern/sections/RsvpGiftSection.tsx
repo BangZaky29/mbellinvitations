@@ -14,8 +14,8 @@ export const RsvpGiftSection: React.FC<RsvpGiftSectionProps> = ({
   handleCopyAccount,
   handleCopyAddress,
 }) => {
-  const showRsvp = theme.show_rsvp !== false && isSectionActive('rsvp');
-  const showGift = theme.show_gift !== false && isSectionActive('gift');
+  const showRsvp = theme?.show_rsvp !== false && isSectionActive('rsvp');
+  const showGift = theme?.show_gift !== false && isSectionActive('gift');
 
   if (!showRsvp && !showGift) return null;
 

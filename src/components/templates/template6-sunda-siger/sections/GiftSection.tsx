@@ -3,7 +3,7 @@ import type { BaseSectionProps } from '../../types';
 import { MOCK_SUNDA_DATA } from '../../../../data/mock/sundaData';
 
 export interface SundaGiftProps extends BaseSectionProps {
-  handleCopyAccount: (accNum: string, index?: number) => void;
+  handleCopyAccount: (accNum: string, index: number) => void;
   handleCopyAddress: (addr: string) => void;
 }
 

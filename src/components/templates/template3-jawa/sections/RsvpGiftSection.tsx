@@ -21,8 +21,8 @@ export const RsvpGiftSection: React.FC<JawaRsvpGiftProps> = ({
   handleRsvpSubmit,
   handleCopy,
 }) => {
-  const showRsvp = theme.show_rsvp !== false && isSectionActive('rsvp');
-  const showGift = theme.show_gift !== false && (isSectionActive('gift') || isPreview);
+  const showRsvp = theme?.show_rsvp !== false && isSectionActive('rsvp');
+  const showGift = theme?.show_gift !== false && (isSectionActive('gift') || isPreview);
 
   if (!showRsvp && !showGift) return null;
 

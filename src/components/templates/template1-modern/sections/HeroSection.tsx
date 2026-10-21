@@ -3,10 +3,12 @@ import type { HeroSectionProps } from '../../types';
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
   data,
-  firstPerson,
-  secondPerson,
+  firstPerson: rawFirst,
+  secondPerson: rawSecond,
   countdown,
 }) => {
+  const firstPerson = rawFirst || data.groom || { name: 'Mempelai Pria' };
+  const secondPerson = rawSecond || data.bride || { name: 'Mempelai Wanita' };
   const { days, hours, minutes, seconds } = countdown;
 
   return (

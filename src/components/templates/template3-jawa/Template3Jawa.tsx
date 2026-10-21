@@ -154,8 +154,6 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
                 isPreview={isPreview}
                 firstPerson={firstPerson}
                 secondPerson={secondPerson}
-                firstPersonRole=""
-                secondPersonRole=""
               />
             )}
 
