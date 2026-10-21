@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { WaTemplatePopupModal } from './WaTemplatePopupModal';
+import { DEFAULT_WA_TEMPLATE } from '../../../components/dashboard/guest-list/constants';
+import { getInvitationFullUrl } from '../../../utils/urlHelper';
 
 interface EditorBottomBarProps {
   activeStep: number;
@@ -7,6 +10,9 @@ interface EditorBottomBarProps {
   unsavedCount?: number;
   isAlreadyPublished?: boolean;
   isTemplateChanged?: boolean;
+  invitationSlug?: string;
+  coupleNames?: string;
+  showToast?: (msg: string, type?: 'success' | 'info' | 'error' | 'copy') => void;
   onSaveDraft: () => void;
   onRevertAll?: () => void;
   onPrevStep: () => void;
@@ -22,6 +28,9 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
   unsavedCount = 0,
   isAlreadyPublished = false,
   isTemplateChanged = false,
+  invitationSlug = 'undangan-baru',
+  coupleNames = 'Mempelai Pria & Mempelai Wanita',
+  showToast,
   onSaveDraft,
   onRevertAll,
   onPrevStep,
@@ -29,10 +38,35 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
   onRequestPublish,
   onOpenPreview,
 }) => {
+  const [showWaTemplateModal, setShowWaTemplateModal] = useState(false);
   const shouldShowPublishButton = !isAlreadyPublished || isTemplateChanged;
 
+  // Handler salin teks pesan undangan lengkap untuk dikirimkan ke tamu
+  const handleCopyInviteMessage = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const storageKey = `mbell_wa_template_${invitationSlug}`;
+      const template = localStorage.getItem(storageKey) || DEFAULT_WA_TEMPLATE;
+      const publicUrl = getInvitationFullUrl(invitationSlug);
+      const guestGreeting = 'Bapak/Ibu/Saudara/i';
+      
+      const formattedMessage = template
+        .replace(/{nama_tamu}/g, guestGreeting)
+        .replace(/{nama_mempelai}/g, coupleNames)
+        .replace(/{link_undangan}/g, publicUrl);
+
+      await navigator.clipboard.writeText(formattedMessage);
+      if (showToast) {
+        showToast('Pesan & tautan undangan tersalin!', 'copy');
+      }
+    } catch (err) {
+      console.warn('Gagal menyalin teks undangan:', err);
+    }
+  };
+
   return (
-    <div className="fixed bottom-[72px] left-3 right-3 max-w-lg mx-auto sm:static sm:bottom-auto sm:left-auto sm:right-auto sm:max-w-none sm:mx-0 z-30 bg-white/95 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none border border-stone-200/90 sm:border-0 sm:border-t sm:border-stone-200/90 shadow-lg sm:shadow-none rounded-full sm:rounded-none px-3.5 py-1.5 sm:p-0 sm:pt-4 sm:mb-2 transition-all w-auto sm:w-full">
+    <>
+      <div className="fixed bottom-[72px] left-3 right-3 max-w-lg mx-auto sm:static sm:bottom-auto sm:left-auto sm:right-auto sm:max-w-none sm:mx-0 z-30 bg-white/95 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none border border-stone-200/90 sm:border-0 sm:border-t sm:border-stone-200/90 shadow-lg sm:shadow-none rounded-full sm:rounded-none px-3.5 py-1.5 sm:p-0 sm:pt-4 sm:mb-2 transition-all w-auto sm:w-full">
       <div className="flex items-center justify-between gap-2 sm:gap-3 w-full min-w-0">
         {/* SISI KIRI: INDIKATOR STEP TAHAP (Ramping & Bersih) */}
         <div className="flex items-center gap-2 shrink-0 py-1">
@@ -107,7 +141,7 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
                 type="button"
                 onClick={onRequestPublish}
                 disabled={isSaving}
-                className="p-1.5 sm:px-3.5 sm:py-2 rounded-full sm:rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-md shadow-amber-500/20 shrink-0"
+                className="px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-full sm:rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-md shadow-amber-500/20 shrink-0"
                 title={
                   isTemplateChanged
                     ? 'Perubahan tema terdeteksi. Klik untuk terbitkan tema baru!'
@@ -115,20 +149,52 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
                 }
               >
                 <span className="material-symbols-outlined text-[18px] text-stone-950">rocket_launch</span>
-                <span className="hidden sm:inline">Terbitkan</span>
+                <span>Terbitkan</span>
               </button>
             ) : null
           ) : isAlreadyPublished ? (
-            <button
-              type="button"
-              onClick={onRequestPublish}
-              disabled={isSaving}
-              className="p-1.5 sm:px-3 sm:py-2 rounded-full sm:rounded-xl font-bold text-xs sm:text-sm transition-all shadow-xs active:scale-95 cursor-pointer flex items-center justify-center gap-1 bg-stone-900 hover:bg-stone-800 text-emerald-400 border border-emerald-500/40 shrink-0"
-              title="Undangan live dan aktif di tautan publik"
-            >
-              <span className="material-symbols-outlined text-[18px] text-emerald-400">verified</span>
-              <span className="hidden sm:inline text-white">Live</span>
-            </button>
+            /* CLUSTER AKSI: [Live] + [Salin Pesan & Link] + [Edit Template WA] */
+            <div className="flex items-center rounded-full sm:rounded-xl bg-stone-900 border border-emerald-500/40 p-0.5 sm:p-1 shadow-xs shrink-0">
+              {/* Sub-tombol 1: [✅ Live] */}
+              <button
+                type="button"
+                onClick={onRequestPublish}
+                disabled={isSaving}
+                className="px-2 py-1 sm:px-2.5 sm:py-1 rounded-full sm:rounded-lg font-bold text-xs sm:text-sm text-emerald-400 hover:bg-stone-800/80 transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95 shrink-0"
+                title="Undangan live dan aktif di tautan publik. Klik untuk lihat detail link."
+              >
+                <span className="material-symbols-outlined text-[17px] sm:text-[18px] text-emerald-400">verified</span>
+                <span>Live</span>
+              </button>
+
+              {/* Garis Pemisah Vertikal 1 */}
+              <div className="w-px h-3.5 sm:h-4 bg-stone-700/60 my-auto shrink-0" />
+
+              {/* Sub-tombol 2: [📋 Salin] */}
+              <button
+                type="button"
+                onClick={handleCopyInviteMessage}
+                className="px-1.5 py-1 sm:px-2.5 sm:py-1 rounded-full sm:rounded-lg text-stone-300 hover:text-white hover:bg-stone-800/80 transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95 text-xs font-medium shrink-0"
+                title="Salin teks pesan undangan & tautan siap kirim ke tamu"
+              >
+                <span className="material-symbols-outlined text-[17px] sm:text-[18px] text-stone-300">content_copy</span>
+                <span className="hidden sm:inline">Salin</span>
+              </button>
+
+              {/* Garis Pemisah Vertikal 2 */}
+              <div className="w-px h-3.5 sm:h-4 bg-stone-700/60 my-auto shrink-0" />
+
+              {/* Sub-tombol 3: [✏️ Edit] */}
+              <button
+                type="button"
+                onClick={() => setShowWaTemplateModal(true)}
+                className="px-1.5 py-1 sm:px-2.5 sm:py-1 rounded-full sm:rounded-lg text-stone-300 hover:text-white hover:bg-stone-800/80 transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95 text-xs font-medium shrink-0"
+                title="Ubah template teks pesan pengantar WhatsApp"
+              >
+                <span className="material-symbols-outlined text-[17px] sm:text-[18px] text-stone-300">edit_note</span>
+                <span className="hidden sm:inline">Edit</span>
+              </button>
+            </div>
           ) : null}
 
           {/* Tombol Sebelumnya (Step > 1) */}
@@ -157,20 +223,32 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
             </button>
           )}
 
-          {/* Tombol Preview (Icon Mata di mobile, Mata + Teks di desktop) */}
+          {/* Tombol Preview (Hanya tampil di mobile, disembunyikan pada tampilan web/desktop) */}
           {onOpenPreview && (
             <button
               type="button"
               onClick={onOpenPreview}
-              className="p-1.5 sm:px-3 sm:py-2 rounded-full sm:rounded-xl bg-stone-900 hover:bg-stone-800 text-white font-semibold text-xs sm:text-sm transition-all active:scale-95 shadow-sm cursor-pointer flex items-center justify-center gap-1.5 shrink-0 border border-white/10"
+              className="flex sm:hidden p-1.5 rounded-full bg-stone-900 hover:bg-stone-800 text-white font-semibold text-xs transition-all active:scale-95 shadow-sm cursor-pointer items-center justify-center gap-1.5 shrink-0 border border-white/10"
               title="Buka Pratinjau Undangan (Preview)"
             >
               <span className="material-symbols-outlined text-[18px]">visibility</span>
-              <span className="hidden md:inline">Preview</span>
             </button>
           )}
         </div>
       </div>
     </div>
+
+    {/* Pop-up Dialog Template Pesan Pengantar WhatsApp */}
+    <WaTemplatePopupModal
+      isOpen={showWaTemplateModal}
+      invitationSlug={invitationSlug}
+      onClose={() => setShowWaTemplateModal(false)}
+      onSaved={() => {
+        if (showToast) {
+          showToast('Template pesan WhatsApp berhasil diperbarui!');
+        }
+      }}
+    />
+  </>
   );
 };

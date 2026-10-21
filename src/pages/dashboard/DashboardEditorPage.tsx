@@ -256,6 +256,19 @@ export const DashboardEditorPage: React.FC = () => {
   const currentSlug = editor.formData.slug || computeCoupleSlug(editor.formData.groom?.name, editor.formData.bride?.name) || 'undangan-baru';
   const coupleNames = `${editor.formData.groom?.name || 'Mempelai Pria'} & ${editor.formData.bride?.name || 'Mempelai Wanita'}`;
 
+  // Set tab yang sudah pernah dikunjungi agar komponen tetap hidup di memori (Keep-Alive)
+  // Ini mencegah unmount & reload berulang kontainer saat bolak-balik menu
+  const [visitedTabs, setVisitedTabs] = useState<Set<string>>(() => new Set([editor.activeTab]));
+
+  useEffect(() => {
+    setVisitedTabs((prev) => {
+      if (prev.has(editor.activeTab)) return prev;
+      const next = new Set(prev);
+      next.add(editor.activeTab);
+      return next;
+    });
+  }, [editor.activeTab]);
+
   // Sinkronisasi realtime jumlah ucapan dan jumlah tamu asli dari database Supabase
   useEffect(() => {
     let isMounted = true;
@@ -333,6 +346,13 @@ export const DashboardEditorPage: React.FC = () => {
         { event: '*', schema: 'public', table: 'guests' },
         () => {
           fetchCounts();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_templates' },
+        () => {
+          window.dispatchEvent(new CustomEvent('mbell_templates_updated'));
         }
       )
       .subscribe();
@@ -431,19 +451,25 @@ export const DashboardEditorPage: React.FC = () => {
             {/* KOLOM 2: CENTER EDITOR PANEL (VERTICAL SCROLL) */}
             <main id="dashboard-editor-main" data-dashboard-editor="true" className="flex-1 h-full overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 scroll-smooth bg-[#F5F2EB]">
               <div className="max-w-3xl mx-auto space-y-6 pb-44 sm:pb-28">
-                {editor.activeTab === 'template-saya' ? (
-                  <MyTemplatesPanel
-                    currentUserId={user?.id || null}
-                    currentFormData={editor.formData}
-                    activeTemplateId={editor.currentTemplateRecordId}
-                    onSelectTemplate={editor.handleSelectSavedTemplate}
-                    onImplementActiveTemplate={editor.handleImplementActiveTemplate}
-                    onOpenAuthGate={() => editor.setShowAuthGateModal(true)}
-                    onAddNewTemplate={editor.handleAddNewTemplate}
-                    onSlugChange={editor.handleSlugChange}
-                  />
-                ) : editor.activeTab === 'edit-undangan' ? (
-                  <>
+                {/* 1. TAB: TEMPLATE SAYA */}
+                {visitedTabs.has('template-saya') && (
+                  <div className={editor.activeTab === 'template-saya' ? 'block' : 'hidden'}>
+                    <MyTemplatesPanel
+                      currentUserId={user?.id || null}
+                      currentFormData={editor.formData}
+                      activeTemplateId={editor.currentTemplateRecordId}
+                      onSelectTemplate={editor.handleSelectSavedTemplate}
+                      onImplementActiveTemplate={editor.handleImplementActiveTemplate}
+                      onOpenAuthGate={() => editor.setShowAuthGateModal(true)}
+                      onAddNewTemplate={editor.handleAddNewTemplate}
+                      onSlugChange={editor.handleSlugChange}
+                    />
+                  </div>
+                )}
+
+                {/* 2. TAB: EDIT UNDANGAN (WIZARD STEPS) */}
+                {visitedTabs.has('edit-undangan') && (
+                  <div className={editor.activeTab === 'edit-undangan' ? 'block space-y-6' : 'hidden'}>
                     <EditorStepContent
                       activeStep={editor.activeStep}
                       formData={editor.formData}
@@ -466,6 +492,16 @@ export const DashboardEditorPage: React.FC = () => {
                       unsavedCount={save.unsavedCount}
                       isAlreadyPublished={publish.isAlreadyPublished}
                       isTemplateChanged={publish.isTemplateChanged}
+                      invitationSlug={currentSlug}
+                      coupleNames={coupleNames}
+                      showToast={(msg, type = 'success') =>
+                        save.setSaveToast({
+                          show: true,
+                          message: msg,
+                          type,
+                          isError: type === 'error',
+                        })
+                      }
                       onSaveDraft={handleSafeSave}
                       onRevertAll={save.handleRevertAll}
                       onPrevStep={editor.handlePrevStep}
@@ -473,44 +509,59 @@ export const DashboardEditorPage: React.FC = () => {
                       onRequestPublish={publish.handleRequestPublish}
                       onOpenPreview={() => editor.setShowFullscreenModal(true)}
                     />
-                  </>
-                ) : editor.activeTab === 'daftar-tamu' ? (
-                  <GuestListPanel
-                    userId={user?.id}
-                    invitationId={editor.formData.id}
-                    invitationSlug={currentSlug}
-                    coupleNames={coupleNames}
-                    currentFormData={editor.formData}
-                    activeTemplateId={editor.currentTemplateRecordId}
-                    onGoToEditor={() => editor.setActiveTab('edit-undangan')}
-                    onOpenMyTemplates={() => editor.setActiveTab('template-saya')}
-                    onOpenAuthGate={() => editor.setShowAuthGateModal(true)}
-                    onSelectSavedTemplate={editor.handleSelectSavedTemplate}
-                  />
-                ) : editor.activeTab === 'ucapan-masuk' ? (
-                  <WishesListPanel
-                    userId={user?.id}
-                    invitationId={editor.formData.id}
-                    invitationSlug={currentSlug}
-                    coupleNames={coupleNames}
-                    currentFormData={editor.formData}
-                    activeTemplateId={editor.currentTemplateRecordId}
-                    onGoToEditor={() => editor.setActiveTab('edit-undangan')}
-                    onOpenMyTemplates={() => editor.setActiveTab('template-saya')}
-                    onOpenAuthGate={() => editor.setShowAuthGateModal(true)}
-                    onSelectSavedTemplate={editor.handleSelectSavedTemplate}
-                  />
-                ) : (
-                  <SettingsAccountPanel
-                    userId={user?.id}
-                    userEmail={user?.email}
-                    userName={user?.full_name}
-                    userAvatar={user?.avatar_url}
-                    invitationSlug={currentSlug}
-                    onGoToEditor={() => editor.setActiveTab('edit-undangan')}
-                    onOpenAuthGate={() => editor.setShowAuthGateModal(true)}
-                    onLogout={handleRequestLogout}
-                  />
+                  </div>
+                )}
+
+                {/* 3. TAB: DAFTAR TAMU */}
+                {visitedTabs.has('daftar-tamu') && (
+                  <div className={editor.activeTab === 'daftar-tamu' ? 'block' : 'hidden'}>
+                    <GuestListPanel
+                      userId={user?.id}
+                      invitationId={editor.formData.id}
+                      invitationSlug={currentSlug}
+                      coupleNames={coupleNames}
+                      currentFormData={editor.formData}
+                      activeTemplateId={editor.currentTemplateRecordId}
+                      onGoToEditor={() => editor.setActiveTab('edit-undangan')}
+                      onOpenMyTemplates={() => editor.setActiveTab('template-saya')}
+                      onOpenAuthGate={() => editor.setShowAuthGateModal(true)}
+                      onSelectSavedTemplate={editor.handleSelectSavedTemplate}
+                    />
+                  </div>
+                )}
+
+                {/* 4. TAB: UCAPAN MASUK */}
+                {visitedTabs.has('ucapan-masuk') && (
+                  <div className={editor.activeTab === 'ucapan-masuk' ? 'block' : 'hidden'}>
+                    <WishesListPanel
+                      userId={user?.id}
+                      invitationId={editor.formData.id}
+                      invitationSlug={currentSlug}
+                      coupleNames={coupleNames}
+                      currentFormData={editor.formData}
+                      activeTemplateId={editor.currentTemplateRecordId}
+                      onGoToEditor={() => editor.setActiveTab('edit-undangan')}
+                      onOpenMyTemplates={() => editor.setActiveTab('template-saya')}
+                      onOpenAuthGate={() => editor.setShowAuthGateModal(true)}
+                      onSelectSavedTemplate={editor.handleSelectSavedTemplate}
+                    />
+                  </div>
+                )}
+
+                {/* 5. TAB: PENGATURAN */}
+                {visitedTabs.has('pengaturan') && (
+                  <div className={editor.activeTab === 'pengaturan' ? 'block' : 'hidden'}>
+                    <SettingsAccountPanel
+                      userId={user?.id}
+                      userEmail={user?.email}
+                      userName={user?.full_name}
+                      userAvatar={user?.avatar_url}
+                      invitationSlug={currentSlug}
+                      onGoToEditor={() => editor.setActiveTab('edit-undangan')}
+                      onOpenAuthGate={() => editor.setShowAuthGateModal(true)}
+                      onLogout={handleRequestLogout}
+                    />
+                  </div>
                 )}
               </div>
             </main>
@@ -526,17 +577,35 @@ export const DashboardEditorPage: React.FC = () => {
             </aside>
           </div>
 
-          {/* MOBILE FLOATING PILL BUTTON "Preview" (Hanya tampil di luar tab editor karena di tab editor sudah sebaris di EditorBottomBar) */}
+          {/* MOBILE FLOATING BAR "Preview" DI LUAR TAB EDITOR (Container identik dengan EditorBottomBar, hanya berisi [👁️ Preview]) */}
           {editor.activeTab !== 'edit-undangan' && (
-            <div className="fixed bottom-[72px] right-3 sm:right-6 z-30 xl:hidden">
-              <button
-                type="button"
-                onClick={() => editor.setShowFullscreenModal(true)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-stone-900 text-white font-semibold text-xs shadow-xl hover:bg-stone-800 transition-all active:scale-95 cursor-pointer border border-white/20 backdrop-blur-md"
-              >
-                <span className="material-symbols-outlined text-[17px]">visibility</span>
-                <span>Preview</span>
-              </button>
+            <div className="fixed bottom-[72px] left-3 right-3 max-w-lg mx-auto z-30 xl:hidden bg-white/95 backdrop-blur-md border border-stone-200/90 shadow-lg rounded-full px-3.5 py-1.5 transition-all w-auto">
+              <div className="flex items-center justify-between gap-2 w-full min-w-0">
+                {/* Sisi Kiri: Indikator Menu Aktif */}
+                <div className="flex items-center gap-2 shrink-0 py-1">
+                  <span className="w-2 h-2 rounded-full shrink-0 bg-emerald-600" />
+                  <span className="text-xs font-semibold text-stone-500">
+                    {editor.activeTab === 'template-saya'
+                      ? 'Template Saya'
+                      : editor.activeTab === 'daftar-tamu'
+                      ? 'Daftar Tamu'
+                      : editor.activeTab === 'ucapan-masuk'
+                      ? 'Ucapan Masuk'
+                      : 'Pengaturan'}
+                  </span>
+                </div>
+
+                {/* Sisi Kanan: Hanya Tombol Preview (Ikon Mata + "Preview") */}
+                <button
+                  type="button"
+                  onClick={() => editor.setShowFullscreenModal(true)}
+                  className="px-3 py-1.5 rounded-full bg-stone-900 hover:bg-stone-800 text-white font-semibold text-xs transition-all active:scale-95 shadow-sm cursor-pointer flex items-center justify-center gap-1.5 shrink-0 border border-white/10"
+                  title="Buka Pratinjau Undangan (Preview)"
+                >
+                  <span className="material-symbols-outlined text-[17px]">visibility</span>
+                  <span>Preview</span>
+                </button>
+              </div>
             </div>
           )}
 

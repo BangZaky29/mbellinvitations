@@ -7,6 +7,7 @@ export interface DraggableCoverSheetProps {
   children: React.ReactNode;
   className?: string;
   id?: string;
+  isPreview?: boolean;
 }
 
 /**

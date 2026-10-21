@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchUserTemplates, type UserTemplateRecord } from '../../../lib/supabaseClient';
 import type { InvitationData } from '../../../types/invitation';
 import { THEME_BANNER_COLORS } from '../my-templates/types';
@@ -49,6 +49,9 @@ const FALLBACK_DEFAULT_TEMPLATES: TemplateSelectorItem[] = [
   },
 ];
 
+// In-Memory Cache agar perpindahan antar-tab instan (0ms) tanpa reload/kedipan kosong
+const globalTemplatesCache = new Map<string, TemplateSelectorItem[]>();
+
 export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
   userId,
   currentFormData,
@@ -62,8 +65,16 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
   sectionSubtitle = 'Pilih salah satu kartu template di bawah untuk melihat & mengelola buku tamu atau pesan ucapan khusus undangan tersebut:',
   badgeLabel,
 }) => {
-  const [items, setItems] = useState<TemplateSelectorItem[]>([]);
+  // Langsung inisialisasi dari cache jika user sudah pernah load sebelumnya
+  const [items, setItems] = useState<TemplateSelectorItem[]>(() => {
+    if (userId && globalTemplatesCache.has(userId)) {
+      return globalTemplatesCache.get(userId) || [];
+    }
+    return [];
+  });
   const [loading, setLoading] = useState(false);
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
 
   const parseCouple = (content?: any, fallbackTitle?: string) => {
     const groom = (content?.groom?.name || '').trim();
@@ -82,8 +93,10 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
     };
   };
 
-  const loadAllTemplates = useCallback(async () => {
-    setLoading(true);
+  const loadAllTemplates = useCallback(async (isSilent = false) => {
+    if (!isSilent && itemsRef.current.length === 0) {
+      setLoading(true);
+    }
     try {
       const list: TemplateSelectorItem[] = [];
       const seenSlugs = new Set<string>();
@@ -156,6 +169,8 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
         FALLBACK_DEFAULT_TEMPLATES.forEach((fb) => list.push(fb));
       }
 
+      // Simpan ke in-memory cache
+      globalTemplatesCache.set(userId, list);
       setItems(list);
 
       // Pilih default jika belum ada yang dipilih
@@ -182,22 +197,29 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
   }, [userId, currentFormData, activeTemplateId, activeSlug]);
 
   useEffect(() => {
-    loadAllTemplates();
+    // Jika data sudah ada di cache, lakukan silent refresh di background tanpa kedipan
+    const hasCached = itemsRef.current.length > 0;
+    loadAllTemplates(hasCached);
 
-    const handleUpdate = () => loadAllTemplates();
+    const handleUpdate = () => loadAllTemplates(true);
     const handleDelete = (e: any) => {
       const deletedId = e?.detail?.id;
       const deletedSlug = e?.detail?.slug;
-      setItems((prev) => prev.filter((p) => p.id !== deletedId && p.slug !== deletedSlug));
+      setItems((prev) => {
+        const updated = prev.filter((p) => p.id !== deletedId && p.slug !== deletedSlug);
+        if (userId) globalTemplatesCache.set(userId, updated);
+        return updated;
+      });
     };
 
     window.addEventListener('mbell_templates_updated', handleUpdate);
     window.addEventListener('mbell_template_deleted', handleDelete);
+
     return () => {
       window.removeEventListener('mbell_templates_updated', handleUpdate);
       window.removeEventListener('mbell_template_deleted', handleDelete);
     };
-  }, [loadAllTemplates]);
+  }, [loadAllTemplates, userId]);
 
   // Sembunyikan total kartu selector jika user belum login atau belum memiliki koleksi template tersimpan di DB
   if (!userId || items.length === 0) {
