@@ -713,6 +713,44 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
       DEMO_KEYWORDS.some((kw) => currentGroom.includes(kw)) ||
       DEMO_KEYWORDS.some((kw) => currentBride.includes(kw));
 
+    // Pertahankan status template yang sudah dibeli dan status pembayaran agar badge 'Sudah Dibeli' tidak hilang saat ganti tema
+    const currentUnlocked = (Array.isArray(formData.unlocked_templates) && formData.unlocked_templates.length > 0)
+      ? formData.unlocked_templates
+      : (() => {
+          try {
+            const raw = localStorage.getItem('mbell_pending_draft_formData');
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed?.unlocked_templates) && parsed.unlocked_templates.length > 0) {
+                return parsed.unlocked_templates;
+              }
+            }
+          } catch (e) {}
+          return [];
+        })();
+
+    const currentIsPaid = formData.is_paid ?? (() => {
+      try {
+        const raw = localStorage.getItem('mbell_pending_draft_formData');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return Boolean(parsed?.is_paid);
+        }
+      } catch (e) {}
+      return false;
+    })();
+
+    const currentPaidTpl = formData.paid_template_id || (() => {
+      try {
+        const raw = localStorage.getItem('mbell_pending_draft_formData');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return parsed?.paid_template_id || null;
+        }
+      } catch (e) {}
+      return null;
+    })();
+
     let updatedData: InvitationData;
     if ((isUsingDemoContent || forcePreset) && thematicData) {
       const gName = (thematicData.groom?.name || '').trim();
@@ -724,10 +762,21 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
         slug: formData.slug || dynamicSlug,
         status: formData.status || 'draft',
         theme_id: semanticId as any,
+        unlocked_templates: currentUnlocked,
+        paid_template_id: currentPaidTpl,
+        is_paid: currentIsPaid,
+        paid_at: formData.paid_at || null,
+        user_id: formData.user_id,
       };
       setFormData(updatedData);
     } else {
-      updatedData = { ...formData, theme_id: semanticId as any };
+      updatedData = {
+        ...formData,
+        theme_id: semanticId as any,
+        unlocked_templates: currentUnlocked,
+        paid_template_id: currentPaidTpl,
+        is_paid: currentIsPaid,
+      };
       setFormData(updatedData);
     }
     setThemeConfig(matchedConfig);
@@ -750,9 +799,9 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
       // langsung lakukan sinkronisasi diam-diam (silent-sync) ke database Supabase
       const isUnlocked = isTemplateUnlocked(
         semanticId,
-        formData.unlocked_templates,
-        formData.paid_template_id,
-        formData.is_paid
+        updatedData.unlocked_templates,
+        updatedData.paid_template_id,
+        updatedData.is_paid
       );
 
       if (isUnlocked) {
