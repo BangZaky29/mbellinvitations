@@ -1,4 +1,15 @@
 {
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Permissions-Policy",
+          "value": "autoplay=(self \"https://www.youtube.com\"), encrypted-media=(self \"https://www.youtube.com\"), compute-pressure=(self \"https://www.youtube.com\")"
+        }
+      ]
+    }
+  ],
   "rewrites": [
     {
       "source": "/og-banners/(.*)",
