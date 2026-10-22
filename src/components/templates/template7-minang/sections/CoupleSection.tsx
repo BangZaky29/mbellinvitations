@@ -10,8 +10,6 @@ export interface MinangCoupleProps extends BaseSectionProps {
 
 export const CoupleSection: React.FC<MinangCoupleProps> = ({
   data,
-  firstPerson,
-  secondPerson,
 }) => {
   const isGroomFirst = !data.is_bride_first;
   const groom = data.groom;

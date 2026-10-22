@@ -19,7 +19,6 @@ import {
 import {
   computeCoupleSlug,
   getCanonicalPublishedSlug,
-  cleanDraftSlug,
 } from '../pages/dashboard/helpers/computeCoupleSlug';
 import { parseSupabaseUser, type DashboardUser } from './useDashboardAuth';
 
