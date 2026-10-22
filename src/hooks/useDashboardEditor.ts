@@ -257,12 +257,11 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
             setCurrentTemplateRecordId(userTemplateData.id);
             localStorage.setItem('mbell_active_template_id', userTemplateData.id);
 
-            // Deteksi apakah template ini adalah template live yang dipublikasikan
+            // Deteksi apakah template ini adalah template live yang dipublikasikan secara nyata
             const isThisPublished =
               userTemplateData.status === 'published' ||
               Boolean(publishedUt && publishedUt.id === userTemplateData.id) ||
-              Boolean(livePublishedTheme && (userTemplateData.theme_id === livePublishedTheme || userTemplateData.content?.theme_id === livePublishedTheme)) ||
-              Boolean(publishedInv && userTemplateData.slug === publishedInv.slug);
+              Boolean(publishedInv && userTemplateData.slug === publishedInv.slug && publishedInv.status === 'published');
 
             const activeTheme = (userTemplateData.theme_id ||
               userTemplateData.content?.theme_id ||
@@ -283,23 +282,7 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
             const bName = (loadedContent.bride?.name || '').trim();
             const coupleSlug = computeCoupleSlug(gName, bName);
             const rawSlug = userTemplateData.slug || loadedContent.slug || coupleSlug || 'undangan-baru';
-            const effectiveSlug = isThisPublished
-              ? getCanonicalPublishedSlug(rawSlug, gName, bName)
-              : (rawSlug || coupleSlug || 'undangan-baru');
-
-            // Jika record sudah published tapi slug di database masih memiliki suffix -draf, auto-heal ke slug kanonikal resmi
-            if (isThisPublished && userTemplateData.slug && userTemplateData.slug !== effectiveSlug) {
-              supabase
-                .from('user_templates')
-                .update({ slug: effectiveSlug, status: 'published' })
-                .eq('id', userTemplateData.id)
-                .then();
-              supabase
-                .from('invitations')
-                .update({ slug: effectiveSlug, status: 'published' })
-                .eq('slug', userTemplateData.slug)
-                .then();
-            }
+            const effectiveSlug = rawSlug;
 
             // Cek apakah ada perubahan belum disimpan di localStorage (misal user sedang coba preview tema lain)
             const hasUnsavedDraft = localStorage.getItem('mbell_pending_draft_hasUnsavedEdits') === 'true';
