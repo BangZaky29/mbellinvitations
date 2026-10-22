@@ -766,7 +766,6 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
         paid_template_id: currentPaidTpl,
         is_paid: currentIsPaid,
         paid_at: formData.paid_at || null,
-        user_id: formData.user_id,
       };
       setFormData(updatedData);
     } else {

@@ -74,6 +74,7 @@ export type TemplateThemeId =
 
 export interface InvitationData {
   id?: string;
+  user_id?: string;
   slug?: string;
   status?: string;
   title?: string;
