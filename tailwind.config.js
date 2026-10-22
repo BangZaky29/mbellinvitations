@@ -17,6 +17,21 @@ export default {
         'gold-champagne': '#C5A059',
         'gold-light': '#F4EDE0',
 
+        // Template 7 (Minang Baralek Gadang)
+        burgundy: '#1B0609',
+        'burgundy-dark': '#130305',
+        'burgundy-deep': '#2E0A10',
+        'burgundy-card': '#2A080E',
+        'burgundy-accent': '#4A121A',
+        gold: '#D4AF37',
+        'gold-bright': '#F5E296',
+        'gold-leaf': '#E5C158',
+        'gold-bronze': '#7D5C1E',
+        'gold-dark': '#8A6822',
+        cream: '#FAF6EE',
+        'cream-paper': '#F7F2E9',
+        'cream-muted': '#EADEC7',
+
         // Dynamic Material 3 tokens via scoped CSS variables
         primary: "rgb(var(--color-primary) / <alpha-value>)",
         "primary-container": "rgb(var(--color-primary-container) / <alpha-value>)",
@@ -103,6 +118,31 @@ export default {
           goldlight: '#F5E6BE',
           silver: '#E5E5E5',
         },
+
+        // Template 7 (Minang Baralek Gadang)
+        burgundy: {
+          DEFAULT: '#4A121A',
+          dark: '#2E0A10',
+          deep: '#1B0609',
+          light: '#6B1B27',
+        },
+        gold: {
+          light: '#F5E296',
+          DEFAULT: '#D4AF37',
+          leaf: '#E5C158',
+          bronze: '#AA8239',
+          dark: '#7D5C1E',
+        },
+        cream: {
+          DEFAULT: '#F7F2E9',
+          paper: '#FAF6EE',
+          muted: '#EADEC9',
+        },
+      },
+      boxShadow: {
+        'gold-glow': '0 0 25px rgba(212, 175, 55, 0.28)',
+        'gold-card': '0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(229, 193, 88, 0.35)',
+        'inner-gold': 'inset 0 0 15px rgba(212, 175, 55, 0.2)',
       },
       spacing: {
         'space-xs': '0.25rem',
@@ -118,8 +158,11 @@ export default {
         sans: ['"Plus Jakarta Sans"', 'sans-serif'],
         serif: ['"Playfair Display"', 'serif'],
 
-        // Distinct Registered Fonts for 5 Templates
+        // Distinct Registered Fonts for Templates
         cormorant: ['"Cormorant Garamond"', 'serif'],
+        cinzel: ['"Cinzel"', 'serif'],
+        script: ['"Great Vibes"', 'cursive'],
+        greatvibes: ['"Great Vibes"', 'cursive'],
         playfair: ['"Playfair Display"', 'serif'],
         ebgaramond: ['"EB Garamond"', 'serif'],
         bodoni: ['"Bodoni Moda"', 'serif'],

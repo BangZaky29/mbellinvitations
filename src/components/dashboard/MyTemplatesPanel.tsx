@@ -129,12 +129,8 @@ export const MyTemplatesPanel: React.FC<MyTemplatesPanelProps> = ({
   // Deteksi template yang sedang aktif di editor
   const isTemplateActive = (t: UserTemplateRecord) => {
     if (activeTemplateId && t.id === activeTemplateId) return true;
-    if (t.slug && currentFormData.slug && t.slug === currentFormData.slug) return true;
-    const gName = (t.content?.groom?.name || '').trim().toLowerCase();
-    const bName = (t.content?.bride?.name || '').trim().toLowerCase();
-    const curG = (currentFormData.groom?.name || '').trim().toLowerCase();
-    const curB = (currentFormData.bride?.name || '').trim().toLowerCase();
-    if (curG && curB && gName === curG && bName === curB) return true;
+    if (currentFormData.id && t.id === currentFormData.id) return true;
+    if (t.slug && currentFormData.slug && t.slug === currentFormData.slug && !activeTemplateId) return true;
     return false;
   };
 

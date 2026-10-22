@@ -3,6 +3,7 @@ import type { UserTemplateRecord } from '../../../lib/supabaseClient';
 import type { InvitationData } from '../../../types/invitation';
 import { THEME_BANNER_COLORS } from './types';
 import { getInvitationDisplayUrl } from '../../../utils/urlHelper';
+import { getCanonicalPublishedSlug, computeCoupleSlug } from '../../../pages/dashboard/helpers/computeCoupleSlug';
 
 interface TemplateCardProps {
   item: UserTemplateRecord;
@@ -26,31 +27,26 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
   const themeStyle = THEME_BANNER_COLORS[item.theme_id || 'modern'] || THEME_BANNER_COLORS.modern;
 
   // Hitung slug otomatis dari nama mempelai pada setiap template tersimpan
-  const itemG = (item.content?.groom?.name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-  const itemB = (item.content?.bride?.name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-  const itemAutoSlug = itemG && itemB ? `${itemG}-${itemB}` : '';
+  const itemG = (item.content?.groom?.name || '').trim();
+  const itemB = (item.content?.bride?.name || '').trim();
+  const itemAutoSlug = computeCoupleSlug(itemG, itemB);
   const itemEffectiveSlug =
-    item.slug && item.slug !== 'raditya-jessica'
+    item.status === 'published'
+      ? getCanonicalPublishedSlug(item.slug, itemG, itemB)
+      : item.slug && item.slug !== 'raditya-jessica'
       ? item.slug
       : itemAutoSlug || item.slug || 'undangan-baru';
 
-  const isCopied = copiedSlug === itemEffectiveSlug;
+  const isCurrentActive = Boolean(activeTemplateId)
+    ? item.id === activeTemplateId
+    : (item.id === currentFormData.id || (Boolean(item.slug) && item.slug === currentFormData.slug));
 
-  const currentG = (currentFormData.groom?.name || '').trim().toLowerCase();
-  const currentB = (currentFormData.bride?.name || '').trim().toLowerCase();
-  const namesMatch = currentG && currentB && itemG === currentG && itemB === currentB;
+  const themeSlug = item.theme_id || 'modern';
+  const displaySlug = isCurrentActive && item.status === 'published'
+    ? itemEffectiveSlug
+    : `${themeSlug}/${itemEffectiveSlug}`;
 
-  const isCurrentActive =
-    (Boolean(activeTemplateId) && item.id === activeTemplateId) ||
-    namesMatch ||
-    (itemEffectiveSlug === (currentFormData.slug || 'undangan-baru') &&
-      (item.theme_id === currentFormData.theme_id ||
-        (item.template_id === 'template3' && currentFormData.theme_id === 'jawa') ||
-        (item.template_id === 'template1' && currentFormData.theme_id === 'modern') ||
-        (item.template_id === 'template2' && currentFormData.theme_id === 'rustic') ||
-        (item.template_id === 'template4' && currentFormData.theme_id === 'islami') ||
-        (item.template_id === 'template5' && currentFormData.theme_id === 'luxury') ||
-        (item.template_id === 'template6' && currentFormData.theme_id === 'sunda')));
+  const isCopied = copiedSlug === displaySlug || copiedSlug === itemEffectiveSlug;
 
   const updatedDate = item.updated_at
     ? new Date(item.updated_at).toLocaleDateString('id-ID', {
@@ -134,26 +130,57 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-stone-500 text-xs flex-wrap">
-            <span className="font-mono text-xs font-semibold text-stone-800 select-all">
-              {getInvitationDisplayUrl(itemEffectiveSlug)}
-            </span>
-            <button
-              type="button"
-              onClick={() => onCopyLink(itemEffectiveSlug)}
-              title="Salin tautan undangan"
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md hover:bg-stone-100 text-stone-500 hover:text-stone-900 text-[11px] font-medium transition-colors cursor-pointer shrink-0"
-            >
-              <span className="material-symbols-outlined text-[14px]">
-                {isCopied ? 'check' : 'content_copy'}
+          {item.status === 'published' ? (
+            <div className="flex items-center gap-2 text-stone-500 text-xs flex-wrap">
+              <span className="font-mono text-xs font-semibold text-stone-800 select-all">
+                {getInvitationDisplayUrl(displaySlug)}
               </span>
-              <span>{isCopied ? 'Tersalin' : 'Salin'}</span>
-            </button>
-            <span className="text-stone-300">•</span>
-            <span className="text-[11px] text-stone-500">
-              Diperbarui: {updatedDate}
-            </span>
-          </div>
+              <button
+                type="button"
+                onClick={() => onCopyLink(displaySlug)}
+                title={`Salin tautan ${isCurrentActive ? 'live utama' : `tema ${themeStyle.label}`}`}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md hover:bg-stone-100 text-stone-500 hover:text-stone-900 text-[11px] font-medium transition-colors cursor-pointer shrink-0"
+              >
+                <span className="material-symbols-outlined text-[14px]">
+                  {isCopied ? 'check' : 'content_copy'}
+                </span>
+                <span>{isCopied ? 'Tersalin' : 'Salin'}</span>
+              </button>
+              <a
+                href={`/${displaySlug}`}
+                target="_blank"
+                rel="noreferrer"
+                title={`Buka ${isCurrentActive ? 'undangan live' : `tema ${themeStyle.label}`} di tab baru`}
+                className="p-1 rounded-md hover:bg-stone-100 text-stone-500 hover:text-stone-900 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[15px]">open_in_new</span>
+              </a>
+              <span className="text-stone-300">•</span>
+              <span className="text-[11px] text-stone-500">
+                Diperbarui: {updatedDate}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-stone-500 text-xs flex-wrap">
+              <span className="text-[11px] font-semibold text-amber-800 bg-amber-100/80 border border-amber-300/70 px-2 py-0.5 rounded-md">
+                Draf Tersimpan (Belum Diterbitkan)
+              </span>
+              <a
+                href={`/${displaySlug}`}
+                target="_blank"
+                rel="noreferrer"
+                title={`Pratinjau draf tema ${themeStyle.label} di tab baru`}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md hover:bg-stone-100 text-stone-600 hover:text-stone-900 text-[11px] font-medium transition-colors"
+              >
+                <span className="material-symbols-outlined text-[14px]">visibility</span>
+                <span>Pratinjau</span>
+              </a>
+              <span className="text-stone-300">•</span>
+              <span className="text-[11px] text-stone-500">
+                Diperbarui: {updatedDate}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -173,17 +200,6 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
           </span>
           <span>{isCurrentActive ? 'Lanjut Edit di Editor' : 'Buka & Edit'}</span>
         </button>
-
-        <a
-          href={`/${itemEffectiveSlug}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 py-2 px-3 rounded-xl border border-stone-200 hover:bg-stone-50 hover:border-stone-300 text-stone-700 font-medium text-xs sm:text-sm transition-colors shrink-0"
-          title="Buka undangan live di tab baru"
-        >
-          <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-          <span className="hidden sm:inline">Lihat Live</span>
-        </a>
 
         <button
           type="button"

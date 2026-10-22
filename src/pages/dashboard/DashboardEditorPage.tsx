@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { supabase, saveUserTemplate } from '../../lib/supabaseClient';
+import { supabase, saveUserTemplate, fetchUserTemplates } from '../../lib/supabaseClient';
 import {
   MOCK_MODERN_WISHES,
   MOCK_THEME_WISHES_MAP,
@@ -14,8 +14,14 @@ import {
   CANONICAL_THEMES,
   isTemplateUnlocked,
   DEFAULT_THEME_CONFIGS,
+  getSafeDbTemplateId,
 } from './constants/themeMapping';
-import { computeCoupleSlug } from './helpers/computeCoupleSlug';
+import { extractYouTubeId } from '../../hooks/useAudioPlayer';
+import {
+  computeCoupleSlug,
+  getCanonicalPublishedSlug,
+  cleanDraftSlug,
+} from './helpers/computeCoupleSlug';
 import { getInvitationDisplayUrl } from '../../utils/urlHelper';
 import { EditorStepContent } from './components/EditorStepContent';
 import { EditorBottomBar } from './components/EditorBottomBar';
@@ -194,11 +200,145 @@ export const DashboardEditorPage: React.FC = () => {
 
   // State modal peringatan ketika user mencoba menyimpan saat tema baru belum dibeli
   const [showUnpurchasedThemeModal, setShowUnpurchasedThemeModal] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [savedTemplatesCount, setSavedTemplatesCount] = useState<number>(0);
+
+  // Sinkronisasi realtime jumlah template tersimpan di "Template Saya"
+  useEffect(() => {
+    let isMounted = true;
+    async function loadTemplateCount() {
+      if (!user?.id) {
+        setSavedTemplatesCount(0);
+        return;
+      }
+      try {
+        const templates = await fetchUserTemplates(user.id);
+        if (isMounted) {
+          setSavedTemplatesCount(templates.length);
+        }
+      } catch (err) {
+        console.warn('Error loading template count:', err);
+      }
+    }
+
+    loadTemplateCount();
+    window.addEventListener('mbell_templates_updated', loadTemplateCount);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('mbell_templates_updated', loadTemplateCount);
+    };
+  }, [user?.id]);
 
   // Deteksi jika user sedang memilih tema yang berbeda dari tema yang dibeli dan belum dibeli
   const isEditingUnpurchasedNewTheme = Boolean(
     publish.isAlreadyPublished && publish.isTemplateChanged && !publish.isUnlocked
   );
+
+  // Universal Publish Handler: Simpan & Publikasikan ke Supabase Live URL secara instan
+  const handlePublishUniversal = async () => {
+    if (!user?.id) {
+      editor.setShowAuthGateModal(true);
+      return;
+    }
+
+    const currentTheme = editor.formData.theme_id || 'modern';
+    const isUnlocked = isTemplateUnlocked(
+      currentTheme,
+      editor.formData.unlocked_templates,
+      editor.formData.paid_template_id || publish.publishedThemeId,
+      editor.formData.is_paid || Boolean(publish.publishedThemeId)
+    );
+
+    // Jika tema baru berbayar belum dibeli & bukan free modern: buka modal bayar / paywall
+    if (!isUnlocked && currentTheme !== 'modern') {
+      setShowUnpurchasedThemeModal(true);
+      return;
+    }
+
+    // Jika tema sudah dibeli atau gratis: langsung terbitkan & simpan ke live database!
+    setIsPublishing(true);
+    try {
+      await publish.handleConfirmSameTemplatePublish();
+      editor.setPublishedThemeId(currentTheme);
+    } catch (err) {
+      console.error('Publish universal error:', err);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  // Handler Simpan Draf Baru (+1 ke menu Template Saya)
+  const handleSaveAsNewDraftTemplate = async () => {
+    if (!user?.id) {
+      editor.setShowAuthGateModal(true);
+      return;
+    }
+
+    setIsSavingDraft(true);
+    try {
+      const rawSlug = editor.formData.slug || computeCoupleSlug(editor.formData.groom?.name, editor.formData.bride?.name) || 'undangan';
+      const baseSlug = cleanDraftSlug(rawSlug) || 'undangan';
+      const randSuffix = Math.random().toString(36).substring(2, 6);
+      const newDraftSlug = `${baseSlug}-draf-${randSuffix}`;
+      const currentTheme = editor.formData.theme_id || 'modern';
+      const themeDisplayName = getTemplateDisplayName(currentTheme);
+      const coupleTitle = `${editor.formData.groom?.name || 'Mempelai Pria'} & ${editor.formData.bride?.name || 'Mempelai Wanita'}`;
+      const newTitle = `Draf ${themeDisplayName} - ${coupleTitle}`;
+      const safeDbTemplateId = getSafeDbTemplateId(currentTheme);
+
+      const resolvedMusicUrl = editor.formData.music_url || editor.themeConfig.music_url || '';
+      const resolvedMusicType = Boolean(extractYouTubeId(resolvedMusicUrl)) ? 'youtube' : 'mp3';
+
+      const draftContent = {
+        ...editor.formData,
+        id: undefined,
+        slug: newDraftSlug,
+        status: 'draft' as const,
+        theme_id: currentTheme as any,
+      };
+
+      const saveResult = await saveUserTemplate({
+        user_id: user.id,
+        title: newTitle,
+        slug: newDraftSlug,
+        template_id: safeDbTemplateId,
+        theme_id: currentTheme,
+        status: 'draft',
+        content: draftContent,
+        theme_config: editor.themeConfig,
+        music_url: resolvedMusicUrl,
+        music_type: resolvedMusicType,
+        thumbnail_url: editor.formData.cover_image || editor.formData.couple_photo || null,
+        is_paid: editor.formData.is_paid || false,
+        paid_template_id: editor.formData.paid_template_id || null,
+        unlocked_templates: editor.formData.unlocked_templates || [],
+      });
+
+      if (saveResult.success) {
+        window.dispatchEvent(new CustomEvent('mbell_templates_updated'));
+        setSavedTemplatesCount((prev) => prev + 1);
+        save.setSaveToast({
+          show: true,
+          message: `Draf "${themeDisplayName}" berhasil ditambahkan ke menu Template Saya (+1)!`,
+          type: 'success',
+          isError: false,
+        }, 4000);
+      } else {
+        throw new Error(saveResult.error || 'Gagal menyimpan draf');
+      }
+    } catch (err: any) {
+      console.error('Save draft template error:', err);
+      save.setSaveToast({
+        show: true,
+        message: 'Gagal menyimpan draf: ' + (err.message || 'Coba lagi'),
+        type: 'error',
+        isError: true,
+      }, 3500);
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
 
   // Safe Save Handler: Mencegah perubahan tema live secara gratis
   const handleSafeSave = async () => {
@@ -253,7 +393,11 @@ export const DashboardEditorPage: React.FC = () => {
     MOCK_THEME_WISHES_MAP[TEMPLATE_ID_TO_THEME[String(editor.formData.theme_id || 'modern')]] ||
     MOCK_MODERN_WISHES;
 
-  const currentSlug = editor.formData.slug || computeCoupleSlug(editor.formData.groom?.name, editor.formData.bride?.name) || 'undangan-baru';
+  const isLiveOrPublished = Boolean(publish.isAlreadyPublished || editor.formData.status === 'published');
+  const coupleSlug = computeCoupleSlug(editor.formData.groom?.name, editor.formData.bride?.name);
+  const currentSlug = isLiveOrPublished
+    ? getCanonicalPublishedSlug(editor.formData.slug, editor.formData.groom?.name, editor.formData.bride?.name)
+    : (editor.formData.slug || coupleSlug || 'undangan-baru');
   const coupleNames = `${editor.formData.groom?.name || 'Mempelai Pria'} & ${editor.formData.bride?.name || 'Mempelai Wanita'}`;
 
   // Set tab yang sudah pernah dikunjungi agar komponen tetap hidup di memori (Keep-Alive)
@@ -406,7 +550,7 @@ export const DashboardEditorPage: React.FC = () => {
             publishedThemeId={publish.publishedThemeId}
             currentThemeId={editor.formData.theme_id}
             suggestedSlug={computeCoupleSlug(editor.formData.groom?.name, editor.formData.bride?.name)}
-            onSaveDraft={handleSafeSave}
+            onSaveDraft={handleSaveAsNewDraftTemplate}
             onRevertAll={save.handleRevertAll}
             isSaving={save.isSaving}
             lastSaved={save.lastSaved}
@@ -422,7 +566,7 @@ export const DashboardEditorPage: React.FC = () => {
             onOpenMyTemplates={() => editor.setActiveTab('template-saya')}
             onReplayOpening={() => editor.setShowOpeningSplash(true)}
             onLogout={handleRequestLogout}
-            onPublish={publish.handleRequestPublish}
+            onPublish={handlePublishUniversal}
             onOpenPreview={() => editor.setShowFullscreenModal(true)}
           />
 
@@ -435,6 +579,7 @@ export const DashboardEditorPage: React.FC = () => {
               unreadWishesCount={realWishesCount !== null ? realWishesCount : 0}
               totalGuestsCount={realGuestsCount !== null ? realGuestsCount : 0}
               totalTemplatesCount={TOTAL_EXCLUSIVE_THEMES}
+              savedTemplatesCount={savedTemplatesCount}
               unlockedTemplatesCount={
                 CANONICAL_THEMES.filter((themeKey) =>
                   isTemplateUnlocked(
@@ -488,6 +633,8 @@ export const DashboardEditorPage: React.FC = () => {
                     <EditorBottomBar
                       activeStep={editor.activeStep}
                       isSaving={save.isSaving}
+                      isSavingDraft={isSavingDraft}
+                      isPublishing={isPublishing}
                       hasUnsavedChanges={save.hasUnsavedChanges}
                       unsavedCount={save.unsavedCount}
                       isAlreadyPublished={publish.isAlreadyPublished}
@@ -502,11 +649,11 @@ export const DashboardEditorPage: React.FC = () => {
                           isError: type === 'error',
                         })
                       }
-                      onSaveDraft={handleSafeSave}
+                      onSaveDraft={handleSaveAsNewDraftTemplate}
                       onRevertAll={save.handleRevertAll}
                       onPrevStep={editor.handlePrevStep}
                       onNextStep={editor.handleNextStep}
-                      onRequestPublish={publish.handleRequestPublish}
+                      onRequestPublish={handlePublishUniversal}
                       onOpenPreview={() => editor.setShowFullscreenModal(true)}
                     />
                   </div>
@@ -655,8 +802,10 @@ export const DashboardEditorPage: React.FC = () => {
             onClose={() => editor.setShowPricingModal(false)}
             onConfirmPublish={publish.handleConfirmPublish}
             invitationSlug={currentSlug}
+            invitationId={editor.formData.id || ''}
             themeId={editor.formData.theme_id || 'modern'}
             coupleName={`${editor.formData.groom?.name || 'Mempelai Pria'} & ${editor.formData.bride?.name || 'Mempelai Wanita'}`}
+            userId={user?.id || null}
           />
 
           {/* MODAL POPUP: PERINGATAN TEMA BELUM DIAKTIVASI */}

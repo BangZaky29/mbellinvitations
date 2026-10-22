@@ -1,0 +1,10 @@
+export { CoverSection } from './CoverSection';
+export { HeroSection } from './HeroSection';
+export { CoupleSection } from './CoupleSection';
+export { EventSection } from './EventSection';
+export { DresscodeSection } from './DresscodeSection';
+export { GallerySection } from './GallerySection';
+export { GiftSection } from './GiftSection';
+export { RsvpSection } from './RsvpSection';
+export { WishesSection } from './WishesSection';
+export { ClosingFooterSection } from './ClosingFooterSection';

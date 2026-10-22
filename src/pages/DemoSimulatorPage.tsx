@@ -6,6 +6,7 @@ import { Template3Jawa } from '../components/templates/Template3Jawa';
 import { Template4Islami } from '../components/templates/Template4Islami';
 import { Template5Luxury } from '../components/templates/Template5Luxury';
 import { TemplateSundaSiger } from '../components/templates/TemplateSundaSiger';
+import { TemplateMinangBaralek } from '../components/templates/Template7Minang';
 import {
   MOCK_MODERN_DATA,
   MOCK_MODERN_THEME,
@@ -25,6 +26,9 @@ import {
   MOCK_SUNDA_DATA,
   MOCK_SUNDA_THEME,
   MOCK_SUNDA_WISHES,
+  MOCK_MINANG_DATA,
+  MOCK_MINANG_THEME,
+  MOCK_MINANG_WISHES,
 } from '../data/mockInvitation';
 
 const TEMPLATE_LIST = [
@@ -34,6 +38,7 @@ const TEMPLATE_LIST = [
   { id: 'template4', num: '4', name: 'Islami Kubah', short: 'Islami', accentColor: '#5E2832' },
   { id: 'template5', num: '5', name: 'Luxury Glamour', short: 'Luxury', accentColor: '#E2C792' },
   { id: 'template6', num: '6', name: 'Adat Sunda Siger', short: 'Sunda', accentColor: '#C5A059' },
+  { id: 'template7', num: '7', name: 'Adat Minang Baralek Gadang', short: 'Minang', accentColor: '#D4AF37' },
 ];
 
 export const DemoSimulatorPage: React.FC = () => {
@@ -239,6 +244,17 @@ export const DemoSimulatorPage: React.FC = () => {
             data={MOCK_SUNDA_DATA}
             theme={MOCK_SUNDA_THEME}
             wishes={MOCK_SUNDA_WISHES}
+            isCoverOpen={isCoverOpen}
+            isPreview={isPreview}
+          />
+        )}
+
+        {selectedTemplate === 'template7' && (
+          <TemplateMinangBaralek
+            invitationId="demo-invitation-007"
+            data={MOCK_MINANG_DATA}
+            theme={MOCK_MINANG_THEME}
+            wishes={MOCK_MINANG_WISHES}
             isCoverOpen={isCoverOpen}
             isPreview={isPreview}
           />

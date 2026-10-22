@@ -8,5 +8,12 @@ export default defineConfig({
     headers: {
       'Permissions-Policy': 'compute-pressure=(self "https://www.youtube.com")',
     },
+    proxy: {
+      '/api/midtrans': {
+        target: 'https://api.sandbox.midtrans.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/midtrans/, ''),
+      },
+    },
   },
 })

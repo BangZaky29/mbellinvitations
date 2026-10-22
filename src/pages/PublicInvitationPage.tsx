@@ -7,15 +7,31 @@ import { Template3Jawa } from '../components/templates/Template3Jawa';
 import { Template4Islami } from '../components/templates/Template4Islami';
 import { Template5Luxury } from '../components/templates/Template5Luxury';
 import { TemplateSundaSiger } from '../components/templates/TemplateSundaSiger';
+import { TemplateMinangBaralek } from '../components/templates/Template7Minang';
 import { DraftNoticeScreen } from '../components/common/DraftNoticeScreen';
 import { isTemplateUnlocked, TEMPLATE_ID_TO_THEME } from './dashboard/constants/themeMapping';
 
 export const PublicInvitationPage: React.FC = () => {
-  const { slug = 'raditya-jessica' } = useParams<{ slug: string }>();
+  const { slug = 'raditya-jessica', themeSlug } = useParams<{ slug?: string; themeSlug?: string }>();
   const [searchParams] = useSearchParams();
 
   const guestParam = searchParams.get('to') || searchParams.get('guest');
   const codeParam = searchParams.get('g') || searchParams.get('code');
+
+  // Resolusi tema yang diminta secara eksplisit via URL (misal: /minang/zaky-bella atau ?theme=minang)
+  const rawThemeParam = themeSlug || searchParams.get('theme');
+  let requestedTheme: string | null = null;
+  if (rawThemeParam) {
+    const clean = rawThemeParam.toLowerCase().replace(/^template[-_]?/i, '').trim();
+    if (clean === '7' || clean === 'minang') requestedTheme = 'minang';
+    else if (clean === '6' || clean === 'sunda') requestedTheme = 'sunda';
+    else if (clean === '3' || clean === 'jawa') requestedTheme = 'jawa';
+    else if (clean === '2' || clean === 'rustic') requestedTheme = 'rustic';
+    else if (clean === '4' || clean === 'islami') requestedTheme = 'islami';
+    else if (clean === '5' || clean === 'luxury') requestedTheme = 'luxury';
+    else if (clean === '1' || clean === 'modern') requestedTheme = 'modern';
+    else requestedTheme = TEMPLATE_ID_TO_THEME[rawThemeParam] || rawThemeParam;
+  }
 
   const {
     loading,
@@ -30,6 +46,7 @@ export const PublicInvitationPage: React.FC = () => {
     slug,
     guestParam,
     codeParam,
+    requestedTheme,
   });
 
   // Dynamic Browser Tab Title
@@ -90,14 +107,20 @@ export const PublicInvitationPage: React.FC = () => {
 
   const showDemoPill = slug === 'demo' && !isPublished;
 
-  // Resolusi template secara defensif agar tidak salah template jika template_id ambigu
-  const activeTheme = invitationData?.theme_id;
-  const isSunda = templateId === 'template6' || templateId === 'sunda' || activeTheme === 'sunda';
-  const isJawa = !isSunda && (templateId === 'template3' || templateId === 'jawa' || activeTheme === 'jawa');
-  const isRustic = !isSunda && !isJawa && (templateId === 'template2' || templateId === 'rustic' || activeTheme === 'rustic');
-  const isIslami = !isSunda && !isJawa && !isRustic && (templateId === 'template4' || templateId === 'islami' || activeTheme === 'islami');
-  const isLuxury = !isSunda && !isJawa && !isRustic && !isIslami && (templateId === 'template5' || templateId === 'luxury' || activeTheme === 'luxury');
-  const isModern = !isSunda && !isJawa && !isRustic && !isIslami && !isLuxury;
+  // Resolusi template murni berdasarkan tema aktif (tanpa dibajak oleh riwayat template berbayar lama)
+  const activeTheme =
+    requestedTheme ||
+    invitationData?.theme_id ||
+    TEMPLATE_ID_TO_THEME[templateId] ||
+    (templateId === 'template7' ? 'minang' : templateId === 'template6' ? 'sunda' : 'modern');
+
+  const isMinang = activeTheme === 'minang';
+  const isSunda = activeTheme === 'sunda';
+  const isJawa = activeTheme === 'jawa';
+  const isRustic = activeTheme === 'rustic';
+  const isIslami = activeTheme === 'islami';
+  const isLuxury = activeTheme === 'luxury';
+  const isModern = !isMinang && !isSunda && !isJawa && !isRustic && !isIslami && !isLuxury;
 
   return (
     <div id="invitation-root" data-public-invitation="true" className="relative w-full min-h-screen no-scrollbar">
@@ -178,6 +201,17 @@ export const PublicInvitationPage: React.FC = () => {
 
       {isSunda && (
         <TemplateSundaSiger
+          invitationId={slug}
+          data={invitationData}
+          theme={themeConfig}
+          wishes={wishes}
+          onSubmitWish={onSubmitWish}
+          onSubmitRsvp={onSubmitRsvp}
+        />
+      )}
+
+      {isMinang && (
+        <TemplateMinangBaralek
           invitationId={slug}
           data={invitationData}
           theme={themeConfig}

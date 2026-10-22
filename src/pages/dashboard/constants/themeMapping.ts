@@ -6,6 +6,7 @@ import {
   MOCK_ISLAMI_THEME,
   MOCK_LUXURY_THEME,
   MOCK_SUNDA_THEME,
+  MOCK_MINANG_THEME,
 } from '../../../data/mockInvitation';
 
 // Template ID Normalization (PostgreSQL FK constraint to public.templates)
@@ -16,33 +17,29 @@ export const THEME_TO_TEMPLATE_ID: Record<string, string> = {
   islami: 'template4',
   luxury: 'template5',
   sunda: 'template6',
+  minang: 'template7',
   template1: 'template1',
   template2: 'template2',
   template3: 'template3',
   template4: 'template4',
   template5: 'template5',
   template6: 'template6',
+  template7: 'template7',
 };
 
 /**
  * Daftar tema eksklusif resmi yang tersedia di Wedding Studio
  */
-export const CANONICAL_THEMES = ['sunda', 'jawa', 'islami', 'modern', 'rustic', 'luxury'] as const;
-export const TOTAL_EXCLUSIVE_THEMES = CANONICAL_THEMES.length; // 6 Tema Eksklusif
+export const CANONICAL_THEMES = ['sunda', 'minang', 'jawa', 'islami', 'modern', 'rustic', 'luxury'] as const;
+export const TOTAL_EXCLUSIVE_THEMES = CANONICAL_THEMES.length; // 7 Tema Eksklusif
 
+// ID template yang sah terdaftar di master table public.templates Supabase (mencegah error 409 FK violation)
 export const KNOWN_DB_TEMPLATE_IDS = new Set([
   'template1',
   'template2',
   'template3',
   'template4',
   'template5',
-  'template6',
-  'sunda',
-  'jawa',
-  'modern',
-  'rustic',
-  'islami',
-  'luxury',
 ]);
 
 /**
@@ -51,6 +48,8 @@ export const KNOWN_DB_TEMPLATE_IDS = new Set([
 export const THEME_NAMES: Record<string, string> = {
   sunda: 'Adat Sunda Siger',
   template6: 'Adat Sunda Siger',
+  minang: 'Adat Minang Baralek Gadang',
+  template7: 'Adat Minang Baralek Gadang',
   jawa: 'Adat Jawa',
   template3: 'Adat Jawa',
   modern: 'Modern Arch',
@@ -82,6 +81,18 @@ export const THEME_META: Record<string, ThemeMetaInfo> = {
     tag: 'Tradisi Parahyangan & Ronce Melati',
     icon: 'local_florist',
     accentColor: '#C5A059',
+  },
+  minang: {
+    name: 'Adat Minang Baralek Gadang',
+    tag: 'Suntiang Gadang & Songket Silungkang',
+    icon: 'temple_buddhist',
+    accentColor: '#D4AF37',
+  },
+  template7: {
+    name: 'Adat Minang Baralek Gadang',
+    tag: 'Suntiang Gadang & Songket Silungkang',
+    icon: 'temple_buddhist',
+    accentColor: '#D4AF37',
   },
   jawa: {
     name: 'Adat Jawa',
@@ -180,12 +191,14 @@ export const TEMPLATE_ID_TO_THEME: Record<string, string> = {
   template4: 'islami',
   template5: 'luxury',
   template6: 'sunda',
+  template7: 'minang',
   modern: 'modern',
   rustic: 'rustic',
   jawa: 'jawa',
   islami: 'islami',
   luxury: 'luxury',
   sunda: 'sunda',
+  minang: 'minang',
 };
 
 export const DEFAULT_THEME_CONFIGS: Record<string, ThemeConfig> = {
@@ -201,12 +214,15 @@ export const DEFAULT_THEME_CONFIGS: Record<string, ThemeConfig> = {
   template5: MOCK_LUXURY_THEME,
   sunda: MOCK_SUNDA_THEME,
   template6: MOCK_SUNDA_THEME,
+  minang: MOCK_MINANG_THEME,
+  template7: MOCK_MINANG_THEME,
 };
 
 // Demo keywords untuk deteksi apakah form masih memakai data bawaan template
 export const DEMO_KEYWORDS = [
   'dimas', 'sarah',
   'raditya', 'jessica',
+  'farhan', 'nadia',
   'romeo', 'juliet',
   'arya', 'dian', 'suryonegoro', 'daniswara',
   'rayhan', 'yasmin', 'al-fatih', 'anbiya',
@@ -238,6 +254,24 @@ export const TEMPLATE_PRICING: Record<string, TemplatePriceInfo> = {
     categoryLabel: 'Adat Nusantara',
   },
   template6: {
+    price: 59000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 59.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 59rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  minang: {
+    price: 59000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 59.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 59rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  template7: {
     price: 59000,
     originalPrice: 99000,
     priceDisplay: 'Rp 59.000',

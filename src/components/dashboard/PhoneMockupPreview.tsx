@@ -6,6 +6,7 @@ import { Template3Jawa } from '../templates/Template3Jawa';
 import { Template4Islami } from '../templates/Template4Islami';
 import { Template5Luxury } from '../templates/Template5Luxury';
 import { TemplateSundaSiger } from '../templates/TemplateSundaSiger';
+import { TemplateMinangBaralek } from '../templates/Template7Minang';
 import { PreviewToolbar } from './phone-preview/PreviewToolbar';
 import { PhoneFrame } from './phone-preview/PhoneFrame';
 import {
@@ -108,6 +109,9 @@ export const PhoneMockupPreview: React.FC<PhoneMockupPreviewProps> = ({
       case 'sunda':
       case 'template6':
         return <TemplateSundaSiger {...props} />;
+      case 'minang':
+      case 'template7':
+        return <TemplateMinangBaralek {...props} />;
       default:
         return <Template1Modern {...props} />;
     }

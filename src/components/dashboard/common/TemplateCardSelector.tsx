@@ -3,6 +3,7 @@ import { fetchUserTemplates, type UserTemplateRecord } from '../../../lib/supaba
 import type { InvitationData } from '../../../types/invitation';
 import { THEME_BANNER_COLORS } from '../my-templates/types';
 import { getInvitationDisplayUrl } from '../../../utils/urlHelper';
+import { cleanDraftSlug } from '../../../pages/dashboard/helpers/computeCoupleSlug';
 
 export interface TemplateSelectorItem {
   id: string;
@@ -335,7 +336,7 @@ export const TemplateCardSelector: React.FC<TemplateCardSelectorProps> = ({
                 </div>
                 <div className="flex items-center gap-2 text-stone-500 text-xs">
                   <span className="font-mono text-[11px] text-stone-500 truncate">
-                    {getInvitationDisplayUrl(item.slug)}
+                    {getInvitationDisplayUrl(item.status === 'published' ? cleanDraftSlug(item.slug) : item.slug)}
                   </span>
                 </div>
               </div>

@@ -24,10 +24,11 @@ export interface UseInvitationRealtimeOptions {
   slug?: string;
   guestParam?: string | null;  // dari ?to=Nama
   codeParam?: string | null;   // dari ?g=Code
+  requestedTheme?: string | null; // dari /:themeSlug/:slug atau ?theme=
 }
 
 // Helper untuk inisialisasi state awal secara instan (zero-delay) dari cache atau URL slug
-function getInitialRealtimeState(slug: string, guestParam?: string | null, codeParam?: string | null) {
+function getInitialRealtimeState(slug: string, guestParam?: string | null, codeParam?: string | null, requestedTheme?: string | null) {
   // 1. Coba dari cache lokal khusus slug ini
   try {
     const cachedStr = typeof window !== 'undefined' ? localStorage.getItem(`mbell_cached_inv_${slug}`) : null;
@@ -35,11 +36,13 @@ function getInitialRealtimeState(slug: string, guestParam?: string | null, codeP
       const parsed = JSON.parse(cachedStr);
       if (parsed && (parsed.invitationData || parsed.content)) {
         const rawContent = parsed.invitationData || parsed.content;
-        const effectiveTheme = rawContent.theme_id || parsed.theme_id || '';
+        const effectiveTheme = requestedTheme || rawContent.theme_id || parsed.theme_id || '';
         const resolvedTplId =
-          parsed.templateId ||
-          (effectiveTheme === 'sunda' ? 'template6' : THEME_TO_TEMPLATE_ID[effectiveTheme]) ||
-          'template1';
+          effectiveTheme === 'minang'
+            ? 'template7'
+            : effectiveTheme === 'sunda'
+            ? 'template6'
+            : (THEME_TO_TEMPLATE_ID[effectiveTheme] || parsed.templateId || 'template1');
         return {
           templateId: resolvedTplId,
           invitationData: {
@@ -86,8 +89,9 @@ export function useInvitationRealtime({
   slug = 'raditya-jessica',
   guestParam,
   codeParam,
+  requestedTheme,
 }: UseInvitationRealtimeOptions) {
-  const initial = getInitialRealtimeState(slug, guestParam, codeParam);
+  const initial = getInitialRealtimeState(slug, guestParam, codeParam, requestedTheme);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -137,11 +141,14 @@ export function useInvitationRealtime({
 
         if (inv && isMounted) {
           setInvitationRecord(inv);
-          const effectiveTheme = (inv.content?.theme_id || (inv as any).theme_id || '') as string;
+          const rawTheme = requestedTheme || (inv.content?.theme_id || (inv as any).theme_id || inv.template_id || '') as string;
+          const effectiveTheme = TEMPLATE_ID_TO_THEME[rawTheme] || rawTheme;
           const resolvedTemplateId =
-            (effectiveTheme === 'sunda' || inv.template_id === 'template6' || inv.template_id === 'sunda')
+            effectiveTheme === 'minang'
+              ? 'template7'
+              : effectiveTheme === 'sunda'
               ? 'template6'
-              : inv.template_id || THEME_TO_TEMPLATE_ID[effectiveTheme] || 'template1';
+              : (THEME_TO_TEMPLATE_ID[effectiveTheme] || inv.template_id || 'template1');
           setTemplateId(resolvedTemplateId);
 
           // Merge content with guest name & code serta status dan kepemilikan template
@@ -283,11 +290,14 @@ export function useInvitationRealtime({
           const updated = payload.new as SupabaseInvitationRecord;
           if (updated) {
             setInvitationRecord(updated);
-            const effectiveTheme = (updated.content?.theme_id || (updated as any).theme_id || '') as string;
+            const rawTheme = requestedTheme || (updated.content?.theme_id || (updated as any).theme_id || updated.template_id || '') as string;
+            const effectiveTheme = TEMPLATE_ID_TO_THEME[rawTheme] || rawTheme;
             const resolvedTemplateId =
-              (effectiveTheme === 'sunda' || updated.template_id === 'template6' || updated.template_id === 'sunda')
+              effectiveTheme === 'minang'
+                ? 'template7'
+                : effectiveTheme === 'sunda'
                 ? 'template6'
-                : updated.template_id || THEME_TO_TEMPLATE_ID[effectiveTheme] || 'template1';
+                : (THEME_TO_TEMPLATE_ID[effectiveTheme] || updated.template_id || 'template1');
             setTemplateId(resolvedTemplateId);
             if (updated.content && typeof updated.content === 'object') {
               setInvitationData((prev) => ({

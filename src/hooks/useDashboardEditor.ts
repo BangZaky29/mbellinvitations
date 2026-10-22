@@ -14,8 +14,13 @@ import {
   DEFAULT_THEME_CONFIGS,
   DEMO_KEYWORDS,
   getSafeDbTemplateId,
+  isTemplateUnlocked,
 } from '../pages/dashboard/constants/themeMapping';
-import { computeCoupleSlug } from '../pages/dashboard/helpers/computeCoupleSlug';
+import {
+  computeCoupleSlug,
+  getCanonicalPublishedSlug,
+  cleanDraftSlug,
+} from '../pages/dashboard/helpers/computeCoupleSlug';
 import { parseSupabaseUser, type DashboardUser } from './useDashboardAuth';
 
 export const INITIAL_BLANK_DRAFT: InvitationData = {
@@ -178,12 +183,44 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
             const gName = (loadedContent.groom?.name || '').trim();
             const bName = (loadedContent.bride?.name || '').trim();
             const coupleSlug = computeCoupleSlug(gName, bName);
-            const effectiveSlug = userTemplateData.slug || loadedContent.slug || coupleSlug || 'undangan-baru';
+            const rawSlug = userTemplateData.slug || loadedContent.slug || coupleSlug || 'undangan-baru';
+            const effectiveSlug = isDbPublished
+              ? getCanonicalPublishedSlug(rawSlug, gName, bName)
+              : (rawSlug || coupleSlug || 'undangan-baru');
+
+            // Jika record sudah published tapi slug di database masih memiliki suffix -draf, auto-heal ke slug kanonikal resmi
+            if (isDbPublished && userTemplateData.slug && userTemplateData.slug !== effectiveSlug) {
+              supabase
+                .from('user_templates')
+                .update({ slug: effectiveSlug })
+                .eq('id', userTemplateData.id)
+                .then();
+              supabase
+                .from('invitations')
+                .update({ slug: effectiveSlug })
+                .eq('slug', userTemplateData.slug)
+                .then();
+            }
 
             // Cek apakah ada perubahan belum disimpan di localStorage (misal user sedang coba preview tema lain)
             const hasUnsavedDraft = localStorage.getItem('mbell_pending_draft_hasUnsavedEdits') === 'true';
             const savedDraftFormDataStr = localStorage.getItem('mbell_pending_draft_formData');
             const savedDraftThemeConfigStr = localStorage.getItem('mbell_pending_draft_themeConfig');
+
+            // Kolom tabel database (user_templates) adalah Single Source of Truth
+            const dbHasUnlockedCol = Array.isArray(userTemplateData.unlocked_templates);
+            const dbUnlocked: string[] = dbHasUnlockedCol
+              ? userTemplateData.unlocked_templates
+              : (Array.isArray(loadedContent.unlocked_templates) ? loadedContent.unlocked_templates : []);
+
+            const effectiveIsPaid = Boolean(userTemplateData.is_paid ?? (isDbPublished ? true : (loadedContent.is_paid || false)));
+            const effectivePaidTplId = effectiveIsPaid
+              ? (userTemplateData.paid_template_id || loadedContent.paid_template_id || (isDbPublished ? dbPublishedTheme : null))
+              : null;
+
+            const effectiveUnlocked = effectiveIsPaid
+              ? Array.from(new Set([...dbUnlocked, effectivePaidTplId].filter(Boolean)))
+              : (dbHasUnlockedCol ? userTemplateData.unlocked_templates : []);
 
             if (hasUnsavedDraft && savedDraftFormDataStr) {
               try {
@@ -192,19 +229,12 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
                   ? JSON.parse(savedDraftThemeConfigStr)
                   : (userTemplateData.theme_config || themeConfig);
 
-                const effectiveUnlocked = Array.from(
-                  new Set([
-                    ...(Array.isArray(userTemplateData.unlocked_templates) ? userTemplateData.unlocked_templates : []),
-                    ...(Array.isArray(loadedContent.unlocked_templates) ? loadedContent.unlocked_templates : []),
-                    ...(Array.isArray(pendingFormData.unlocked_templates) ? pendingFormData.unlocked_templates : []),
-                    userTemplateData.paid_template_id,
-                    loadedContent.paid_template_id,
-                  ].filter(Boolean))
-                );
-                const effectiveIsPaid = Boolean(userTemplateData.is_paid ?? loadedContent.is_paid ?? isDbPublished);
-                const effectivePaidTplId = userTemplateData.paid_template_id || loadedContent.paid_template_id || (isDbPublished ? dbPublishedTheme : null);
+                // Jika di database is_paid adalah false (misal di-reset), jangan biarkan draf lokal membangkitkan status berbayar
+                const draftUnlocked = effectiveIsPaid
+                  ? Array.from(new Set([...effectiveUnlocked, ...(Array.isArray(pendingFormData.unlocked_templates) ? pendingFormData.unlocked_templates : [])]))
+                  : effectiveUnlocked;
 
-                // Muat ke state form editor agar perubahan tidak hilang, tapi status publikasi database TETAP AMAN
+                // Muat ke state form editor agar perubahan tidak hilang, tapi status pembayaran database TETAP SEJATI
                 setFormData({
                   ...MOCK_MODERN_DATA,
                   ...pendingFormData,
@@ -212,7 +242,7 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
                   status: isDbPublished ? 'published' : (userTemplateData.status || 'draft'),
                   // Jika tema di draft berbeda, biarkan editor menampilkan preview tema tersebut
                   theme_id: pendingFormData.theme_id || dbPublishedTheme,
-                  unlocked_templates: effectiveUnlocked,
+                  unlocked_templates: draftUnlocked,
                   is_paid: effectiveIsPaid,
                   paid_template_id: effectivePaidTplId,
                 });
@@ -223,17 +253,6 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
                 console.warn('Gagal mem-parse unsaved draft:', err);
               }
             }
-
-            const effectiveUnlocked = Array.from(
-              new Set([
-                ...(Array.isArray(userTemplateData.unlocked_templates) ? userTemplateData.unlocked_templates : []),
-                ...(Array.isArray(loadedContent.unlocked_templates) ? loadedContent.unlocked_templates : []),
-                userTemplateData.paid_template_id,
-                loadedContent.paid_template_id,
-              ].filter(Boolean))
-            );
-            const effectiveIsPaid = Boolean(userTemplateData.is_paid ?? loadedContent.is_paid ?? isDbPublished);
-            const effectivePaidTplId = userTemplateData.paid_template_id || loadedContent.paid_template_id || (isDbPublished ? dbPublishedTheme : null);
 
             // Jika tidak ada unsaved draft atau parse gagal, gunakan data resmi dari database
             setFormData({
@@ -401,9 +420,12 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
       const gName = (template.content.groom?.name || '').trim();
       const bName = (template.content.bride?.name || '').trim();
       const coupleSlug = computeCoupleSlug(gName, bName);
-      const effectiveSlug = (template.slug && template.slug !== 'raditya-jessica')
+      const rawSlug = (template.slug && template.slug !== 'raditya-jessica')
         ? template.slug
         : (coupleSlug || template.slug || 'undangan-baru');
+      const effectiveSlug = isPublishedTemplate
+        ? getCanonicalPublishedSlug(rawSlug, gName, bName)
+        : rawSlug;
 
       const mergedContent: InvitationData = {
         ...MOCK_MODERN_DATA,
@@ -588,16 +610,21 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
       };
 
       // Coba perbarui row dengan slug lama atau slug baru
-      const { data: updateData } = await supabase
+      const { data: existingInv } = await supabase
         .from('invitations')
-        .update(invPayload)
+        .select('id')
         .or(`slug.eq.${cleanSlug},slug.eq.${oldSlug}`)
-        .select();
+        .maybeSingle();
 
-      if (!updateData || updateData.length === 0) {
+      if (existingInv?.id) {
         await supabase
           .from('invitations')
-          .upsert(invPayload, { onConflict: 'slug' });
+          .update(invPayload)
+          .eq('id', existingInv.id);
+      } else {
+        await supabase
+          .from('invitations')
+          .insert(invPayload);
       }
 
       // 2. Update di public.user_templates jika user login
@@ -687,21 +714,79 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
       DEMO_KEYWORDS.some((kw) => currentGroom.includes(kw)) ||
       DEMO_KEYWORDS.some((kw) => currentBride.includes(kw));
 
+    let updatedData: InvitationData;
     if ((isUsingDemoContent || forcePreset) && thematicData) {
       const gName = (thematicData.groom?.name || '').trim();
       const bName = (thematicData.bride?.name || '').trim();
       const dynamicSlug = computeCoupleSlug(gName, bName) || 'undangan-baru';
-      setFormData({
+      updatedData = {
         ...thematicData,
         id: formData.id,
         slug: formData.slug || dynamicSlug,
         status: formData.status || 'draft',
         theme_id: semanticId as any,
-      });
+      };
+      setFormData(updatedData);
     } else {
-      setFormData((prev) => ({ ...prev, theme_id: semanticId as any }));
+      updatedData = { ...formData, theme_id: semanticId as any };
+      setFormData(updatedData);
     }
     setThemeConfig(matchedConfig);
+
+    // Sinkronkan cache lokal seketika agar saat membuka tab publik link langsung menampilkan tema baru
+    const activeSlug = updatedData.slug || computeCoupleSlug(updatedData.groom?.name, updatedData.bride?.name);
+    const safeDbTpl = getSafeDbTemplateId(semanticId);
+    if (activeSlug) {
+      try {
+        localStorage.setItem(`mbell_cached_inv_${activeSlug}`, JSON.stringify({
+          templateId: safeDbTpl,
+          invitationData: updatedData,
+          themeConfig: matchedConfig,
+        }));
+        localStorage.setItem('mbell_pending_draft_formData', JSON.stringify(updatedData));
+        localStorage.setItem('mbell_pending_draft_themeConfig', JSON.stringify(matchedConfig));
+      } catch (e) {}
+
+      // Jika tema yang dipilih sudah berstatus dibeli (unlocked) atau undangan published,
+      // langsung lakukan sinkronisasi diam-diam (silent-sync) ke database Supabase
+      const isUnlocked = isTemplateUnlocked(
+        semanticId,
+        formData.unlocked_templates,
+        formData.paid_template_id,
+        formData.is_paid
+      );
+
+      if (isUnlocked) {
+        (async () => {
+          try {
+            await supabase
+              .from('invitations')
+              .update({
+                template_id: safeDbTpl,
+                content: updatedData,
+                theme_config: matchedConfig,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('slug', activeSlug);
+
+            if (currentTemplateRecordId) {
+              await supabase
+                .from('user_templates')
+                .update({
+                  template_id: safeDbTpl,
+                  theme_id: semanticId,
+                  content: updatedData,
+                  theme_config: matchedConfig,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', currentTemplateRecordId);
+            }
+          } catch (err) {
+            console.warn('Silent theme switch sync notice:', err);
+          }
+        })();
+      }
+    }
   };
 
   const handleApplyPreset = (themeId: string) => {

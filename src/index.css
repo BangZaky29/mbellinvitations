@@ -382,6 +382,48 @@ body::-webkit-scrollbar-thumb,
 .theme-luxury .text-on-surface { color: #e2e2e8 !important; }
 .theme-luxury .text-on-surface-variant { color: #c4c6d0 !important; }
 
+/* TEMPLATE 7: ADAT MINANG BARALEK GADANG (ROYAL BURGUNDY & GOLD SONGKET) */
+.theme-minang {
+  background-color: #1B0609 !important;
+  color: #F7F2E9;
+}
+
+.bg-texture-noise {
+  background-image: radial-gradient(rgba(212, 175, 55, 0.08) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.songket-side-border-left {
+  background-image: radial-gradient(#d4af37 1px, transparent 1px),
+    linear-gradient(45deg, transparent 48%, #d4af37 49%, #d4af37 51%, transparent 52%),
+    linear-gradient(-45deg, transparent 48%, #d4af37 49%, #d4af37 51%, transparent 52%);
+  background-size: 8px 8px, 12px 12px, 12px 12px;
+  opacity: 0.35;
+}
+
+.songket-side-border-right {
+  background-image: radial-gradient(#d4af37 1px, transparent 1px),
+    linear-gradient(-45deg, transparent 48%, #d4af37 49%, #d4af37 51%, transparent 52%),
+    linear-gradient(45deg, transparent 48%, #d4af37 49%, #d4af37 51%, transparent 52%);
+  background-size: 8px 8px, 12px 12px, 12px 12px;
+  opacity: 0.35;
+}
+
+.text-gold-shimmer {
+  background: linear-gradient(135deg, #FFF0B8 0%, #D4AF37 45%, #AA8239 80%, #F5E296 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-gradient-btn {
+  background: linear-gradient(135deg, #F5E296 0%, #D4AF37 50%, #B88B2A 100%);
+  box-shadow: 0 4px 18px rgba(212, 175, 55, 0.35);
+}
+
+.gold-gradient-btn:active {
+  transform: scale(0.98);
+}
+
 .font-editorial {
   font-family: 'Cormorant Garamond', serif;
 }
@@ -751,6 +793,62 @@ header#dashboard-header * {
   transition: none !important;
   animation: none !important;
   filter: none !important;
+}
+
+/* ============================================================
+   TEMPLATE 7: MINANG BARALEK GADANG REGAL UTILITIES & TOKENS
+   ============================================================ */
+.theme-minang {
+  --color-primary: 27 6 9;
+  --color-on-primary: 250 246 238;
+  --color-surface: 250 246 238;
+  --color-on-surface: 46 10 16;
+  background-color: #1B0609 !important;
+  color: #FAF6EE !important;
+}
+
+.text-gold-shimmer {
+  background: linear-gradient(135deg, #FFF0B8 0%, #D4AF37 50%, #F5E296 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-gradient-btn {
+  background: linear-gradient(135deg, #F5E296 0%, #D4AF37 50%, #B8860B 100%);
+  color: #1B0609 !important;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);
+  font-weight: 700;
+}
+
+.gold-gradient-btn:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+}
+
+.bg-texture-noise {
+  background-image: radial-gradient(rgba(212, 175, 55, 0.04) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.shadow-gold-card {
+  box-shadow: 0 4px 20px -2px rgba(212, 175, 55, 0.15), 0 2px 6px -1px rgba(0, 0, 0, 0.4);
+}
+
+.shadow-gold-glow {
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.25);
+}
+
+@keyframes float-gonjong {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-float-gonjong {
+  animation: float-gonjong 4s ease-in-out infinite;
 }
 
 

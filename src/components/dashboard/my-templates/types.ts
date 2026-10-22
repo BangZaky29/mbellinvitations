@@ -52,6 +52,13 @@ export const THEME_PRESETS: ThemePresetItem[] = [
     description: 'Kemegahan Mahkota Siger, ronce melati, gending kecapi suling, dan nuansa Parahyangan',
     thumbnail: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDSMQzGjURPVSsGCRPPE-zHZ7bgKvtteTLFR6OM9LyCulQKLncbS8LirSkj3E_Ec1t0kJzOapSpd3NsulL3IStOlVI1tPnPGmcvYQoygMvF5gCkYEGhruz0lao1Cvo72k1VcpUgtv_jCWbRtWdBfhARMKHCGycQV3bau425N0jO8a6JVq5ufjrf_Pobe0giwVbiqnYhx5nY-LXDs9HaYTaUkUyKwqa5yxlJAfvBxubqUxz0wQHVGIl6mQ',
   },
+  {
+    id: 'minang',
+    name: 'Adat Minang Baralek Gadang',
+    category: 'Adat Nusantara',
+    description: 'Kemegahan Suntiang Gadang, Songket Silungkang, Gonjong Rumah Gadang, dan ornamen ukir Minangkabau',
+    thumbnail: 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=600&q=80',
+  },
 ];
 
 export const THEME_BANNER_COLORS: Record<string, { bg: string; text: string; badge: string; label: string }> = {
@@ -90,6 +97,24 @@ export const THEME_BANNER_COLORS: Record<string, { bg: string; text: string; bad
     text: 'text-[#ffdea5]',
     badge: 'bg-[#c5a059]/25 text-[#ffdea5] border-[#c5a059]/40',
     label: 'Adat Sunda Siger',
+  },
+  template6: {
+    bg: 'from-[#775a19]/90 via-[#c5a059]/70 to-[#8a4c56]/80',
+    text: 'text-[#ffdea5]',
+    badge: 'bg-[#c5a059]/25 text-[#ffdea5] border-[#c5a059]/40',
+    label: 'Adat Sunda Siger',
+  },
+  minang: {
+    bg: 'from-[#5a1018] via-[#8a1c28] to-[#d4af37]/80',
+    text: 'text-[#f5e6c8]',
+    badge: 'bg-[#d4af37]/25 text-[#f5e6c8] border-[#d4af37]/40',
+    label: 'Adat Minang Baralek Gadang',
+  },
+  template7: {
+    bg: 'from-[#5a1018] via-[#8a1c28] to-[#d4af37]/80',
+    text: 'text-[#f5e6c8]',
+    badge: 'bg-[#d4af37]/25 text-[#f5e6c8] border-[#d4af37]/40',
+    label: 'Adat Minang Baralek Gadang',
   },
 };
 

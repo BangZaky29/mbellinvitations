@@ -10,7 +10,9 @@ import {
   getTemplatePriceInfo,
 } from '../pages/dashboard/constants/themeMapping';
 import type { DashboardUser } from './useDashboardAuth';
-import { computeCoupleSlug } from '../pages/dashboard/helpers/computeCoupleSlug';
+import {
+  getCanonicalPublishedSlug,
+} from '../pages/dashboard/helpers/computeCoupleSlug';
 
 interface UseDashboardPublishOptions {
   user: DashboardUser | null;
@@ -108,14 +110,18 @@ export function useDashboardPublish({
         }
 
         // 2. Jika currentTemplateRecordId belum ada atau baru, cek record published milik user ini berdasarkan slug aktif
-        const targetSlug = formData.slug || computeCoupleSlug(formData.groom?.name, formData.bride?.name);
-        if (activeUserId && targetSlug) {
+        const canonicalSlug = getCanonicalPublishedSlug(formData.slug, formData.groom?.name, formData.bride?.name);
+        const slugsToCheck = Array.from(new Set([canonicalSlug, formData.slug].filter(Boolean)));
+
+        if (activeUserId && slugsToCheck.length > 0) {
           const { data: utBySlug } = await supabase
             .from('user_templates')
             .select('id, user_id, status, template_id, theme_id, slug, content')
             .eq('user_id', activeUserId)
-            .eq('slug', targetSlug)
+            .in('slug', slugsToCheck)
             .eq('status', 'published')
+            .order('updated_at', { ascending: false })
+            .limit(1)
             .maybeSingle();
 
           if (isMounted && utBySlug) {
@@ -135,8 +141,10 @@ export function useDashboardPublish({
             .from('invitations')
             .select('id, user_id, status, template_id, content')
             .eq('user_id', activeUserId)
-            .eq('slug', targetSlug)
+            .in('slug', slugsToCheck)
             .eq('status', 'published')
+            .order('updated_at', { ascending: false })
+            .limit(1)
             .maybeSingle();
 
           if (isMounted && invRow) {
@@ -184,8 +192,7 @@ export function useDashboardPublish({
         return;
       }
 
-      const coupleSlug = computeCoupleSlug(formData.groom?.name, formData.bride?.name);
-      const targetSlug = formData.slug || coupleSlug || 'undangan';
+      const targetSlug = getCanonicalPublishedSlug(formData.slug, formData.groom?.name, formData.bride?.name);
 
       // Cek record yang tersimpan saat ini di Supabase untuk user dan slug ini
       let invQuery = supabase
@@ -218,8 +225,7 @@ export function useDashboardPublish({
     setShowConfirmPublishModal(false);
     setIsSaving(true);
     try {
-      const coupleSlug = computeCoupleSlug(formData.groom?.name, formData.bride?.name);
-      const targetSlug = formData.slug || coupleSlug || 'undangan-baru';
+      const targetSlug = getCanonicalPublishedSlug(formData.slug, formData.groom?.name, formData.bride?.name);
       const coupleTitle = `Pernikahan ${formData.groom?.name || 'Mempelai Pria'} & ${formData.bride?.name || 'Mempelai Wanita'}`;
       const template_id = THEME_TO_TEMPLATE_ID[formData.theme_id || 'sunda'] || 'template6';
       const safeDbTemplateId = getSafeDbTemplateId(formData.theme_id);
@@ -239,6 +245,7 @@ export function useDashboardPublish({
 
       const updatedContent: InvitationData = {
         ...formData,
+        slug: targetSlug,
         status: 'published' as const,
         theme_id: currentThemeId as any,
         is_paid: true,
@@ -246,7 +253,7 @@ export function useDashboardPublish({
         unlocked_templates: updatedUnlockedTemplates,
       };
 
-      // 1. Simpan ke invitations dengan status published
+      // 1. Simpan ke invitations dengan status published secara aman tanpa error 409
       const invPayload = {
         user_id: user?.id || null,
         template_id: safeDbTemplateId,
@@ -262,16 +269,33 @@ export function useDashboardPublish({
         updated_at: new Date().toISOString(),
       };
 
-      const { data: updateData, error: updateError } = await supabase
+      const { data: existingInv } = await supabase
         .from('invitations')
-        .update(invPayload)
+        .select('id')
         .eq('slug', targetSlug)
-        .select();
+        .maybeSingle();
 
-      if (updateError || !updateData || updateData.length === 0) {
+      if (existingInv?.id) {
         await supabase
           .from('invitations')
-          .upsert(invPayload, { onConflict: 'slug' });
+          .update(invPayload)
+          .eq('id', existingInv.id);
+      } else {
+        await supabase
+          .from('invitations')
+          .insert(invPayload);
+      }
+
+      // Bersihkan row slug draf lama di tabel invitations jika berbeda dari targetSlug
+      if (formData.slug && formData.slug !== targetSlug && formData.slug.includes('-draf')) {
+        try {
+          await supabase
+            .from('invitations')
+            .delete()
+            .eq('slug', formData.slug);
+        } catch (cleanupErr) {
+          console.warn('Cleanup draft slug row warning:', cleanupErr);
+        }
       }
 
       // 2. Simpan ke user_templates
@@ -281,7 +305,7 @@ export function useDashboardPublish({
           user_id: user.id,
           title: coupleTitle,
           slug: targetSlug,
-          template_id,
+          template_id: safeDbTemplateId,
           theme_id: currentThemeId,
           status: 'published' as const,
           is_paid: true,
@@ -308,7 +332,7 @@ export function useDashboardPublish({
           invitationData: updatedContent,
           themeConfig,
         }));
-      } catch (e) {}
+      } catch (e) { }
       setLastSaved(new Date());
 
       // PENTING: Dispatch event agar useDashboardSave mereset baseline & menghapus counter (+2)
@@ -362,8 +386,7 @@ export function useDashboardPublish({
 
       const template_id = THEME_TO_TEMPLATE_ID[activeThemeId] || 'template1';
       const safeDbTemplateId = getSafeDbTemplateId(activeThemeId);
-      const coupleSlug = computeCoupleSlug(formData.groom?.name, formData.bride?.name);
-      const targetSlug = formData.slug || coupleSlug || 'undangan-baru';
+      const targetSlug = getCanonicalPublishedSlug(formData.slug, formData.groom?.name, formData.bride?.name);
       const coupleTitle = `Pernikahan ${formData.groom?.name || 'Mempelai Pria'} & ${formData.bride?.name || 'Mempelai Wanita'}`;
       const resolvedMusicUrl = formData.music_url || themeConfig.music_url || '';
       const resolvedMusicType = Boolean(extractYouTubeId(resolvedMusicUrl)) ? 'youtube' : 'mp3';
@@ -383,6 +406,7 @@ export function useDashboardPublish({
 
       const publishedContent = {
         ...formData,
+        slug: targetSlug,
         theme_id: activeThemeId,
         status: 'published' as const,
         is_paid: true,
@@ -412,18 +436,32 @@ export function useDashboardPublish({
         updated_at: nowIso,
       };
 
-      const { data: updateData, error: updateError } = await supabase
+      const { data: existingInv } = await supabase
         .from('invitations')
-        .update(payload)
+        .select('id')
         .eq('slug', targetSlug)
-        .select();
+        .maybeSingle();
 
-      if (updateError || !updateData || updateData.length === 0) {
-        const { error: upsertError } = await supabase
+      if (existingInv?.id) {
+        await supabase
           .from('invitations')
-          .upsert(payload, { onConflict: 'slug' });
-        if (upsertError) {
-          console.warn('Invitations publish upsert notice:', upsertError.message);
+          .update(payload)
+          .eq('id', existingInv.id);
+      } else {
+        await supabase
+          .from('invitations')
+          .insert(payload);
+      }
+
+      // Bersihkan row slug draf lama di tabel invitations jika berbeda dari targetSlug
+      if (formData.slug && formData.slug !== targetSlug && formData.slug.includes('-draf')) {
+        try {
+          await supabase
+            .from('invitations')
+            .delete()
+            .eq('slug', formData.slug);
+        } catch (cleanupErr) {
+          console.warn('Cleanup draft slug row warning:', cleanupErr);
         }
       }
 
@@ -434,7 +472,7 @@ export function useDashboardPublish({
           user_id: user.id,
           title: coupleTitle,
           slug: targetSlug,
-          template_id,
+          template_id: safeDbTemplateId,
           theme_id: activeThemeId,
           status: 'published' as const,
           is_paid: true,
@@ -466,7 +504,7 @@ export function useDashboardPublish({
           invitationData: publishedContent,
           themeConfig,
         }));
-      } catch (e) {}
+      } catch (e) { }
       setLastSaved(new Date());
 
       // PENTING: Dispatch event agar useDashboardSave mereset baseline & menghapus counter (+2)

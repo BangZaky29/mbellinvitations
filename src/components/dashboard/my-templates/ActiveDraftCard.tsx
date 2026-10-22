@@ -126,17 +126,6 @@ export const ActiveDraftCard: React.FC<ActiveDraftCardProps> = ({
             </button>
           )}
 
-          <a
-            href={`/${currentEffectiveSlug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 sm:px-3 sm:py-2 rounded-xl border border-stone-200 text-stone-700 hover:bg-stone-50 text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0"
-            title="Buka pratinjau live"
-          >
-            <span className="hidden sm:inline">Pratinjau Live</span>
-            <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-          </a>
-
           {activeRecord?.id && onDeleteClick && (
             <button
               type="button"

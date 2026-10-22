@@ -23,7 +23,10 @@ export function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
-        {/* Dynamic Public Invitation by Slug (e.g. /raditya-jessica) */}
+        {/* Dedicated Theme Invitation URL (e.g. /minang/zaky-bella, /sunda/zaky-bella, /template-minang/zaky-bella) */}
+        <Route path="/:themeSlug/:slug" element={<PublicInvitationPage />} />
+
+        {/* Dynamic Public Invitation by Slug (e.g. /zaky-bella) */}
         <Route path="/:slug" element={<PublicInvitationPage />} />
 
         {/* 404 Fallback */}

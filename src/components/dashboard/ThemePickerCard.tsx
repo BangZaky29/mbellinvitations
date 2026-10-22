@@ -41,6 +41,24 @@ const THEME_OPTIONS: ThemeOption[] = [
     badgeOriginal: 'Rp 99rb',
   },
   {
+    id: 'template7',
+    name: 'Adat Minang Baralek Gadang',
+    subtitle: 'Suntiang Gadang & Songket Silungkang',
+    styleTag: 'Tradisi Ranah Minang',
+    coupleSample: 'Farhan & Nadia',
+    badge: 'New Royal',
+    accentColor: '#D4AF37',
+    icon: 'temple_buddhist',
+    bgClass: 'bg-[#1B0609] text-[#D4AF37] border-[#D4AF37]/50',
+    category: 'adat',
+    price: 59000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 59.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 59rb',
+    badgeOriginal: 'Rp 99rb',
+  },
+  {
     id: 'template3',
     name: 'Adat Jawa',
     subtitle: 'Klasik Keraton & Wayang',
@@ -163,6 +181,7 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
       islami: 'template4',
       luxury: 'template5',
       sunda: 'template6',
+      minang: 'template7',
     };
     return map[id] || id;
   };
@@ -175,6 +194,7 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
       template4: 'islami',
       template5: 'luxury',
       template6: 'sunda',
+      template7: 'minang',
     };
     return map[id] || id;
   };

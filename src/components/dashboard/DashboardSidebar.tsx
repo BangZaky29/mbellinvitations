@@ -11,6 +11,7 @@ export interface DashboardSidebarProps {
   totalGuestsCount?: number;
   totalTemplatesCount?: number;
   unlockedTemplatesCount?: number;
+  savedTemplatesCount?: number;
   activeThemeName?: string;
 }
 
@@ -22,6 +23,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   totalGuestsCount = 0,
   totalTemplatesCount,
   unlockedTemplatesCount = 0,
+  savedTemplatesCount = 0,
 }) => {
   const effectiveTotalTemplates = totalTemplatesCount || TOTAL_EXCLUSIVE_THEMES;
 
@@ -48,6 +50,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       label: 'Template Saya',
       subtitle: 'Koleksi & Draf Tersimpan',
       icon: 'dashboard_customize',
+      badge: savedTemplatesCount > 0 ? savedTemplatesCount : undefined,
     },
     {
       id: 'daftar-tamu',

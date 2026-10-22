@@ -94,16 +94,30 @@ async function syncInvitationsRow(
         const liveContent = isAttemptingUnpaidThemeOnLive
           ? { ...payload.content, theme_id: existingTheme }
           : payload.content;
+        const effectiveIsPaid = Boolean(existing.is_paid ?? (existing.status === 'published'));
+        const effectivePaidTplId = effectiveIsPaid
+          ? (payload.content?.paid_template_id || existing.paid_template_id || (existing.status === 'published' ? activeLiveTemplateId : null))
+          : null;
+        const effectiveUnlocked = effectiveIsPaid
+          ? (Array.isArray(existing.unlocked_templates) && existing.unlocked_templates.length > 0 ? existing.unlocked_templates : (payload.content?.unlocked_templates || []))
+          : (Array.isArray(existing.unlocked_templates) ? existing.unlocked_templates : []);
+
+        const synchronizedContent = {
+          ...liveContent,
+          is_paid: effectiveIsPaid,
+          paid_template_id: effectivePaidTplId,
+          unlocked_templates: effectiveUnlocked,
+        };
 
         const updatePayload: any = {
           template_id: activeLiveTemplateId,
-          content: liveContent,
+          content: synchronizedContent,
           theme_config: isAttemptingUnpaidThemeOnLive ? (existing.content?.theme_config || (existing as any).theme_config || payload.theme_config) : payload.theme_config,
           music_url: payload.music_url,
           music_type: payload.music_type,
-          is_paid: existing.is_paid ?? payload.content?.is_paid ?? (existing.status === 'published'),
-          paid_template_id: payload.content?.paid_template_id || existing.paid_template_id || (existing.status === 'published' ? activeLiveTemplateId : null),
-          unlocked_templates: payload.content?.unlocked_templates || existing.unlocked_templates || [],
+          is_paid: effectiveIsPaid,
+          paid_template_id: effectivePaidTplId,
+          unlocked_templates: effectiveUnlocked,
           updated_at: new Date().toISOString(),
         };
         if (existing.status !== 'published') {
