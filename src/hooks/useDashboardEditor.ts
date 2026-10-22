@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase, saveUserTemplate, purgeRadityaJessica, type UserTemplateRecord } from '../lib/supabaseClient';
 import type { InvitationData, ThemeConfig } from '../types/invitation';
 import type { DashboardTab } from '../components/dashboard/DashboardSidebar';
@@ -114,6 +114,11 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [showOpeningSplash, setShowOpeningSplash] = useState(true);
   const [publishedThemeId, setPublishedThemeId] = useState<string | null>(null);
+  const liveBaselineRef = useRef<{
+    formData: InvitationData;
+    themeConfig: ThemeConfig;
+    theme_id: string;
+  } | null>(null);
 
   // 1. Initial Load: Auth check and fetch invitation from Supabase
   useEffect(() => {
@@ -138,21 +143,110 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
         }
 
         if (currentUser) {
-          // 1. Cek terlebih dahulu apakah ada template tersimpan di user_templates milik user ini
-          const savedActiveId = localStorage.getItem('mbell_active_template_id');
-          let userTemplateQuery = supabase
+          // Cari record berstatus 'published' yang resmi milik user ini di public.user_templates & public.invitations
+          const { data: publishedUt } = await supabase
             .from('user_templates')
             .select('*')
             .eq('user_id', currentUser.id)
-            .neq('slug', 'raditya-jessica');
+            .eq('status', 'published')
+            .neq('slug', 'raditya-jessica')
+            .order('updated_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
 
-          if (savedActiveId) {
-            userTemplateQuery = userTemplateQuery.eq('id', savedActiveId);
-          } else {
-            userTemplateQuery = userTemplateQuery.order('updated_at', { ascending: false }).limit(1);
+          const { data: publishedInv } = await supabase
+            .from('invitations')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .eq('status', 'published')
+            .neq('slug', 'raditya-jessica')
+            .order('updated_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          const livePublishedTheme =
+            publishedUt?.theme_id ||
+            publishedUt?.content?.theme_id ||
+            (publishedUt?.template_id ? TEMPLATE_ID_TO_THEME[publishedUt.template_id] : null) ||
+            publishedInv?.content?.theme_id ||
+            (publishedInv?.template_id ? TEMPLATE_ID_TO_THEME[publishedInv.template_id] : null) ||
+            null;
+
+          if (livePublishedTheme) {
+            setPublishedThemeId(livePublishedTheme);
           }
 
-          const { data: userTemplateData } = await userTemplateQuery.maybeSingle();
+          const liveSource = publishedUt || publishedInv;
+          if (liveSource && livePublishedTheme) {
+            const liveContent = (liveSource.content && typeof liveSource.content === 'object') ? liveSource.content : {};
+            const liveGName = (liveContent.groom?.name || '').trim();
+            const liveBName = (liveContent.bride?.name || '').trim();
+            const coupleSlug = computeCoupleSlug(liveGName, liveBName);
+            const rawSlug = liveSource.slug || liveContent.slug || coupleSlug || 'undangan-baru';
+            const liveSlug = getCanonicalPublishedSlug(rawSlug, liveGName, liveBName);
+            const liveConfig: ThemeConfig =
+              (liveSource.theme_config && typeof liveSource.theme_config === 'object')
+                ? {
+                    ...liveSource.theme_config,
+                    ...(liveSource.music_url ? { music_url: liveSource.music_url } : {}),
+                  }
+                : (DEFAULT_THEME_CONFIGS[livePublishedTheme] || DEFAULT_THEME_CONFIGS['modern']);
+
+            const liveUnlocked = Array.from(new Set([
+              ...(Array.isArray(liveSource.unlocked_templates) ? liveSource.unlocked_templates : []),
+              ...(Array.isArray(liveContent.unlocked_templates) ? liveContent.unlocked_templates : []),
+              livePublishedTheme,
+              liveSource.paid_template_id,
+            ].filter(Boolean)));
+
+            liveBaselineRef.current = {
+              formData: {
+                ...MOCK_MODERN_DATA,
+                ...liveContent,
+                slug: liveSlug,
+                status: 'published',
+                theme_id: livePublishedTheme as any,
+                is_paid: true,
+                paid_template_id: liveSource.paid_template_id || livePublishedTheme,
+                unlocked_templates: liveUnlocked,
+                ...(liveSource.music_url ? { music_url: liveSource.music_url } : {}),
+              },
+              themeConfig: liveConfig,
+              theme_id: livePublishedTheme,
+            };
+          }
+
+          // Cek template yang ingin dimuat ke editor
+          const savedActiveId = localStorage.getItem('mbell_active_template_id');
+          let userTemplateData: any = null;
+
+          if (savedActiveId) {
+            const { data } = await supabase
+              .from('user_templates')
+              .select('*')
+              .eq('user_id', currentUser.id)
+              .eq('id', savedActiveId)
+              .neq('slug', 'raditya-jessica')
+              .maybeSingle();
+            userTemplateData = data;
+          }
+
+          if (!userTemplateData) {
+            // Jika savedActiveId tidak ditemukan, prioritaskan template berstatus published
+            if (publishedUt) {
+              userTemplateData = publishedUt;
+            } else {
+              const { data } = await supabase
+                .from('user_templates')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .neq('slug', 'raditya-jessica')
+                .order('updated_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+              userTemplateData = data;
+            }
+          }
 
           // KASUS A: User SUDAH memiliki template tersimpan di database
           if (
@@ -163,17 +257,23 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
             setCurrentTemplateRecordId(userTemplateData.id);
             localStorage.setItem('mbell_active_template_id', userTemplateData.id);
 
-            const isDbPublished = userTemplateData.status === 'published';
-            const dbPublishedTheme = (userTemplateData.theme_id ||
+            // Deteksi apakah template ini adalah template live yang dipublikasikan
+            const isThisPublished =
+              userTemplateData.status === 'published' ||
+              Boolean(publishedUt && publishedUt.id === userTemplateData.id) ||
+              Boolean(livePublishedTheme && (userTemplateData.theme_id === livePublishedTheme || userTemplateData.content?.theme_id === livePublishedTheme)) ||
+              Boolean(publishedInv && userTemplateData.slug === publishedInv.slug);
+
+            const activeTheme = (userTemplateData.theme_id ||
               userTemplateData.content?.theme_id ||
               (userTemplateData.template_id ? TEMPLATE_ID_TO_THEME[userTemplateData.template_id] : null) ||
+              livePublishedTheme ||
               'modern') as any;
 
-            // Jika status di database adalah published, WAJIB pertahankan status LIVE dan tema live-nya
-            if (isDbPublished) {
-              setPublishedThemeId(dbPublishedTheme);
-            } else {
-              setPublishedThemeId(null);
+            if (livePublishedTheme) {
+              setPublishedThemeId(livePublishedTheme);
+            } else if (isThisPublished) {
+              setPublishedThemeId(activeTheme);
             }
 
             const loadedContent = (userTemplateData.content && typeof userTemplateData.content === 'object')
@@ -183,20 +283,20 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
             const bName = (loadedContent.bride?.name || '').trim();
             const coupleSlug = computeCoupleSlug(gName, bName);
             const rawSlug = userTemplateData.slug || loadedContent.slug || coupleSlug || 'undangan-baru';
-            const effectiveSlug = isDbPublished
+            const effectiveSlug = isThisPublished
               ? getCanonicalPublishedSlug(rawSlug, gName, bName)
               : (rawSlug || coupleSlug || 'undangan-baru');
 
             // Jika record sudah published tapi slug di database masih memiliki suffix -draf, auto-heal ke slug kanonikal resmi
-            if (isDbPublished && userTemplateData.slug && userTemplateData.slug !== effectiveSlug) {
+            if (isThisPublished && userTemplateData.slug && userTemplateData.slug !== effectiveSlug) {
               supabase
                 .from('user_templates')
-                .update({ slug: effectiveSlug })
+                .update({ slug: effectiveSlug, status: 'published' })
                 .eq('id', userTemplateData.id)
                 .then();
               supabase
                 .from('invitations')
-                .update({ slug: effectiveSlug })
+                .update({ slug: effectiveSlug, status: 'published' })
                 .eq('slug', userTemplateData.slug)
                 .then();
             }
@@ -212,13 +312,13 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
               ? userTemplateData.unlocked_templates
               : (Array.isArray(loadedContent.unlocked_templates) ? loadedContent.unlocked_templates : []);
 
-            const effectiveIsPaid = Boolean(userTemplateData.is_paid ?? (isDbPublished ? true : (loadedContent.is_paid || false)));
+            const effectiveIsPaid = Boolean(userTemplateData.is_paid ?? (isThisPublished ? true : (loadedContent.is_paid || false)));
             const effectivePaidTplId = effectiveIsPaid
-              ? (userTemplateData.paid_template_id || loadedContent.paid_template_id || (isDbPublished ? dbPublishedTheme : null))
+              ? (userTemplateData.paid_template_id || loadedContent.paid_template_id || livePublishedTheme || activeTheme)
               : null;
 
             const effectiveUnlocked = effectiveIsPaid
-              ? Array.from(new Set([...dbUnlocked, effectivePaidTplId].filter(Boolean)))
+              ? Array.from(new Set([...dbUnlocked, effectivePaidTplId, livePublishedTheme].filter(Boolean)))
               : (dbHasUnlockedCol ? userTemplateData.unlocked_templates : []);
 
             if (hasUnsavedDraft && savedDraftFormDataStr) {
@@ -238,9 +338,9 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
                   ...MOCK_MODERN_DATA,
                   ...pendingFormData,
                   slug: effectiveSlug,
-                  status: isDbPublished ? 'published' : (userTemplateData.status || 'draft'),
+                  status: isThisPublished ? 'published' : (userTemplateData.status || 'draft'),
                   // Jika tema di draft berbeda, biarkan editor menampilkan preview tema tersebut
-                  theme_id: pendingFormData.theme_id || dbPublishedTheme,
+                  theme_id: pendingFormData.theme_id || activeTheme,
                   unlocked_templates: draftUnlocked,
                   is_paid: effectiveIsPaid,
                   paid_template_id: effectivePaidTplId,
@@ -253,25 +353,76 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
               }
             }
 
-            // Jika tidak ada unsaved draft atau parse gagal, gunakan data resmi dari database
-            setFormData({
+            const officialForm: InvitationData = {
               ...MOCK_MODERN_DATA,
               ...loadedContent,
               slug: effectiveSlug,
-              status: isDbPublished ? 'published' : (userTemplateData.status || 'draft'),
-              theme_id: dbPublishedTheme,
+              status: isThisPublished ? 'published' : (userTemplateData.status || 'draft'),
+              theme_id: activeTheme,
               unlocked_templates: effectiveUnlocked,
               is_paid: effectiveIsPaid,
               paid_template_id: effectivePaidTplId,
               ...(userTemplateData.music_url ? { music_url: userTemplateData.music_url } : {}),
-            });
+            };
 
-            if (userTemplateData.theme_config && typeof userTemplateData.theme_config === 'object') {
-              setThemeConfig({
-                ...userTemplateData.theme_config,
-                ...(userTemplateData.music_url ? { music_url: userTemplateData.music_url } : {}),
-              });
+            const officialThemeConfig: ThemeConfig =
+              userTemplateData.theme_config && typeof userTemplateData.theme_config === 'object'
+                ? {
+                    ...userTemplateData.theme_config,
+                    ...(userTemplateData.music_url ? { music_url: userTemplateData.music_url } : {}),
+                  }
+                : themeConfig;
+
+            if (isThisPublished || (livePublishedTheme && (livePublishedTheme === activeTheme || livePublishedTheme === userTemplateData.theme_id))) {
+              liveBaselineRef.current = {
+                formData: JSON.parse(JSON.stringify(officialForm)),
+                themeConfig: JSON.parse(JSON.stringify(officialThemeConfig)),
+                theme_id: activeTheme,
+              };
             }
+
+            setFormData(officialForm);
+            setThemeConfig(officialThemeConfig);
+            setLoading(false);
+            return;
+          }
+
+          // KASUS A.2: User belum punya di user_templates tapi punya record resmi di invitations!
+          if (!userTemplateData && publishedInv) {
+            const invContent = (publishedInv.content && typeof publishedInv.content === 'object') ? publishedInv.content : {};
+            const gName = (invContent.groom?.name || '').trim();
+            const bName = (invContent.bride?.name || '').trim();
+            const coupleSlug = computeCoupleSlug(gName, bName);
+            const effectiveSlug = getCanonicalPublishedSlug(publishedInv.slug || coupleSlug, gName, bName);
+            const activeTheme = livePublishedTheme || 'modern';
+
+            if (livePublishedTheme) {
+              setPublishedThemeId(livePublishedTheme);
+            }
+
+            const invFormData: InvitationData = {
+              ...MOCK_MODERN_DATA,
+              ...invContent,
+              slug: effectiveSlug,
+              status: 'published',
+              theme_id: activeTheme,
+              is_paid: true,
+              paid_template_id: activeTheme,
+              unlocked_templates: [activeTheme],
+            };
+            const invThemeConfig: ThemeConfig =
+              publishedInv.theme_config && typeof publishedInv.theme_config === 'object'
+                ? publishedInv.theme_config
+                : themeConfig;
+
+            liveBaselineRef.current = {
+              formData: JSON.parse(JSON.stringify(invFormData)),
+              themeConfig: JSON.parse(JSON.stringify(invThemeConfig)),
+              theme_id: activeTheme,
+            };
+
+            setFormData(invFormData);
+            setThemeConfig(invThemeConfig);
             setLoading(false);
             return;
           }
@@ -410,8 +561,6 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
 
     if (isPublishedTemplate) {
       setPublishedThemeId(effectiveTheme);
-    } else {
-      setPublishedThemeId(null);
     }
 
     let loadedFormData: InvitationData = formData;
@@ -452,6 +601,14 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
       setThemeConfig(loadedThemeConfig);
     }
 
+    if (isPublishedTemplate) {
+      liveBaselineRef.current = {
+        formData: JSON.parse(JSON.stringify(loadedFormData)),
+        themeConfig: JSON.parse(JSON.stringify(loadedThemeConfig)),
+        theme_id: effectiveTheme,
+      };
+    }
+
     if (!stayOnCurrentTab) {
       setActiveTab('edit-undangan');
       const isDraft = template.status === 'draft';
@@ -484,6 +641,29 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
       })
     );
   };
+
+  // Listener sinkronisasi liveBaselineRef ketika ada event mbell_template_loaded
+  useEffect(() => {
+    const handleTemplateLoaded = (e: any) => {
+      const detail = e.detail;
+      if (detail?.formData && detail?.themeConfig) {
+        const isPub = detail.formData.status === 'published' || detail.template?.status === 'published';
+        if (isPub) {
+          const pubTheme = detail.formData.theme_id || publishedThemeId || 'modern';
+          liveBaselineRef.current = {
+            formData: JSON.parse(JSON.stringify(detail.formData)),
+            themeConfig: JSON.parse(JSON.stringify(detail.themeConfig)),
+            theme_id: pubTheme,
+          };
+          setPublishedThemeId(pubTheme);
+        }
+      }
+    };
+    window.addEventListener('mbell_template_loaded', handleTemplateLoaded);
+    return () => {
+      window.removeEventListener('mbell_template_loaded', handleTemplateLoaded);
+    };
+  }, [publishedThemeId]);
 
   // Handler Implementasikan Template Aktif
   const handleImplementActiveTemplate = () => {
@@ -698,6 +878,55 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
     const semanticId = TEMPLATE_ID_TO_THEME[newThemeId] || newThemeId;
     const currentTheme = formData.theme_id || 'modern';
     if (!forcePreset && currentTheme === semanticId) {
+      return;
+    }
+
+    // Deteksi apakah user kembali memilih template yang saat ini sedang LIVE / PUBLISHED
+    const effectiveLiveTheme = publishedThemeId || liveBaselineRef.current?.theme_id;
+    const isReturningToLive = Boolean(
+      effectiveLiveTheme &&
+      (semanticId === effectiveLiveTheme || (liveBaselineRef.current && liveBaselineRef.current.formData.theme_id === semanticId))
+    );
+
+    if (isReturningToLive && !forcePreset) {
+      const restoredForm: InvitationData = liveBaselineRef.current
+        ? JSON.parse(JSON.stringify(liveBaselineRef.current.formData))
+        : {
+            ...formData,
+            theme_id: semanticId as any,
+            status: 'published',
+            is_paid: true,
+          };
+      const restoredConfig: ThemeConfig = liveBaselineRef.current
+        ? JSON.parse(JSON.stringify(liveBaselineRef.current.themeConfig))
+        : (MOCK_THEME_CONFIG_MAP[semanticId] || DEFAULT_THEME_CONFIGS[semanticId] || themeConfig);
+
+      setFormData(restoredForm);
+      setThemeConfig(restoredConfig);
+
+      try {
+        localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
+        localStorage.setItem('mbell_pending_draft_formData', JSON.stringify(restoredForm));
+        localStorage.setItem('mbell_pending_draft_themeConfig', JSON.stringify(restoredConfig));
+        const activeSlug = restoredForm.slug || computeCoupleSlug(restoredForm.groom?.name, restoredForm.bride?.name);
+        if (activeSlug) {
+          localStorage.setItem(`mbell_cached_inv_${activeSlug}`, JSON.stringify({
+            templateId: getSafeDbTemplateId(semanticId),
+            invitationData: restoredForm,
+            themeConfig: restoredConfig,
+          }));
+        }
+      } catch (e) {}
+
+      // Dispatch mbell_template_loaded agar useDashboardSave mereset baseline & unsavedCount ke 0
+      window.dispatchEvent(
+        new CustomEvent('mbell_template_loaded', {
+          detail: {
+            formData: restoredForm,
+            themeConfig: restoredConfig,
+          },
+        })
+      );
       return;
     }
 

@@ -12,6 +12,7 @@ interface EditorStepContentProps {
   activeStep: number;
   formData: InvitationData;
   themeConfig: ThemeConfig;
+  publishedThemeId?: string | null;
   onSelectStep: (step: number) => void;
   onThemeChange: (themeId: string) => void;
   onApplyPreset: (themeId: string) => void;
@@ -27,6 +28,7 @@ export const EditorStepContent: React.FC<EditorStepContentProps> = ({
   activeStep,
   formData,
   themeConfig,
+  publishedThemeId = null,
   onSelectStep,
   onThemeChange,
   onApplyPreset,
@@ -49,6 +51,7 @@ export const EditorStepContent: React.FC<EditorStepContentProps> = ({
           unlockedTemplates={formData.unlocked_templates}
           paidTemplateId={formData.paid_template_id}
           isPaid={formData.is_paid}
+          publishedThemeId={publishedThemeId}
           onSelectTheme={onThemeChange}
           onThemeSelect={onThemeChange}
           onApplyPreset={onApplyPreset}

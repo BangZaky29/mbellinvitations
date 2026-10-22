@@ -95,6 +95,25 @@ export async function saveUserTemplate(
         .eq('id', payload.id)
         .select()
         .single();
+
+      if (result.error && payload.user_id && payload.slug) {
+        // Fallback jika error (misal duplicate slug dengan row lain):
+        const { data: fallbackRow } = await supabase
+          .from('user_templates')
+          .select('id')
+          .eq('user_id', payload.user_id)
+          .eq('slug', payload.slug)
+          .maybeSingle();
+
+        if (fallbackRow?.id) {
+          result = await supabase
+            .from('user_templates')
+            .update(record)
+            .eq('id', fallbackRow.id)
+            .select()
+            .single();
+        }
+      }
     } else {
       // Periksa apakah sudah ada template dengan slug & user_id yang sama sebelum insert baru
       const { data: existingRows } = await supabase

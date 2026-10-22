@@ -157,6 +157,7 @@ export interface ThemePickerCardProps {
   unlockedTemplates?: string[];
   paidTemplateId?: string | null;
   isPaid?: boolean;
+  publishedThemeId?: string | null;
   onThemeSelect?: (themeId: any) => void;
   onSelectTheme?: (themeId: any) => void;
   onApplyPreset?: (themeId: string) => void;
@@ -167,6 +168,7 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
   unlockedTemplates = [],
   paidTemplateId = null,
   isPaid = false,
+  publishedThemeId = null,
   onThemeSelect,
   onSelectTheme,
   onApplyPreset,
@@ -301,8 +303,14 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
       {/* Grid Kartu Tema (Mobile: 2 Kolom Card Mini, Desktop: 3 Kolom) */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4 pt-1">
         {filteredOptions.map((theme) => {
-          const isActive = effectiveActive === theme.id;
-          const isBought = isTemplateUnlocked(theme.id, unlockedTemplates, paidTemplateId, isPaid);
+          const semanticThemeId = toSemanticId(theme.id);
+          const semanticPublished = publishedThemeId ? toSemanticId(publishedThemeId) : null;
+          const isLive = Boolean(
+            semanticPublished &&
+            (semanticThemeId === semanticPublished || theme.id === publishedThemeId)
+          );
+          const isActive = effectiveActive === theme.id || toSemanticId(effectiveActive) === semanticThemeId;
+          const isBought = isTemplateUnlocked(theme.id, unlockedTemplates, paidTemplateId, isPaid) || isLive;
 
           return (
             <div
@@ -312,8 +320,12 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
                 handleSelect(theme.id);
               }}
               className={`group rounded-xl sm:rounded-2xl p-2 sm:p-4 space-y-2 sm:space-y-3 relative transition-all duration-200 cursor-pointer border ${
-                isActive
+                isActive && isLive
+                  ? 'border-emerald-600 bg-emerald-50/25 ring-2 ring-emerald-500/25 shadow-md'
+                  : isActive
                   ? 'border-stone-900 bg-stone-50/70 ring-2 ring-stone-900/15 shadow-md'
+                  : isLive
+                  ? 'border-emerald-300/80 bg-white hover:border-emerald-500 hover:shadow-xs'
                   : 'border-stone-200 bg-white hover:border-stone-300 hover:shadow-xs active:scale-[0.98]'
               }`}
             >
@@ -334,14 +346,21 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
                   </span>
                 )}
 
-                {/* Top-Right: Indikator Aktif Dipilih ATAU Badge Khas Tema */}
-                {isActive ? (
-                  <span className="absolute top-1.5 right-1.5 px-1.5 sm:px-2.5 py-0.5 rounded-full bg-stone-900 text-white text-[9px] sm:text-[10px] font-bold flex items-center gap-1 shadow-sm border border-stone-700">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>Aktif</span>
+                {/* Top-Right: Indikator Live (selalu Live) ATAU Badge Bawaan Tema (tidak berubah jadi Aktif) */}
+                {isLive ? (
+                  <span
+                    className={`absolute top-1.5 right-1.5 px-2 sm:px-2.5 py-0.5 rounded-full text-white text-[9px] sm:text-[10px] font-bold flex items-center gap-1 shadow-sm border ${
+                      isActive
+                        ? 'bg-emerald-600 border-emerald-400 ring-2 ring-emerald-400/40 shadow-emerald-500/20'
+                        : 'bg-emerald-700/95 border-emerald-400/50 backdrop-blur-xs'
+                    }`}
+                    title="Template ini adalah template resmi yang diterbitkan (Live)"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    <span>Live</span>
                   </span>
                 ) : theme.badge ? (
-                  <span className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-full bg-stone-900/70 text-white text-[8px] sm:text-[10px] font-medium backdrop-blur-xs shadow-2xs border border-white/10 hidden sm:inline-flex">
+                  <span className="absolute top-1.5 right-1.5 px-1.5 sm:px-2 py-0.5 rounded-full bg-stone-900/70 text-white text-[8px] sm:text-[10px] font-medium backdrop-blur-xs shadow-2xs border border-white/10 inline-flex items-center">
                     {theme.badge}
                   </span>
                 ) : null}
@@ -371,11 +390,15 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
                     <h3 className="text-xs sm:text-sm font-bold text-stone-900 truncate group-hover:text-stone-700 transition-colors">
                       {theme.name}
                     </h3>
-                    {isBought && (
-                      <span className="inline-flex items-center text-emerald-600 shrink-0" title="Template ini sudah dibeli untuk undangan ini">
-                        <span className="material-symbols-outlined text-[13px] sm:text-[15px]">verified</span>
+                    {isLive ? (
+                      <span className="inline-flex items-center text-emerald-600 shrink-0" title="Template ini adalah template resmi yang diterbitkan (Live)">
+                        <span className="material-symbols-outlined text-[14px] sm:text-[16px] text-emerald-600">verified</span>
                       </span>
-                    )}
+                    ) : isBought ? (
+                      <span className="inline-flex items-center text-emerald-600 shrink-0" title="Template ini sudah dibeli untuk undangan ini">
+                        <span className="material-symbols-outlined text-[13px] sm:text-[15px]">check_circle</span>
+                      </span>
+                    ) : null}
                   </div>
                   <p className="text-[10px] sm:text-xs text-stone-500 truncate leading-tight mt-0.5">
                     {theme.subtitle}
@@ -383,7 +406,12 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
                 </div>
 
                 {isActive ? (
-                  <span className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-stone-900 text-white shadow-sm shrink-0" title="Template sedang aktif">
+                  <span
+                    className={`flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl text-white shadow-sm shrink-0 ${
+                      isLive ? 'bg-emerald-600' : 'bg-stone-900'
+                    }`}
+                    title={isLive ? 'Template Live aktif di editor' : 'Template sedang aktif'}
+                  >
                     <span className="material-symbols-outlined text-[14px] sm:text-[17px] font-bold">check</span>
                   </span>
                 ) : (

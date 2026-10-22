@@ -393,7 +393,7 @@ export const DashboardEditorPage: React.FC = () => {
     MOCK_THEME_WISHES_MAP[TEMPLATE_ID_TO_THEME[String(editor.formData.theme_id || 'modern')]] ||
     MOCK_MODERN_WISHES;
 
-  const isLiveOrPublished = Boolean(publish.isAlreadyPublished || editor.formData.status === 'published');
+  const isLiveOrPublished = Boolean(publish.isAlreadyPublished || editor.formData.status === 'published' || Boolean(publish.publishedThemeId || editor.publishedThemeId));
   const coupleSlug = computeCoupleSlug(editor.formData.groom?.name, editor.formData.bride?.name);
   const currentSlug = isLiveOrPublished
     ? getCanonicalPublishedSlug(editor.formData.slug, editor.formData.groom?.name, editor.formData.bride?.name)
@@ -543,11 +543,11 @@ export const DashboardEditorPage: React.FC = () => {
           <DashboardHeader
             slug={currentSlug}
             onSlugChange={editor.handleSlugChange}
-            status={editor.formData.status || 'published'}
-            isPublished={editor.formData.status === 'published'}
-            isAlreadyPublished={publish.isAlreadyPublished}
+            status={editor.formData.status || (publish.isAlreadyPublished ? 'published' : 'draft')}
+            isPublished={publish.isAlreadyPublished || editor.formData.status === 'published' || Boolean(publish.publishedThemeId || editor.publishedThemeId)}
+            isAlreadyPublished={publish.isAlreadyPublished || Boolean((publish.publishedThemeId || editor.publishedThemeId) && !publish.isTemplateChanged)}
             isTemplateChanged={publish.isTemplateChanged}
-            publishedThemeId={publish.publishedThemeId}
+            publishedThemeId={publish.publishedThemeId || editor.publishedThemeId || (editor.formData.status === 'published' ? (editor.formData.theme_id || 'modern') : null)}
             currentThemeId={editor.formData.theme_id}
             suggestedSlug={computeCoupleSlug(editor.formData.groom?.name, editor.formData.bride?.name)}
             onSaveDraft={handleSaveAsNewDraftTemplate}
@@ -619,6 +619,7 @@ export const DashboardEditorPage: React.FC = () => {
                       activeStep={editor.activeStep}
                       formData={editor.formData}
                       themeConfig={editor.themeConfig}
+                      publishedThemeId={publish.publishedThemeId || editor.publishedThemeId || (editor.formData.status === 'published' ? (editor.formData.theme_id || 'modern') : null)}
                       onSelectStep={editor.handleSelectStep}
                       onThemeChange={editor.handleThemeChange}
                       onApplyPreset={editor.handleApplyPreset}
@@ -637,7 +638,7 @@ export const DashboardEditorPage: React.FC = () => {
                       isPublishing={isPublishing}
                       hasUnsavedChanges={save.hasUnsavedChanges}
                       unsavedCount={save.unsavedCount}
-                      isAlreadyPublished={publish.isAlreadyPublished}
+                      isAlreadyPublished={publish.isAlreadyPublished || Boolean((publish.publishedThemeId || editor.publishedThemeId) && !publish.isTemplateChanged)}
                       isTemplateChanged={publish.isTemplateChanged}
                       invitationSlug={currentSlug}
                       coupleNames={coupleNames}

@@ -82,7 +82,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     return 'U';
   };
 
-  const isLive = Boolean(publishedThemeId && (status === 'published' || isPublished));
+  const isLive = Boolean(publishedThemeId || isAlreadyPublished || status === 'published' || isPublished);
   const isSamePublishedTheme = Boolean(
     (isAlreadyPublished ?? isLive) && !isTemplateChanged
   );
@@ -93,7 +93,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
   // Hanya tampilkan tautan link publik di header (mobile & desktop) jika user SUDAH LOGIN dan memiliki template yang diterbitkan (published)
   const shouldShowPublicLink = Boolean(
-    (userEmail || userName) && (isAlreadyPublished || (publishedThemeId && (status === 'published' || isPublished)))
+    (userEmail || userName) && (isAlreadyPublished || Boolean(publishedThemeId) || status === 'published' || isPublished)
   );
 
   return (

@@ -90,58 +90,47 @@ export function useDashboardPublish({
             .eq('user_id', activeUserId)
             .maybeSingle();
 
-          if (isMounted && utRecord) {
-            if (utRecord.status === 'published') {
-              const liveTheme =
-                utRecord.theme_id ||
-                utRecord.content?.theme_id ||
-                (utRecord.template_id ? TEMPLATE_ID_TO_THEME[utRecord.template_id] : null) ||
-                utRecord.content?.paid_template_id;
-              if (liveTheme) {
-                setEffectivePublishedThemeId(liveTheme);
-                return;
-              }
-            } else {
-              // Jika record spesifik ini berstatus draf di database, tema ini belum live
-              setEffectivePublishedThemeId(null);
+          if (isMounted && utRecord && utRecord.status === 'published') {
+            const liveTheme =
+              utRecord.theme_id ||
+              utRecord.content?.theme_id ||
+              (utRecord.template_id ? TEMPLATE_ID_TO_THEME[utRecord.template_id] : null) ||
+              utRecord.content?.paid_template_id;
+            if (liveTheme) {
+              setEffectivePublishedThemeId(liveTheme);
               return;
             }
           }
         }
 
-        // 2. Jika currentTemplateRecordId belum ada atau baru, cek record published milik user ini berdasarkan slug aktif
-        const canonicalSlug = getCanonicalPublishedSlug(formData.slug, formData.groom?.name, formData.bride?.name);
-        const slugsToCheck = Array.from(new Set([canonicalSlug, formData.slug].filter(Boolean)));
-
-        if (activeUserId && slugsToCheck.length > 0) {
-          const { data: utBySlug } = await supabase
+        // 2. Cek apakah ada record berstatus published milik user ini di user_templates
+        if (activeUserId) {
+          const { data: utPublished } = await supabase
             .from('user_templates')
             .select('id, user_id, status, template_id, theme_id, slug, content')
             .eq('user_id', activeUserId)
-            .in('slug', slugsToCheck)
             .eq('status', 'published')
             .order('updated_at', { ascending: false })
             .limit(1)
             .maybeSingle();
 
-          if (isMounted && utBySlug) {
+          if (isMounted && utPublished) {
             const liveTheme =
-              utBySlug.theme_id ||
-              utBySlug.content?.theme_id ||
-              (utBySlug.template_id ? TEMPLATE_ID_TO_THEME[utBySlug.template_id] : null) ||
-              utBySlug.content?.paid_template_id;
+              utPublished.theme_id ||
+              utPublished.content?.theme_id ||
+              (utPublished.template_id ? TEMPLATE_ID_TO_THEME[utPublished.template_id] : null) ||
+              utPublished.content?.paid_template_id;
             if (liveTheme) {
               setEffectivePublishedThemeId(liveTheme);
               return;
             }
           }
 
-          // Cek juga di tabel invitations milik user aktif ini
+          // 3. Cek di tabel invitations milik user aktif ini
           const { data: invRow } = await supabase
             .from('invitations')
             .select('id, user_id, status, template_id, content')
             .eq('user_id', activeUserId)
-            .in('slug', slugsToCheck)
             .eq('status', 'published')
             .order('updated_at', { ascending: false })
             .limit(1)
@@ -159,19 +148,20 @@ export function useDashboardPublish({
           }
         }
 
-        // 3. Fallback: jika formData statusnya published
+        // 4. Fallback: jika formData statusnya published
         if (formData.status === 'published') {
           const fallbackTheme =
             formData.paid_template_id ||
             formData.theme_id ||
             (Array.isArray(formData.unlocked_templates) && formData.unlocked_templates[0]);
-          if (isMounted) {
-            setEffectivePublishedThemeId(fallbackTheme || null);
+          if (isMounted && fallbackTheme) {
+            setEffectivePublishedThemeId(fallbackTheme);
           }
-        } else {
-          if (isMounted) {
-            setEffectivePublishedThemeId(null);
-          }
+          return;
+        }
+
+        if (isMounted && !effectivePublishedThemeId) {
+          setEffectivePublishedThemeId(null);
         }
       } catch (e) {
         console.warn('Initial live theme fetch warning:', e);
@@ -181,232 +171,298 @@ export function useDashboardPublish({
     resolveLiveTheme();
   }, [user?.id, currentTemplateRecordId, formData.slug, formData.status, formData.paid_template_id]);
 
-  // 1. Handler Meminta Terbitkan: Cek Auth, Deteksi Perubahan Template & Munculkan Pop-up Konfirmasi
-  const handleRequestPublish = async () => {
-    try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const currentUser = sessionData?.session?.user || (user?.id ? user : null);
+// 1. Handler Meminta Terbitkan: Cek Auth, Deteksi Perubahan Template & Munculkan Pop-up Konfirmasi
+const handleRequestPublish = async () => {
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const currentUser = sessionData?.session?.user || (user?.id ? user : null);
 
-      if (!currentUser || !currentUser.id) {
-        setShowAuthGateModal(true);
-        return;
-      }
-
-      const targetSlug = getCanonicalPublishedSlug(formData.slug, formData.groom?.name, formData.bride?.name);
-
-      // Cek record yang tersimpan saat ini di Supabase untuk user dan slug ini
-      let invQuery = supabase
-        .from('invitations')
-        .select('status, template_id, content')
-        .eq('slug', targetSlug);
-
-      if (currentUser?.id) {
-        invQuery = invQuery.eq('user_id', currentUser.id);
-      }
-      const { data: invRow } = await invQuery.maybeSingle();
-
-      const isLive = invRow?.status === 'published' || formData.status === 'published';
-      const existingTheme = invRow?.content?.theme_id || (invRow?.template_id ? TEMPLATE_ID_TO_THEME[invRow.template_id] : null) || effectivePublishedThemeId;
-
-      if (isLive && existingTheme) {
-        setEffectivePublishedThemeId(existingTheme);
-      }
-
-      // Wajib SELALU munculkan Pop-up Konfirmasi sebelum publikasi
-      setShowConfirmPublishModal(true);
-    } catch (err) {
-      console.warn('Auth check error:', err);
+    if (!currentUser || !currentUser.id) {
       setShowAuthGateModal(true);
+      return;
     }
-  };
 
-  // 2. Handler saat user mengonfirmasi publikasi untuk template yang SAMA (Free instant publish)
-  const handleConfirmSameTemplatePublish = async () => {
-    setShowConfirmPublishModal(false);
-    setIsSaving(true);
-    try {
-      const targetSlug = getCanonicalPublishedSlug(formData.slug, formData.groom?.name, formData.bride?.name);
-      const coupleTitle = `Pernikahan ${formData.groom?.name || 'Mempelai Pria'} & ${formData.bride?.name || 'Mempelai Wanita'}`;
-      const template_id = THEME_TO_TEMPLATE_ID[formData.theme_id || 'sunda'] || 'template6';
-      const safeDbTemplateId = getSafeDbTemplateId(formData.theme_id);
-      const resolvedMusicUrl = formData.music_url || themeConfig.music_url || '';
-      const resolvedMusicType = Boolean(extractYouTubeId(resolvedMusicUrl)) ? 'youtube' : 'mp3';
+    const targetSlug = getCanonicalPublishedSlug(formData.slug, formData.groom?.name, formData.bride?.name);
 
-      const currentThemeId = formData.theme_id || 'modern';
-      const rawUnlockedList = [
-        ...(formData.unlocked_templates || []),
-        currentThemeId,
-        template_id,
-        safeDbTemplateId,
-      ].filter(Boolean);
-      const updatedUnlockedTemplates = Array.from(
-        new Set(rawUnlockedList.map((id) => TEMPLATE_ID_TO_THEME[id] || id))
-      );
+    // Cek record yang tersimpan saat ini di Supabase untuk user dan slug ini
+    let invQuery = supabase
+      .from('invitations')
+      .select('status, template_id, content')
+      .eq('slug', targetSlug);
 
-      const updatedContent: InvitationData = {
-        ...formData,
+    if (currentUser?.id) {
+      invQuery = invQuery.eq('user_id', currentUser.id);
+    }
+    const { data: invRow } = await invQuery.maybeSingle();
+
+    const isLive = invRow?.status === 'published' || formData.status === 'published';
+    const existingTheme = invRow?.content?.theme_id || (invRow?.template_id ? TEMPLATE_ID_TO_THEME[invRow.template_id] : null) || effectivePublishedThemeId;
+
+    if (isLive && existingTheme) {
+      setEffectivePublishedThemeId(existingTheme);
+    }
+
+    // Wajib SELALU munculkan Pop-up Konfirmasi sebelum publikasi
+    setShowConfirmPublishModal(true);
+  } catch (err) {
+    console.warn('Auth check error:', err);
+    setShowAuthGateModal(true);
+  }
+};
+
+// 2. Handler saat user mengonfirmasi publikasi untuk template yang SAMA (Free instant publish)
+const handleConfirmSameTemplatePublish = async () => {
+  setShowConfirmPublishModal(false);
+  setIsSaving(true);
+  try {
+    const targetSlug = getCanonicalPublishedSlug(formData.slug, formData.groom?.name, formData.bride?.name);
+    const coupleTitle = `Pernikahan ${formData.groom?.name || 'Mempelai Pria'} & ${formData.bride?.name || 'Mempelai Wanita'}`;
+    const template_id = THEME_TO_TEMPLATE_ID[formData.theme_id || 'sunda'] || 'template6';
+    const safeDbTemplateId = getSafeDbTemplateId(formData.theme_id);
+    const resolvedMusicUrl = formData.music_url || themeConfig.music_url || '';
+    const resolvedMusicType = Boolean(extractYouTubeId(resolvedMusicUrl)) ? 'youtube' : 'mp3';
+
+    const currentThemeId = formData.theme_id || 'modern';
+    const rawUnlockedList = [
+      ...(formData.unlocked_templates || []),
+      currentThemeId,
+      template_id,
+      safeDbTemplateId,
+    ].filter(Boolean);
+    const updatedUnlockedTemplates = Array.from(
+      new Set(rawUnlockedList.map((id) => TEMPLATE_ID_TO_THEME[id] || id))
+    );
+
+    const updatedContent: InvitationData = {
+      ...formData,
+      slug: targetSlug,
+      status: 'published' as const,
+      theme_id: currentThemeId as any,
+      is_paid: true,
+      paid_template_id: safeDbTemplateId,
+      unlocked_templates: updatedUnlockedTemplates,
+    };
+
+    // 1. Simpan ke invitations dengan status published secara aman tanpa error 409
+    const invPayload = {
+      user_id: user?.id || null,
+      template_id: safeDbTemplateId,
+      slug: targetSlug,
+      content: updatedContent,
+      theme_config: themeConfig,
+      status: 'published',
+      is_paid: true,
+      paid_template_id: safeDbTemplateId,
+      unlocked_templates: updatedUnlockedTemplates,
+      music_url: resolvedMusicUrl,
+      music_type: resolvedMusicType,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data: existingInv } = await supabase
+      .from('invitations')
+      .select('id')
+      .eq('slug', targetSlug)
+      .maybeSingle();
+
+    if (existingInv?.id) {
+      await supabase
+        .from('invitations')
+        .update(invPayload)
+        .eq('id', existingInv.id);
+    } else {
+      await supabase
+        .from('invitations')
+        .insert(invPayload);
+    }
+
+    // Bersihkan row slug draf lama di tabel invitations jika berbeda dari targetSlug
+    if (formData.slug && formData.slug !== targetSlug && formData.slug.includes('-draf')) {
+      try {
+        await supabase
+          .from('invitations')
+          .delete()
+          .eq('slug', formData.slug);
+      } catch (cleanupErr) {
+        console.warn('Cleanup draft slug row warning:', cleanupErr);
+      }
+    }
+
+    // 2. Simpan ke user_templates
+    if (user?.id) {
+      const res = await saveUserTemplate({
+        id: currentTemplateRecordId || undefined,
+        user_id: user.id,
+        title: coupleTitle,
         slug: targetSlug,
+        template_id: safeDbTemplateId,
+        theme_id: currentThemeId,
         status: 'published' as const,
-        theme_id: currentThemeId as any,
         is_paid: true,
         paid_template_id: safeDbTemplateId,
         unlocked_templates: updatedUnlockedTemplates,
-      };
-
-      // 1. Simpan ke invitations dengan status published secara aman tanpa error 409
-      const invPayload = {
-        user_id: user?.id || null,
-        template_id: safeDbTemplateId,
-        slug: targetSlug,
         content: updatedContent,
         theme_config: themeConfig,
-        status: 'published',
-        is_paid: true,
-        paid_template_id: safeDbTemplateId,
-        unlocked_templates: updatedUnlockedTemplates,
         music_url: resolvedMusicUrl,
         music_type: resolvedMusicType,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { data: existingInv } = await supabase
-        .from('invitations')
-        .select('id')
-        .eq('slug', targetSlug)
-        .maybeSingle();
-
-      if (existingInv?.id) {
-        await supabase
-          .from('invitations')
-          .update(invPayload)
-          .eq('id', existingInv.id);
-      } else {
-        await supabase
-          .from('invitations')
-          .insert(invPayload);
+        thumbnail_url: formData.cover_image || formData.couple_photo || null,
+      });
+      if (res.success && res.data) {
+        setCurrentTemplateRecordId(res.data.id);
+        localStorage.setItem('mbell_active_template_id', res.data.id);
+        window.dispatchEvent(new CustomEvent('mbell_templates_updated'));
       }
-
-      // Bersihkan row slug draf lama di tabel invitations jika berbeda dari targetSlug
-      if (formData.slug && formData.slug !== targetSlug && formData.slug.includes('-draf')) {
-        try {
-          await supabase
-            .from('invitations')
-            .delete()
-            .eq('slug', formData.slug);
-        } catch (cleanupErr) {
-          console.warn('Cleanup draft slug row warning:', cleanupErr);
-        }
-      }
-
-      // 2. Simpan ke user_templates
-      if (user?.id) {
-        const res = await saveUserTemplate({
-          id: currentTemplateRecordId || undefined,
-          user_id: user.id,
-          title: coupleTitle,
-          slug: targetSlug,
-          template_id: safeDbTemplateId,
-          theme_id: currentThemeId,
-          status: 'published' as const,
-          is_paid: true,
-          paid_template_id: safeDbTemplateId,
-          unlocked_templates: updatedUnlockedTemplates,
-          content: updatedContent,
-          theme_config: themeConfig,
-          music_url: resolvedMusicUrl,
-          music_type: resolvedMusicType,
-          thumbnail_url: formData.cover_image || formData.couple_photo || null,
-        });
-        if (res.success && res.data) {
-          setCurrentTemplateRecordId(res.data.id);
-          localStorage.setItem('mbell_active_template_id', res.data.id);
-          window.dispatchEvent(new CustomEvent('mbell_templates_updated'));
-        }
-      }
-
-      setFormData(updatedContent);
-      setEffectivePublishedThemeId(currentThemeId);
-      try {
-        localStorage.setItem(`mbell_cached_inv_${targetSlug}`, JSON.stringify({
-          templateId: template_id,
-          invitationData: updatedContent,
-          themeConfig,
-        }));
-      } catch (e) { }
-      setLastSaved(new Date());
-
-      // PENTING: Dispatch event agar useDashboardSave mereset baseline & menghapus counter (+2)
-      window.dispatchEvent(
-        new CustomEvent('mbell_template_loaded', {
-          detail: {
-            formData: updatedContent,
-            themeConfig,
-          },
-        })
-      );
-
-      setSaveToast({
-        show: true,
-        message: `Undangan live berhasil diperbarui! Tautan tetap aktif di /${targetSlug}`,
-        type: 'success',
-        isError: false,
-      }, 4000);
-    } catch (err: any) {
-      console.error('Publish update error:', err);
-      setSaveToast({
-        show: true,
-        message: 'Gagal memperbarui publikasi: ' + (err.message || 'Coba lagi.'),
-        isError: true,
-      }, 3500);
-    } finally {
-      setIsSaving(false);
     }
-  };
 
-  // 3. Handler saat diarahkan ke menu pembayaran (karena perubahan template / publikasi pertama)
-  const handleProceedToPayment = () => {
-    setShowConfirmPublishModal(false);
-    setShowPricingModal(true);
-  };
-
-  // 4. Handler Konfirmasi Pembayaran Template & Menerbitkan Live ke Supabase (Pay-Per-Template)
-  const handleConfirmPublish = async (paymentDetails?: { themeId?: string; paymentMethod?: string; amount?: number } | string) => {
-    setIsSaving(true);
+    setFormData(updatedContent);
+    setEffectivePublishedThemeId(currentThemeId);
     try {
-      const activeThemeId = (typeof paymentDetails === 'object' && paymentDetails?.themeId)
-        ? paymentDetails.themeId
-        : (formData.theme_id || 'modern');
-      const selectedMethod = (typeof paymentDetails === 'object' && paymentDetails?.paymentMethod)
-        ? paymentDetails.paymentMethod
-        : 'qris';
-      const priceInfo = getTemplatePriceInfo(activeThemeId);
-      const paidAmount = (typeof paymentDetails === 'object' && paymentDetails?.amount)
-        ? paymentDetails.amount
-        : priceInfo.price;
+      localStorage.setItem(`mbell_cached_inv_${targetSlug}`, JSON.stringify({
+        templateId: template_id,
+        invitationData: updatedContent,
+        themeConfig,
+      }));
+    } catch (e) { }
+    setLastSaved(new Date());
 
-      const template_id = THEME_TO_TEMPLATE_ID[activeThemeId] || 'template1';
-      const safeDbTemplateId = getSafeDbTemplateId(activeThemeId);
-      const targetSlug = getCanonicalPublishedSlug(formData.slug, formData.groom?.name, formData.bride?.name);
-      const coupleTitle = `Pernikahan ${formData.groom?.name || 'Mempelai Pria'} & ${formData.bride?.name || 'Mempelai Wanita'}`;
-      const resolvedMusicUrl = formData.music_url || themeConfig.music_url || '';
-      const resolvedMusicType = Boolean(extractYouTubeId(resolvedMusicUrl)) ? 'youtube' : 'mp3';
+    // PENTING: Dispatch event agar useDashboardSave mereset baseline & menghapus counter (+2)
+    window.dispatchEvent(
+      new CustomEvent('mbell_template_loaded', {
+        detail: {
+          formData: updatedContent,
+          themeConfig,
+        },
+      })
+    );
 
-      // Akumulasikan template yang telah di-unlock pada desain undangan ini secara kanonikal
-      const rawUnlockedList = [
-        ...(formData.unlocked_templates || []),
-        activeThemeId,
-        template_id,
-        safeDbTemplateId,
-      ].filter(Boolean);
-      const updatedUnlockedTemplates = Array.from(
-        new Set(rawUnlockedList.map((id) => TEMPLATE_ID_TO_THEME[id] || id))
-      );
+    setSaveToast({
+      show: true,
+      message: `Undangan live berhasil diperbarui! Tautan tetap aktif di /${targetSlug}`,
+      type: 'success',
+      isError: false,
+    }, 4000);
+  } catch (err: any) {
+    console.error('Publish update error:', err);
+    setSaveToast({
+      show: true,
+      message: 'Gagal memperbarui publikasi: ' + (err.message || 'Coba lagi.'),
+      isError: true,
+    }, 3500);
+  } finally {
+    setIsSaving(false);
+  }
+};
 
-      const nowIso = new Date().toISOString();
+// 3. Handler saat diarahkan ke menu pembayaran (karena perubahan template / publikasi pertama)
+const handleProceedToPayment = () => {
+  setShowConfirmPublishModal(false);
+  setShowPricingModal(true);
+};
 
-      const publishedContent = {
-        ...formData,
+// 4. Handler Konfirmasi Pembayaran Template & Menerbitkan Live ke Supabase (Pay-Per-Template)
+const handleConfirmPublish = async (paymentDetails?: { themeId?: string; paymentMethod?: string; amount?: number } | string) => {
+  setIsSaving(true);
+  try {
+    const activeThemeId = (typeof paymentDetails === 'object' && paymentDetails?.themeId)
+      ? paymentDetails.themeId
+      : (formData.theme_id || 'modern');
+    const selectedMethod = (typeof paymentDetails === 'object' && paymentDetails?.paymentMethod)
+      ? paymentDetails.paymentMethod
+      : 'qris';
+    const priceInfo = getTemplatePriceInfo(activeThemeId);
+    const paidAmount = (typeof paymentDetails === 'object' && paymentDetails?.amount)
+      ? paymentDetails.amount
+      : priceInfo.price;
+
+    const template_id = THEME_TO_TEMPLATE_ID[activeThemeId] || 'template1';
+    const safeDbTemplateId = getSafeDbTemplateId(activeThemeId);
+    const targetSlug = getCanonicalPublishedSlug(formData.slug, formData.groom?.name, formData.bride?.name);
+    const coupleTitle = `Pernikahan ${formData.groom?.name || 'Mempelai Pria'} & ${formData.bride?.name || 'Mempelai Wanita'}`;
+    const resolvedMusicUrl = formData.music_url || themeConfig.music_url || '';
+    const resolvedMusicType = Boolean(extractYouTubeId(resolvedMusicUrl)) ? 'youtube' : 'mp3';
+
+    // Akumulasikan template yang telah di-unlock pada desain undangan ini secara kanonikal
+    const rawUnlockedList = [
+      ...(formData.unlocked_templates || []),
+      activeThemeId,
+      template_id,
+      safeDbTemplateId,
+    ].filter(Boolean);
+    const updatedUnlockedTemplates = Array.from(
+      new Set(rawUnlockedList.map((id) => TEMPLATE_ID_TO_THEME[id] || id))
+    );
+
+    const nowIso = new Date().toISOString();
+
+    const publishedContent = {
+      ...formData,
+      slug: targetSlug,
+      theme_id: activeThemeId,
+      status: 'published' as const,
+      is_paid: true,
+      paid_template_id: safeDbTemplateId,
+      unlocked_templates: updatedUnlockedTemplates,
+      paid_at: nowIso,
+      payment_method: selectedMethod,
+      amount_paid: paidAmount,
+    };
+
+    // 1. Simpan dan terbitkan ke tabel public.invitations (menggunakan safeDbTemplateId)
+    const payload = {
+      user_id: user?.id || null,
+      template_id: safeDbTemplateId,
+      slug: targetSlug,
+      content: publishedContent,
+      theme_config: themeConfig,
+      status: 'published',
+      is_paid: true,
+      paid_template_id: safeDbTemplateId,
+      unlocked_templates: updatedUnlockedTemplates,
+      paid_at: nowIso,
+      payment_method: selectedMethod,
+      amount_paid: paidAmount,
+      music_url: resolvedMusicUrl,
+      music_type: resolvedMusicType,
+      updated_at: nowIso,
+    };
+
+    const { data: existingInv } = await supabase
+      .from('invitations')
+      .select('id')
+      .eq('slug', targetSlug)
+      .maybeSingle();
+
+    if (existingInv?.id) {
+      await supabase
+        .from('invitations')
+        .update(payload)
+        .eq('id', existingInv.id);
+    } else {
+      await supabase
+        .from('invitations')
+        .insert(payload);
+    }
+
+    // Bersihkan row slug draf lama di tabel invitations jika berbeda dari targetSlug
+    if (formData.slug && formData.slug !== targetSlug && formData.slug.includes('-draf')) {
+      try {
+        await supabase
+          .from('invitations')
+          .delete()
+          .eq('slug', formData.slug);
+      } catch (cleanupErr) {
+        console.warn('Cleanup draft slug row warning:', cleanupErr);
+      }
+    }
+
+    // 2. Simpan dan perbarui status ke tabel public.user_templates
+    if (user?.id) {
+      const userTemplatePayload = {
+        id: currentTemplateRecordId || undefined,
+        user_id: user.id,
+        title: coupleTitle,
         slug: targetSlug,
+        template_id: safeDbTemplateId,
         theme_id: activeThemeId,
         status: 'published' as const,
         is_paid: true,
@@ -415,134 +471,68 @@ export function useDashboardPublish({
         paid_at: nowIso,
         payment_method: selectedMethod,
         amount_paid: paidAmount,
-      };
-
-      // 1. Simpan dan terbitkan ke tabel public.invitations (menggunakan safeDbTemplateId)
-      const payload = {
-        user_id: user?.id || null,
-        template_id: safeDbTemplateId,
-        slug: targetSlug,
         content: publishedContent,
         theme_config: themeConfig,
-        status: 'published',
-        is_paid: true,
-        paid_template_id: safeDbTemplateId,
-        unlocked_templates: updatedUnlockedTemplates,
-        paid_at: nowIso,
-        payment_method: selectedMethod,
-        amount_paid: paidAmount,
         music_url: resolvedMusicUrl,
         music_type: resolvedMusicType,
-        updated_at: nowIso,
+        thumbnail_url: formData.cover_image || formData.couple_photo || null,
       };
 
-      const { data: existingInv } = await supabase
-        .from('invitations')
-        .select('id')
-        .eq('slug', targetSlug)
-        .maybeSingle();
-
-      if (existingInv?.id) {
-        await supabase
-          .from('invitations')
-          .update(payload)
-          .eq('id', existingInv.id);
-      } else {
-        await supabase
-          .from('invitations')
-          .insert(payload);
+      const res = await saveUserTemplate(userTemplatePayload);
+      if (res.success && res.data) {
+        setCurrentTemplateRecordId(res.data.id);
+        localStorage.setItem('mbell_active_template_id', res.data.id);
+        window.dispatchEvent(new CustomEvent('mbell_templates_updated'));
       }
-
-      // Bersihkan row slug draf lama di tabel invitations jika berbeda dari targetSlug
-      if (formData.slug && formData.slug !== targetSlug && formData.slug.includes('-draf')) {
-        try {
-          await supabase
-            .from('invitations')
-            .delete()
-            .eq('slug', formData.slug);
-        } catch (cleanupErr) {
-          console.warn('Cleanup draft slug row warning:', cleanupErr);
-        }
-      }
-
-      // 2. Simpan dan perbarui status ke tabel public.user_templates
-      if (user?.id) {
-        const userTemplatePayload = {
-          id: currentTemplateRecordId || undefined,
-          user_id: user.id,
-          title: coupleTitle,
-          slug: targetSlug,
-          template_id: safeDbTemplateId,
-          theme_id: activeThemeId,
-          status: 'published' as const,
-          is_paid: true,
-          paid_template_id: safeDbTemplateId,
-          unlocked_templates: updatedUnlockedTemplates,
-          paid_at: nowIso,
-          payment_method: selectedMethod,
-          amount_paid: paidAmount,
-          content: publishedContent,
-          theme_config: themeConfig,
-          music_url: resolvedMusicUrl,
-          music_type: resolvedMusicType,
-          thumbnail_url: formData.cover_image || formData.couple_photo || null,
-        };
-
-        const res = await saveUserTemplate(userTemplatePayload);
-        if (res.success && res.data) {
-          setCurrentTemplateRecordId(res.data.id);
-          localStorage.setItem('mbell_active_template_id', res.data.id);
-          window.dispatchEvent(new CustomEvent('mbell_templates_updated'));
-        }
-      }
-
-      setFormData(publishedContent);
-      setEffectivePublishedThemeId(activeThemeId);
-      try {
-        localStorage.setItem(`mbell_cached_inv_${targetSlug}`, JSON.stringify({
-          templateId: template_id,
-          invitationData: publishedContent,
-          themeConfig,
-        }));
-      } catch (e) { }
-      setLastSaved(new Date());
-
-      // PENTING: Dispatch event agar useDashboardSave mereset baseline & menghapus counter (+2)
-      window.dispatchEvent(
-        new CustomEvent('mbell_template_loaded', {
-          detail: {
-            formData: publishedContent,
-            themeConfig,
-          },
-        })
-      );
-      setSaveToast({
-        show: true,
-        message: 'Pembayaran berhasil diverifikasi! Undangan Anda resmi live & aktif selamanya.',
-        type: 'success',
-        isError: false,
-      }, 5000);
-    } catch (err: any) {
-      console.error('Publish error exception:', err);
-      setSaveToast({
-        show: true,
-        message: 'Gagal menerbitkan undangan: ' + (err.message || 'Silakan coba lagi.'),
-        isError: true,
-      });
-      throw err;
-    } finally {
-      setIsSaving(false);
     }
-  };
 
-  return {
-    publishedThemeId: effectivePublishedThemeId,
-    isAlreadyPublished,
-    isTemplateChanged,
-    isUnlocked,
-    handleRequestPublish,
-    handleConfirmSameTemplatePublish,
-    handleProceedToPayment,
-    handleConfirmPublish,
-  };
-}
+    setFormData(publishedContent);
+    setEffectivePublishedThemeId(activeThemeId);
+    try {
+      localStorage.setItem(`mbell_cached_inv_${targetSlug}`, JSON.stringify({
+        templateId: template_id,
+        invitationData: publishedContent,
+        themeConfig,
+      }));
+    } catch (e) { }
+    setLastSaved(new Date());
+
+    // PENTING: Dispatch event agar useDashboardSave mereset baseline & menghapus counter (+2)
+    window.dispatchEvent(
+      new CustomEvent('mbell_template_loaded', {
+        detail: {
+          formData: publishedContent,
+          themeConfig,
+        },
+      })
+    );
+    setSaveToast({
+      show: true,
+      message: 'Pembayaran berhasil diverifikasi! Undangan Anda resmi live & aktif selamanya.',
+      type: 'success',
+      isError: false,
+    }, 5000);
+  } catch (err: any) {
+    console.error('Publish error exception:', err);
+    setSaveToast({
+      show: true,
+      message: 'Gagal menerbitkan undangan: ' + (err.message || 'Silakan coba lagi.'),
+      isError: true,
+    });
+    throw err;
+  } finally {
+    setIsSaving(false);
+  }
+};
+
+return {
+  publishedThemeId: effectivePublishedThemeId,
+  isAlreadyPublished,
+  isTemplateChanged,
+  isUnlocked,
+  handleRequestPublish,
+  handleConfirmSameTemplatePublish,
+  handleProceedToPayment,
+  handleConfirmPublish,
+};
+} 
