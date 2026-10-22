@@ -22,19 +22,13 @@ const MIDTRANS_SERVER_KEY =
 
 /**
  * Endpoint Midtrans:
- * Di mode dev (Vite), kita gunakan proxy '/api/midtrans' untuk mem-bypass CORS browser.
- * Di mode produksi (atau fallback), gunakan endpoint sandbox / production resmi.
+ * Baik di mode dev (Vite proxy) maupun di mode produksi (Vercel Edge Proxy),
+ * selalu gunakan '/api/midtrans' agar bebas CORS browser.
  */
-const isDev = import.meta.env.DEV;
-const isSandbox = import.meta.env.VITE_MIDTRANS_IS_SANDBOX !== 'false';
-const MIDTRANS_PROD_URL = 'https://api.midtrans.com';
 const MIDTRANS_SANDBOX_URL = 'https://api.sandbox.midtrans.com';
 
 function getMidtransBaseUrl(): string {
-  if (isDev) {
-    return '/api/midtrans';
-  }
-  return isSandbox ? MIDTRANS_SANDBOX_URL : MIDTRANS_PROD_URL;
+  return '/api/midtrans';
 }
 
 /**
