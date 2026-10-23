@@ -49,7 +49,7 @@ export const EventSection: React.FC<EventSectionProps> = ({
             </div>
 
             <h3 className="font-headline-md text-headline-md text-on-surface mb-4 break-words [overflow-wrap:anywhere]">
-              {event.name}
+              {event.title || event.name}
             </h3>
 
             <div className="space-y-3 font-body-md text-body-md text-on-surface-variant">

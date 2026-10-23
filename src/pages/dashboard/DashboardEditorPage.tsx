@@ -60,9 +60,9 @@ export const DashboardEditorPage: React.FC = () => {
   const { user, setUser } = useDashboardAuth();
 
   // Ref bridges to avoid cyclic dependencies between editor, save, and publish hooks
-  const saveToastRef = useRef<(toast: { show: boolean; message: string; isError?: boolean; type?: 'success' | 'info' | 'error' | 'copy' } | null) => void>(() => {});
-  const isSavingRef = useRef<(saving: boolean) => void>(() => {});
-  const lastSavedRef = useRef<(date: Date | null) => void>(() => {});
+  const saveToastRef = useRef<(toast: { show: boolean; message: string; isError?: boolean; type?: 'success' | 'info' | 'error' | 'copy' } | null) => void>(() => { });
+  const isSavingRef = useRef<(saving: boolean) => void>(() => { });
+  const lastSavedRef = useRef<(date: Date | null) => void>(() => { });
 
   // 2. Editor Hook (State form, step, navigation, tab, modal)
   const editor = useDashboardEditor({
@@ -629,6 +629,9 @@ export const DashboardEditorPage: React.FC = () => {
                       onEventsChange={editor.handleEventsChange}
                       onSetCountdownTarget={editor.handleSetCountdownTarget}
                       onManualSave={handleSafeSave}
+                      onSaveMusicOnly={async () => {
+                        await save.handleManualSave();
+                      }}
                     />
 
                     <EditorBottomBar
@@ -736,10 +739,10 @@ export const DashboardEditorPage: React.FC = () => {
                     {editor.activeTab === 'template-saya'
                       ? 'Template Saya'
                       : editor.activeTab === 'daftar-tamu'
-                      ? 'Daftar Tamu'
-                      : editor.activeTab === 'ucapan-masuk'
-                      ? 'Ucapan Masuk'
-                      : 'Pengaturan'}
+                        ? 'Daftar Tamu'
+                        : editor.activeTab === 'ucapan-masuk'
+                          ? 'Ucapan Masuk'
+                          : 'Pengaturan'}
                   </span>
                 </div>
 

@@ -75,7 +75,7 @@ export const EventSection: React.FC<EventSectionProps> = ({
                 </div>
 
                 <h4 className="font-serif text-lg sm:text-xl font-bold text-[#FAF6EE] mt-1 break-words [overflow-wrap:anywhere]">
-                  {ev.name || ev.title}
+                  {ev.title || ev.name}
                 </h4>
 
                 {ev.date && (

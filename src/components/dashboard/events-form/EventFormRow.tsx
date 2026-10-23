@@ -17,6 +17,8 @@ interface EventFormRowProps {
   defaultPlaceholderAddress: string;
   isCountdownActive?: boolean;
   onSetCountdown?: () => void;
+  canDelete?: boolean;
+  onDelete?: () => void;
 }
 
 export const EventFormRow: React.FC<EventFormRowProps> = ({
@@ -35,7 +37,27 @@ export const EventFormRow: React.FC<EventFormRowProps> = ({
   defaultPlaceholderAddress,
   isCountdownActive = false,
   onSetCountdown,
+  canDelete = false,
+  onDelete,
 }) => {
+  const toInputDateFormat = (dateStr?: string) => {
+    if (!dateStr) return '';
+    const trimmed = dateStr.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+    if (trimmed.includes('T')) {
+      const p = trimmed.split('T')[0];
+      if (/^\d{4}-\d{2}-\d{2}$/.test(p)) return p;
+    }
+    const d = new Date(trimmed);
+    if (!isNaN(d.getTime())) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+    return '';
+  };
+
   return (
     <div className="p-5 sm:p-6 rounded-2xl bg-stone-50/70 border border-stone-200/90 space-y-4 hover:border-stone-300 transition-colors">
       <div className="flex items-center justify-between pb-3 border-b border-stone-200 gap-2 flex-wrap">
@@ -65,6 +87,18 @@ export const EventFormRow: React.FC<EventFormRowProps> = ({
           <span className="px-2.5 py-0.5 rounded-full bg-stone-200 text-stone-800 text-xs font-medium">
             {badge}
           </span>
+
+          {canDelete && onDelete && (
+            <button
+              type="button"
+              onClick={onDelete}
+              className="p-1 rounded-lg text-rose-500 hover:bg-rose-50 hover:text-rose-700 transition-colors cursor-pointer"
+              title="Hapus sesi acara ini"
+              aria-label="Hapus acara"
+            >
+              <span className="material-symbols-outlined text-[18px]">delete</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -89,11 +123,15 @@ export const EventFormRow: React.FC<EventFormRowProps> = ({
             <input
               type="date"
               min={minDate}
-              value={event.date || ''}
+              value={toInputDateFormat(event.date)}
               onChange={(e) => onChange('date', e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl bg-white text-stone-900 border border-stone-200 hover:border-stone-300 focus:outline-none focus:border-stone-900 focus:ring-2 focus:ring-stone-900/10 text-sm shadow-2xs transition-all"
             />
-            <p className="text-[10px] text-stone-400">*Tanggal sebelum hari ini tidak dapat dipilih</p>
+            {event.date && (
+              <p className="text-[10px] text-stone-500 font-medium">
+                {event.date}
+              </p>
+            )}
           </div>
 
           <div className="space-y-1.5">

@@ -40,12 +40,12 @@ export const EventSection: React.FC<EventSectionProps> = ({
                     }`}
                 ></i>
                 <span className="text-[11px] tracking-[0.25em] uppercase font-semibold">
-                  {event.name}
+                  {event.name || event.title}
                 </span>
               </div>
 
               <h3 className="font-editorial text-2xl text-charcoal-dark font-medium break-words [overflow-wrap:anywhere]">
-                {event.title}
+                {event.title || event.name}
               </h3>
 
               <div className="my-4 py-3 border-y border-border-subtle space-y-2 text-xs text-charcoal-muted">
@@ -61,10 +61,10 @@ export const EventSection: React.FC<EventSectionProps> = ({
                   <i className="fa-solid fa-location-dot text-gold-champagne w-4 text-center mt-0.5 shrink-0"></i>
                   <div className="min-w-0 flex-1">
                     <span className="font-medium text-charcoal-dark block break-words [overflow-wrap:anywhere]">
-                      {event.venue_name}
+                      {event.venue_name || event.location_name}
                     </span>
                     <span className="font-light leading-relaxed break-words [overflow-wrap:anywhere]">
-                      {event.venue_address}
+                      {event.venue_address || event.address}
                     </span>
                   </div>
                 </div>

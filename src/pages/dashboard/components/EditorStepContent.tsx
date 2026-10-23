@@ -22,6 +22,7 @@ interface EditorStepContentProps {
   onEventsChange: (events: any) => void;
   onSetCountdownTarget?: (target: 'akad' | 'resepsi') => void;
   onManualSave: () => void;
+  onSaveMusicOnly?: () => void;
 }
 
 export const EditorStepContent: React.FC<EditorStepContentProps> = ({
@@ -38,6 +39,7 @@ export const EditorStepContent: React.FC<EditorStepContentProps> = ({
   onEventsChange,
   onSetCountdownTarget,
   onManualSave,
+  onSaveMusicOnly,
 }) => {
   return (
     <>
@@ -112,7 +114,7 @@ export const EditorStepContent: React.FC<EditorStepContentProps> = ({
             setFormData((prev) => ({ ...prev, music_url }));
             setThemeConfig((prev) => ({ ...prev, music_url }));
           }}
-          onSaveMusic={onManualSave}
+          onSaveMusic={onSaveMusicOnly || onManualSave}
           onBankAccountsChange={() => { }}
         />
       )}
@@ -127,7 +129,7 @@ export const EditorStepContent: React.FC<EditorStepContentProps> = ({
             setFormData((prev) => ({ ...prev, music_url }));
             setThemeConfig((prev) => ({ ...prev, music_url }));
           }}
-          onSaveMusic={onManualSave}
+          onSaveMusic={onSaveMusicOnly || onManualSave}
         />
       )}
 

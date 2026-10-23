@@ -57,7 +57,7 @@ export const EventSection: React.FC<EventSectionProps> = ({
 
             {/* Event Name */}
             <h4 className="font-serif text-xl sm:text-2xl text-[#2C4034] font-bold mb-4 break-words">
-              {event.name}
+              {event.title || event.name}
             </h4>
 
             <div className="flex flex-col gap-3 text-xs text-[#4D5E53] mb-4">
@@ -75,8 +75,8 @@ export const EventSection: React.FC<EventSectionProps> = ({
                   location_on
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="font-bold text-[#1E2E22] break-words [overflow-wrap:anywhere]">{event.venue_name}</div>
-                  <div className="text-[11px] text-[#526859] leading-relaxed break-words [overflow-wrap:anywhere]">{event.venue_address}</div>
+                  <div className="font-bold text-[#1E2E22] break-words [overflow-wrap:anywhere]">{event.venue_name || event.location_name}</div>
+                  <div className="text-[11px] text-[#526859] leading-relaxed break-words [overflow-wrap:anywhere]">{event.venue_address || event.address}</div>
                 </div>
               </div>
             </div>

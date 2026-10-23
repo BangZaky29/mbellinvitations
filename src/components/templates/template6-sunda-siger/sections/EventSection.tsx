@@ -39,7 +39,7 @@ export const EventSection: React.FC<EventSectionProps> = ({
                 <span className="material-symbols-outlined text-[15px] shrink-0">
                   {ev.icon || (isResepsi ? 'celebration' : 'auto_stories')}
                 </span>
-                <span className="break-words [overflow-wrap:anywhere]">{ev.name || ev.title}</span>
+                <span className="break-words [overflow-wrap:anywhere]">{ev.title || ev.name}</span>
               </div>
 
               <div className="flex items-center gap-2 text-[#8a6822] text-[17px] font-serif font-semibold mb-1 max-w-full">

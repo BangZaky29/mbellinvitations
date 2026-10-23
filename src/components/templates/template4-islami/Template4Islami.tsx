@@ -208,6 +208,7 @@ export const Template4Islami: React.FC<InvitationProps> = ({
               isOpen={isOpen}
               isOpening={isOpening}
               onOpenInvitation={handleOpenInvitation}
+              className="bg-[#FCF8F8]"
             >
               <CoverSection
                 data={data}

@@ -47,42 +47,7 @@ export interface DynamicPriceInfo {
   categoryLabel: string;
 }
 
-const THEME_TO_TPL: Record<string, string> = {
-  modern: 'template1',
-  rustic: 'template2',
-  jawa: 'template3',
-  islami: 'template4',
-  luxury: 'template5',
-  sunda: 'template6',
-  minang: 'template7',
-};
 
-const TPL_TO_THEME: Record<string, string> = {
-  template1: 'modern',
-  template2: 'rustic',
-  template3: 'jawa',
-  template4: 'islami',
-  template5: 'luxury',
-  template6: 'sunda',
-  template7: 'minang',
-};
-
-const TEMPLATE_SLUG_MAP: Record<string, string> = {
-  template1: 'modern-arch',
-  template2: 'rustic-casual',
-  template3: 'adat-jawa',
-  template4: 'islami-maroko',
-  template5: 'luxury-glamour',
-  template6: 'adat-sunda',
-  template7: 'adat-minang',
-  modern: 'modern-arch',
-  rustic: 'rustic-casual',
-  jawa: 'adat-jawa',
-  islami: 'islami-maroko',
-  luxury: 'luxury-glamour',
-  sunda: 'adat-sunda',
-  minang: 'adat-minang',
-};
 
 // Preset styling visual mockup (icon, background card, couple sample) untuk card preview
 export const TEMPLATE_VISUAL_PRESETS: Record<
@@ -342,22 +307,33 @@ export async function fetchTemplatesCatalog(): Promise<DbTemplateRecord[]> {
 }
 
 /**
- * Mencocokkan template di frontend dengan baris record di tabel public.templates
+ * Mencocokkan template di frontend dengan baris record di tabel public.templates secara murni:
+ * 1. Cocokkan ID tabel persis ('template1', 'template2', ...)
+ * 2. Cocokkan slug tabel persis ('modern-arch', 'adat-sunda', ...)
+ * 3. Cocokkan kata kunci di slug atau nama ('sunda' cocok ke 'adat-sunda', 'modern' cocok ke 'modern-arch')
  */
 export function findDbTemplate(themeOrTemplateId: string, catalog: DbTemplateRecord[]): DbTemplateRecord | null {
   if (!catalog || catalog.length === 0) return null;
 
-  const rawKey = themeOrTemplateId.toLowerCase().trim();
-  const semanticId = TPL_TO_THEME[rawKey] || rawKey;
-  const templateId = THEME_TO_TPL[semanticId] || rawKey;
-  const targetSlug = TEMPLATE_SLUG_MAP[rawKey] || TEMPLATE_SLUG_MAP[semanticId] || TEMPLATE_SLUG_MAP[templateId];
+  const key = (themeOrTemplateId || '').toLowerCase().trim();
+  if (!key) return catalog[0] || null;
 
-  return (
-    catalog.find((item) => item.id?.toLowerCase() === rawKey || item.id?.toLowerCase() === templateId) ||
-    catalog.find((item) => targetSlug && item.slug?.toLowerCase() === targetSlug) ||
-    catalog.find((item) => item.slug?.toLowerCase().includes(semanticId) || item.slug?.toLowerCase().includes(rawKey)) ||
-    null
+  // 1. Cocokkan kolom id persis di database
+  const byId = catalog.find((item) => item.id?.toLowerCase() === key);
+  if (byId) return byId;
+
+  // 2. Cocokkan kolom slug persis di database
+  const bySlug = catalog.find((item) => item.slug?.toLowerCase() === key);
+  if (bySlug) return bySlug;
+
+  // 3. Cocokkan kata kunci semantic di slug atau name dari database
+  const byKeyword = catalog.find(
+    (item) => item.slug?.toLowerCase().includes(key) || item.name?.toLowerCase().includes(key)
   );
+  if (byKeyword) return byKeyword;
+
+  // 4. Fallback ke item pertama
+  return catalog[0] || null;
 }
 
 /**

@@ -72,30 +72,25 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
     };
   }, []);
 
+  // Normalisasi ID secara dinamis dari data database Supabase (tanpa hardcode map)
   const toTemplateId = (id: string) => {
-    const map: Record<string, string> = {
-      modern: 'template1',
-      rustic: 'template2',
-      jawa: 'template3',
-      islami: 'template4',
-      luxury: 'template5',
-      sunda: 'template6',
-      minang: 'template7',
-    };
-    return map[id] || id;
+    const key = (id || '').toLowerCase().trim();
+    const found = dynamicOptions.find(
+      (t) => t.id.toLowerCase() === key || t.slug?.toLowerCase().includes(key)
+    );
+    return found ? found.id : id;
   };
 
   const toSemanticId = (id: string) => {
-    const map: Record<string, string> = {
-      template1: 'modern',
-      template2: 'rustic',
-      template3: 'jawa',
-      template4: 'islami',
-      template5: 'luxury',
-      template6: 'sunda',
-      template7: 'minang',
-    };
-    return map[id] || id;
+    const key = (id || '').toLowerCase().trim();
+    const found = dynamicOptions.find(
+      (t) => t.id.toLowerCase() === key || t.slug?.toLowerCase() === key
+    );
+    if (!found) return id;
+    // Ekstraksi kata semantik tema dari slug database (misal 'adat-sunda' -> 'sunda', 'modern-arch' -> 'modern')
+    const slugParts = (found.slug || '').split('-');
+    const semantic = slugParts.find((part) => part !== 'adat') || slugParts[0] || found.id;
+    return semantic;
   };
 
   const effectiveActive = toTemplateId(activeThemeId);
@@ -146,20 +141,6 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
         </span>
       </div>
 
-      {/* Banner Mode Bebas Coba (Free Sandbox Mode) */}
-      <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 p-3 sm:p-3.5 rounded-xl bg-gradient-to-r from-amber-50/90 via-amber-50/60 to-stone-50 border border-amber-200/80 text-amber-950 text-xs shadow-2xs">
-        <span className="material-symbols-outlined text-amber-700 text-lg sm:text-xl shrink-0 p-1 bg-amber-100 rounded-lg">
-          auto_awesome
-        </span>
-        <div className="leading-relaxed text-[11px] sm:text-xs">
-          <span className="font-bold text-stone-900 block sm:inline">
-            Mode Bebas Coba (Free Sandbox):
-          </span>{' '}
-          <span className="text-stone-700">
-            Bebas memilih seluruh tema di Live Preview dan menyimpan Draf tanpa biaya. Pembayaran hanya dilakukan saat Anda siap menerbitkan undangan (Publish).
-          </span>
-        </div>
-      </div>
 
       {/* Filter Segmented Tab: Kategori Adat vs Modern */}
       <div className="flex items-center gap-1.5 p-1 rounded-xl bg-stone-100/90 border border-stone-200/70 w-full sm:w-fit overflow-x-auto no-scrollbar">
@@ -221,7 +202,7 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
                 if (isActive) return;
                 handleSelect(theme.id);
               }}
-              className={`group rounded-xl sm:rounded-2xl p-2 sm:p-4 space-y-2 sm:space-y-3 relative transition-all duration-200 cursor-pointer border ${
+              className={`group rounded-xl sm:rounded-2xl p-2.5 sm:p-4 flex flex-col justify-between relative transition-all duration-200 cursor-pointer border ${
                 isActive && isLive
                   ? 'border-emerald-600 bg-emerald-50/25 ring-2 ring-emerald-500/25 shadow-md'
                   : isActive
@@ -231,95 +212,102 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
                   : 'border-stone-200 bg-white hover:border-stone-300 hover:shadow-xs active:scale-[0.98]'
               }`}
             >
-              {/* Card Mini Preview Mockup */}
-              <div
-                className={`relative w-full h-24 sm:h-36 rounded-lg sm:rounded-xl overflow-hidden flex flex-col items-center justify-center p-1.5 sm:p-3 text-center shadow-inner transition-transform group-hover:scale-[1.01] border ${theme.bgClass}`}
-              >
-                {/* Top-Left: Badge Status Dibeli ATAU Badge Harga Coret */}
-                {isBought ? (
-                  <span className="absolute top-1.5 left-1.5 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-emerald-600 text-white text-[9px] sm:text-[10px] font-bold flex items-center gap-0.5 sm:gap-1 shadow-sm ring-1 ring-emerald-400/40">
-                    <span className="material-symbols-outlined text-[11px] sm:text-[13px]">check</span>
-                    <span className="hidden sm:inline">Sudah </span><span>Dibeli</span>
-                  </span>
-                ) : (
-                  <span className="absolute top-1.5 left-1.5 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-stone-900/90 text-white text-[9px] sm:text-[10px] font-semibold backdrop-blur-md shadow-xs flex items-center gap-1 border border-white/10">
-                    <span className="line-through text-stone-400 text-[8px] sm:text-[9px] hidden sm:inline">{theme.badgeOriginal}</span>
-                    <span className="text-amber-300 font-bold">{theme.badgePrice}</span>
-                  </span>
-                )}
-
-                {/* Top-Right: Indikator Live (selalu Live) ATAU Badge Bawaan Tema (tidak berubah jadi Aktif) */}
-                {isLive ? (
-                  <span
-                    className={`absolute top-1.5 right-1.5 px-2 sm:px-2.5 py-0.5 rounded-full text-white text-[9px] sm:text-[10px] font-bold flex items-center gap-1 shadow-sm border ${
-                      isActive
-                        ? 'bg-emerald-600 border-emerald-400 ring-2 ring-emerald-400/40 shadow-emerald-500/20'
-                        : 'bg-emerald-700/95 border-emerald-400/50 backdrop-blur-xs'
-                    }`}
-                    title="Template ini adalah template resmi yang diterbitkan (Live)"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                    <span>Live</span>
-                  </span>
-                ) : theme.badge ? (
-                  <span className="absolute top-1.5 right-1.5 px-1.5 sm:px-2 py-0.5 rounded-full bg-stone-900/70 text-white text-[8px] sm:text-[10px] font-medium backdrop-blur-xs shadow-2xs border border-white/10 inline-flex items-center">
-                    {theme.badge}
-                  </span>
-                ) : null}
-
-                <span
-                  className="material-symbols-outlined text-[20px] sm:text-[28px] mb-0.5 sm:mb-1 drop-shadow-xs"
-                  style={{ color: theme.accentColor }}
-                >
-                  {theme.icon}
-                </span>
-                <span className="text-[8px] sm:text-[10px] tracking-wider uppercase font-semibold opacity-85 truncate max-w-full px-1">
-                  {theme.styleTag}
-                </span>
-                <p className="font-serif text-[11px] sm:text-sm font-bold tracking-tight mt-0.5 sm:mt-1 truncate w-full px-1">
-                  {theme.coupleSample}
-                </p>
+              <div className="space-y-2 sm:space-y-2.5">
+                {/* Card Mini Preview Mockup */}
                 <div
-                  className="w-5 sm:w-8 h-0.5 mt-0.5 sm:mt-2 rounded-full"
-                  style={{ backgroundColor: theme.accentColor }}
-                />
-              </div>
+                  className={`relative w-full h-24 sm:h-36 rounded-lg sm:rounded-xl overflow-hidden flex flex-col items-center justify-center p-1.5 sm:p-3 text-center shadow-inner transition-transform group-hover:scale-[1.01] border ${theme.bgClass}`}
+                >
+                  {/* Top-Left: Badge Status Dibeli ATAU Badge Harga Coret */}
+                  {isBought ? (
+                    <span className="absolute top-1.5 left-1.5 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-emerald-600 text-white text-[9px] sm:text-[10px] font-bold flex items-center gap-0.5 sm:gap-1 shadow-sm ring-1 ring-emerald-400/40">
+                      <span className="material-symbols-outlined text-[11px] sm:text-[13px]">check</span>
+                      <span className="hidden sm:inline">Sudah </span><span>Dibeli</span>
+                    </span>
+                  ) : (
+                    <span className="absolute top-1.5 left-1.5 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-stone-900/90 text-white text-[9px] sm:text-[10px] font-semibold backdrop-blur-md shadow-xs flex items-center gap-1 border border-white/10">
+                      <span className="line-through text-stone-400 text-[8px] sm:text-[9px] hidden sm:inline">{theme.badgeOriginal}</span>
+                      <span className="text-amber-300 font-bold">{theme.badgePrice}</span>
+                    </span>
+                  )}
 
-              {/* Card Bottom Meta */}
-              <div className="flex items-center justify-between pt-0.5 sm:pt-1 gap-1">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1">
-                    <h3 className="text-xs sm:text-sm font-bold text-stone-900 truncate group-hover:text-stone-700 transition-colors">
+                  {/* Top-Right: Indikator Live (selalu Live) ATAU Badge Bawaan Tema (tidak berubah jadi Aktif) */}
+                  {isLive ? (
+                    <span
+                      className={`absolute top-1.5 right-1.5 px-2 sm:px-2.5 py-0.5 rounded-full text-white text-[9px] sm:text-[10px] font-bold flex items-center gap-1 shadow-sm border ${
+                        isActive
+                          ? 'bg-emerald-600 border-emerald-400 ring-2 ring-emerald-400/40 shadow-emerald-500/20'
+                          : 'bg-emerald-700/95 border-emerald-400/50 backdrop-blur-xs'
+                      }`}
+                      title="Template ini adalah template resmi yang diterbitkan (Live)"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                      <span>Live</span>
+                    </span>
+                  ) : theme.badge ? (
+                    <span className="absolute top-1.5 right-1.5 px-1.5 sm:px-2 py-0.5 rounded-full bg-stone-900/70 text-white text-[8px] sm:text-[10px] font-medium backdrop-blur-xs shadow-2xs border border-white/10 inline-flex items-center">
+                      {theme.badge}
+                    </span>
+                  ) : null}
+
+                  <span
+                    className="material-symbols-outlined text-[20px] sm:text-[28px] mb-0.5 sm:mb-1 drop-shadow-xs"
+                    style={{ color: theme.accentColor }}
+                  >
+                    {theme.icon}
+                  </span>
+                  <span className="text-[8px] sm:text-[10px] tracking-wider uppercase font-semibold opacity-85 truncate max-w-full px-1">
+                    {theme.styleTag}
+                  </span>
+                  <p className="font-serif text-[11px] sm:text-sm font-bold tracking-tight mt-0.5 sm:mt-1 truncate w-full px-1">
+                    {theme.coupleSample}
+                  </p>
+                  <div
+                    className="w-5 sm:w-8 h-0.5 mt-0.5 sm:mt-2 rounded-full"
+                    style={{ backgroundColor: theme.accentColor }}
+                  />
+                </div>
+
+                {/* Card Meta (Judul & Caption) */}
+                <div className="space-y-0.5 sm:space-y-1">
+                  <div className="flex items-start justify-between gap-1">
+                    <h3 className="text-xs sm:text-sm font-bold text-stone-900 leading-snug group-hover:text-stone-700 transition-colors line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] flex-1">
                       {theme.name}
                     </h3>
                     {isLive ? (
-                      <span className="inline-flex items-center text-emerald-600 shrink-0" title="Template ini adalah template resmi yang diterbitkan (Live)">
+                      <span className="inline-flex items-center text-emerald-600 shrink-0 mt-0.5" title="Template ini adalah template resmi yang diterbitkan (Live)">
                         <span className="material-symbols-outlined text-[14px] sm:text-[16px] text-emerald-600">verified</span>
                       </span>
                     ) : isBought ? (
-                      <span className="inline-flex items-center text-emerald-600 shrink-0" title="Template ini sudah dibeli untuk undangan ini">
+                      <span className="inline-flex items-center text-emerald-600 shrink-0 mt-0.5" title="Template ini sudah dibeli untuk undangan ini">
                         <span className="material-symbols-outlined text-[13px] sm:text-[15px]">check_circle</span>
                       </span>
                     ) : null}
                   </div>
-                  <p className="text-[10px] sm:text-xs text-stone-500 truncate leading-tight mt-0.5">
+                  <p className="text-[10px] sm:text-xs text-stone-500 line-clamp-2 leading-relaxed min-h-[1.75rem] sm:min-h-[2rem]">
                     {theme.subtitle}
                   </p>
                 </div>
+              </div>
 
+              {/* Card Bottom Action Button */}
+              <div className="pt-2 sm:pt-2.5">
                 {isActive ? (
-                  <span
-                    className={`flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl text-white shadow-sm shrink-0 ${
-                      isLive ? 'bg-emerald-600' : 'bg-stone-900'
+                  <div
+                    className={`w-full py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-center text-[10px] sm:text-xs font-bold flex items-center justify-center gap-1 shadow-2xs ${
+                      isLive
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-stone-900 text-white'
                     }`}
                     title={isLive ? 'Template Live aktif di editor' : 'Template sedang aktif'}
                   >
-                    <span className="material-symbols-outlined text-[14px] sm:text-[17px] font-bold">check</span>
-                  </span>
+                    <span className="material-symbols-outlined text-[12px] sm:text-[15px] font-bold">check</span>
+                    <span>{isLive ? 'Live Aktif' : 'Aktif'}</span>
+                  </div>
                 ) : (
-                  <span className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border border-stone-200 text-stone-700 text-[10px] sm:text-xs font-semibold group-hover:bg-stone-900 group-hover:text-white group-hover:border-stone-900 transition-all shrink-0">
-                    Pilih
-                  </span>
+                  <div className="w-full py-1 sm:py-1.5 rounded-lg sm:rounded-xl border border-stone-200 text-stone-700 text-[10px] sm:text-xs font-semibold group-hover:bg-stone-900 group-hover:text-white group-hover:border-stone-900 transition-all flex items-center justify-center gap-1">
+                    <span>Pilih Tema</span>
+                    <span className="material-symbols-outlined text-[12px] sm:text-[14px] opacity-70">arrow_forward</span>
+                  </div>
                 )}
               </div>
             </div>
