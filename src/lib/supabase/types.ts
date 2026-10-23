@@ -4,7 +4,7 @@ export interface SupabaseTemplateRecord {
   id: string;
   slug: string;
   name: string;
-  category: 'adat' | 'casual' | string;
+  category: 'adat' | 'modern' | string;
   description?: string | null;
   thumbnail_url?: string | null;
   preview_badge?: string | null;

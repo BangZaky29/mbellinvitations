@@ -8,6 +8,7 @@ import {
   MOCK_SUNDA_THEME,
   MOCK_MINANG_THEME,
 } from '../../../data/mockInvitation';
+import { getDynamicPriceInfo } from '../../../services/templateCatalogService';
 
 // Template ID Normalization (PostgreSQL FK constraint to public.templates)
 export const THEME_TO_TEMPLATE_ID: Record<string, string> = {
@@ -238,144 +239,157 @@ export interface TemplatePriceInfo {
   priceDisplay: string;
   originalPriceDisplay: string;
   badgePrice: string;
-  category: 'adat' | 'casual';
+  category: 'adat' | 'modern';
   categoryLabel: string;
 }
 
 export const TEMPLATE_PRICING: Record<string, TemplatePriceInfo> = {
-  // Kelompok 1: Adat Nusantara (Harga: Rp 59.000, Coret: Rp 99.000)
+  // Kelompok 1: Adat Nusantara (Harga Promo: Rp 79.000, Coret: Rp 99.000)
   sunda: {
-    price: 59000,
+    price: 79000,
     originalPrice: 99000,
-    priceDisplay: 'Rp 59.000',
+    priceDisplay: 'Rp 79.000',
     originalPriceDisplay: 'Rp 99.000',
-    badgePrice: 'Rp 59rb',
+    badgePrice: 'Rp 79rb',
     category: 'adat',
     categoryLabel: 'Adat Nusantara',
   },
   template6: {
-    price: 59000,
+    price: 79000,
     originalPrice: 99000,
-    priceDisplay: 'Rp 59.000',
+    priceDisplay: 'Rp 79.000',
     originalPriceDisplay: 'Rp 99.000',
-    badgePrice: 'Rp 59rb',
+    badgePrice: 'Rp 79rb',
     category: 'adat',
     categoryLabel: 'Adat Nusantara',
   },
   minang: {
-    price: 59000,
+    price: 79000,
     originalPrice: 99000,
-    priceDisplay: 'Rp 59.000',
+    priceDisplay: 'Rp 79.000',
     originalPriceDisplay: 'Rp 99.000',
-    badgePrice: 'Rp 59rb',
+    badgePrice: 'Rp 79rb',
     category: 'adat',
     categoryLabel: 'Adat Nusantara',
   },
   template7: {
-    price: 59000,
+    price: 79000,
     originalPrice: 99000,
-    priceDisplay: 'Rp 59.000',
+    priceDisplay: 'Rp 79.000',
     originalPriceDisplay: 'Rp 99.000',
-    badgePrice: 'Rp 59rb',
+    badgePrice: 'Rp 79rb',
     category: 'adat',
     categoryLabel: 'Adat Nusantara',
   },
   jawa: {
-    price: 59000,
+    price: 79000,
     originalPrice: 99000,
-    priceDisplay: 'Rp 59.000',
+    priceDisplay: 'Rp 79.000',
     originalPriceDisplay: 'Rp 99.000',
-    badgePrice: 'Rp 59rb',
+    badgePrice: 'Rp 79rb',
     category: 'adat',
     categoryLabel: 'Adat Nusantara',
   },
   template3: {
-    price: 59000,
+    price: 79000,
     originalPrice: 99000,
-    priceDisplay: 'Rp 59.000',
+    priceDisplay: 'Rp 79.000',
     originalPriceDisplay: 'Rp 99.000',
-    badgePrice: 'Rp 59rb',
-    category: 'adat',
-    categoryLabel: 'Adat Nusantara',
-  },
-  islami: {
-    price: 59000,
-    originalPrice: 99000,
-    priceDisplay: 'Rp 59.000',
-    originalPriceDisplay: 'Rp 99.000',
-    badgePrice: 'Rp 59rb',
-    category: 'adat',
-    categoryLabel: 'Adat Nusantara',
-  },
-  template4: {
-    price: 59000,
-    originalPrice: 99000,
-    priceDisplay: 'Rp 59.000',
-    originalPriceDisplay: 'Rp 99.000',
-    badgePrice: 'Rp 59rb',
+    badgePrice: 'Rp 79rb',
     category: 'adat',
     categoryLabel: 'Adat Nusantara',
   },
 
-  // Kelompok 2: Modern & Casual (Harga: Rp 39.000, Coret: Rp 79.000)
-  modern: {
-    price: 39000,
+  // Kelompok 2: Modern (Harga Promo: Rp 49.000, Coret: Rp 79.000)
+  islami: {
+    price: 49000,
     originalPrice: 79000,
-    priceDisplay: 'Rp 39.000',
+    priceDisplay: 'Rp 49.000',
     originalPriceDisplay: 'Rp 79.000',
-    badgePrice: 'Rp 39rb',
-    category: 'casual',
-    categoryLabel: 'Modern & Casual',
+    badgePrice: 'Rp 49rb',
+    category: 'modern',
+    categoryLabel: 'Modern',
+  },
+  template4: {
+    price: 49000,
+    originalPrice: 79000,
+    priceDisplay: 'Rp 49.000',
+    originalPriceDisplay: 'Rp 79.000',
+    badgePrice: 'Rp 49rb',
+    category: 'modern',
+    categoryLabel: 'Modern',
+  },
+  modern: {
+    price: 49000,
+    originalPrice: 79000,
+    priceDisplay: 'Rp 49.000',
+    originalPriceDisplay: 'Rp 79.000',
+    badgePrice: 'Rp 49rb',
+    category: 'modern',
+    categoryLabel: 'Modern',
   },
   template1: {
-    price: 39000,
+    price: 49000,
     originalPrice: 79000,
-    priceDisplay: 'Rp 39.000',
+    priceDisplay: 'Rp 49.000',
     originalPriceDisplay: 'Rp 79.000',
-    badgePrice: 'Rp 39rb',
-    category: 'casual',
-    categoryLabel: 'Modern & Casual',
+    badgePrice: 'Rp 49rb',
+    category: 'modern',
+    categoryLabel: 'Modern',
   },
   rustic: {
-    price: 39000,
+    price: 49000,
     originalPrice: 79000,
-    priceDisplay: 'Rp 39.000',
+    priceDisplay: 'Rp 49.000',
     originalPriceDisplay: 'Rp 79.000',
-    badgePrice: 'Rp 39rb',
-    category: 'casual',
-    categoryLabel: 'Modern & Casual',
+    badgePrice: 'Rp 49rb',
+    category: 'modern',
+    categoryLabel: 'Modern',
   },
   template2: {
-    price: 39000,
+    price: 49000,
     originalPrice: 79000,
-    priceDisplay: 'Rp 39.000',
+    priceDisplay: 'Rp 49.000',
     originalPriceDisplay: 'Rp 79.000',
-    badgePrice: 'Rp 39rb',
-    category: 'casual',
-    categoryLabel: 'Modern & Casual',
+    badgePrice: 'Rp 49rb',
+    category: 'modern',
+    categoryLabel: 'Modern',
   },
   luxury: {
-    price: 39000,
+    price: 49000,
     originalPrice: 79000,
-    priceDisplay: 'Rp 39.000',
+    priceDisplay: 'Rp 49.000',
     originalPriceDisplay: 'Rp 79.000',
-    badgePrice: 'Rp 39rb',
-    category: 'casual',
-    categoryLabel: 'Modern & Casual',
+    badgePrice: 'Rp 49rb',
+    category: 'modern',
+    categoryLabel: 'Modern',
   },
   template5: {
-    price: 39000,
+    price: 49000,
     originalPrice: 79000,
-    priceDisplay: 'Rp 39.000',
+    priceDisplay: 'Rp 49.000',
     originalPriceDisplay: 'Rp 79.000',
-    badgePrice: 'Rp 39rb',
-    category: 'casual',
-    categoryLabel: 'Modern & Casual',
+    badgePrice: 'Rp 49rb',
+    category: 'modern',
+    categoryLabel: 'Modern',
   },
 };
 
 export function getTemplatePriceInfo(themeOrTemplateId?: string): TemplatePriceInfo {
   const key = themeOrTemplateId || 'modern';
+  const dynamic = getDynamicPriceInfo(key);
+  if (dynamic) {
+    return {
+      price: dynamic.price,
+      originalPrice: dynamic.originalPrice,
+      priceDisplay: dynamic.priceDisplay,
+      originalPriceDisplay: dynamic.originalPriceDisplay,
+      badgePrice: dynamic.badgePrice,
+      category: dynamic.category,
+      categoryLabel: dynamic.categoryLabel,
+    };
+  }
+
   return (
     TEMPLATE_PRICING[key] ||
     TEMPLATE_PRICING[THEME_TO_TEMPLATE_ID[key]] || {
@@ -384,8 +398,8 @@ export function getTemplatePriceInfo(themeOrTemplateId?: string): TemplatePriceI
       priceDisplay: 'Rp 39.000',
       originalPriceDisplay: 'Rp 79.000',
       badgePrice: 'Rp 39rb',
-      category: 'casual',
-      categoryLabel: 'Modern & Casual',
+      category: 'modern',
+      categoryLabel: 'Modern',
     }
   );
 }

@@ -1,156 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { isTemplateUnlocked } from '../../pages/dashboard/constants/themeMapping';
+import { supabase } from '../../lib/supabase/client';
+import {
+  type ThemeOption,
+  fetchTemplatesCatalog,
+  getCachedCatalog,
+  buildThemeOptionsFromDb,
+} from '../../services/templateCatalogService';
 
-export interface ThemeOption {
-  id: string;
-  name: string;
-  subtitle: string;
-  styleTag: string;
-  coupleSample: string;
-  badge?: string;
-  accentColor: string;
-  icon: string;
-  bgClass: string;
-  category: 'adat' | 'casual';
-  price: number;
-  originalPrice: number;
-  priceDisplay: string;
-  originalPriceDisplay: string;
-  badgePrice: string;
-  badgeOriginal: string;
-}
-
-const THEME_OPTIONS: ThemeOption[] = [
-  // Kategori 1: Adat & Tradisi Nusantara (Rp 59.000 / Coret Rp 99.000)
-  {
-    id: 'template6',
-    name: 'Adat Sunda Siger',
-    subtitle: 'Mahkota Siger & Ronce Melati',
-    styleTag: 'Tradisi Parahyangan',
-    coupleSample: 'Raditya & Jessica',
-    badge: 'Royal Adat',
-    accentColor: '#C5A059',
-    icon: 'local_florist',
-    bgClass: 'bg-[#FBF9F6] text-[#775A19] border-[#C5A059]/40',
-    category: 'adat',
-    price: 59000,
-    originalPrice: 99000,
-    priceDisplay: 'Rp 59.000',
-    originalPriceDisplay: 'Rp 99.000',
-    badgePrice: 'Rp 59rb',
-    badgeOriginal: 'Rp 99rb',
-  },
-  {
-    id: 'template7',
-    name: 'Adat Minang Baralek Gadang',
-    subtitle: 'Suntiang Gadang & Songket Silungkang',
-    styleTag: 'Tradisi Ranah Minang',
-    coupleSample: 'Farhan & Nadia',
-    badge: 'New Royal',
-    accentColor: '#D4AF37',
-    icon: 'temple_buddhist',
-    bgClass: 'bg-[#1B0609] text-[#D4AF37] border-[#D4AF37]/50',
-    category: 'adat',
-    price: 59000,
-    originalPrice: 99000,
-    priceDisplay: 'Rp 59.000',
-    originalPriceDisplay: 'Rp 99.000',
-    badgePrice: 'Rp 59rb',
-    badgeOriginal: 'Rp 99rb',
-  },
-  {
-    id: 'template3',
-    name: 'Adat Jawa',
-    subtitle: 'Klasik Keraton & Wayang',
-    styleTag: 'Batik & Budaya',
-    coupleSample: 'Arya & Dian',
-    badge: 'Best Choice',
-    accentColor: '#C5A059',
-    icon: 'architecture',
-    bgClass: 'bg-[#1C1A17] text-[#C5A059] border-amber-900/50',
-    category: 'adat',
-    price: 59000,
-    originalPrice: 99000,
-    priceDisplay: 'Rp 59.000',
-    originalPriceDisplay: 'Rp 99.000',
-    badgePrice: 'Rp 59rb',
-    badgeOriginal: 'Rp 99rb',
-  },
-  {
-    id: 'template4',
-    name: 'Islami Kubah',
-    subtitle: 'Sacred Mosque Ornament',
-    styleTag: 'Kubah Maroko & Doa',
-    coupleSample: 'Rayhan & Yasmin',
-    badge: 'Eksklusif',
-    accentColor: '#93335B',
-    icon: 'mosque',
-    bgClass: 'bg-[#FDF8F9] text-[#5E2832] border-rose-200',
-    category: 'adat',
-    price: 59000,
-    originalPrice: 99000,
-    priceDisplay: 'Rp 59.000',
-    originalPriceDisplay: 'Rp 99.000',
-    badgePrice: 'Rp 59rb',
-    badgeOriginal: 'Rp 99rb',
-  },
-
-  // Kategori 2: Modern & Casual Editorial (Rp 39.000 / Coret Rp 79.000)
-  {
-    id: 'template1',
-    name: 'Modern Arch',
-    subtitle: 'Editorial Quiet Luxury',
-    styleTag: 'Editorial Minimalis',
-    coupleSample: 'Dimas & Sarah',
-    badge: 'Trending',
-    accentColor: '#D4AF37',
-    icon: 'flare',
-    bgClass: 'bg-[#FAF8F5] text-stone-900 border-stone-300',
-    category: 'casual',
-    price: 39000,
-    originalPrice: 79000,
-    priceDisplay: 'Rp 39.000',
-    originalPriceDisplay: 'Rp 79.000',
-    badgePrice: 'Rp 39rb',
-    badgeOriginal: 'Rp 79rb',
-  },
-  {
-    id: 'template2',
-    name: 'Rustic Casual',
-    subtitle: 'Botanical Warm Harmony',
-    styleTag: 'Botanical Earthy',
-    coupleSample: 'Romeo & Juliet',
-    badge: 'Populer',
-    accentColor: '#8C4E2D',
-    icon: 'local_florist',
-    bgClass: 'bg-gradient-to-b from-[#FBF9F5] to-[#EFE8DE] text-[#1E2E22] border-[#DECFBD]',
-    category: 'casual',
-    price: 39000,
-    originalPrice: 79000,
-    priceDisplay: 'Rp 39.000',
-    originalPriceDisplay: 'Rp 79.000',
-    badgePrice: 'Rp 39rb',
-    badgeOriginal: 'Rp 79rb',
-  },
-  {
-    id: 'template5',
-    name: 'Luxury Glamour',
-    subtitle: 'Midnight Dark & Gold Foil',
-    styleTag: 'Gold Foil VIP',
-    coupleSample: 'Romeo & Juliet A.',
-    badge: 'VIP Only',
-    accentColor: '#E2C792',
-    icon: 'hotel_class',
-    bgClass: 'bg-[#121316] text-[#E2C792] border-amber-600/40',
-    category: 'casual',
-    price: 39000,
-    originalPrice: 79000,
-    priceDisplay: 'Rp 39.000',
-    originalPriceDisplay: 'Rp 79.000',
-    badgePrice: 'Rp 39rb',
-    badgeOriginal: 'Rp 79rb',
-  },
-];
+export { type ThemeOption };
 
 export interface ThemePickerCardProps {
   activeThemeId: string;
@@ -173,7 +31,46 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
   onSelectTheme,
   onApplyPreset,
 }) => {
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'adat' | 'casual'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'adat' | 'modern'>('all');
+  const [dynamicOptions, setDynamicOptions] = useState<ThemeOption[]>(() =>
+    buildThemeOptionsFromDb(getCachedCatalog())
+  );
+
+  // Sinkronisasi otomatis murni dengan tabel public.templates di Supabase secara Realtime
+  useEffect(() => {
+    let isMounted = true;
+
+    fetchTemplatesCatalog().then((catalog) => {
+      if (isMounted && catalog && catalog.length > 0) {
+        setDynamicOptions(buildThemeOptionsFromDb(catalog));
+      }
+    });
+
+    const handleCatalogUpdated = (e: any) => {
+      if (isMounted && e.detail && Array.isArray(e.detail)) {
+        setDynamicOptions(buildThemeOptionsFromDb(e.detail));
+      }
+    };
+    window.addEventListener('mbell_templates_catalog_updated', handleCatalogUpdated);
+
+    // Supabase Realtime: jika ada perubahan baris (update harga/kategori) di Supabase Studio
+    const channel = supabase
+      .channel('realtime_public_templates_picker')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'templates' }, () => {
+        fetchTemplatesCatalog().then((cat) => {
+          if (isMounted && cat) {
+            setDynamicOptions(buildThemeOptionsFromDb(cat));
+          }
+        });
+      })
+      .subscribe();
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('mbell_templates_catalog_updated', handleCatalogUpdated);
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const toTemplateId = (id: string) => {
     const map: Record<string, string> = {
@@ -203,7 +100,7 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
 
   const effectiveActive = toTemplateId(activeThemeId);
   const activeSemantic = toSemanticId(activeThemeId);
-  const currentOption = THEME_OPTIONS.find((t) => t.id === effectiveActive) || THEME_OPTIONS[0];
+  const currentOption = dynamicOptions.find((t) => t.id === effectiveActive) || dynamicOptions[0];
 
   const handleSelect = (id: string) => {
     const semanticId = toSemanticId(id);
@@ -214,11 +111,16 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
 
   const filteredOptions =
     selectedCategory === 'all'
-      ? THEME_OPTIONS
-      : THEME_OPTIONS.filter((t) => t.category === selectedCategory);
+      ? dynamicOptions
+      : dynamicOptions.filter((t) => t.category === selectedCategory);
 
-  const adatCount = THEME_OPTIONS.filter((t) => t.category === 'adat').length;
-  const casualCount = THEME_OPTIONS.filter((t) => t.category === 'casual').length;
+  const adatCount = dynamicOptions.filter((t) => t.category === 'adat').length;
+  const modernCount = dynamicOptions.filter((t) => t.category === 'modern').length;
+
+  const adatSample = dynamicOptions.find((t) => t.category === 'adat');
+  const modernSample = dynamicOptions.find((t) => t.category === 'modern');
+  const adatBadgePrice = adatSample?.badgePrice || 'Rp 79rb';
+  const modernBadgePrice = modernSample?.badgePrice || 'Rp 49rb';
 
   return (
     <section className="bg-white rounded-2xl p-3.5 sm:p-7 shadow-xs border border-stone-200/90 space-y-4 sm:space-y-6">
@@ -240,7 +142,7 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
 
         <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-stone-100 border border-stone-200/80 text-stone-700 text-xs font-semibold self-start sm:self-auto">
           <span className="material-symbols-outlined text-[15px] sm:text-[16px] text-stone-600">palette</span>
-          <span>{THEME_OPTIONS.length} Koleksi Desain</span>
+          <span>{dynamicOptions.length} Koleksi Desain</span>
         </span>
       </div>
 
@@ -259,7 +161,7 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
         </div>
       </div>
 
-      {/* Filter Segmented Tab: Kategori Adat vs Casual */}
+      {/* Filter Segmented Tab: Kategori Adat vs Modern */}
       <div className="flex items-center gap-1.5 p-1 rounded-xl bg-stone-100/90 border border-stone-200/70 w-full sm:w-fit overflow-x-auto no-scrollbar">
         <button
           type="button"
@@ -270,7 +172,7 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
               : 'text-stone-600 hover:text-stone-900'
           }`}
         >
-          Semua Koleksi ({THEME_OPTIONS.length})
+          Semua Koleksi ({dynamicOptions.length})
         </button>
         <button
           type="button"
@@ -282,21 +184,21 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
           }`}
         >
           <span>🏛️ Adat</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-900 font-bold">Rp 59rb</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-900 font-bold">{adatBadgePrice}</span>
           <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-200/60 font-bold">{adatCount}</span>
         </button>
         <button
           type="button"
-          onClick={() => setSelectedCategory('casual')}
+          onClick={() => setSelectedCategory('modern')}
           className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
-            selectedCategory === 'casual'
+            selectedCategory === 'modern'
               ? 'bg-white text-stone-900 shadow-xs'
               : 'text-stone-600 hover:text-stone-900'
           }`}
         >
           <span>🌿 Modern</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-200 text-stone-800 font-bold">Rp 39rb</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-200/60 font-bold">{casualCount}</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-900 font-bold">{modernBadgePrice}</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-200/60 font-bold">{modernCount}</span>
         </button>
       </div>
 
