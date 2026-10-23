@@ -25,7 +25,6 @@ export const EventSection: React.FC<EventSectionProps> = ({
 
       {data.events.map((event: any, idx: number) => {
         const badgeIcon = idx === 0 ? 'verified' : 'celebration';
-        const badgeText = event.badge || (idx === 0 ? 'Ijab Qobul' : 'Panggih & Pahargyan');
         const headerSub = idx === 0 ? 'Sasana Ageng' : 'Resepsi Ageng';
 
         const activeTargetIdx = data.countdown_target === 'resepsi' && data.events.length > 1 ? 1 : 0;
@@ -39,9 +38,6 @@ export const EventSection: React.FC<EventSectionProps> = ({
             <div className="flex items-center justify-between mb-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high text-primary">
                 <span className="material-symbols-outlined text-sm">{badgeIcon}</span>
-                <span className="font-label-md text-label-md uppercase tracking-wider">
-                  {badgeText}
-                </span>
               </div>
               <span className="font-caption text-caption text-secondary">
                 {headerSub}
