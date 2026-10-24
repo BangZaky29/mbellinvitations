@@ -157,8 +157,10 @@ export async function fetchInvitationBySlug(slug: string): Promise<SupabaseInvit
     ...(resolvedMusicUrl ? { music_url: resolvedMusicUrl } : {}),
   };
 
-  const primaryId = latestSource?.id || olderSource?.id;
-  const altId = olderSource?.id !== primaryId ? olderSource?.id : undefined;
+  // PENTING: Foreign key pada tabel 'guests' dan 'wishes' merujuk ke public.invitations(id).
+  // Oleh karena itu, primaryId WAJIB memprioritaskan id dari public.invitations (invData) jika ada!
+  const primaryId = invData?.id || latestSource?.id || olderSource?.id;
+  const altId = latestSource?.id !== primaryId ? latestSource?.id : (olderSource?.id !== primaryId ? olderSource?.id : undefined);
 
   return {
     id: primaryId,

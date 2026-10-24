@@ -212,15 +212,6 @@ export const TemplateBatakToba: React.FC<InvitationProps> = ({
                 />
               )}
 
-              {/* DIGITAL GIFT / TANDA HOLONG */}
-              {isSectionActive('gift') && (
-                <GiftSection
-                  data={data}
-                  handleCopyAccount={handleCopyAccount}
-                  handleCopyAddress={handleCopyAddress}
-                />
-              )}
-
               {/* RSVP & DIGITAL PASS MEJA VIP */}
               {isSectionActive('rsvp') && (
                 <RsvpSection
@@ -234,6 +225,15 @@ export const TemplateBatakToba: React.FC<InvitationProps> = ({
               {/* GUEST WISHES / UCAPAN DOA RESTU */}
               {isSectionActive('wishes') && (
                 <WishesSection wishes={wishes} />
+              )}
+
+              {/* DIGITAL GIFT / TANDA HOLONG (Card Rekening & Alamat Kado) */}
+              {isSectionActive('gift') && (
+                <GiftSection
+                  data={data}
+                  handleCopyAccount={handleCopyAccount}
+                  handleCopyAddress={handleCopyAddress}
+                />
               )}
 
               {/* CLOSING FOOTER (MAULIATE GODANG) */}

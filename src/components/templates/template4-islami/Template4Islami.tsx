@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { InvitationProps, WishItem } from '../../../types/invitation';
+import type { InvitationProps } from '../../../types/invitation';
 import { useTemplateState } from '../../../hooks/useTemplateState';
 import { FloatingDock } from '../../common/FloatingDock';
 import { SleekToast } from '../../common/SleekToast';
@@ -12,8 +12,10 @@ import {
   StorySection,
   EventSection,
   GallerySection,
-  RsvpGiftSection,
+  RsvpSection,
+  GiftSection,
   WishesSection,
+  ClosingFooterSection,
 } from './sections';
 
 export const Template4Islami: React.FC<InvitationProps> = ({
@@ -32,6 +34,10 @@ export const Template4Islami: React.FC<InvitationProps> = ({
     isPlaying,
     toggleMusic: toggleAudio,
     countdown,
+    wishes,
+    rsvpForm,
+    setRsvpForm,
+    handleRsvpSubmit,
     toastMessage,
     toastType,
     showToast,
@@ -58,58 +64,6 @@ export const Template4Islami: React.FC<InvitationProps> = ({
       showToast(label, 'copy');
       setTimeout(() => setCopiedKey(null), 2200);
     });
-  };
-
-  // RSVP Form State
-  const [rsvpName, setRsvpName] = useState(data.guest_name || '');
-  const [rsvpPax, setRsvpPax] = useState('1');
-  const [rsvpStatus, setRsvpStatus] = useState<'hadir' | 'ragu' | 'tidak'>('hadir');
-  const [rsvpSubmitted, setRsvpSubmitted] = useState(false);
-
-  const handleRsvpSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!rsvpName.trim()) return;
-    const statusMap: Record<'hadir' | 'ragu' | 'tidak', 'attending' | 'pending' | 'declined'> = {
-      hadir: 'attending',
-      ragu: 'pending',
-      tidak: 'declined',
-    };
-    if (onSubmitRsvp) {
-      onSubmitRsvp(rsvpName, statusMap[rsvpStatus], Number(rsvpPax));
-    }
-    setRsvpSubmitted(true);
-    showToast('Konfirmasi kehadiran terkirim', 'success');
-  };
-
-  // Wishes State
-  const [wishesList, setWishesList] = useState<WishItem[]>(initialWishes);
-  const [wishName, setWishName] = useState('');
-  const [wishMessage, setWishMessage] = useState('');
-
-  useEffect(() => {
-    if (initialWishes !== undefined) {
-      setWishesList(initialWishes);
-    }
-  }, [initialWishes]);
-
-  const handleWishSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!wishName.trim() || !wishMessage.trim()) return;
-
-    const newWish: WishItem = {
-      id: Date.now().toString(),
-      guest_name: wishName.trim(),
-      message: wishMessage.trim(),
-      attendance: 'attending',
-      created_at: new Date().toISOString(),
-    };
-
-    setWishesList((prev) => [newWish, ...prev]);
-    if (onSubmitWish) {
-      onSubmitWish(wishName.trim(), wishMessage.trim());
-    }
-    setWishMessage('');
-    showToast('Ucapan berhasil dikirim', 'success');
   };
 
   // Lightbox Modal
@@ -176,9 +130,8 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                   type="button"
                 >
                   <span
-                    className={`material-symbols-outlined text-[20px] ${
-                      isPlaying ? 'animate-spin-slow' : ''
-                    }`}
+                    className={`material-symbols-outlined text-[20px] ${isPlaying ? 'animate-spin-slow' : ''
+                      }`}
                   >
                     {isPlaying ? 'music_note' : 'music_off'}
                   </span>
@@ -190,18 +143,16 @@ export const Template4Islami: React.FC<InvitationProps> = ({
 
         {/* MAIN BODY */}
         <main
-          className={`flex-1 flex flex-col relative w-full bg-surface ${
-            isOpen ? 'pt-16 pb-6' : 'p-0'
-          }`}
+          className={`flex-1 flex flex-col relative w-full bg-surface ${isOpen ? 'pt-16 pb-6' : 'p-0'
+            }`}
         >
           <div
-            className={`flex flex-col w-full text-on-surface relative ${
-              !isOpen
-                ? isPreview
-                  ? 'h-full overflow-hidden'
-                  : 'h-[100dvh] overflow-hidden'
-                : 'min-h-screen overflow-visible'
-            }`}
+            className={`flex flex-col w-full text-on-surface relative ${!isOpen
+              ? isPreview
+                ? 'h-full overflow-hidden'
+                : 'h-[100dvh] overflow-hidden'
+              : 'min-h-screen overflow-visible'
+              }`}
           >
             {/* SECTION 1: Cover Gate Overlay */}
             <DraggableCoverSheet
@@ -223,9 +174,8 @@ export const Template4Islami: React.FC<InvitationProps> = ({
 
             {/* INNER CONTENT */}
             <div
-              className={`flex flex-col w-full ${
-                !isOpen ? 'pointer-events-none select-none max-h-screen overflow-hidden' : ''
-              }`}
+              className={`flex flex-col w-full ${!isOpen ? 'pointer-events-none select-none max-h-screen overflow-hidden' : ''
+                }`}
             >
               {/* SECTION 2: Hero & Countdown */}
               <HeroSection
@@ -276,34 +226,36 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                 />
               )}
 
-              {/* SECTION 7: RSVP & Digital Envelope */}
-              <RsvpGiftSection
+              {/* SECTION 7: RSVP */}
+              <RsvpSection
                 data={data}
                 theme={theme}
                 isPreview={isPreview}
-                rsvpName={rsvpName}
-                setRsvpName={setRsvpName}
-                rsvpPax={rsvpPax}
-                setRsvpPax={setRsvpPax}
-                rsvpStatus={rsvpStatus}
-                setRsvpStatus={setRsvpStatus}
-                rsvpSubmitted={rsvpSubmitted}
+                rsvpForm={rsvpForm}
+                setRsvpForm={setRsvpForm}
                 handleRsvpSubmit={handleRsvpSubmit}
-                copiedKey={copiedKey}
-                handleCopy={handleCopy}
               />
 
-              {/* SECTION 8: Live Wishes Wall & Closing */}
+              {/* SECTION 8: Live Wishes Wall */}
               <WishesSection
                 data={data}
                 theme={theme}
                 isPreview={isPreview}
-                wishesList={wishesList}
-                wishName={wishName}
-                setWishName={setWishName}
-                wishMessage={wishMessage}
-                setWishMessage={setWishMessage}
-                handleWishSubmit={handleWishSubmit}
+                wishesList={wishes}
+              />
+
+              {/* SECTION 9: Digital Gift & Kado */}
+              <GiftSection
+                data={data}
+                theme={theme}
+                isPreview={isPreview}
+                copiedKey={copiedKey}
+                handleCopy={handleCopy}
+              />
+
+              {/* SECTION 10: Family Closing & Brand Footer */}
+              <ClosingFooterSection
+                data={data}
                 renderBrandFooter={renderBrandFooter}
               />
             </div>
@@ -322,9 +274,8 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                 title="Putar / Hentikan Musik"
               >
                 <span
-                  className={`material-symbols-outlined text-[20px] text-primary ${
-                    isPlaying ? 'animate-spin-slow' : ''
-                  }`}
+                  className={`material-symbols-outlined text-[20px] text-primary ${isPlaying ? 'animate-spin-slow' : ''
+                    }`}
                 >
                   {isPlaying ? 'music_note' : 'music_off'}
                 </span>

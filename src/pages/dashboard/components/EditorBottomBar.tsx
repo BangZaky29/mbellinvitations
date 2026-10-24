@@ -51,18 +51,26 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
     e.stopPropagation();
     try {
       const storageKey = `mbell_wa_template_${invitationSlug}`;
+      const guestStorageKey = `mbell_last_guest_name_${invitationSlug}`;
       const template = localStorage.getItem(storageKey) || DEFAULT_WA_TEMPLATE;
-      const publicUrl = getInvitationFullUrl(invitationSlug);
-      const guestGreeting = 'Bapak/Ibu/Saudara/i';
+      const basePublicUrl = getInvitationFullUrl(invitationSlug);
+      const savedGuest = (localStorage.getItem(guestStorageKey) || '').trim();
+      const guestGreeting = savedGuest || 'Bapak/Ibu/Saudara/i';
+      const personalizedUrl = savedGuest
+        ? `${basePublicUrl}?to=${encodeURIComponent(savedGuest)}`
+        : basePublicUrl;
       
       const formattedMessage = template
         .replace(/{nama_tamu}/g, guestGreeting)
         .replace(/{nama_mempelai}/g, coupleNames)
-        .replace(/{link_undangan}/g, publicUrl);
+        .replace(/{link_undangan}/g, personalizedUrl);
 
       await navigator.clipboard.writeText(formattedMessage);
       if (showToast) {
-        showToast('Pesan & tautan undangan tersalin!', 'copy');
+        showToast(
+          savedGuest ? `Pesan undangan untuk ${savedGuest} tersalin!` : 'Pesan & tautan undangan tersalin!',
+          'copy'
+        );
       }
     } catch (err) {
       console.warn('Gagal menyalin teks undangan:', err);
@@ -249,7 +257,13 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
     <WaTemplatePopupModal
       isOpen={showWaTemplateModal}
       invitationSlug={invitationSlug}
+      coupleNames={coupleNames}
       onClose={() => setShowWaTemplateModal(false)}
+      onCopySuccess={(msg) => {
+        if (showToast) {
+          showToast(msg, 'copy');
+        }
+      }}
       onSaved={() => {
         if (showToast) {
           showToast('Template pesan WhatsApp berhasil diperbarui!');

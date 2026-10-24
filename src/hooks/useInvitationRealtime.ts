@@ -383,7 +383,7 @@ export function useInvitationRealtime({
   // 4. Handler Submit RSVP
   const handleSendRsvp = useCallback(
     async (name: string, status: string, pax: number = 1, notes: string = '') => {
-      const invId = invitationRecord?.id || 'a0000000-0000-0000-0000-000000000001';
+      const invId = invitationRecord?.id || slug;
       setIsSubmittingRsvp(true);
 
       try {

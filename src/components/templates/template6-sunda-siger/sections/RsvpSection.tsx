@@ -28,7 +28,7 @@ export const RsvpSection: React.FC<SundaRsvpProps> = ({
         Konfirmasi Kehadiran
       </span>
       <h2 className="text-2xl sm:text-3xl text-[#1b1c1a] font-serif font-medium mt-1 mb-6 text-center reveal delay-100">
-        RSVP Undangan
+        RSVP &amp; Doa Restu
       </h2>
 
       {/* RSVP Form */}
@@ -38,14 +38,14 @@ export const RsvpSection: React.FC<SundaRsvpProps> = ({
       >
         <div>
           <label className="text-xs font-semibold text-[#1b1c1a] block mb-1">
-            Nama Lengkap
+            Nama Lengkap Tamu
           </label>
           <input
             type="text"
             required
             value={rsvpForm.name}
             onChange={(e) => setRsvpForm({ ...rsvpForm, name: e.target.value })}
-            placeholder="Ketik nama Anda"
+            placeholder="Ketik nama lengkap Anda"
             className="w-full px-4 py-2.5 rounded-xl bg-[#fbf9f6] text-[#1b1c1a] text-xs focus:outline-none focus:bg-white border border-[#ede9e1] focus:border-[#c5a059]"
           />
         </div>
@@ -54,11 +54,10 @@ export const RsvpSection: React.FC<SundaRsvpProps> = ({
           <label className="text-xs font-semibold text-[#1b1c1a] block mb-2">
             Konfirmasi Kehadiran
           </label>
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+          <div className="grid grid-cols-2 gap-3">
             {[
-              { key: 'hadir', label: 'Hadir', cls: 'bg-[#8a6822] text-white shadow-xs' },
-              { key: 'ragu', label: 'Masih Ragu', cls: 'bg-[#c5a059] text-white shadow-xs' },
-              { key: 'tidak', label: 'Berhalangan', cls: 'bg-[#54463d] text-white shadow-xs' },
+              { key: 'hadir', label: 'Hadir', icon: 'check_circle', cls: 'bg-[#8a6822] text-white shadow-xs font-semibold' },
+              { key: 'tidak', label: 'Tidak Hadir', icon: 'cancel', cls: 'bg-rose-950/15 text-rose-800 border border-rose-300 shadow-xs font-semibold' },
             ].map((item) => (
               <button
                 key={item.key}
@@ -67,39 +66,53 @@ export const RsvpSection: React.FC<SundaRsvpProps> = ({
                   setActiveRsvpTab(item.key as any);
                   setRsvpForm({
                     ...rsvpForm,
-                    status: item.key === 'tidak' ? 'declined' : 'hadir',
+                    status: item.key === 'tidak' ? 'tidak_hadir' : 'hadir',
                   });
                 }}
-                className={`py-2 px-1 sm:px-2 text-center rounded-xl text-[10.5px] sm:text-xs font-semibold tracking-tight transition-all cursor-pointer flex items-center justify-center min-h-[42px] leading-tight ${
+                className={`py-2.5 px-3 text-center rounded-xl text-xs font-semibold tracking-tight transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[42px] ${
                   activeRsvpTab === item.key
                     ? item.cls
                     : 'bg-[#f4efe4] text-[#1b1c1a] hover:bg-[#ede7dc]'
                 }`}
               >
-                <span className="w-full text-center break-words [overflow-wrap:anywhere]">
-                  {item.label}
-                </span>
+                <span className="material-symbols-outlined text-[17px]">{item.icon}</span>
+                <span>{item.label}</span>
               </button>
             ))}
           </div>
         </div>
 
+        {activeRsvpTab === 'hadir' && (
+          <div>
+            <label className="text-xs font-semibold text-[#1b1c1a] block mb-1">
+              Jumlah Tamu
+            </label>
+            <select
+              value={rsvpForm.pax}
+              onChange={(e) =>
+                setRsvpForm({ ...rsvpForm, pax: Number(e.target.value) || 1 })
+              }
+              className="w-full px-4 py-2.5 rounded-xl bg-[#fbf9f6] text-[#1b1c1a] text-xs focus:outline-none focus:bg-white border border-[#ede9e1] focus:border-[#c5a059]"
+            >
+              <option value="1">1 Orang Tamu</option>
+              <option value="2">2 Orang Tamu</option>
+              <option value="3">3 Orang Tamu</option>
+              <option value="4">4 Orang Tamu</option>
+            </select>
+          </div>
+        )}
+
         <div>
           <label className="text-xs font-semibold text-[#1b1c1a] block mb-1">
-            Jumlah Tamu
+            Doa &amp; Ucapan Selamat
           </label>
-          <select
-            value={rsvpForm.pax}
-            onChange={(e) =>
-              setRsvpForm({ ...rsvpForm, pax: Number(e.target.value) || 1 })
-            }
-            className="w-full px-4 py-2.5 rounded-xl bg-[#fbf9f6] text-[#1b1c1a] text-xs focus:outline-none focus:bg-white border border-[#ede9e1] focus:border-[#c5a059]"
-          >
-            <option value="1">1 Orang</option>
-            <option value="2">2 Orang</option>
-            <option value="3">3 Orang</option>
-            <option value="4">4 Orang</option>
-          </select>
+          <textarea
+            rows={3}
+            value={(rsvpForm as any).notes || ''}
+            onChange={(e) => setRsvpForm({ ...rsvpForm, notes: e.target.value })}
+            placeholder="Tuliskan ucapan dan doa restu untuk kedua mempelai..."
+            className="w-full px-4 py-2.5 rounded-xl bg-[#fbf9f6] text-[#1b1c1a] text-xs focus:outline-none focus:bg-white border border-[#ede9e1] focus:border-[#c5a059] resize-none"
+          />
         </div>
 
         <button
@@ -107,7 +120,7 @@ export const RsvpSection: React.FC<SundaRsvpProps> = ({
           className="w-full py-3 rounded-full bg-[#8a6822] text-white text-xs font-semibold shadow-md hover:bg-[#6e5318] transition-colors flex items-center justify-center gap-2 mt-2 cursor-pointer"
         >
           <span className="material-symbols-outlined text-[17px]">send</span>
-          <span>Kirim Konfirmasi Kehadiran</span>
+          <span>Kirim Ucapan &amp; Konfirmasi</span>
         </button>
       </form>
     </section>

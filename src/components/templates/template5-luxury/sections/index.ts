@@ -6,3 +6,4 @@ export * from './EventSection';
 export * from './GallerySection';
 export * from './RsvpGiftSection';
 export * from './WishesSection';
+export * from './ClosingFooterSection';

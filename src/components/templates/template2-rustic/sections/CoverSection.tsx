@@ -100,7 +100,7 @@ export const CoverSection: React.FC<CoverSectionProps> = ({
             Kepada Yth. Bapak/Ibu/Saudara/i:
           </span>
           <div className="font-serif text-lg sm:text-xl text-[#1E2E22] font-bold line-clamp-1 my-0.5">
-            {data.guest_name || 'Tamu Undangan Kinasih'}
+            {data.guest_name || 'Tamu Undangan'}
           </div>
           {(Boolean(data.guest_code) || isPreview) && (
             <div className="mt-1 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#F5ECE0] text-[#8C4E2D] text-[11px] font-mono font-bold border border-[#DECFBD] shadow-2xs">

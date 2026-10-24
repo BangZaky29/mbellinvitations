@@ -3,24 +3,17 @@ import type { BaseSectionProps } from '../../types';
 import type { CoupleInfo, WishItem } from '../../../../types/invitation';
 
 export interface JawaWishesProps extends BaseSectionProps {
-  firstPerson: CoupleInfo;
-  secondPerson: CoupleInfo;
+  firstPerson?: CoupleInfo;
+  secondPerson?: CoupleInfo;
   wishes: WishItem[];
-  wishForm: { name: string; message: string };
-  setWishForm: (form: any) => void;
-  handleWishSubmit: (e: React.FormEvent) => void;
-  renderBrandFooter: (extraProps?: any) => React.ReactNode;
+  wishForm?: { name: string; message: string };
+  setWishForm?: (form: any) => void;
+  handleWishSubmit?: (e: React.FormEvent) => void;
+  renderBrandFooter?: (extraProps?: any) => React.ReactNode;
 }
 
 export const WishesSection: React.FC<JawaWishesProps> = ({
-  data,
-  firstPerson,
-  secondPerson,
   wishes,
-  wishForm,
-  setWishForm,
-  handleWishSubmit,
-  renderBrandFooter,
 }) => {
   return (
     <section className="relative w-full bg-surface px-margin pt-space-xl pb-6 flex flex-col items-center">
@@ -36,75 +29,63 @@ export const WishesSection: React.FC<JawaWishesProps> = ({
         </p>
       </div>
 
-      {/* Wishes Input Form */}
-      <div className="w-full bg-surface-container-low rounded-2xl p-space-md shadow-lg mb-6">
-        <form onSubmit={handleWishSubmit} className="space-y-3" id="wishes-form">
-          <input
-            type="text"
-            value={wishForm.name}
-            onChange={(e) => setWishForm({ ...wishForm, name: e.target.value })}
-            placeholder="Asma Panjenengan (Nama Anda)"
-            required
-            className="w-full px-3.5 py-2.5 rounded-lg bg-surface-container-lowest text-on-surface placeholder:text-on-surface-variant/40 placeholder:italic font-body-md text-body-md focus:outline-none focus:ring-1 focus:ring-primary"
-          />
-          <textarea
-            rows={3}
-            value={wishForm.message}
-            onChange={(e) => setWishForm({ ...wishForm, message: e.target.value })}
-            placeholder="Tuliskan donga berkah saha pangestu panjenengan..."
-            required
-            className="w-full px-3.5 py-2.5 rounded-lg bg-surface-container-lowest text-on-surface placeholder:text-on-surface-variant/40 placeholder:italic font-body-md text-body-md focus:outline-none focus:ring-1 focus:ring-primary resize-none"
-          ></textarea>
-          <button
-            type="submit"
-            className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-primary-fixed-dim to-secondary text-on-primary font-label-lg text-label-lg shadow active:scale-95 transition-transform flex items-center justify-center gap-1.5 cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-base">rate_review</span>
-            <span>KIRIM UCAPAN</span>
-          </button>
-        </form>
-      </div>
-
       {/* Live Wishes List */}
-      <div className="w-full space-y-3" id="wishes-container">
-        {wishes.map((wish) => (
-          <div key={wish.id} className="bg-surface-container-low rounded-xl p-4 shadow-sm">
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <span className="font-title-md text-title-md text-primary font-semibold break-words [overflow-wrap:anywhere]">
-                  {wish.guest_name}
-                </span>
+      <div className="w-full space-y-3 max-h-[480px] overflow-y-auto pr-0.5" id="wishes-container">
+        {wishes && wishes.length > 0 ? (
+          wishes.map((wish, idx) => (
+            <div key={wish.id || idx} className="bg-surface-container-low rounded-xl p-4 shadow-sm border border-[#D4AF37]/15">
+              <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-[#D4AF37]/10">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="w-7 h-7 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-xs shrink-0">
+                    {(wish.guest_name || 'U').charAt(0).toUpperCase()}
+                  </div>
+                  <span className="font-title-md text-title-md text-primary font-semibold min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
+                    {wish.guest_name}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  {wish.attendance && (
+                    <span
+                      className={`text-[9.5px] font-sans font-medium px-2 py-0.5 rounded-full ${
+                        wish.attendance === 'attending'
+                          ? 'bg-emerald-950 text-emerald-300 border border-emerald-700/50'
+                          : wish.attendance === 'declined'
+                          ? 'bg-rose-950 text-rose-300 border border-rose-700/50'
+                          : 'bg-amber-950 text-amber-300 border border-amber-700/50'
+                      }`}
+                    >
+                      {wish.attendance === 'attending'
+                        ? 'Rawuh'
+                        : wish.attendance === 'declined'
+                        ? 'Nyenyuwun Pangapunten'
+                        : 'Mangu-mangu'}
+                    </span>
+                  )}
+                  <span className="shrink-0 font-caption text-caption text-on-surface-variant/60 text-[10px]">
+                    {wish.created_at
+                      ? new Date(wish.created_at).toLocaleDateString('id-ID', {
+                          day: 'numeric',
+                          month: 'short',
+                        })
+                      : 'Nembe kemawon'}
+                  </span>
+                </div>
               </div>
-              <span className="shrink-0 font-caption text-caption text-on-surface-variant/60">
-                {new Date(wish.created_at).toLocaleDateString('id-ID', {
-                  day: 'numeric',
-                  month: 'short',
-                })}
-              </span>
+              <p className="font-body-md text-body-md text-on-surface leading-relaxed break-words [overflow-wrap:anywhere]">
+                {wish.message}
+              </p>
             </div>
-            <p className="font-body-md text-body-md text-on-surface leading-relaxed break-words [overflow-wrap:anywhere]">
-              {wish.message}
+          ))
+        ) : (
+          <div className="p-6 text-center rounded-xl bg-surface-container-low border border-[#D4AF37]/20">
+            <span className="material-symbols-outlined text-3xl text-secondary mb-2">mark_chat_read</span>
+            <p className="text-xs text-on-surface-variant">
+              Dereng wonten donga pangestu. Kirimaken donga restu panjenengan wonten ing nginggil!
             </p>
           </div>
-        ))}
+        )}
       </div>
-
-      {/* Final Royal Footer Emblem */}
-      <div className="mt-6 flex flex-col items-center text-center opacity-80">
-        <span className="material-symbols-outlined text-primary text-2xl mb-2">flare</span>
-        <p className="font-caption text-caption text-on-surface-variant tracking-wider uppercase">
-          Matur Nuwun Sanget
-        </p>
-        <p className="font-title-md text-title-md text-primary italic">
-          {firstPerson.name} &amp; {secondPerson.name}
-        </p>
-        <p className="font-caption text-caption text-on-surface-variant/50 mt-1">
-          {data.hashtag || 'Kraton Ngayogyakarta Hadiningrat'}
-        </p>
-      </div>
-
-      {/* Dynamic mbell Invitations Brand Signature Footer */}
-      {renderBrandFooter({ themeId: 'jawa' })}
     </section>
   );
 };

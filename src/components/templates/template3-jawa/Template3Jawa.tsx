@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import type { InvitationProps } from '../../../types/invitation';
 import { useTemplateState } from '../../../hooks/useTemplateState';
 import { FloatingDock } from '../../common/FloatingDock';
@@ -12,8 +12,10 @@ import {
   StorySection,
   EventSection,
   GallerySection,
-  RsvpGiftSection,
+  RsvpSection,
+  GiftSection,
   WishesSection,
+  ClosingFooterSection,
 } from './sections';
 
 export const Template3Jawa: React.FC<InvitationProps> = ({
@@ -33,9 +35,9 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
     toggleMusic,
     countdown,
     wishes,
-    wishForm,
-    setWishForm,
-    handleWishSubmit,
+    rsvpForm,
+    setRsvpForm,
+    handleRsvpSubmit,
     selectedImage,
     setSelectedImage,
     showAllGallery,
@@ -59,31 +61,12 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
     fallbackMusicUrl: 'https://assets.mixkit.co/music/preview/mixkit-romantic-wedding-walk-257.mp3',
   });
 
-  // RSVP Form state specific to Javanese theme
-  const [rsvpForm, setRsvpForm] = useState({
-    name: data.guest_name || '',
-    guests: 2,
-    presence: 'hadir',
-  });
-  const [rsvpToastVisible, setRsvpToastVisible] = useState(false);
-
   // Copy to clipboard helper
   const handleCopy = (text: string, label: string) => {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text);
     }
     showToast(label);
-  };
-
-  // Handler RSVP Submit
-  const handleRsvpSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (onSubmitRsvp) {
-      onSubmitRsvp(rsvpForm.name, rsvpForm.presence, rsvpForm.guests);
-    }
-    setRsvpToastVisible(true);
-    setTimeout(() => setRsvpToastVisible(false), 4000);
-    showToast('Matur nuwun, konfirmasi rawuh panjenengan sampun katampi!');
   };
 
   return (
@@ -103,13 +86,12 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
 
         <main className="flex flex-col relative w-full bg-[#14100D] min-h-screen flex-1">
           <div
-            className={`flex flex-col w-full relative ${
-              !isOpen
+            className={`flex flex-col w-full relative ${!isOpen
                 ? isPreview
                   ? 'h-full overflow-hidden'
                   : 'h-[100dvh] overflow-hidden'
                 : 'min-h-screen overflow-visible'
-            }`}
+              }`}
           >
             {/* ========================================== */}
             {/* SECTION 1: COVER GATE OVERLAY              */}
@@ -201,18 +183,16 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
               )}
 
             {/* ========================================== */}
-            {/* SECTION 7: RSVP & DIGITAL ENVELOPE         */}
+            {/* SECTION 7: RSVP & DO'A RESTU               */}
             {/* ========================================== */}
-            <RsvpGiftSection
+            <RsvpSection
               data={data}
               theme={theme}
               isPreview={isPreview}
               isSectionActive={isSectionActive}
               rsvpForm={rsvpForm}
               setRsvpForm={setRsvpForm}
-              rsvpToastVisible={rsvpToastVisible}
               handleRsvpSubmit={handleRsvpSubmit}
-              handleCopy={handleCopy}
             />
 
             {/* ========================================== */}
@@ -226,12 +206,29 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
                 firstPerson={firstPerson}
                 secondPerson={secondPerson}
                 wishes={wishes}
-                wishForm={wishForm}
-                setWishForm={setWishForm}
-                handleWishSubmit={handleWishSubmit}
-                renderBrandFooter={renderBrandFooter}
               />
             )}
+
+            {/* ========================================== */}
+            {/* SECTION 9: DIGITAL ENVELOPE / GIFT CARD    */}
+            {/* ========================================== */}
+            <GiftSection
+              data={data}
+              theme={theme}
+              isPreview={isPreview}
+              isSectionActive={isSectionActive}
+              handleCopy={handleCopy}
+            />
+
+            {/* ========================================== */}
+            {/* CLOSING ROYAL FOOTER EMBLEM & BRAND FOOTER */}
+            {/* ========================================== */}
+            <ClosingFooterSection
+              data={data}
+              firstPerson={firstPerson}
+              secondPerson={secondPerson}
+              renderBrandFooter={renderBrandFooter}
+            />
           </div>
         </main>
 
@@ -246,9 +243,8 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
                 className="relative group flex items-center justify-center w-11 h-11 rounded-full bg-[#322822] border border-[#f2ca50]/40 shadow-xl transition-transform active:scale-95 cursor-pointer"
               >
                 <div
-                  className={`w-9 h-9 rounded-full bg-[#150c08] flex items-center justify-center ${
-                    isPlaying ? 'animate-[spin_6s_linear_infinite]' : ''
-                  }`}
+                  className={`w-9 h-9 rounded-full bg-[#150c08] flex items-center justify-center ${isPlaying ? 'animate-[spin_6s_linear_infinite]' : ''
+                    }`}
                 >
                   <span className="material-symbols-outlined text-[#f2ca50] text-lg">
                     {isPlaying ? 'music_note' : 'music_off'}

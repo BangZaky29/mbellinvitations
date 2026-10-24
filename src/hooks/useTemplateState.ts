@@ -97,11 +97,12 @@ export function useTemplateState({
     }
   }, [initialWishes]);
 
-  // RSVP Form state
+  // RSVP Form state (Unified: Kehadiran, Jumlah Tamu & Doa/Ucapan)
   const [rsvpForm, setRsvpForm] = useState({
     name: data.guest_name || '',
     status: 'hadir',
     pax: 1,
+    notes: '',
   });
   const [rsvpSubmitted, setRsvpSubmitted] = useState(false);
 
@@ -204,38 +205,78 @@ export function useTemplateState({
     setTimeout(() => setCopiedAddress(false), 2500);
   };
 
-  // Handler RSVP Submit
-  const handleRsvpSubmit = (e: React.FormEvent) => {
+  // Handler RSVP Submit (Unified: Kirim Konfirmasi Kehadiran & Doa Restu Sekaligus)
+  const handleRsvpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (onSubmitRsvp) {
-      onSubmitRsvp(rsvpForm.name, rsvpForm.status, rsvpForm.pax);
+    if (!rsvpForm.name.trim()) {
+      showToast('Mohon masukkan nama lengkap Anda', 'error');
+      return;
     }
-    setRsvpSubmitted(true);
-    showToast('Konfirmasi kehadiran terkirim', 'success');
-    setTimeout(() => setRsvpSubmitted(false), 2400);
+
+    try {
+      // 1. Kirim Konfirmasi Kehadiran -> Tabel guests (Dashboard: Daftar Tamu)
+      if (onSubmitRsvp) {
+        const res = await onSubmitRsvp(rsvpForm.name, rsvpForm.status, rsvpForm.pax, rsvpForm.notes);
+        if (res && typeof res === 'object' && 'success' in res && !(res as any).success) {
+          throw new Error((res as any).message || 'Gagal menyimpan konfirmasi kehadiran');
+        }
+      }
+
+      // 2. Jika ada pesan doa restu, kirim -> Tabel wishes (Dashboard: Ucapan Masuk)
+      const wishMsg = rsvpForm.notes?.trim();
+      if (wishMsg) {
+        if (onSubmitWish) {
+          await onSubmitWish(rsvpForm.name, wishMsg, rsvpForm.status);
+        }
+
+        // Optimistic UI: Tampilkan seketika di daftar ucapan realtime
+        const newWish: WishItem = {
+          id: `local-${Date.now()}`,
+          guest_name: rsvpForm.name.trim(),
+          message: wishMsg,
+          attendance: rsvpForm.status === 'hadir' || rsvpForm.status === 'attending' ? 'attending' : 'declined',
+          created_at: 'Baru saja',
+        };
+        setWishes((prev) => [newWish, ...prev.filter((w) => w.id !== newWish.id)]);
+      }
+
+      setRsvpSubmitted(true);
+      showToast('Konfirmasi kehadiran & ucapan berhasil dikirim!', 'success');
+      // Kosongkan pesan ucapan setelah terkirim
+      setRsvpForm((prev: any) => ({ ...prev, notes: '' }));
+      setTimeout(() => setRsvpSubmitted(false), 2500);
+    } catch (err: any) {
+      console.error('[RSVP] Error submitting:', err);
+      showToast(err?.message || 'Gagal mengirim konfirmasi, silakan coba lagi', 'error');
+    }
   };
 
-  // Handler Wish Submit
-  const handleWishSubmit = (e: React.FormEvent) => {
+  // Handler Wish Submit (Fallback / Standalone bila dipanggil terpisah)
+  const handleWishSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!wishForm.name.trim() || !wishForm.message.trim()) return;
 
-    const newWish: WishItem = {
-      id: Date.now().toString(),
-      guest_name: wishForm.name,
-      message: wishForm.message,
-      attendance: rsvpForm.status === 'hadir' ? 'attending' : 'declined',
-      created_at: new Date().toISOString(),
-    };
+    try {
+      const newWish: WishItem = {
+        id: Date.now().toString(),
+        guest_name: wishForm.name,
+        message: wishForm.message,
+        attendance: rsvpForm.status === 'hadir' ? 'attending' : 'declined',
+        created_at: new Date().toISOString(),
+      };
 
-    setWishes((prev) => [newWish, ...prev]);
-    if (onSubmitWish) {
-      onSubmitWish(wishForm.name, wishForm.message);
+      setWishes((prev) => [newWish, ...prev]);
+      if (onSubmitWish) {
+        await onSubmitWish(wishForm.name, wishForm.message);
+      }
+      setWishForm({ name: '', message: '' });
+      setWishSubmitted(true);
+      showToast('Ucapan berhasil dikirim', 'success');
+      setTimeout(() => setWishSubmitted(false), 2400);
+    } catch (err: any) {
+      console.error('[Wish] Error submitting:', err);
+      showToast('Gagal mengirim ucapan, silakan coba lagi', 'error');
     }
-    setWishForm({ name: '', message: '' });
-    setWishSubmitted(true);
-    showToast('Ucapan berhasil dikirim', 'success');
-    setTimeout(() => setWishSubmitted(false), 2400);
   };
 
   // Helpers for couple order

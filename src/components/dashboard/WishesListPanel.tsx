@@ -6,6 +6,7 @@ import { getInvitationFullUrl, getInvitationDisplayUrl } from '../../utils/urlHe
 
 interface WishEntry {
   id: string;
+  invitation_id?: string;
   guest_name: string;
   message: string;
   attendance?: string;
@@ -47,6 +48,15 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
   const [wishToDelete, setWishToDelete] = useState<WishEntry | null>(null);
   const [isDeletingWish, setIsDeletingWish] = useState(false);
 
+  // 🌟 Real-time Status & Notifikasi Pesan Masuk
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
+  const [newlyArrivedIds, setNewlyArrivedIds] = useState<Set<string>>(new Set());
+  const [realtimeNotice, setRealtimeNotice] = useState<{
+    guestName: string;
+    message: string;
+    attendance?: string;
+  } | null>(null);
+
   // State template yang sedang dipilih di selector
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateSelectorItem | null>(null);
 
@@ -62,20 +72,24 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
   };
 
   useEffect(() => {
+    let isMounted = true;
+    let targetInvitationId = effectiveId;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
     const fetchWishes = async () => {
       setIsLoading(true);
 
       try {
         if (!userId) {
-          setWishes([]);
-          setIsLoading(false);
-          window.dispatchEvent(
-            new CustomEvent('mbell_wishes_count_changed', { detail: { count: 0 } })
-          );
+          if (isMounted) {
+            setWishes([]);
+            setIsLoading(false);
+            window.dispatchEvent(
+              new CustomEvent('mbell_wishes_count_changed', { detail: { count: 0 } })
+            );
+          }
           return;
         }
-
-        let targetInvitationId = effectiveId;
 
         // Jika ada slug, resolve ID record dari tabel invitations
         if (effectiveSlug && effectiveSlug !== 'undangan-baru' && effectiveSlug !== 'raditya-jessica') {
@@ -114,34 +128,180 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
 
           const { data: wishesData, error } = await query.order('created_at', { ascending: false });
 
-          if (!error && wishesData && wishesData.length > 0) {
+          if (!error && wishesData && isMounted) {
             setWishes(wishesData as WishEntry[]);
             window.dispatchEvent(
               new CustomEvent('mbell_wishes_count_changed', { detail: { count: wishesData.length } })
             );
-          } else {
+          } else if (isMounted) {
             setWishes([]);
             window.dispatchEvent(
               new CustomEvent('mbell_wishes_count_changed', { detail: { count: 0 } })
             );
           }
-        } else {
+        } else if (isMounted) {
           setWishes([]);
           window.dispatchEvent(
             new CustomEvent('mbell_wishes_count_changed', { detail: { count: 0 } })
           );
         }
       } catch {
-        setWishes([]);
-        window.dispatchEvent(
-          new CustomEvent('mbell_wishes_count_changed', { detail: { count: 0 } })
-        );
+        if (isMounted) {
+          setWishes([]);
+          window.dispatchEvent(
+            new CustomEvent('mbell_wishes_count_changed', { detail: { count: 0 } })
+          );
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchWishes();
+
+    // 🌟 SETUP SUPABASE REAL-TIME CHANNEL PADA TABEL 'wishes'
+    const channelName = `realtime-wishes-${effectiveSlug || effectiveId || 'panel'}-${Date.now()}`;
+    channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'wishes',
+        },
+        (payload) => {
+          if (!isMounted) return;
+
+          if (payload.eventType === 'INSERT') {
+            const newWish = payload.new as WishEntry;
+            const isMatch =
+              !targetInvitationId ||
+              newWish.invitation_id === targetInvitationId ||
+              (effectiveId && newWish.invitation_id === effectiveId);
+
+            if (isMatch) {
+              setWishes((prev) => {
+                if (prev.some((w) => w.id === newWish.id)) return prev;
+                const nextList = [newWish, ...prev];
+                const realCount = nextList.filter((w) => !w.id.startsWith('wish-')).length;
+                window.dispatchEvent(
+                  new CustomEvent('mbell_wishes_count_changed', { detail: { count: realCount } })
+                );
+                return nextList;
+              });
+
+              // Tandai ID sebagai wish baru untuk animasi highlight
+              setNewlyArrivedIds((prev) => new Set(prev).add(newWish.id));
+              setTimeout(() => {
+                if (isMounted) {
+                  setNewlyArrivedIds((prev) => {
+                    const copy = new Set(prev);
+                    copy.delete(newWish.id);
+                    return copy;
+                  });
+                }
+              }, 12000);
+
+              // Tampilkan toast notifikasi realtime
+              setRealtimeNotice({
+                guestName: newWish.guest_name,
+                message: newWish.message,
+                attendance: newWish.attendance,
+              });
+              setTimeout(() => {
+                if (isMounted) {
+                  setRealtimeNotice(null);
+                }
+              }, 6000);
+            } else {
+              // Jika target id belum sinkron, panggil fetch ulang
+              fetchWishes();
+            }
+          } else if (payload.eventType === 'DELETE') {
+            const deletedId = (payload.old as any)?.id;
+            if (deletedId) {
+              setWishes((prev) => {
+                const nextList = prev.filter((w) => w.id !== deletedId);
+                const realCount = nextList.filter((w) => !w.id.startsWith('wish-')).length;
+                window.dispatchEvent(
+                  new CustomEvent('mbell_wishes_count_changed', { detail: { count: realCount } })
+                );
+                return nextList;
+              });
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            fetchWishes();
+          }
+        }
+      )
+      .subscribe((status) => {
+        if (isMounted) {
+          setIsRealtimeConnected(status === 'SUBSCRIBED');
+        }
+      });
+
+    // 🌟 LISTENER EVENT LOKAL UNTUK PREVIEW EDITOR DI DASHBOARD
+    const handleWishEvent = (e: any) => {
+      if (e?.detail?.name && e?.detail?.message) {
+        const localId = `local-${Date.now()}`;
+        const newWish: WishEntry = {
+          id: localId,
+          guest_name: e.detail.name,
+          message: e.detail.message,
+          attendance: e.detail.attendance || (e.detail.status === 'hadir' ? 'attending' : 'declined'),
+          created_at: new Date().toISOString(),
+        };
+
+        setWishes((prev) => {
+          if (prev.some((w) => w.guest_name === newWish.guest_name && w.message === newWish.message)) {
+            return prev;
+          }
+          const nextList = [newWish, ...prev];
+          window.dispatchEvent(
+            new CustomEvent('mbell_wishes_count_changed', { detail: { count: nextList.length } })
+          );
+          return nextList;
+        });
+
+        setNewlyArrivedIds((prev) => new Set(prev).add(localId));
+        setTimeout(() => {
+          if (isMounted) {
+            setNewlyArrivedIds((prev) => {
+              const copy = new Set(prev);
+              copy.delete(localId);
+              return copy;
+            });
+          }
+        }, 12000);
+
+        setRealtimeNotice({
+          guestName: newWish.guest_name,
+          message: newWish.message,
+          attendance: newWish.attendance,
+        });
+        setTimeout(() => {
+          if (isMounted) {
+            setRealtimeNotice(null);
+          }
+        }, 6000);
+      }
+      fetchWishes();
+    };
+
+    window.addEventListener('mbell_wish_submitted', handleWishEvent);
+    window.addEventListener('mbell_rsvp_submitted', handleWishEvent);
+
+    return () => {
+      isMounted = false;
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+      window.removeEventListener('mbell_wish_submitted', handleWishEvent);
+      window.removeEventListener('mbell_rsvp_submitted', handleWishEvent);
+    };
   }, [userId, effectiveId, effectiveSlug]);
 
   const handleCopyLink = () => {
@@ -248,6 +408,27 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-200">
               {effectiveCouple}
             </span>
+
+            {/* 🌟 Status Indikator Supabase Real-time */}
+            <span
+              className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border transition-all ${
+                isRealtimeConnected
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700 shadow-2xs'
+                  : 'bg-stone-100 border-stone-200 text-stone-500'
+              }`}
+              title={
+                isRealtimeConnected
+                  ? 'Koneksi Supabase Real-time aktif. Pesan doa baru akan langsung muncul otomatis di layar.'
+                  : 'Menghubungkan ke Supabase Real-time...'
+              }
+            >
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  isRealtimeConnected ? 'bg-emerald-500 animate-pulse' : 'bg-stone-400'
+                }`}
+              />
+              <span>{isRealtimeConnected ? 'Real-time Aktif' : 'Menghubungkan...'}</span>
+            </span>
           </div>
           <p className="text-xs sm:text-sm text-stone-500">
             Koleksi pesan selamat dan doa tulus untuk tautan{' '}
@@ -293,8 +474,13 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
             <span className="text-[11px] sm:text-xs font-medium text-stone-500 truncate">Total Doa</span>
             <span className="material-symbols-outlined text-[18px] text-amber-600">mail</span>
           </div>
-          <div className="text-lg sm:text-2xl font-serif font-bold text-stone-900">
-            {wishes.length}
+          <div className="text-lg sm:text-2xl font-serif font-bold text-stone-900 flex items-center gap-2">
+            <span>{wishes.length}</span>
+            {newlyArrivedIds.size > 0 && (
+              <span className="inline-flex items-center px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold font-sans animate-bounce border border-emerald-300">
+                +{newlyArrivedIds.size} baru
+              </span>
+            )}
           </div>
           <span className="text-[10px] text-stone-400 mt-0.5 block truncate">Semua ucapan masuk</span>
         </div>
@@ -484,11 +670,16 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
           {filteredWishes.map((wish) => {
             const isAttending = wish.attendance === 'attending' || wish.attendance === 'hadir';
             const isCopied = copiedWishId === wish.id;
+            const isNew = newlyArrivedIds.has(wish.id);
 
             return (
               <div
                 key={wish.id}
-                className="p-5 rounded-2xl bg-white border border-stone-200/90 hover:border-amber-300 hover:shadow-xs transition-all space-y-3.5 flex flex-col justify-between relative group"
+                className={`p-5 rounded-2xl bg-white border transition-all space-y-3.5 flex flex-col justify-between relative group ${
+                  isNew
+                    ? 'border-emerald-500 ring-2 ring-emerald-400/30 bg-emerald-50/15 shadow-md animate-in fade-in slide-in-from-top-3 duration-500'
+                    : 'border-stone-200/90 hover:border-amber-300 hover:shadow-xs'
+                }`}
               >
                 {/* Decorative Watermark Quote Icon */}
                 <span className="material-symbols-outlined text-[36px] text-stone-200/50 absolute right-4 top-4 select-none pointer-events-none group-hover:text-amber-200/60 transition-colors">
@@ -496,16 +687,30 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
                 </span>
 
                 <div className="space-y-3">
-                  {/* Top Bar: Avatar, Nama, Status RSVP, Tanggal */}
+                  {/* Top Bar: Avatar, Nama, Status RSVP, Tanggal, & Badge Pesan Baru */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-stone-950 font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                      <div
+                        className={`w-9 h-9 rounded-xl font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs ${
+                          isNew
+                            ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white ring-2 ring-emerald-300'
+                            : 'bg-gradient-to-br from-amber-500 to-amber-600 text-stone-950'
+                        }`}
+                      >
                         {wish.guest_name ? wish.guest_name.charAt(0).toUpperCase() : 'T'}
                       </div>
                       <div className="min-w-0">
-                        <h4 className="font-serif font-bold text-stone-900 text-sm truncate">
-                          {wish.guest_name}
-                        </h4>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h4 className="font-serif font-bold text-stone-900 text-sm truncate">
+                            {wish.guest_name}
+                          </h4>
+                          {isNew && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300 animate-pulse shrink-0">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              Baru Saja
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           {isAttending ? (
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
@@ -532,7 +737,13 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
                   </div>
 
                   {/* Isi Pesan Doa Restu */}
-                  <div className="bg-[#FAF8F5] p-3.5 rounded-xl border border-stone-200/70 text-xs sm:text-[13px] text-stone-800 leading-relaxed font-sans relative">
+                  <div
+                    className={`p-3.5 rounded-xl border text-xs sm:text-[13px] leading-relaxed font-sans relative ${
+                      isNew
+                        ? 'bg-white border-emerald-200 text-stone-900 font-medium shadow-2xs'
+                        : 'bg-[#FAF8F5] border-stone-200/70 text-stone-800'
+                    }`}
+                  >
                     <p className="italic whitespace-pre-line">"{wish.message}"</p>
                   </div>
                 </div>
@@ -564,6 +775,37 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* 5. FLOATING REALTIME TOAST NOTIFICATION BANNER */}
+      {realtimeNotice && (
+        <div className="fixed bottom-6 right-6 z-50 max-w-sm w-full p-4 bg-stone-950/95 text-white rounded-2xl shadow-2xl border border-emerald-500/50 backdrop-blur-md flex items-start gap-3 animate-in fade-in slide-in-from-bottom-5 duration-300">
+          <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-emerald-400 shrink-0 mt-0.5">
+            <span className="material-symbols-outlined text-[20px] animate-bounce">mark_email_unread</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-1.5">
+              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Ucapan Doa Baru Masuk!
+              </span>
+              <button
+                type="button"
+                onClick={() => setRealtimeNotice(null)}
+                className="text-stone-400 hover:text-white cursor-pointer"
+                title="Tutup notifikasi"
+              >
+                <span className="material-symbols-outlined text-[15px]">close</span>
+              </button>
+            </div>
+            <h5 className="font-serif font-bold text-sm text-white truncate mt-0.5">
+              {realtimeNotice.guestName}
+            </h5>
+            <p className="text-[11px] text-stone-300 line-clamp-2 mt-1 italic">
+              "{realtimeNotice.message}"
+            </p>
+          </div>
         </div>
       )}
 

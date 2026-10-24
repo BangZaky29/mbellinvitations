@@ -12,7 +12,8 @@ import {
   StorySection,
   EventSection,
   GallerySection,
-  RsvpGiftSection,
+  RsvpSection,
+  GiftSection,
   WishesSection,
   FooterSection,
 } from './sections';
@@ -34,9 +35,6 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
     toggleMusic,
     countdown,
     wishes,
-    wishForm,
-    setWishForm,
-    handleWishSubmit,
     rsvpForm,
     setRsvpForm,
     handleRsvpSubmit,
@@ -90,18 +88,16 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
 
         {/* Main Content Area */}
         <main
-          className={`flex flex-col relative w-full ${
-            isOpen ? 'pt-4 pb-28 px-margin' : 'p-0'
-          } bg-[#FAF8F5] min-h-screen flex-1`}
+          className={`flex flex-col relative w-full ${isOpen ? 'pt-4 pb-28 px-margin' : 'p-0'
+            } bg-[#FAF8F5] min-h-screen flex-1`}
         >
           <div
-            className={`flex flex-col w-full text-[#1E2E22] relative ${
-              !isOpen
+            className={`flex flex-col w-full text-[#1E2E22] relative ${!isOpen
                 ? isPreview
                   ? 'h-full overflow-hidden'
                   : 'h-[100dvh] overflow-hidden'
                 : 'min-h-screen overflow-visible'
-            }`}
+              }`}
           >
             {/* ========================================== */}
             {/* SECTION 1: COVER GATE OVERLAY              */}
@@ -126,9 +122,8 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
             {/* INNER CONTENT (Tersedia di bawah cover & interaktif) */}
             {/* ========================================== */}
             <div
-              className={`flex flex-col w-full ${
-                !isOpen ? 'pointer-events-none select-none max-h-screen overflow-hidden' : ''
-              }`}
+              className={`flex flex-col w-full ${!isOpen ? 'pointer-events-none select-none max-h-screen overflow-hidden' : ''
+                }`}
             >
               {/* SECTION 2: HERO & LIVE COUNTDOWN */}
               {isSectionActive('hero') && (
@@ -190,8 +185,8 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                   />
                 )}
 
-              {/* SECTION 7: RSVP & DIGITAL ENVELOPE */}
-              <RsvpGiftSection
+              {/* SECTION 7: RSVP */}
+              <RsvpSection
                 data={data}
                 theme={theme}
                 isPreview={isPreview}
@@ -199,9 +194,6 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                 rsvpForm={rsvpForm}
                 setRsvpForm={setRsvpForm}
                 handleRsvpSubmit={handleRsvpSubmit}
-                activeGiftTab={activeGiftTab}
-                setActiveGiftTab={setActiveGiftTab}
-                handleCopy={handleCopy}
               />
 
               {/* SECTION 8: LIVE WISHES WALL & GREETINGS */}
@@ -211,11 +203,19 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                   theme={theme}
                   isPreview={isPreview}
                   wishes={wishes}
-                  wishForm={wishForm}
-                  setWishForm={setWishForm}
-                  handleWishSubmit={handleWishSubmit}
                 />
               )}
+
+              {/* SECTION 9: DIGITAL ENVELOPE & KADO */}
+              <GiftSection
+                data={data}
+                theme={theme}
+                isPreview={isPreview}
+                isSectionActive={isSectionActive}
+                activeGiftTab={activeGiftTab}
+                setActiveGiftTab={setActiveGiftTab}
+                handleCopy={handleCopy}
+              />
 
               {/* FOOTER ORNAMENT & BRAND FOOTER */}
               <FooterSection
@@ -242,9 +242,8 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                 title="Putar / Hentikan Musik"
               >
                 <span
-                  className={`material-symbols-outlined text-[20px] text-[#2C4034] ${
-                    isPlaying ? 'animate-spin' : ''
-                  }`}
+                  className={`material-symbols-outlined text-[20px] text-[#2C4034] ${isPlaying ? 'animate-spin' : ''
+                    }`}
                   style={{ animationDuration: '6s' }}
                 >
                   {isPlaying ? 'album' : 'music_off'}

@@ -69,7 +69,7 @@ export interface GallerySectionProps extends BaseSectionProps {
  * Props untuk RSVP & Digital Envelope Section.
  */
 export interface RsvpGiftSectionProps extends BaseSectionProps {
-  rsvpForm: { name: string; status: string; pax: number };
+  rsvpForm: { name: string; status: string; pax: number; notes?: string };
   setRsvpForm: (form: any) => void;
   rsvpSubmitted: boolean;
   handleRsvpSubmit: (e: React.FormEvent) => void;
@@ -84,9 +84,9 @@ export interface RsvpGiftSectionProps extends BaseSectionProps {
  */
 export interface WishesSectionProps extends BaseSectionProps {
   wishes: WishItem[];
-  wishForm: { name: string; message: string };
-  setWishForm: (form: any) => void;
-  wishSubmitted: boolean;
-  handleWishSubmit: (e: React.FormEvent) => void;
+  wishForm?: { name: string; message: string };
+  setWishForm?: (form: any) => void;
+  wishSubmitted?: boolean;
+  handleWishSubmit?: (e: React.FormEvent) => void;
   renderBrandFooter: (extraProps?: any) => React.ReactNode;
 }

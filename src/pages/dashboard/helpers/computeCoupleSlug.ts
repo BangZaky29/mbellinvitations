@@ -1,13 +1,14 @@
 // 🌟 HELPER UNIVERSAL: Hitung slug bersih otomatis dari nama panggilan kedua mempelai
 export const computeCoupleSlug = (groomName?: string, brideName?: string): string => {
-  const cleanG = (groomName || '')
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '');
-  const cleanB = (brideName || '')
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '');
+  const getCallName = (name?: string) => {
+    if (!name) return '';
+    const beforeComma = name.trim().split(',')[0].trim();
+    const words = beforeComma.split(/\s+/).filter(Boolean);
+    return words[0] || beforeComma;
+  };
+
+  const cleanG = getCallName(groomName).toLowerCase().replace(/[^a-z0-9]/g, '');
+  const cleanB = getCallName(brideName).toLowerCase().replace(/[^a-z0-9]/g, '');
 
   if (cleanG && cleanB) {
     return `${cleanG}-${cleanB}`;
@@ -41,10 +42,33 @@ export const getCanonicalPublishedSlug = (
   brideName?: string
 ): string => {
   const cleaned = cleanDraftSlug(rawSlug);
+  const coupleSlug = computeCoupleSlug(groomName, brideName);
+
   if (cleaned && cleaned !== 'raditya-jessica' && cleaned !== 'undangan-baru') {
+    // Validasi apakah slug lama sinkron dengan nama mempelai aktif
+    const getFirstWord = (name?: string) => {
+      if (!name) return '';
+      const beforeComma = name.trim().split(',')[0].trim();
+      const words = beforeComma.split(/\s+/).filter(Boolean);
+      return (words[0] || beforeComma).toLowerCase().replace(/[^a-z0-9]/g, '');
+    };
+
+    const firstG = getFirstWord(groomName);
+    const firstB = getFirstWord(brideName);
+
+    if (firstG || firstB) {
+      const cleanedLower = cleaned.toLowerCase();
+      const hasG = Boolean(firstG && cleanedLower.includes(firstG));
+      const hasB = Boolean(firstB && cleanedLower.includes(firstB));
+
+      // Jika slug sama sekali tidak mengandung nama panggilan groom maupun bride,
+      // maka ini adalah slug stale/bekas template sebelumnya (misal: 'ghifari-nadia' padahal aktif 'arya-dian')
+      if (!hasG && !hasB && coupleSlug) {
+        return coupleSlug;
+      }
+    }
     return cleaned;
   }
-  const coupleSlug = computeCoupleSlug(groomName, brideName);
   return coupleSlug || 'undangan';
 };
 

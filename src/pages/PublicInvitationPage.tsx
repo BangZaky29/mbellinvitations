@@ -64,12 +64,12 @@ export const PublicInvitationPage: React.FC = () => {
     }
   }, [invitationData.groom?.name, invitationData.bride?.name, invitationData.is_bride_first]);
 
-  const onSubmitWish = async (name: string, message: string) => {
-    return await handleSendWish(name, message);
+  const onSubmitWish = async (name: string, message: string, attendance: string = 'hadir') => {
+    return await handleSendWish(name, message, attendance);
   };
 
-  const onSubmitRsvp = async (name: string, status: string, pax: number) => {
-    return await handleSendRsvp(name, status, pax);
+  const onSubmitRsvp = async (name: string, status: string, pax: number, notes: string = '') => {
+    return await handleSendRsvp(name, status, pax, notes);
   };
 
   const isPublished = invitationData.status === 'published';

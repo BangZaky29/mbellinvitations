@@ -12,8 +12,10 @@ import {
   StorySection,
   EventSection,
   GallerySection,
-  RsvpGiftSection,
+  RsvpSection,
+  GiftSection,
   WishesSection,
+  ClosingFooterSection,
 } from './sections';
 
 const SectionDivider: React.FC = () => (
@@ -41,10 +43,6 @@ export const Template1Modern: React.FC<InvitationProps> = ({
     toggleMusic,
     countdown,
     wishes,
-    wishForm,
-    setWishForm,
-    wishSubmitted,
-    handleWishSubmit,
     rsvpForm,
     setRsvpForm,
     rsvpSubmitted,
@@ -89,13 +87,12 @@ export const Template1Modern: React.FC<InvitationProps> = ({
 
       {/* Mobile Viewport Container (Max 430px) */}
       <div
-        className={`relative w-full max-w-[430px] bg-alabaster shadow-2xl overflow-x-clip border-x border-[#E2DDD3] flex flex-col no-scrollbar ${
-          !isOpen
+        className={`relative w-full max-w-[430px] bg-alabaster shadow-2xl overflow-x-clip border-x border-[#E2DDD3] flex flex-col no-scrollbar ${!isOpen
             ? isPreview
               ? 'h-full overflow-hidden'
               : 'h-[100dvh] overflow-hidden'
             : 'h-full min-h-screen overflow-visible'
-        }`}
+          }`}
       >
         {/* ========================================== */}
         {/* 1. PHYSICAL DRAGGABLE COVER SHEET OVERLAY  */}
@@ -192,9 +189,9 @@ export const Template1Modern: React.FC<InvitationProps> = ({
               </>
             )}
 
-          {/* 7. RSVP & DIGITAL ENVELOPE SECTION */}
+          {/* 7. RSVP SECTION */}
           <SectionDivider />
-          <RsvpGiftSection
+          <RsvpSection
             data={data}
             theme={theme}
             isPreview={isPreview}
@@ -203,10 +200,6 @@ export const Template1Modern: React.FC<InvitationProps> = ({
             setRsvpForm={setRsvpForm}
             rsvpSubmitted={rsvpSubmitted}
             handleRsvpSubmit={handleRsvpSubmit}
-            copiedAccountIndex={copiedAccountIndex}
-            copiedAddress={copiedAddress}
-            handleCopyAccount={handleCopyAccount}
-            handleCopyAddress={handleCopyAddress}
           />
 
           {/* 8. LIVE WISHES WALL SECTION */}
@@ -218,14 +211,28 @@ export const Template1Modern: React.FC<InvitationProps> = ({
                 theme={theme}
                 isPreview={isPreview}
                 wishes={wishes}
-                wishForm={wishForm}
-                setWishForm={setWishForm}
-                wishSubmitted={wishSubmitted}
-                handleWishSubmit={handleWishSubmit}
-                renderBrandFooter={renderBrandFooter}
               />
             </>
           )}
+
+          {/* 9. DIGITAL ENVELOPE & GIFT CARD */}
+          <SectionDivider />
+          <GiftSection
+            data={data}
+            theme={theme}
+            isPreview={isPreview}
+            isSectionActive={isSectionActive}
+            copiedAccountIndex={copiedAccountIndex}
+            copiedAddress={copiedAddress}
+            handleCopyAccount={handleCopyAccount}
+            handleCopyAddress={handleCopyAddress}
+          />
+
+          {/* 10. CLOSING & BRAND FOOTER */}
+          <ClosingFooterSection
+            data={data}
+            renderBrandFooter={renderBrandFooter}
+          />
         </main>
 
         {/* FLOATING AUDIO CONTROLLER BUBBLE */}
@@ -241,9 +248,8 @@ export const Template1Modern: React.FC<InvitationProps> = ({
               >
                 <i
                   id="music-icon"
-                  className={`fa-solid fa-compact-disc text-xl animate-spin-slow ${
-                    !isPlaying ? 'paused' : ''
-                  }`}
+                  className={`fa-solid fa-compact-disc text-xl animate-spin-slow ${!isPlaying ? 'paused' : ''
+                    }`}
                 ></i>
               </button>
             </div>

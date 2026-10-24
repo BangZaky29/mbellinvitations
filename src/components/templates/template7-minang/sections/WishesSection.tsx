@@ -3,16 +3,13 @@ import type { WishItem } from '../../types';
 
 export interface MinangWishesProps {
   wishes: WishItem[];
-  wishForm: { name: string; message: string };
-  setWishForm: (form: any) => void;
-  handleWishSubmit: (e: React.FormEvent) => void;
+  wishForm?: { name: string; message: string };
+  setWishForm?: (form: any) => void;
+  handleWishSubmit?: (e: React.FormEvent) => void;
 }
 
 export const WishesSection: React.FC<MinangWishesProps> = ({
   wishes,
-  wishForm,
-  setWishForm,
-  handleWishSubmit,
 }) => {
   return (
     <section
@@ -25,38 +22,8 @@ export const WishesSection: React.FC<MinangWishesProps> = ({
         <h3 className="font-cinzel text-xl font-bold tracking-wider text-[#2E0A10]">
           UNTAIAN DOA &amp; RESTU
         </h3>
-        <div className="w-10 h-0.5 bg-[#D4AF37]/60 mx-auto mt-1" />
+        <div className="w-10 h-0.5 bg-[#D4AF37]/60 mx-auto mt-1 mb-6" />
       </div>
-
-      {/* Wish Submission Form */}
-      <form
-        onSubmit={handleWishSubmit}
-        className="w-full max-w-sm mx-auto rounded-2xl p-5 bg-white shadow-sm flex flex-col gap-3 mb-6 border border-[#D4AF37]/40"
-      >
-        <input
-          type="text"
-          required
-          value={wishForm.name}
-          onChange={(e) => setWishForm({ ...wishForm, name: e.target.value })}
-          placeholder="Nama Anda"
-          className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF6EE] text-[#2E0A10] text-xs focus:outline-none border border-[#D4AF37]/40 focus:border-[#D4AF37] placeholder-[#2E0A10]/40"
-        />
-        <textarea
-          rows={3}
-          required
-          value={wishForm.message}
-          onChange={(e) => setWishForm({ ...wishForm, message: e.target.value })}
-          placeholder="Tuliskan ucapan dan doa tulus untuk kedua mempelai..."
-          className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF6EE] text-[#2E0A10] text-xs focus:outline-none border border-[#D4AF37]/40 focus:border-[#D4AF37] resize-none placeholder-[#2E0A10]/40"
-        />
-        <button
-          type="submit"
-          className="w-full py-2.5 rounded-xl gold-gradient-btn text-[#1B0609] text-xs font-bold font-sans uppercase tracking-wider flex items-center justify-center gap-2 hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-sm"
-        >
-          <span className="material-symbols-outlined text-[17px]">favorite</span>
-          <span>Kirim Doa Restu</span>
-        </button>
-      </form>
 
       {/* Feed of Wishes */}
       <div className="w-full max-w-sm mx-auto flex flex-col gap-3.5 max-h-[480px] overflow-y-auto no-scrollbar pr-0.5 overscroll-contain">

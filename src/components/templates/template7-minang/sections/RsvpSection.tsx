@@ -30,10 +30,10 @@ export const RsvpSection: React.FC<MinangRsvpProps> = ({
       <div className="text-center mb-6">
         <span className="font-script text-2xl text-[#F5E296]">Konfirmasi Undangan</span>
         <h4 className="font-cinzel text-xl font-bold tracking-wider text-gold-shimmer">
-          RSVP KEHADIRAN
+          RSVP &amp; DOA RESTU
         </h4>
         <p className="text-xs text-[#FAF6EE]/75 font-sans mt-1 max-w-[300px] mx-auto">
-          Mohon konfirmasi kehadiran Anda demi kelancaran jamuan Baralek Gadang.
+          Mohon konfirmasi kehadiran dan sampaikan doa restu Anda untuk kedua mempelai.
         </p>
       </div>
 
@@ -60,68 +60,78 @@ export const RsvpSection: React.FC<MinangRsvpProps> = ({
             <label className="block text-xs font-sans font-semibold text-[#F5E296] mb-1.5">
               Konfirmasi Kehadiran
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-3">
               <label
                 onClick={() => {
                   setActiveRsvpTab('hadir');
-                  setRsvpForm({ ...rsvpForm, status: 'attending' });
+                  setRsvpForm({ ...rsvpForm, status: 'hadir' });
                 }}
-                className={`flex items-center justify-center p-2 rounded-lg border text-xs cursor-pointer transition-all ${activeRsvpTab === 'hadir'
+                className={`flex items-center justify-center gap-2 p-2.5 rounded-lg border text-xs cursor-pointer transition-all ${
+                  activeRsvpTab === 'hadir'
                     ? 'border-[#D4AF37] gold-gradient-btn text-[#1B0609] font-bold shadow-xs'
                     : 'border-[#D4AF37]/30 bg-[#1B0609] text-[#FAF6EE]/80 hover:border-[#D4AF37]/60'
-                  }`}
+                }`}
               >
+                <span className="material-symbols-outlined text-[17px]">check_circle</span>
                 <span>Hadir</span>
               </label>
 
               <label
                 onClick={() => {
-                  setActiveRsvpTab('ragu');
-                  setRsvpForm({ ...rsvpForm, status: 'tentative' });
-                }}
-                className={`flex items-center justify-center p-2 rounded-lg border text-xs cursor-pointer transition-all ${activeRsvpTab === 'ragu'
-                    ? 'border-[#D4AF37] gold-gradient-btn text-[#1B0609] font-bold shadow-xs'
-                    : 'border-[#D4AF37]/30 bg-[#1B0609] text-[#FAF6EE]/80 hover:border-[#D4AF37]/60'
-                  }`}
-              >
-                <span>Ragu-ragu</span>
-              </label>
-
-              <label
-                onClick={() => {
                   setActiveRsvpTab('tidak');
-                  setRsvpForm({ ...rsvpForm, status: 'declined' });
+                  setRsvpForm({ ...rsvpForm, status: 'tidak_hadir' });
                 }}
-                className={`flex items-center justify-center p-2 rounded-lg border text-xs cursor-pointer transition-all ${activeRsvpTab === 'tidak'
-                    ? 'border-[#D4AF37] gold-gradient-btn text-[#1B0609] font-bold shadow-xs'
+                className={`flex items-center justify-center gap-2 p-2.5 rounded-lg border text-xs cursor-pointer transition-all ${
+                  activeRsvpTab === 'tidak'
+                    ? 'border-rose-500/80 bg-rose-950/40 text-rose-200 font-bold shadow-xs'
                     : 'border-[#D4AF37]/30 bg-[#1B0609] text-[#FAF6EE]/80 hover:border-[#D4AF37]/60'
-                  }`}
+                }`}
               >
-                <span>Berhalangan</span>
+                <span className="material-symbols-outlined text-[17px]">cancel</span>
+                <span>Tidak Hadir</span>
               </label>
             </div>
           </div>
 
-          {/* Guest Count Pax Dropdown */}
+          {/* Guest Count Pax Dropdown (Hanya jika Hadir) */}
+          {activeRsvpTab === 'hadir' && (
+            <div>
+              <label className="block text-xs font-sans font-semibold text-[#F5E296] mb-1">
+                Jumlah Tamu
+              </label>
+              <select
+                value={rsvpForm.pax}
+                onChange={(e) => setRsvpForm({ ...rsvpForm, pax: Number(e.target.value) })}
+                className="w-full bg-[#1B0609] border border-[#D4AF37]/40 rounded-lg px-3 py-2 text-xs text-white focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none"
+              >
+                <option className="bg-[#1B0609] text-white" value={1}>
+                  1 Orang Tamu
+                </option>
+                <option className="bg-[#1B0609] text-white" value={2}>
+                  2 Orang Tamu (Beserta Pendamping)
+                </option>
+                <option className="bg-[#1B0609] text-white" value={3}>
+                  3 Orang Tamu
+                </option>
+                <option className="bg-[#1B0609] text-white" value={4}>
+                  4 Orang Tamu
+                </option>
+              </select>
+            </div>
+          )}
+
+          {/* Doa & Ucapan Selamat */}
           <div>
             <label className="block text-xs font-sans font-semibold text-[#F5E296] mb-1">
-              Jumlah Tamu
+              Doa &amp; Ucapan Selamat
             </label>
-            <select
-              value={rsvpForm.pax}
-              onChange={(e) => setRsvpForm({ ...rsvpForm, pax: Number(e.target.value) })}
-              className="w-full bg-[#1B0609] border border-[#D4AF37]/40 rounded-lg px-3 py-2 text-xs text-white focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none"
-            >
-              <option className="bg-[#1B0609] text-white" value={1}>
-                1 Orang
-              </option>
-              <option className="bg-[#1B0609] text-white" value={2}>
-                2 Orang (Bawa Pasangan)
-              </option>
-              <option className="bg-[#1B0609] text-white" value={3}>
-                3 Orang / Keluarga
-              </option>
-            </select>
+            <textarea
+              rows={3}
+              value={(rsvpForm as any).notes || ''}
+              onChange={(e) => setRsvpForm({ ...rsvpForm, notes: e.target.value })}
+              placeholder="Tuliskan ucapan dan doa restu untuk kedua mempelai..."
+              className="w-full bg-[#1B0609] border border-[#D4AF37]/40 rounded-lg px-3 py-2 text-xs text-white placeholder-[#FAF6EE]/40 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none resize-none"
+            />
           </div>
 
           {/* Submit Button */}
@@ -129,8 +139,8 @@ export const RsvpSection: React.FC<MinangRsvpProps> = ({
             type="submit"
             className="w-full py-3 rounded-xl gold-gradient-btn text-[#1B0609] font-sans font-bold text-xs uppercase tracking-widest shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
           >
-            <span>Kirim Konfirmasi Kehadiran</span>
-            <span className="material-symbols-outlined text-[16px]">send</span>
+            <span className="material-symbols-outlined text-[17px]">send</span>
+            <span>Kirim Ucapan &amp; Konfirmasi</span>
           </button>
         </form>
       </div>

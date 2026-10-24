@@ -4,6 +4,6 @@ export { CoupleSection } from './CoupleSection';
 export { StorySection } from './StorySection';
 export { EventSection } from './EventSection';
 export { GallerySection } from './GallerySection';
-export { RsvpGiftSection } from './RsvpGiftSection';
+export { RsvpGiftSection, RsvpSection, GiftSection } from './RsvpGiftSection';
 export { WishesSection } from './WishesSection';
 export { FooterSection } from './FooterSection';

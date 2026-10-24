@@ -104,6 +104,14 @@ export function useGuestList({
     };
 
     fetchGuests();
+
+    const handleRsvpEvent = () => {
+      fetchGuests();
+    };
+    window.addEventListener('mbell_rsvp_submitted', handleRsvpEvent);
+    return () => {
+      window.removeEventListener('mbell_rsvp_submitted', handleRsvpEvent);
+    };
   }, [userId, invitationId, invitationSlug]);
 
   // Sinkronisasi dinamis jumlah tamu ke sidebar dan mobile navigation

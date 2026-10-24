@@ -102,7 +102,7 @@ export const CoverSection: React.FC<CoverSectionProps> = ({
           </p>
           <div className="my-2 py-2 px-3 bg-[#14100D] rounded-xl border border-[#F3D068]/20">
             <p className="font-serif text-lg sm:text-xl text-[#FFE082] font-bold line-clamp-1">
-              {data.guest_name || 'Tamu Undangan Kinasih'}
+              {data.guest_name || 'Tamu Undangan'}
             </p>
           </div>
           {(Boolean(data.guest_code) || isPreview) && (

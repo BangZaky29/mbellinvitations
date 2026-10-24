@@ -729,6 +729,7 @@ export const DashboardEditorPage: React.FC = () => {
             {/* KOLOM 3: RIGHT PREVIEW PANEL (STATIC ON DESKTOP) */}
             <aside className="w-[440px] shrink-0 h-full border-l border-stone-200/80 hidden xl:flex flex-col items-center justify-center bg-[#EFECE6] p-4 relative overflow-hidden select-none">
               <PhoneMockupPreview
+                invitationId={editor.currentTemplateRecordId}
                 data={editor.formData}
                 theme={editor.themeConfig}
                 wishes={previewWishes}
@@ -774,6 +775,7 @@ export const DashboardEditorPage: React.FC = () => {
             <div className="fixed inset-0 z-[100] bg-neutral-950/95 backdrop-blur-md flex flex-col items-center justify-center p-1 sm:p-4 overflow-hidden animate-in fade-in duration-200">
               <div className="w-full max-w-[420px] sm:max-w-[440px] h-[calc(100dvh-10px)] max-h-[860px] flex items-center justify-center overflow-hidden">
                 <PhoneMockupPreview
+                  invitationId={editor.currentTemplateRecordId}
                   data={editor.formData}
                   theme={editor.themeConfig}
                   wishes={previewWishes}

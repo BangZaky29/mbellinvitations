@@ -19,7 +19,6 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
   handleRsvpSubmit,
 }) => {
   const isAttending = rsvpForm.status === 'hadir' || rsvpForm.status === 'attending';
-  const isPending = rsvpForm.status === 'ragu' || rsvpForm.status === 'pending';
   const isDeclined =
     rsvpForm.status === 'tidak_hadir' ||
     rsvpForm.status === 'declined' ||
@@ -62,41 +61,43 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
             <label className="font-sans text-[11px] text-[#D1C5B3] uppercase tracking-wider font-semibold">
               Konfirmasi Kehadiran
             </label>
-            <div className="flex flex-col gap-2">
-              <label className="flex items-center gap-2.5 bg-[#19120E] p-2.5 rounded-xl cursor-pointer border border-[#4E4638]/50 hover:border-[#EAC16E]/40 transition-colors">
+            <div className="grid grid-cols-2 gap-2.5">
+              <label
+                className={`flex items-center justify-center gap-2 p-2.5 rounded-xl cursor-pointer border transition-all text-center ${
+                  isAttending
+                    ? 'bg-[#EAC16E]/15 border-[#EAC16E] text-[#EAC16E] font-bold shadow-xs'
+                    : 'bg-[#19120E] border-[#4E4638]/50 text-[#FAF6EE]/80 hover:border-[#EAC16E]/40'
+                }`}
+              >
                 <input
                   type="radio"
                   name="attendance"
                   value="hadir"
                   checked={isAttending}
                   onChange={() => setRsvpForm((prev: any) => ({ ...prev, status: 'hadir' }))}
-                  className="accent-[#EAC16E]"
+                  className="hidden"
                 />
-                <span className="font-sans text-xs text-[#FAF6EE]">Hadir Penuh (Pemberkatan &amp; Adat)</span>
+                <span className="material-symbols-outlined text-[17px]">check_circle</span>
+                <span className="font-sans text-xs">Hadir</span>
               </label>
 
-              <label className="flex items-center gap-2.5 bg-[#19120E] p-2.5 rounded-xl cursor-pointer border border-[#4E4638]/50 hover:border-[#EAC16E]/40 transition-colors">
-                <input
-                  type="radio"
-                  name="attendance"
-                  value="ragu"
-                  checked={isPending}
-                  onChange={() => setRsvpForm((prev: any) => ({ ...prev, status: 'ragu' }))}
-                  className="accent-[#EAC16E]"
-                />
-                <span className="font-sans text-xs text-[#FAF6EE]">Masih Ragu / Belum Pasti</span>
-              </label>
-
-              <label className="flex items-center gap-2.5 bg-[#19120E] p-2.5 rounded-xl cursor-pointer border border-[#4E4638]/50 hover:border-[#EAC16E]/40 transition-colors">
+              <label
+                className={`flex items-center justify-center gap-2 p-2.5 rounded-xl cursor-pointer border transition-all text-center ${
+                  isDeclined
+                    ? 'bg-rose-950/30 border-rose-500/50 text-rose-300 font-bold shadow-xs'
+                    : 'bg-[#19120E] border-[#4E4638]/50 text-[#FAF6EE]/80 hover:border-[#EAC16E]/40'
+                }`}
+              >
                 <input
                   type="radio"
                   name="attendance"
                   value="tidak_hadir"
                   checked={isDeclined}
                   onChange={() => setRsvpForm((prev: any) => ({ ...prev, status: 'tidak_hadir' }))}
-                  className="accent-[#EAC16E]"
+                  className="hidden"
                 />
-                <span className="font-sans text-xs text-[#FAF6EE]">Mohon Maaf, Belum Dapat Hadir</span>
+                <span className="material-symbols-outlined text-[17px]">cancel</span>
+                <span className="font-sans text-xs">Tidak Hadir</span>
               </label>
             </div>
           </div>

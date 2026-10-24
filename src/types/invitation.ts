@@ -177,6 +177,6 @@ export interface InvitationProps {
   isCoverOpen?: boolean;           // true = skip cover gate, langsung scroll ke content
 
   // --- Callback Handlers ---
-  onSubmitRsvp?: (name: string, status: string, pax: number) => void;
-  onSubmitWish?: (name: string, message: string) => void;
+  onSubmitRsvp?: (name: string, status: string, pax: number, notes?: string) => Promise<any> | void;
+  onSubmitWish?: (name: string, message: string, attendance?: string) => Promise<any> | void;
 }

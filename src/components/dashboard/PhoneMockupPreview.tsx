@@ -16,6 +16,7 @@ import {
 } from './phone-preview/helpers';
 import { computeCoupleSlug } from '../../pages/dashboard/helpers/computeCoupleSlug';
 import { getInvitationDisplayUrl } from '../../utils/urlHelper';
+import { submitRsvp, submitWish } from '../../lib/supabaseClient';
 
 export interface PhoneMockupPreviewProps {
   data: InvitationData;
@@ -23,6 +24,7 @@ export interface PhoneMockupPreviewProps {
   wishes?: WishItem[];
   previewUrl?: string;
   onClose?: () => void;
+  invitationId?: string | null;
 }
 
 export const PhoneMockupPreview: React.FC<PhoneMockupPreviewProps> = ({
@@ -31,11 +33,52 @@ export const PhoneMockupPreview: React.FC<PhoneMockupPreviewProps> = ({
   wishes = [],
   previewUrl,
   onClose,
+  invitationId,
 }) => {
   const [isCoverOpen, setIsCoverOpen] = useState(onClose ? true : false);
   const [deviceMode, setDeviceMode] = useState<'ios' | 'android'>('ios');
   const [previewKey, setPreviewKey] = useState(0);
   const [dockNode, setDockNode] = useState<HTMLDivElement | null>(null);
+  const [localWishes, setLocalWishes] = useState<WishItem[]>(wishes);
+
+  useEffect(() => {
+    setLocalWishes(wishes);
+  }, [wishes]);
+
+  const effectiveInvId = invitationId || data.id || localStorage.getItem('mbell_active_template_id') || data.slug || null;
+
+  const handlePreviewSubmitRsvp = async (name: string, status: string, pax: number, notes: string = '') => {
+    const invId = effectiveInvId;
+    if (invId && invId !== 'preview-demo') {
+      try {
+        const res = await submitRsvp(invId, name, status, pax, notes);
+        window.dispatchEvent(new CustomEvent('mbell_rsvp_submitted', { detail: { name, status, pax, notes } }));
+        return res;
+      } catch (e) {
+        console.warn('[PhoneMockupPreview] RSVP submission fallback:', e);
+      }
+    }
+  };
+
+  const handlePreviewSubmitWish = async (name: string, message: string, attendance: string = 'hadir') => {
+    const invId = effectiveInvId;
+    if (invId && invId !== 'preview-demo') {
+      try {
+        await submitWish(invId, name, message, attendance);
+        window.dispatchEvent(new CustomEvent('mbell_wish_submitted', { detail: { name, message, attendance } }));
+      } catch (e) {
+        console.warn('[PhoneMockupPreview] Wish submission fallback:', e);
+      }
+    }
+    const newWish: WishItem = {
+      id: `preview-${Date.now()}`,
+      guest_name: name,
+      message,
+      attendance: attendance === 'hadir' || attendance === 'attending' ? 'attending' : 'declined',
+      created_at: 'Baru saja',
+    };
+    setLocalWishes((prev) => [newWish, ...prev]);
+  };
 
   const dockTargetCallback = useCallback((node: HTMLDivElement | null) => {
     if (node) {
@@ -91,9 +134,11 @@ export const PhoneMockupPreview: React.FC<PhoneMockupPreviewProps> = ({
       data: safeData,
       theme: effectiveTheme,
       invitationId: safeData.id || 'preview-demo',
-      wishes,
+      wishes: localWishes,
       isPreview: true,
       isCoverOpen,
+      onSubmitRsvp: handlePreviewSubmitRsvp,
+      onSubmitWish: handlePreviewSubmitWish,
     };
 
     switch (normalizedThemeId) {

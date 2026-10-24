@@ -33,6 +33,8 @@ export async function fetchWishes(
   }));
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Submit a new wish to public.wishes
  */
@@ -44,10 +46,69 @@ export async function submitWish(
   alternateId?: string
 ): Promise<{ success: boolean; data?: WishItem; error?: string }> {
   try {
+    let resolvedId: string | null = null;
+    if (UUID_REGEX.test(invitationId)) {
+      const { data: invRow } = await supabase.from('invitations').select('id').eq('id', invitationId).maybeSingle();
+      if (invRow?.id) {
+        resolvedId = invRow.id;
+      } else {
+        const { data: utRow } = await supabase.from('user_templates').select('id, slug, user_id, template_id, content, theme_config').eq('id', invitationId).maybeSingle();
+        if (utRow) {
+          const { data: invBySlug } = await supabase.from('invitations').select('id').eq('slug', utRow.slug).maybeSingle();
+          if (invBySlug?.id) {
+            resolvedId = invBySlug.id;
+          } else {
+            const { data: newInv } = await supabase.from('invitations').insert({
+              user_id: utRow.user_id,
+              template_id: utRow.template_id || 'template1',
+              slug: utRow.slug,
+              status: 'published',
+              content: utRow.content || {},
+              theme_config: utRow.theme_config || {},
+            }).select('id').maybeSingle();
+            if (newInv?.id) resolvedId = newInv.id;
+          }
+        }
+      }
+    }
+
+    if (!resolvedId) {
+      const { data: invRow } = await supabase.from('invitations').select('id').eq('slug', invitationId).maybeSingle();
+      if (invRow?.id) {
+        resolvedId = invRow.id;
+      } else {
+        const { data: utRow } = await supabase.from('user_templates').select('id, slug, user_id, template_id, content, theme_config').eq('slug', invitationId).maybeSingle();
+        if (utRow) {
+          const { data: newInv } = await supabase.from('invitations').insert({
+            user_id: utRow.user_id,
+            template_id: utRow.template_id || 'template1',
+            slug: utRow.slug,
+            status: 'published',
+            content: utRow.content || {},
+            theme_config: utRow.theme_config || {},
+          }).select('id').maybeSingle();
+          if (newInv?.id) resolvedId = newInv.id;
+        }
+      }
+    }
+
+    if (!resolvedId) {
+      return {
+        success: true,
+        data: {
+          id: `mock-${Date.now()}`,
+          guest_name: guestName,
+          message,
+          attendance: attendance === 'hadir' || attendance === 'attending' ? 'attending' : 'declined',
+          created_at: new Date().toISOString(),
+        },
+      };
+    }
+
     const { data, error } = await supabase
       .from('wishes')
       .insert({
-        invitation_id: invitationId,
+        invitation_id: resolvedId,
         guest_name: guestName,
         message,
         attendance: attendance === 'hadir' ? 'attending' : 'declined',

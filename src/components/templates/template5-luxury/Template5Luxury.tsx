@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { InvitationProps, WishItem } from '../../../types/invitation';
+import type { InvitationProps } from '../../../types/invitation';
 import { useTemplateState } from '../../../hooks/useTemplateState';
 import { FloatingDock } from '../../common/FloatingDock';
 import { SleekToast } from '../../common/SleekToast';
@@ -12,8 +12,10 @@ import {
   StorySection,
   EventSection,
   GallerySection,
-  RsvpGiftSection,
+  RsvpSection,
+  GiftSection,
   WishesSection,
+  ClosingFooterSection,
 } from './sections';
 
 export const Template5Luxury: React.FC<InvitationProps> = ({
@@ -32,6 +34,10 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
     isPlaying,
     toggleMusic: toggleAudio,
     countdown,
+    wishes,
+    rsvpForm,
+    setRsvpForm,
+    handleRsvpSubmit,
     toastMessage,
     toastType,
     showToast,
@@ -56,62 +62,6 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
       showToast(label, 'copy');
       setTimeout(() => setCopiedKey(null), 2200);
     });
-  };
-
-  // RSVP Form State
-  const [rsvpName, setRsvpName] = useState(data.guest_name || '');
-  const [rsvpContact, setRsvpContact] = useState('');
-  const [rsvpAttendance, setRsvpAttendance] = useState<'hadir' | 'tidak'>('hadir');
-  const [rsvpPax, setRsvpPax] = useState('2');
-  const [rsvpDietary, setRsvpDietary] = useState('');
-  const [rsvpSubmitted, setRsvpSubmitted] = useState(false);
-
-  const handleRsvpSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!rsvpName.trim()) return;
-
-    if (onSubmitRsvp) {
-      onSubmitRsvp(
-        rsvpName,
-        rsvpAttendance === 'hadir' ? 'attending' : 'declined',
-        Number(rsvpPax)
-      );
-    }
-    setRsvpSubmitted(true);
-    showToast('Konfirmasi kehadiran terkirim', 'success');
-  };
-
-  // Wishes State
-  const [wishesList, setWishesList] = useState<WishItem[]>(initialWishes);
-  const [wishName, setWishName] = useState('');
-  const [wishRelation, setWishRelation] = useState('Friend');
-  const [wishMessage, setWishMessage] = useState('');
-
-  useEffect(() => {
-    if (initialWishes !== undefined) {
-      setWishesList(initialWishes);
-    }
-  }, [initialWishes]);
-
-  const handleWishSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!wishName.trim() || !wishMessage.trim()) return;
-
-    const newWish: WishItem = {
-      id: Date.now().toString(),
-      guest_name: `${wishName.trim()} (${wishRelation})`,
-      message: wishMessage.trim(),
-      attendance: 'attending',
-      created_at: new Date().toISOString(),
-    };
-
-    setWishesList((prev) => [newWish, ...prev]);
-    if (onSubmitWish) {
-      onSubmitWish(newWish.guest_name, wishMessage.trim());
-    }
-    setWishMessage('');
-    setWishName('');
-    showToast('Ucapan berhasil dikirim', 'success');
   };
 
   // Lightbox Modal
@@ -158,9 +108,8 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
 
         {/* MAIN BODY */}
         <main className={`flex-1 flex flex-col relative w-full ${isOpen ? 'pt-safe pb-safe' : 'p-0'} bg-surface`}>
-          <div className={`flex flex-col w-full relative selection:bg-primary-container/30 selection:text-on-surface ${
-            !isOpen ? (isPreview ? 'h-full overflow-hidden' : 'h-[100dvh] overflow-hidden') : 'min-h-screen overflow-visible'
-          }`}>
+          <div className={`flex flex-col w-full relative selection:bg-primary-container/30 selection:text-on-surface ${!isOpen ? (isPreview ? 'h-full overflow-hidden' : 'h-[100dvh] overflow-hidden') : 'min-h-screen overflow-visible'
+            }`}>
             {/* Ambient Golden Ray Backdrops */}
             <div className="pointer-events-none fixed -top-40 -left-40 w-96 h-96 rounded-full bg-primary-container/5 blur-3xl z-0"></div>
             <div className="pointer-events-none fixed top-1/2 -right-40 w-96 h-96 rounded-full bg-primary/5 blur-3xl z-0"></div>
@@ -216,38 +165,33 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
                 setShowAllGallery={setShowAllGallery}
               />
 
-              {/* SECTION 7: RSVP & DIGITAL GIFT */}
-              <RsvpGiftSection
+              {/* SECTION 7: RSVP */}
+              <RsvpSection
                 data={data}
                 theme={theme}
-                rsvpName={rsvpName}
-                setRsvpName={setRsvpName}
-                rsvpContact={rsvpContact}
-                setRsvpContact={setRsvpContact}
-                rsvpAttendance={rsvpAttendance}
-                setRsvpAttendance={setRsvpAttendance}
-                rsvpPax={rsvpPax}
-                setRsvpPax={setRsvpPax}
-                rsvpDietary={rsvpDietary}
-                setRsvpDietary={setRsvpDietary}
-                rsvpSubmitted={rsvpSubmitted}
+                rsvpForm={rsvpForm}
+                setRsvpForm={setRsvpForm}
                 handleRsvpSubmit={handleRsvpSubmit}
+              />
+
+              {/* SECTION 8: WISHES STREAM */}
+              <WishesSection
+                data={data}
+                theme={theme}
+                wishesList={wishes}
+              />
+
+              {/* SECTION 9: DIGITAL GIFT (CARD REKENING & ALAMAT) */}
+              <GiftSection
+                data={data}
+                theme={theme}
                 copiedKey={copiedKey}
                 handleCopy={handleCopy}
               />
 
-              {/* SECTION 8: WISHES STREAM & CLOSING */}
-              <WishesSection
+              {/* SECTION 10: CLOSING GRATITUDE & BRAND FOOTER */}
+              <ClosingFooterSection
                 data={data}
-                theme={theme}
-                wishesList={wishesList}
-                wishName={wishName}
-                setWishName={setWishName}
-                wishRelation={wishRelation}
-                setWishRelation={setWishRelation}
-                wishMessage={wishMessage}
-                setWishMessage={setWishMessage}
-                handleWishSubmit={handleWishSubmit}
                 renderBrandFooter={renderBrandFooter}
               />
             </div>
@@ -266,9 +210,8 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
                 type="button"
               >
                 <span
-                  className={`material-symbols-outlined text-[20px] text-amber-300 ${
-                    isPlaying ? 'animate-spin-slow' : ''
-                  }`}
+                  className={`material-symbols-outlined text-[20px] text-amber-300 ${isPlaying ? 'animate-spin-slow' : ''
+                    }`}
                 >
                   {isPlaying ? 'graphic_eq' : 'volume_off'}
                 </span>

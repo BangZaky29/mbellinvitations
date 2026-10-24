@@ -75,7 +75,17 @@ export function buildSafePreviewData(data: InvitationData): {
     quote: data.quote !== undefined ? data.quote : defaultThematicData.quote,
     quote_source: data.quote_source !== undefined ? data.quote_source : defaultThematicData.quote_source,
     hashtag: data.hashtag !== undefined ? data.hashtag : defaultThematicData.hashtag,
-    guest_name: data.guest_name !== undefined ? data.guest_name : defaultThematicData.guest_name,
+    guest_name: (() => {
+      if (data.guest_name) return data.guest_name;
+      const currentSlug = data.slug || '';
+      try {
+        const saved = typeof window !== 'undefined' && currentSlug
+          ? (localStorage.getItem(`mbell_last_guest_name_${currentSlug}`) || '').trim()
+          : '';
+        if (saved) return saved;
+      } catch {}
+      return defaultThematicData.guest_name || 'Tamu Undangan';
+    })(),
     guest_code: data.guest_code !== undefined ? data.guest_code : defaultThematicData.guest_code,
     events: data.events && data.events.length > 0 ? data.events : defaultThematicData.events,
     gallery: data.gallery && data.gallery.length > 0 ? data.gallery : defaultThematicData.gallery,
