@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, saveUserTemplate } from '../lib/supabaseClient';
-import { sanitizeAndUploadBase64InFormData } from '../lib/supabase/storageService';
+import { sanitizeAndUploadBase64InFormData, purgeOrphanedImages } from '../lib/supabase/storageService';
 import type { InvitationData, ThemeConfig } from '../types/invitation';
 import { extractYouTubeId } from './useAudioPlayer';
 import {
@@ -277,9 +277,11 @@ const handleConfirmSameTemplatePublish = async () => {
 
     const { data: existingInv } = await supabase
       .from('invitations')
-      .select('id')
+      .select('id, content')
       .eq('slug', targetSlug)
       .maybeSingle();
+
+    const previousDbFormData = existingInv?.content as InvitationData | undefined;
 
     if (existingInv?.id) {
       await supabase
@@ -340,6 +342,13 @@ const handleConfirmSameTemplatePublish = async () => {
       }));
     } catch (e) { }
     setLastSaved(new Date());
+
+    // Garbage Collector (Staging -> Commit): Bersihkan berkas gambar yatim di storage Supabase secara aman
+    if (previousDbFormData) {
+      purgeOrphanedImages(previousDbFormData, updatedContent).catch((gcErr) =>
+        console.warn('[StorageService] Garbage collection warning in publish:', gcErr)
+      );
+    }
 
     // PENTING: Dispatch event agar useDashboardSave mereset baseline & menghapus counter (+2)
     window.dispatchEvent(
@@ -467,9 +476,11 @@ const handleConfirmPublish = async (paymentDetails?: { themeId?: string; payment
 
     const { data: existingInv } = await supabase
       .from('invitations')
-      .select('id')
+      .select('id, content')
       .eq('slug', targetSlug)
       .maybeSingle();
+
+    const previousDbFormData = existingInv?.content as InvitationData | undefined;
 
     if (existingInv?.id) {
       await supabase
@@ -535,6 +546,13 @@ const handleConfirmPublish = async (paymentDetails?: { themeId?: string; payment
       }));
     } catch (e) { }
     setLastSaved(new Date());
+
+    // Garbage Collector (Staging -> Commit): Bersihkan berkas gambar yatim di storage Supabase secara aman
+    if (previousDbFormData) {
+      purgeOrphanedImages(previousDbFormData, publishedContent).catch((gcErr) =>
+        console.warn('[StorageService] Garbage collection warning in pay publish:', gcErr)
+      );
+    }
 
     // PENTING: Dispatch event agar useDashboardSave mereset baseline & menghapus counter (+2)
     window.dispatchEvent(

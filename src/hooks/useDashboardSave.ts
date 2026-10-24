@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase, saveUserTemplate } from '../lib/supabaseClient';
-import { sanitizeAndUploadBase64InFormData } from '../lib/supabase/storageService';
+import { sanitizeAndUploadBase64InFormData, purgeOrphanedImages } from '../lib/supabase/storageService';
 import type { InvitationData, ThemeConfig } from '../types/invitation';
 import { extractYouTubeId } from './useAudioPlayer';
 import {
@@ -593,6 +593,8 @@ export function useDashboardSave({
         }
       }
 
+      const previousBaselineFormData = baselineSnapshotRef.current?.formData;
+
       baselineSnapshotRef.current = {
         formData: JSON.parse(JSON.stringify(formData)),
         themeConfig: JSON.parse(JSON.stringify(themeConfig)),
@@ -600,6 +602,13 @@ export function useDashboardSave({
       setHasUnsavedChanges(false);
       setUnsavedCount(0);
       setAuditTrail({ count: 0, changes: [], hasChanges: false });
+
+      // Garbage Collector (Staging -> Commit): Bersihkan berkas gambar yatim di storage Supabase secara aman
+      if (previousBaselineFormData) {
+        purgeOrphanedImages(previousBaselineFormData, safeFormData).catch((gcErr) =>
+          console.warn('[StorageService] Garbage collection warning in manual save:', gcErr)
+        );
+      }
 
       // Hitung ulang unpublished changes terhadap live baseline
       const isLiveCurrently = Boolean(isAlreadyPublished || formData.status === 'published' || liveBaseline);
@@ -744,6 +753,8 @@ export function useDashboardSave({
         });
       }
 
+      const previousBaselineFormData = baselineSnapshotRef.current?.formData;
+
       baselineSnapshotRef.current = {
         formData: JSON.parse(JSON.stringify(draftContent)),
         themeConfig: JSON.parse(JSON.stringify(themeConfig)),
@@ -752,6 +763,13 @@ export function useDashboardSave({
       setHasUnsavedChanges(false);
       setUnsavedCount(0);
       setAuditTrail({ count: 0, changes: [], hasChanges: false });
+
+      // Garbage Collector (Staging -> Commit): Bersihkan berkas gambar yatim di storage Supabase secara aman
+      if (previousBaselineFormData) {
+        purgeOrphanedImages(previousBaselineFormData, draftContent).catch((gcErr) =>
+          console.warn('[StorageService] Garbage collection warning in draft save:', gcErr)
+        );
+      }
       localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
       try {
         const publishedLiveTheme = baselineSnapshotRef.current?.formData?.theme_id;

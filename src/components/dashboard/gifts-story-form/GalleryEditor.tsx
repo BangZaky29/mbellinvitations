@@ -1,12 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { convertImageToWebP } from '../../../utils/imageOptimizer';
 import { supabase } from '../../../lib/supabase/client';
-import {
-  uploadInvitationImage,
-  deleteImagePermanently,
-  cleanAllLocalImageDraftCaches,
-} from '../../../lib/supabase/storageService';
-import { ConfirmDeleteImageModal } from '../common/ConfirmDeleteImageModal';
+import { uploadInvitationImage } from '../../../lib/supabase/storageService';
 
 interface GalleryEditorProps {
   gallery: string[];
@@ -32,24 +27,10 @@ export const GalleryEditor: React.FC<GalleryEditorProps> = ({
   const [statusText, setStatusText] = useState<string>('Mengonversi ke WebP...');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // State Pelacak gambar rusak / 404 (misal berkas di bucket sudah terhapus manual)
+  // State Pelacak gambar rusak / 404
   const [brokenUrls, setBrokenUrls] = useState<Set<string>>(new Set());
 
-  // State Pop-up Modal Konfirmasi Hapus
-  const [deleteModalState, setDeleteModalState] = useState<{
-    isOpen: boolean;
-    mode: 'single' | 'all';
-    targetIndex: number | null;
-    targetUrl: string | null;
-  }>({
-    isOpen: false,
-    mode: 'single',
-    targetIndex: null,
-    targetUrl: null,
-  });
-  const [isDeletingPermanently, setIsDeletingPermanently] = useState(false);
-
-  // 1. Tambah Foto Galeri Baru
+  // 1. Tambah Foto Galeri Baru (Upload ke Supabase Storage, URL disimpan ke draft state)
   const handleAddGalleryImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !onGalleryChange) return;
@@ -78,7 +59,7 @@ export const GalleryEditor: React.FC<GalleryEditorProps> = ({
         effectiveUserEmail = authData?.user?.email || null;
       }
 
-      // 3. Unggah ke bucket 'invitations' di path DATA/{email}/{slug}/Galery/
+      // 3. Unggah ke bucket 'invitations' di path terpusat DATA/{email}/{template_terpusat}/Galery/
       const uploadRes = await uploadInvitationImage({
         file: optimized.file,
         userId: effectiveUserId,
@@ -93,8 +74,9 @@ export const GalleryEditor: React.FC<GalleryEditorProps> = ({
         throw new Error(uploadRes.error || 'Gagal mengunggah foto ke storage Supabase.');
       }
 
-      // 4. Masukkan URL publik Supabase (HTTPS) ke galeri, bukan Base64!
-      onGalleryChange([...safeGallery, uploadRes.publicUrl]);
+      // 4. Masukkan URL publik Supabase (HTTPS) ke galeri draf
+      const newGallery = [...safeGallery, uploadRes.publicUrl];
+      onGalleryChange(newGallery);
     } catch (err: any) {
       console.error('[GalleryEditor] Upload error:', err);
       setErrorMessage(err.message || 'Gagal memproses dan mengunggah gambar.');
@@ -107,131 +89,17 @@ export const GalleryEditor: React.FC<GalleryEditorProps> = ({
     }
   };
 
-  // 2. Buka Modal Konfirmasi Hapus 1 Foto
-  const promptDeleteSingle = (index: number) => {
-    const url = safeGallery[index];
-    setDeleteModalState({
-      isOpen: true,
-      mode: 'single',
-      targetIndex: index,
-      targetUrl: url,
-    });
+  // 2. Hapus 1 Foto Instan di UI (Staging mode: tanpa pop-up dan file storage tetap aman untuk Revert)
+  const handleRemoveSingle = (index: number) => {
+    if (!onGalleryChange) return;
+    const newGallery = safeGallery.filter((_, i) => i !== index);
+    onGalleryChange(newGallery);
   };
 
-  // 3. Buka Modal Konfirmasi Bersihkan Seluruh Galeri
-  const promptClearAll = () => {
-    setDeleteModalState({
-      isOpen: true,
-      mode: 'all',
-      targetIndex: null,
-      targetUrl: null,
-    });
-  };
-
-  // Helper sinkronisasi langsung ke database PostgreSQL agar perubahan instan permanen
-  const syncGalleryToDatabase = async (updatedGallery: string[]) => {
-    try {
-      // 1. Simpan ke user_templates
-      if (userTemplateId) {
-        const { data: ut } = await supabase
-          .from('user_templates')
-          .select('content')
-          .eq('id', userTemplateId)
-          .maybeSingle();
-
-        if (ut?.content) {
-          await supabase
-            .from('user_templates')
-            .update({
-              content: { ...ut.content, gallery: updatedGallery },
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', userTemplateId);
-        }
-      }
-
-      // 2. Simpan ke invitations jika ada templateSlug
-      if (templateSlug) {
-        const { data: inv } = await supabase
-          .from('invitations')
-          .select('content')
-          .eq('slug', templateSlug)
-          .maybeSingle();
-
-        if (inv?.content) {
-          await supabase
-            .from('invitations')
-            .update({
-              content: { ...inv.content, gallery: updatedGallery },
-              updated_at: new Date().toISOString(),
-            })
-            .eq('slug', templateSlug);
-        }
-      }
-
-      // 3. Update cadangan draft formData di localStorage jika ada
-      try {
-        const draftStr = localStorage.getItem('mbell_pending_draft_formData');
-        if (draftStr) {
-          const draft = JSON.parse(draftStr);
-          draft.gallery = updatedGallery;
-          localStorage.setItem('mbell_pending_draft_formData', JSON.stringify(draft));
-        }
-      } catch (e) {}
-    } catch (e) {
-      console.warn('[GalleryEditor] Direct DB sync warning:', e);
-    }
-  };
-
-  // 4. Eksekusi Hapus Permanen ke Akar (Storage Bucket + DB + LocalStorage)
-  const handleConfirmDelete = async () => {
-    setIsDeletingPermanently(true);
-    try {
-      if (deleteModalState.mode === 'single' && deleteModalState.targetIndex !== null) {
-        const targetUrl = deleteModalState.targetUrl;
-
-        // A. Hapus berkas fisik di Supabase Storage & metadata di DB
-        if (targetUrl) {
-          await deleteImagePermanently(targetUrl);
-        }
-
-        // B. Update state React
-        const newGallery = safeGallery.filter((_, i) => i !== deleteModalState.targetIndex);
-        if (onGalleryChange) {
-          onGalleryChange(newGallery);
-        }
-
-        // C. Perbarui cache browser lokal agar tidak muncul kembali saat refresh
-        cleanAllLocalImageDraftCaches(templateSlug);
-
-        // D. Simpan perubahan langsung ke database PostgreSQL Supabase
-        await syncGalleryToDatabase(newGallery);
-      } else if (deleteModalState.mode === 'all') {
-        // A. Hapus seluruh berkas galeri di storage secara paralel
-        await Promise.allSettled(
-          safeGallery.map((imgUrl) => deleteImagePermanently(imgUrl))
-        );
-
-        // B. Kosongkan galeri di frontend
-        if (onGalleryChange) {
-          onGalleryChange([]);
-        }
-
-        // C. Bersihkan seluruh cache draft lokal
-        cleanAllLocalImageDraftCaches(templateSlug);
-
-        // D. Simpan perubahan langsung ke database PostgreSQL Supabase
-        await syncGalleryToDatabase([]);
-      }
-
-      // Tutup modal
-      setDeleteModalState({ isOpen: false, mode: 'single', targetIndex: null, targetUrl: null });
-    } catch (err: any) {
-      console.error('[GalleryEditor] Error executing delete:', err);
-      setErrorMessage(err?.message || 'Terjadi kesalahan saat menghapus foto.');
-    } finally {
-      setIsDeletingPermanently(false);
-    }
+  // 3. Bersihkan Seluruh Galeri Instan di UI (Staging mode: dapat dibatalkan lewat tombol [Batalkan])
+  const handleClearAll = () => {
+    if (!onGalleryChange) return;
+    onGalleryChange([]);
   };
 
   const handleImageError = (url: string) => {
@@ -265,14 +133,14 @@ export const GalleryEditor: React.FC<GalleryEditorProps> = ({
         />
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          {/* Tombol Bersihkan Seluruh Galeri jika ada foto */}
+          {/* Tombol Bersihkan Seluruh Galeri */}
           {safeGallery.length > 0 && (
             <button
               type="button"
-              onClick={promptClearAll}
-              disabled={isOptimizingImage || isDeletingPermanently}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-red-200 text-red-600 bg-red-50/50 hover:bg-red-100 hover:text-red-700 text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
-              title="Kosongkan seluruh galeri dari database dan cache browser"
+              onClick={handleClearAll}
+              disabled={isOptimizingImage}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-red-200 text-red-600 bg-red-50/50 hover:bg-red-100 hover:text-red-700 text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer active:scale-95"
+              title="Kosongkan seluruh foto di galeri ini"
             >
               <span className="material-symbols-outlined text-[16px]">mop</span>
               <span>Bersihkan Galeri</span>
@@ -283,8 +151,8 @@ export const GalleryEditor: React.FC<GalleryEditorProps> = ({
           <button
             type="button"
             onClick={() => galleryFileInputRef.current?.click()}
-            disabled={safeGallery.length >= 12 || isOptimizingImage || isDeletingPermanently}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+            disabled={safeGallery.length >= 12 || isOptimizingImage}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition-colors shadow-xs disabled:opacity-50 cursor-pointer active:scale-95"
           >
             {isOptimizingImage ? (
               <>
@@ -346,13 +214,13 @@ export const GalleryEditor: React.FC<GalleryEditorProps> = ({
               />
             )}
 
-            {/* Overlay Hover Icon Sampah Hapus */}
+            {/* Overlay Hover Icon Sampah Hapus Instan */}
             <div className="absolute inset-0 bg-stone-950/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
               <button
                 type="button"
-                onClick={() => promptDeleteSingle(idx)}
-                className="p-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-md transition-all transform hover:scale-110 cursor-pointer"
-                title="Hapus foto permanen"
+                onClick={() => handleRemoveSingle(idx)}
+                className="p-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-md transition-all transform hover:scale-110 active:scale-95 cursor-pointer"
+                title="Hapus foto dari galeri (bisa dibatalkan dengan tombol Batalkan)"
               >
                 <span className="material-symbols-outlined text-[20px]">delete</span>
               </button>
@@ -384,28 +252,6 @@ export const GalleryEditor: React.FC<GalleryEditorProps> = ({
           </div>
         )}
       </div>
-
-      {/* Modal Pop-up Konfirmasi Hapus Foto */}
-      <ConfirmDeleteImageModal
-        isOpen={deleteModalState.isOpen}
-        title={
-          deleteModalState.mode === 'all'
-            ? 'Bersihkan Seluruh Galeri Foto?'
-            : 'Hapus Foto Prewedding Permanen?'
-        }
-        description={
-          deleteModalState.mode === 'all'
-            ? 'Semua foto di galeri ini akan dihapus permanen, Galeri akan dikosongkan.'
-            : 'Foto ini akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.'
-        }
-        imageUrl={deleteModalState.targetUrl}
-        isLoading={isDeletingPermanently}
-        onConfirm={handleConfirmDelete}
-        onClose={() =>
-          !isDeletingPermanently &&
-          setDeleteModalState({ isOpen: false, mode: 'single', targetIndex: null, targetUrl: null })
-        }
-      />
     </div>
   );
 };

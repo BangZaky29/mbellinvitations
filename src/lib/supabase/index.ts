@@ -35,8 +35,11 @@ export {
   getStorageFolderForUser,
   sanitizeFolderPart,
   getSubfolderForCategory,
+  getTemplateStorageFolder,
   sanitizeAndUploadBase64InFormData,
   dataUrlToBlob,
+  purgeOrphanedImages,
+  collectImageUrlsFromInvitation,
 } from './storageService';
 export { runBase64Migration, containsBase64 } from './migrateBase64ToStorage';
 

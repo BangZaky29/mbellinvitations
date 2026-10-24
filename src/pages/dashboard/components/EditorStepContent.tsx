@@ -67,7 +67,7 @@ export const EditorStepContent: React.FC<EditorStepContentProps> = ({
           isBrideFirst={formData.is_bride_first}
           coverImage={formData.cover_image || formData.couple_photo || ''}
           slug={formData.slug || computeCoupleSlug(formData.groom?.name, formData.bride?.name) || 'undangan-baru'}
-          templateSlug={formData.slug || formData.theme_id || 'template_1'}
+          templateSlug={formData.theme_id || formData.template_id || 'template_1'}
           onSlugChange={onSlugChange}
           onGroomChange={(groom) => {
             const newGName = groom.name || '';
@@ -106,7 +106,7 @@ export const EditorStepContent: React.FC<EditorStepContentProps> = ({
       {activeStep === 4 && (
         <GiftsStoryFormCard
           activeTabMode="story_gallery"
-          templateSlug={formData.slug || formData.theme_id || 'template_1'}
+          templateSlug={formData.theme_id || formData.template_id || 'template_1'}
           loveStory={formData.love_story || []}
           gallery={formData.gallery || []}
           musicUrl={formData.music_url || themeConfig.music_url || ''}

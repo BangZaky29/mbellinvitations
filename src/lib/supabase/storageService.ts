@@ -44,6 +44,47 @@ export function getSubfolderForCategory(category: ImageCategory): string {
   return 'image_lainnya';
 }
 
+/**
+ * Memetakan tema atau template ke nama folder yang TERPUSAT dan KONSISTEN di Supabase Storage.
+ * Mencegah fragmentasi folder saat pengguna mengubah nama mempelai atau URL slug.
+ *
+ * Contoh hasil pemetaan terpusat:
+ * - 'modern'  | 'template1' -> 'template_1'
+ * - 'rustic'  | 'template2' -> 'template_2'
+ * - 'jawa'    | 'template3' -> 'template_3'
+ * - 'islami'  | 'template4' -> 'template_4'
+ * - 'luxury'  | 'template5' -> 'template_5'
+ * - 'sunda'   | 'template6' -> 'template_6'
+ * - 'minang'  | 'template7' -> 'template_7'
+ * - 'batak'   | 'template8' -> 'template_8'
+ */
+export function getTemplateStorageFolder(themeOrTemplateId?: string | null): string {
+  if (!themeOrTemplateId) return 'template_1';
+  const clean = themeOrTemplateId.toLowerCase().trim();
+
+  // Jika sudah berformat template_1 s/d template_8
+  if (/^template_\d+$/.test(clean)) return clean;
+  // Jika berformat template1 s/d template8
+  const matchNum = clean.match(/^template(\d+)$/);
+  if (matchNum) return `template_${matchNum[1]}`;
+
+  const map: Record<string, string> = {
+    modern: 'template_1',
+    rustic: 'template_2',
+    jawa: 'template_3',
+    islami: 'template_4',
+    luxury: 'template_5',
+    sunda: 'template_6',
+    minang: 'template_7',
+    batak: 'template_8',
+  };
+
+  if (map[clean]) return map[clean];
+
+  // Jika berupa slug biasa (misal zaky-bella), cari apakah ada tema yang cocok, jika tidak fallback ke template_1
+  return sanitizeFolderPart(clean) || 'template_1';
+}
+
 export interface UploadInvitationImageParams {
   file: File | Blob;
   userId: string;
@@ -69,7 +110,7 @@ export interface UploadImageResult {
  * dan mencatat entri aset ke tabel database `public.invitation_images`.
  *
  * Path yang dihasilkan:
- * DATA/{user_email}/{template_slug}/{Galery|image_lainnya}/{filename}.webp
+ * DATA/{user_email}/{template_terpusat}/{Galery|image_lainnya}/{filename}.webp
  */
 export async function uploadInvitationImage({
   file,
@@ -91,7 +132,8 @@ export async function uploadInvitationImage({
 
   try {
     const ownerFolder = getStorageFolderForUser(userEmail, userId);
-    const templateFolder = sanitizeFolderPart(templateSlug || 'template_1');
+    // Folder TERPUSAT berdasarkan template (template_1 s/d template_8) bukan slug nama mempelai
+    const templateFolder = getTemplateStorageFolder(templateSlug || 'template_1');
     const subfolder = getSubfolderForCategory(category);
 
     // Buat nama file unik jika tidak disediakan kustom
@@ -101,7 +143,7 @@ export async function uploadInvitationImage({
       customFileName ||
       `${category}_${timestamp}_${randomSuffix}.webp`;
 
-    // Path hierarki bucket lengkap
+    // Path hierarki bucket lengkap terpusat per template
     const storagePath = `DATA/${ownerFolder}/${templateFolder}/${subfolder}/${finalFileName}`;
 
     // 1. Upload biner WebP ke Supabase Storage Bucket 'invitations'
@@ -390,7 +432,7 @@ export async function initializeUserTemplateStorage(
 ): Promise<void> {
   try {
     const ownerFolder = getStorageFolderForUser(userEmail, userId);
-    const tSlug = sanitizeFolderPart(templateSlug || 'template_1');
+    const tSlug = getTemplateStorageFolder(templateSlug || 'template_1');
     const dummyBlob = new Blob(['init'], { type: 'text/plain' });
 
     await Promise.allSettled([
@@ -436,7 +478,7 @@ export function dataUrlToBlob(dataUrl: string): { blob: Blob; mimeType: string }
  * FIREWALL & SANITIZER:
  * Memindai seluruh properti gambar dalam formData sebelum disimpan ke database Supabase.
  * Jika ditemukan string Base64 (data:image/...), otomatis dikonversi ke Blob dan diunggah
- * ke bucket 'invitations' di folder DATA/{email}/{templateSlug}/...
+ * ke bucket 'invitations' di folder DATA/{email}/{template_terpusat}/...
  *
  * Mengembalikan salinan formData yang sudah bersih (100% URL publik HTTPS).
  */
@@ -450,7 +492,7 @@ export async function sanitizeAndUploadBase64InFormData(
 
   // Clone formData agar tidak mutasi langsung
   const cleanData: InvitationData = JSON.parse(JSON.stringify(formData));
-  const tSlug = templateSlug || cleanData.slug || cleanData.theme_id || 'template_1';
+  const tSlug = getTemplateStorageFolder(cleanData.theme_id || cleanData.template_id || templateSlug || 'template_1');
 
   // 1. Periksa foto cover
   if (cleanData.cover_image && typeof cleanData.cover_image === 'string' && cleanData.cover_image.startsWith('data:image/')) {
@@ -585,4 +627,107 @@ export async function sanitizeAndUploadBase64InFormData(
   }
 
   return cleanData;
+}
+
+/**
+ * Mengumpulkan seluruh URL gambar yang tercatat dalam data undangan.
+ */
+export function collectImageUrlsFromInvitation(data: InvitationData | null | undefined): Set<string> {
+  const urls = new Set<string>();
+  if (!data || typeof data !== 'object') return urls;
+
+  if (typeof data.cover_image === 'string' && data.cover_image.trim()) {
+    urls.add(data.cover_image.trim());
+  }
+  if (typeof data.couple_photo === 'string' && data.couple_photo.trim()) {
+    urls.add(data.couple_photo.trim());
+  }
+  if (data.groom) {
+    if (typeof data.groom.photo === 'string' && data.groom.photo.trim()) {
+      urls.add(data.groom.photo.trim());
+    }
+    if (typeof data.groom.photo_url === 'string' && data.groom.photo_url.trim()) {
+      urls.add(data.groom.photo_url.trim());
+    }
+  }
+  if (data.bride) {
+    if (typeof data.bride.photo === 'string' && data.bride.photo.trim()) {
+      urls.add(data.bride.photo.trim());
+    }
+    if (typeof data.bride.photo_url === 'string' && data.bride.photo_url.trim()) {
+      urls.add(data.bride.photo_url.trim());
+    }
+  }
+  if (Array.isArray(data.gallery)) {
+    data.gallery.forEach((url) => {
+      if (typeof url === 'string' && url.trim()) {
+        urls.add(url.trim());
+      }
+    });
+  }
+  if (typeof data.qris_url === 'string' && data.qris_url.trim()) {
+    urls.add(data.qris_url.trim());
+  }
+
+  return urls;
+}
+
+/**
+ * GARBAGE COLLECTOR (Staging -> Commit):
+ * Membandingkan aset gambar pada snapshot data sebelumnya vs data baru yang sedang di-commit.
+ * Setiap gambar yang ada di snapshot lama namun sudah tidak ada lagi di data baru (dihapus oleh pengguna)
+ * dan tersimpan di bucket Supabase Storage kita, akan dihapus berkas fisiknya secara permanen.
+ *
+ * Catatan penting:
+ * - Hanya dieksekusi saat user resmi menekan 'Terbitkan' atau 'Simpan Draf' (Commit).
+ * - Saat user menghapus di UI / drafting, tidak ada file di storage yang dihapus sehingga tombol 'Batalkan' (Revert)
+ *   dapat mengembalikan gambar secara instan tanpa resiko 404 broken image.
+ */
+export async function purgeOrphanedImages(
+  previousData: InvitationData | null | undefined,
+  currentData: InvitationData | null | undefined
+): Promise<{ deletedCount: number; errors: string[] }> {
+  if (!previousData || !currentData) {
+    return { deletedCount: 0, errors: [] };
+  }
+
+  const prevUrls = collectImageUrlsFromInvitation(previousData);
+  const currUrls = collectImageUrlsFromInvitation(currentData);
+
+  const orphanedUrls: string[] = [];
+  for (const url of prevUrls) {
+    // Jika tidak ada lagi di data baru
+    if (!currUrls.has(url)) {
+      // Pastikan URL merupakan berkas di bucket storage Supabase kita (bukan dataUrl base64 atau unsplash)
+      const storagePath = extractStoragePathFromUrl(url);
+      if (storagePath) {
+        orphanedUrls.push(url);
+      }
+    }
+  }
+
+  if (orphanedUrls.length === 0) {
+    return { deletedCount: 0, errors: [] };
+  }
+
+  console.info(`[StorageService] Menemukan ${orphanedUrls.length} berkas gambar yang dihapus. Menjalankan garbage collection...`, orphanedUrls);
+
+  const errors: string[] = [];
+  let deletedCount = 0;
+
+  const results = await Promise.allSettled(
+    orphanedUrls.map((url) => deleteImagePermanently(url))
+  );
+
+  results.forEach((res, idx) => {
+    if (res.status === 'fulfilled' && res.value.success) {
+      deletedCount++;
+    } else {
+      const err = res.status === 'rejected' ? res.reason?.message : (res.value as any)?.error;
+      errors.push(`Gagal menghapus ${orphanedUrls[idx]}: ${err || 'Unknown error'}`);
+    }
+  });
+
+  console.info(`[StorageService] Selesai garbage collection: ${deletedCount}/${orphanedUrls.length} berkas fisik berhasil dihapus dari bucket.`);
+  return { deletedCount, errors };
 }

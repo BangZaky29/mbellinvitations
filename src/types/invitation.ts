@@ -82,6 +82,7 @@ export interface InvitationData {
   status?: string;
   title?: string;
   theme_id?: TemplateThemeId | string;
+  template_id?: string;
 
   // --- Payment & Template Ownership (Pay-Per-Template on Publish) ---
   is_paid?: boolean;
