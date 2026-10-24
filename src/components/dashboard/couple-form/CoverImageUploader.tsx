@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { convertImageToWebP } from '../../../utils/imageOptimizer';
-import { supabase } from '../../../lib/supabase/client';
-import { uploadInvitationImage } from '../../../lib/supabase/storageService';
+import { registerStagedBlob, unregisterStagedBlob } from '../../../lib/supabase/storageService';
 
 interface CoverImageUploaderProps {
   coverImage: string;
@@ -14,10 +13,6 @@ interface CoverImageUploaderProps {
 
 export const CoverImageUploader: React.FC<CoverImageUploaderProps> = ({
   coverImage,
-  templateSlug = 'template_1',
-  userId: propUserId,
-  userEmail: propUserEmail,
-  userTemplateId,
   onCoverChange,
 }) => {
   const coverFileInputRef = useRef<HTMLInputElement>(null);
@@ -25,7 +20,7 @@ export const CoverImageUploader: React.FC<CoverImageUploaderProps> = ({
   const [statusText, setStatusText] = useState('Mengompres Foto...');
   const [isBroken, setIsBroken] = useState(false);
 
-  // 1. Upload & Ganti Foto Sampul Baru (Upload ke Supabase Storage, URL disimpan ke draf state)
+  // 1. Upload & Ganti Foto Sampul Baru (Pure Staging: WebP di memori lokal, 0 byte upload ke Supabase Storage sekarang!)
   const handleLocalImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -36,36 +31,15 @@ export const CoverImageUploader: React.FC<CoverImageUploaderProps> = ({
       // 1. Kompres dan konversi foto menjadi WebP resolusi tinggi (~80-120KB)
       const optimized = await convertImageToWebP(file, 0.82, 1280);
 
-      // 2. Ambil user session
-      setStatusText('Mengunggah ke Storage...');
-      let effectiveUserId = propUserId;
-      let effectiveUserEmail = propUserEmail;
+      // 2. Pure Staging: Buat local blob URL (Tanpa menyentuh Supabase Storage!)
+      const blobUrl = URL.createObjectURL(optimized.file);
+      registerStagedBlob(blobUrl, optimized.file);
 
-      if (!effectiveUserId) {
-        const { data: authData } = await supabase.auth.getUser();
-        effectiveUserId = authData?.user?.id || 'guest_user';
-        effectiveUserEmail = authData?.user?.email || null;
-      }
-
-      // 3. Upload ke bucket invitations di folder terpusat DATA/{email}/{template_terpusat}/image_lainnya/
-      const uploadRes = await uploadInvitationImage({
-        file: optimized.file,
-        userId: effectiveUserId,
-        userEmail: effectiveUserEmail,
-        templateSlug: templateSlug || 'template_1',
-        category: 'cover',
-        userTemplateId: userTemplateId || null,
-      });
-
-      if (!uploadRes.success || !uploadRes.publicUrl) {
-        throw new Error(uploadRes.error || 'Gagal mengunggah foto cover ke storage.');
-      }
-
-      // 4. Update URL publik ke state form draf (staging)
+      // 3. Update URL lokal ke state form draf (staging)
       setIsBroken(false);
-      onCoverChange(uploadRes.publicUrl);
+      onCoverChange(blobUrl);
     } catch (err: any) {
-      console.error('[CoverImageUploader] Upload error:', err);
+      console.error('[CoverImageUploader] Process error:', err);
       alert(err.message || 'Gagal memproses foto sampul.');
     } finally {
       setIsProcessing(false);
@@ -79,6 +53,9 @@ export const CoverImageUploader: React.FC<CoverImageUploaderProps> = ({
   // 2. Hapus Foto Sampul Instan di UI (Staging mode: tanpa pop-up dan dapat dibatalkan lewat tombol [Batalkan])
   const handleRemoveCover = () => {
     setIsBroken(false);
+    if (coverImage && coverImage.startsWith('blob:')) {
+      unregisterStagedBlob(coverImage);
+    }
     onCoverChange('');
   };
 

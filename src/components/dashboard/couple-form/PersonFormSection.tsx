@@ -1,8 +1,7 @@
 import React, { useRef, useState } from 'react';
 import type { CoupleInfo } from '../../../types/invitation';
 import { convertImageToWebP } from '../../../utils/imageOptimizer';
-import { supabase } from '../../../lib/supabase/client';
-import { uploadInvitationImage } from '../../../lib/supabase/storageService';
+import { registerStagedBlob, unregisterStagedBlob } from '../../../lib/supabase/storageService';
 
 interface PersonFormSectionProps {
   title: string;
@@ -28,10 +27,6 @@ export const PersonFormSection: React.FC<PersonFormSectionProps> = ({
   genderIcon,
   familyTitle,
   person,
-  templateSlug = 'template_1',
-  userId: propUserId,
-  userEmail: propUserEmail,
-  userTemplateId,
   onChange,
   nicknamePlaceholder,
   fullnamePlaceholder,
@@ -46,7 +41,7 @@ export const PersonFormSection: React.FC<PersonFormSectionProps> = ({
 
   const currentPhoto = person.photo || person.photo_url || '';
 
-  // 1. Upload & Ganti Foto Mempelai (Upload ke Supabase Storage, URL disimpan ke draf state)
+  // 1. Upload & Ganti Foto Mempelai (Pure Staging: WebP di memori lokal, 0 byte upload ke Supabase Storage sekarang!)
   const handleLocalImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -57,38 +52,15 @@ export const PersonFormSection: React.FC<PersonFormSectionProps> = ({
       // 1. Kompres ke format .webp biner
       const optimized = await convertImageToWebP(file, 0.82, 1080);
 
-      // 2. Dapatkan identitas pengguna
-      setStatusText('Mengunggah ke Storage...');
-      let effectiveUserId = propUserId;
-      let effectiveUserEmail = propUserEmail;
+      // 2. Pure Staging: Buat local blob URL (Tanpa menyentuh Supabase Storage!)
+      const blobUrl = URL.createObjectURL(optimized.file);
+      registerStagedBlob(blobUrl, optimized.file);
 
-      if (!effectiveUserId) {
-        const { data: authData } = await supabase.auth.getUser();
-        effectiveUserId = authData?.user?.id || 'guest_user';
-        effectiveUserEmail = authData?.user?.email || null;
-      }
-
-      const category = genderIcon === 'male' ? 'groom' : 'bride';
-
-      // 3. Upload ke bucket invitations di folder terpusat DATA/{email}/{template_terpusat}/image_lainnya/
-      const uploadRes = await uploadInvitationImage({
-        file: optimized.file,
-        userId: effectiveUserId,
-        userEmail: effectiveUserEmail,
-        templateSlug: templateSlug || 'template_1',
-        category,
-        userTemplateId: userTemplateId || null,
-      });
-
-      if (!uploadRes.success || !uploadRes.publicUrl) {
-        throw new Error(uploadRes.error || 'Gagal mengunggah foto mempelai ke storage.');
-      }
-
-      // 4. Simpan URL publik ke state form draf (staging)
+      // 3. Simpan URL lokal ke state form draf (staging)
       setIsBroken(false);
-      onChange({ ...person, photo: uploadRes.publicUrl, photo_url: uploadRes.publicUrl });
+      onChange({ ...person, photo: blobUrl, photo_url: blobUrl });
     } catch (err: any) {
-      console.error('[PersonFormSection] Upload error:', err);
+      console.error('[PersonFormSection] Process error:', err);
       alert(err.message || 'Gagal memproses foto mempelai.');
     } finally {
       setIsProcessing(false);
@@ -102,6 +74,9 @@ export const PersonFormSection: React.FC<PersonFormSectionProps> = ({
   // 2. Hapus Foto Mempelai Instan di UI (Staging mode: tanpa pop-up dan dapat dibatalkan lewat tombol [Batalkan])
   const handleRemovePhoto = () => {
     setIsBroken(false);
+    if (currentPhoto && currentPhoto.startsWith('blob:')) {
+      unregisterStagedBlob(currentPhoto);
+    }
     onChange({ ...person, photo: '', photo_url: '' });
   };
 

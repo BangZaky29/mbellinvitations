@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { convertImageToWebP } from '../../../utils/imageOptimizer';
-import { supabase } from '../../../lib/supabase/client';
-import { uploadInvitationImage } from '../../../lib/supabase/storageService';
+import { registerStagedBlob, unregisterStagedBlob } from '../../../lib/supabase/storageService';
 
 interface GalleryEditorProps {
   gallery: string[];
@@ -14,10 +13,6 @@ interface GalleryEditorProps {
 
 export const GalleryEditor: React.FC<GalleryEditorProps> = ({
   gallery = [],
-  templateSlug = 'template_1',
-  userId: propUserId,
-  userEmail: propUserEmail,
-  userTemplateId,
   onGalleryChange,
 }) => {
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
@@ -30,7 +25,7 @@ export const GalleryEditor: React.FC<GalleryEditorProps> = ({
   // State Pelacak gambar rusak / 404
   const [brokenUrls, setBrokenUrls] = useState<Set<string>>(new Set());
 
-  // 1. Tambah Foto Galeri Baru (Upload ke Supabase Storage, URL disimpan ke draft state)
+  // 1. Tambah Foto Galeri Baru (Pure Staging: WebP di memori lokal, 0 byte upload ke Supabase Storage sekarang!)
   const handleAddGalleryImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !onGalleryChange) return;
@@ -48,38 +43,16 @@ export const GalleryEditor: React.FC<GalleryEditorProps> = ({
       // 1. Kompres gambar ke format .webp biner ringan
       const optimized = await convertImageToWebP(file, 0.82, 1920);
 
-      // 2. Dapatkan identitas pengguna saat ini
-      setStatusText('Mengunggah ke Storage...');
-      let effectiveUserId = propUserId;
-      let effectiveUserEmail = propUserEmail;
+      // 2. Pure Staging: Buat local blob URL (Tanpa menyentuh Supabase Storage!)
+      const blobUrl = URL.createObjectURL(optimized.file);
+      registerStagedBlob(blobUrl, optimized.file);
 
-      if (!effectiveUserId) {
-        const { data: authData } = await supabase.auth.getUser();
-        effectiveUserId = authData?.user?.id || 'guest_user';
-        effectiveUserEmail = authData?.user?.email || null;
-      }
-
-      // 3. Unggah ke bucket 'invitations' di path terpusat DATA/{email}/{template_terpusat}/Galery/
-      const uploadRes = await uploadInvitationImage({
-        file: optimized.file,
-        userId: effectiveUserId,
-        userEmail: effectiveUserEmail,
-        templateSlug: templateSlug || 'template_1',
-        category: 'gallery',
-        userTemplateId: userTemplateId || null,
-        displayOrder: safeGallery.length,
-      });
-
-      if (!uploadRes.success || !uploadRes.publicUrl) {
-        throw new Error(uploadRes.error || 'Gagal mengunggah foto ke storage Supabase.');
-      }
-
-      // 4. Masukkan URL publik Supabase (HTTPS) ke galeri draf
-      const newGallery = [...safeGallery, uploadRes.publicUrl];
+      // 3. Masukkan URL lokal ke galeri draf
+      const newGallery = [...safeGallery, blobUrl];
       onGalleryChange(newGallery);
     } catch (err: any) {
-      console.error('[GalleryEditor] Upload error:', err);
-      setErrorMessage(err.message || 'Gagal memproses dan mengunggah gambar.');
+      console.error('[GalleryEditor] Process error:', err);
+      setErrorMessage(err.message || 'Gagal memproses gambar.');
     } finally {
       setIsOptimizingImage(false);
       setStatusText('Mengonversi ke WebP...');
@@ -89,9 +62,13 @@ export const GalleryEditor: React.FC<GalleryEditorProps> = ({
     }
   };
 
-  // 2. Hapus 1 Foto Instan di UI (Staging mode: tanpa pop-up dan file storage tetap aman untuk Revert)
+  // 2. Hapus 1 Foto Instan di UI (Staging mode: tanpa pop-up dan storage aman untuk Revert)
   const handleRemoveSingle = (index: number) => {
     if (!onGalleryChange) return;
+    const targetUrl = safeGallery[index];
+    if (targetUrl && targetUrl.startsWith('blob:')) {
+      unregisterStagedBlob(targetUrl);
+    }
     const newGallery = safeGallery.filter((_, i) => i !== index);
     onGalleryChange(newGallery);
   };
@@ -99,6 +76,11 @@ export const GalleryEditor: React.FC<GalleryEditorProps> = ({
   // 3. Bersihkan Seluruh Galeri Instan di UI (Staging mode: dapat dibatalkan lewat tombol [Batalkan])
   const handleClearAll = () => {
     if (!onGalleryChange) return;
+    safeGallery.forEach((url) => {
+      if (url && url.startsWith('blob:')) {
+        unregisterStagedBlob(url);
+      }
+    });
     onGalleryChange([]);
   };
 

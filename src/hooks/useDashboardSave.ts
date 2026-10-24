@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase, saveUserTemplate } from '../lib/supabaseClient';
-import { sanitizeAndUploadBase64InFormData, purgeOrphanedImages } from '../lib/supabase/storageService';
+import {
+  sanitizeAndUploadBase64InFormData,
+  purgeOrphanedImages,
+  unregisterStagedBlob,
+  collectImageUrlsFromInvitation,
+} from '../lib/supabase/storageService';
 import type { InvitationData, ThemeConfig } from '../types/invitation';
 import { extractYouTubeId } from './useAudioPlayer';
 import {
@@ -386,6 +391,15 @@ export function useDashboardSave({
   // 🔄 Revert All Changes: mengembalikan seluruh data ke baseline tersimpan
   const handleRevertAll = React.useCallback(() => {
     if (!baselineSnapshotRef.current) return;
+
+    // Bersihkan seluruh objek staged blob lokal yang dibatalkan
+    const currentUrls = collectImageUrlsFromInvitation(formData);
+    currentUrls.forEach((url) => {
+      if (url.startsWith('blob:')) {
+        unregisterStagedBlob(url);
+      }
+    });
+
     setFormData(JSON.parse(JSON.stringify(baselineSnapshotRef.current.formData)));
     if (setThemeConfig) {
       setThemeConfig(JSON.parse(JSON.stringify(baselineSnapshotRef.current.themeConfig)));
@@ -401,7 +415,7 @@ export function useDashboardSave({
       message: 'Semua perubahan berhasil dikembalikan ke posisi semula',
       type: 'info',
     });
-  }, [setFormData, setThemeConfig, setSaveToast]);
+  }, [formData, setFormData, setThemeConfig, setSaveToast]);
 
   // ↩️ Revert Single Field: mengembalikan 1 field spesifik ke baseline
   const handleRevertField = React.useCallback((fieldKey: string) => {
@@ -690,8 +704,17 @@ export function useDashboardSave({
       const resolvedMusicUrl = formData.music_url || themeConfig.music_url || '';
       const resolvedMusicType = Boolean(extractYouTubeId(resolvedMusicUrl)) ? 'youtube' : 'mp3';
 
+      // 0. PURE STAGING COMMIT: Unggah gambar staged (blob: / base64) ke Supabase Storage saat simpan draf
+      let safeDraftData = formData;
+      if (user?.id) {
+        safeDraftData = await sanitizeAndUploadBase64InFormData(formData, user.id, user.email, targetSlug);
+        if (JSON.stringify(safeDraftData) !== JSON.stringify(formData)) {
+          setFormData(safeDraftData);
+        }
+      }
+
       const draftContent: InvitationData = {
-        ...formData,
+        ...safeDraftData,
         slug: targetSlug,
         status: effectiveStatus,
       };
@@ -711,10 +734,10 @@ export function useDashboardSave({
         const targetRecordId = recordId || undefined;
 
         const publishedLiveTheme = baselineSnapshotRef.current?.formData?.theme_id;
-        const isDifferentThemeOnLive = effectiveStatus === 'published' && Boolean(publishedLiveTheme) && formData.theme_id !== publishedLiveTheme;
+        const isDifferentThemeOnLive = effectiveStatus === 'published' && Boolean(publishedLiveTheme) && safeDraftData.theme_id !== publishedLiveTheme;
         const resolvedDbTheme = isDifferentThemeOnLive
           ? (publishedLiveTheme || 'modern')
-          : (formData.theme_id || 'modern');
+          : (safeDraftData.theme_id || 'modern');
         const resolvedDbTemplateId = getSafeDbTemplateId(resolvedDbTheme);
 
         // Simpan / update di public.user_templates
@@ -730,7 +753,7 @@ export function useDashboardSave({
           theme_config: isDifferentThemeOnLive ? (baselineSnapshotRef.current?.themeConfig || themeConfig) : themeConfig,
           music_url: resolvedMusicUrl,
           music_type: resolvedMusicType,
-          thumbnail_url: formData.cover_image || formData.couple_photo || null,
+          thumbnail_url: safeDraftData.cover_image || safeDraftData.couple_photo || null,
         });
 
         if (res.success && res.data) {

@@ -475,12 +475,128 @@ export function dataUrlToBlob(dataUrl: string): { blob: Blob; mimeType: string }
 }
 
 /**
- * FIREWALL & SANITIZER:
- * Memindai seluruh properti gambar dalam formData sebelum disimpan ke database Supabase.
- * Jika ditemukan string Base64 (data:image/...), otomatis dikonversi ke Blob dan diunggah
- * ke bucket 'invitations' di folder DATA/{email}/{template_terpusat}/...
+ * Registri in-memory untuk menyimpan referensi Blob biner yang di-stage oleh pengguna di browser.
+ * Menghindari overhead fetch() ulang untuk blob: URLs.
+ */
+const stagedBlobRegistry = new Map<string, Blob>();
+
+/**
+ * Mendaftarkan Blob biner ke registry staging lokal saat user memilih file di UI
+ */
+export function registerStagedBlob(blobUrl: string, blob: Blob): void {
+  if (blobUrl && blob) {
+    stagedBlobRegistry.set(blobUrl, blob);
+  }
+}
+
+/**
+ * Menghapus dan me-release memory Blob staging (URL.revokeObjectURL)
+ */
+export function unregisterStagedBlob(blobUrl: string): void {
+  if (!blobUrl) return;
+  stagedBlobRegistry.delete(blobUrl);
+  if (typeof window !== 'undefined' && blobUrl.startsWith('blob:')) {
+    try {
+      URL.revokeObjectURL(blobUrl);
+    } catch {}
+  }
+}
+
+/**
+ * Mengecek apakah URL merupakan gambar lokal sementara yang butuh di-commit ke Supabase Storage (blob: atau base64)
+ */
+export function isStagedOrBase64(url?: string | null): boolean {
+  if (!url || typeof url !== 'string') return false;
+  return url.startsWith('blob:') || url.startsWith('data:image/');
+}
+
+/**
+ * Membersihkan URL blob: lokal yang kadaluarsa (misal setelah refresh browser)
+ * dan mengembalikannya ke URL baseline database yang sah agar tidak muncul gambar rusak.
+ */
+export function sanitizeStaleBlobUrls(
+  data: InvitationData,
+  fallbackBaseline?: InvitationData | null
+): InvitationData {
+  if (!data || typeof data !== 'object') return data;
+  const clean = { ...data };
+
+  if (clean.cover_image && clean.cover_image.startsWith('blob:')) {
+    clean.cover_image = fallbackBaseline?.cover_image || '';
+  }
+  if (clean.couple_photo && clean.couple_photo.startsWith('blob:')) {
+    clean.couple_photo = fallbackBaseline?.couple_photo || '';
+  }
+  if (clean.groom) {
+    clean.groom = { ...clean.groom };
+    if (clean.groom.photo?.startsWith('blob:')) {
+      clean.groom.photo = fallbackBaseline?.groom?.photo || '';
+    }
+    if (clean.groom.photo_url?.startsWith('blob:')) {
+      clean.groom.photo_url = fallbackBaseline?.groom?.photo_url || '';
+    }
+  }
+  if (clean.bride) {
+    clean.bride = { ...clean.bride };
+    if (clean.bride.photo?.startsWith('blob:')) {
+      clean.bride.photo = fallbackBaseline?.bride?.photo || '';
+    }
+    if (clean.bride.photo_url?.startsWith('blob:')) {
+      clean.bride.photo_url = fallbackBaseline?.bride?.photo_url || '';
+    }
+  }
+  if (Array.isArray(clean.gallery)) {
+    const valid = clean.gallery.filter((url) => typeof url === 'string' && !url.startsWith('blob:'));
+    clean.gallery = valid.length > 0 || !Array.isArray(fallbackBaseline?.gallery) ? valid : [...fallbackBaseline.gallery];
+  }
+  if (clean.qris_url && clean.qris_url.startsWith('blob:')) {
+    clean.qris_url = fallbackBaseline?.qris_url || '';
+  }
+
+  return clean;
+}
+
+/**
+ * Mengonversi string penanda gambar lokal (blob: URL atau Base64 dataUrl) menjadi Blob biner asli
+ */
+export async function resolveImageStringToBlob(
+  imageStr: string
+): Promise<{ blob: Blob; mimeType: string } | null> {
+  if (!imageStr || typeof imageStr !== 'string') return null;
+
+  // 1. Jika berupa blob: URL (Pure Staging)
+  if (imageStr.startsWith('blob:')) {
+    if (stagedBlobRegistry.has(imageStr)) {
+      const b = stagedBlobRegistry.get(imageStr)!;
+      return { blob: b, mimeType: b.type || 'image/webp' };
+    }
+    try {
+      const resp = await fetch(imageStr);
+      if (resp.ok) {
+        const b = await resp.blob();
+        return { blob: b, mimeType: b.type || 'image/webp' };
+      }
+    } catch (err) {
+      console.warn('[StorageService] Gagal fetch staged blobUrl:', err);
+    }
+    return null;
+  }
+
+  // 2. Jika berupa data:image/ Base64
+  if (imageStr.startsWith('data:image/')) {
+    return dataUrlToBlob(imageStr);
+  }
+
+  return null;
+}
+
+/**
+ * PURE STAGING COMMIT ENGINE & FIREWALL:
+ * Memindai seluruh properti gambar dalam formData saat pengguna menekan 'Terbitkan' atau 'Simpan Draf'.
+ * Mengunggah seluruh gambar lokal sementara (blob: / data:image/) ke bucket 'invitations' di folder
+ * terpusat DATA/{email}/{template_terpusat}/{Galery|image_lainnya}/...
  *
- * Mengembalikan salinan formData yang sudah bersih (100% URL publik HTTPS).
+ * Mengembalikan salinan formData yang sudah bersih (100% URL publik HTTPS Supabase permanen).
  */
 export async function sanitizeAndUploadBase64InFormData(
   formData: InvitationData,
@@ -494,64 +610,67 @@ export async function sanitizeAndUploadBase64InFormData(
   const cleanData: InvitationData = JSON.parse(JSON.stringify(formData));
   const tSlug = getTemplateStorageFolder(cleanData.theme_id || cleanData.template_id || templateSlug || 'template_1');
 
-  // 1. Periksa foto cover
-  if (cleanData.cover_image && typeof cleanData.cover_image === 'string' && cleanData.cover_image.startsWith('data:image/')) {
-    const parsed = dataUrlToBlob(cleanData.cover_image);
-    if (parsed) {
-      const uploadRes = await uploadInvitationImage({
-        file: parsed.blob,
-        userId,
-        userEmail,
-        templateSlug: tSlug,
-        category: 'cover',
-      });
-      if (uploadRes.success && uploadRes.publicUrl) {
-        cleanData.cover_image = uploadRes.publicUrl;
+  // Helper internal untuk mengunggah gambar staged / base64 ke Supabase Storage
+  const processImageField = async (
+    rawUrl: string | undefined | null,
+    category: ImageCategory,
+    displayOrder = 0
+  ): Promise<string | undefined> => {
+    if (!rawUrl || !isStagedOrBase64(rawUrl)) return rawUrl || undefined;
+
+    const parsed = await resolveImageStringToBlob(rawUrl);
+    if (!parsed) return rawUrl;
+
+    const uploadRes = await uploadInvitationImage({
+      file: parsed.blob,
+      userId,
+      userEmail,
+      templateSlug: tSlug,
+      category,
+      displayOrder,
+    });
+
+    if (uploadRes.success && uploadRes.publicUrl) {
+      if (rawUrl.startsWith('blob:')) {
+        unregisterStagedBlob(rawUrl);
       }
+      return uploadRes.publicUrl;
+    }
+
+    return rawUrl;
+  };
+
+  // 1. Periksa foto cover
+  if (cleanData.cover_image && isStagedOrBase64(cleanData.cover_image)) {
+    const uploadedCover = await processImageField(cleanData.cover_image, 'cover');
+    if (uploadedCover) {
+      cleanData.cover_image = uploadedCover;
     }
   }
 
   // 2. Periksa couple_photo
-  if (cleanData.couple_photo && typeof cleanData.couple_photo === 'string' && cleanData.couple_photo.startsWith('data:image/')) {
-    if (cleanData.cover_image && !cleanData.cover_image.startsWith('data:image/')) {
+  if (cleanData.couple_photo && isStagedOrBase64(cleanData.couple_photo)) {
+    if (cleanData.cover_image && !isStagedOrBase64(cleanData.cover_image)) {
       cleanData.couple_photo = cleanData.cover_image;
     } else {
-      const parsed = dataUrlToBlob(cleanData.couple_photo);
-      if (parsed) {
-        const uploadRes = await uploadInvitationImage({
-          file: parsed.blob,
-          userId,
-          userEmail,
-          templateSlug: tSlug,
-          category: 'couple',
-        });
-        if (uploadRes.success && uploadRes.publicUrl) {
-          cleanData.couple_photo = uploadRes.publicUrl;
-        }
+      const uploadedCouple = await processImageField(cleanData.couple_photo, 'couple');
+      if (uploadedCouple) {
+        cleanData.couple_photo = uploadedCouple;
       }
     }
   }
 
   // 3. Periksa foto Groom
   if (cleanData.groom) {
-    if (cleanData.groom.photo && typeof cleanData.groom.photo === 'string' && cleanData.groom.photo.startsWith('data:image/')) {
-      const parsed = dataUrlToBlob(cleanData.groom.photo);
-      if (parsed) {
-        const uploadRes = await uploadInvitationImage({
-          file: parsed.blob,
-          userId,
-          userEmail,
-          templateSlug: tSlug,
-          category: 'groom',
-        });
-        if (uploadRes.success && uploadRes.publicUrl) {
-          cleanData.groom.photo = uploadRes.publicUrl;
-          cleanData.groom.photo_url = uploadRes.publicUrl;
-        }
+    if (cleanData.groom.photo && isStagedOrBase64(cleanData.groom.photo)) {
+      const uploadedGroom = await processImageField(cleanData.groom.photo, 'groom');
+      if (uploadedGroom) {
+        cleanData.groom.photo = uploadedGroom;
+        cleanData.groom.photo_url = uploadedGroom;
       }
     }
-    if (cleanData.groom.photo_url && typeof cleanData.groom.photo_url === 'string' && cleanData.groom.photo_url.startsWith('data:image/')) {
-      if (cleanData.groom.photo && !cleanData.groom.photo.startsWith('data:image/')) {
+    if (cleanData.groom.photo_url && isStagedOrBase64(cleanData.groom.photo_url)) {
+      if (cleanData.groom.photo && !isStagedOrBase64(cleanData.groom.photo)) {
         cleanData.groom.photo_url = cleanData.groom.photo;
       }
     }
@@ -559,24 +678,15 @@ export async function sanitizeAndUploadBase64InFormData(
 
   // 4. Periksa foto Bride
   if (cleanData.bride) {
-    if (cleanData.bride.photo && typeof cleanData.bride.photo === 'string' && cleanData.bride.photo.startsWith('data:image/')) {
-      const parsed = dataUrlToBlob(cleanData.bride.photo);
-      if (parsed) {
-        const uploadRes = await uploadInvitationImage({
-          file: parsed.blob,
-          userId,
-          userEmail,
-          templateSlug: tSlug,
-          category: 'bride',
-        });
-        if (uploadRes.success && uploadRes.publicUrl) {
-          cleanData.bride.photo = uploadRes.publicUrl;
-          cleanData.bride.photo_url = uploadRes.publicUrl;
-        }
+    if (cleanData.bride.photo && isStagedOrBase64(cleanData.bride.photo)) {
+      const uploadedBride = await processImageField(cleanData.bride.photo, 'bride');
+      if (uploadedBride) {
+        cleanData.bride.photo = uploadedBride;
+        cleanData.bride.photo_url = uploadedBride;
       }
     }
-    if (cleanData.bride.photo_url && typeof cleanData.bride.photo_url === 'string' && cleanData.bride.photo_url.startsWith('data:image/')) {
-      if (cleanData.bride.photo && !cleanData.bride.photo.startsWith('data:image/')) {
+    if (cleanData.bride.photo_url && isStagedOrBase64(cleanData.bride.photo_url)) {
+      if (cleanData.bride.photo && !isStagedOrBase64(cleanData.bride.photo)) {
         cleanData.bride.photo_url = cleanData.bride.photo;
       }
     }
@@ -587,47 +697,28 @@ export async function sanitizeAndUploadBase64InFormData(
     const updatedGallery: string[] = [];
     for (let i = 0; i < cleanData.gallery.length; i++) {
       const item = cleanData.gallery[i];
-      if (typeof item === 'string' && item.startsWith('data:image/')) {
-        const parsed = dataUrlToBlob(item);
-        if (parsed) {
-          const uploadRes = await uploadInvitationImage({
-            file: parsed.blob,
-            userId,
-            userEmail,
-            templateSlug: tSlug,
-            category: 'gallery',
-            displayOrder: i,
-          });
-          if (uploadRes.success && uploadRes.publicUrl) {
-            updatedGallery.push(uploadRes.publicUrl);
-            continue;
-          }
-        }
+      if (item && isStagedOrBase64(item)) {
+        const uploadedItem = await processImageField(item, 'gallery', i);
+        updatedGallery.push(uploadedItem || item);
+      } else if (item) {
+        updatedGallery.push(item);
       }
-      updatedGallery.push(item);
     }
     cleanData.gallery = updatedGallery;
   }
 
   // 6. Periksa qris_url
-  if (cleanData.qris_url && typeof cleanData.qris_url === 'string' && cleanData.qris_url.startsWith('data:image/')) {
-    const parsed = dataUrlToBlob(cleanData.qris_url);
-    if (parsed) {
-      const uploadRes = await uploadInvitationImage({
-        file: parsed.blob,
-        userId,
-        userEmail,
-        templateSlug: tSlug,
-        category: 'qris',
-      });
-      if (uploadRes.success && uploadRes.publicUrl) {
-        cleanData.qris_url = uploadRes.publicUrl;
-      }
+  if (cleanData.qris_url && isStagedOrBase64(cleanData.qris_url)) {
+    const uploadedQris = await processImageField(cleanData.qris_url, 'qris');
+    if (uploadedQris) {
+      cleanData.qris_url = uploadedQris;
     }
   }
 
   return cleanData;
 }
+
+export const commitStagedImagesInFormData = sanitizeAndUploadBase64InFormData;
 
 /**
  * Mengumpulkan seluruh URL gambar yang tercatat dalam data undangan.

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase, saveUserTemplate, purgeRadityaJessica, type UserTemplateRecord } from '../lib/supabaseClient';
+import { sanitizeStaleBlobUrls } from '../lib/supabase';
 import type { InvitationData, ThemeConfig } from '../types/invitation';
 import type { DashboardTab } from '../components/dashboard/DashboardSidebar';
 import { extractYouTubeId } from './useAudioPlayer';
@@ -311,7 +312,8 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
 
             if (hasUnsavedDraft && savedDraftFormDataStr) {
               try {
-                const pendingFormData: InvitationData = JSON.parse(savedDraftFormDataStr);
+                const rawPending: InvitationData = JSON.parse(savedDraftFormDataStr);
+                const pendingFormData: InvitationData = sanitizeStaleBlobUrls(rawPending, loadedContent as InvitationData);
                 const pendingThemeConfig: ThemeConfig = savedDraftThemeConfigStr
                   ? JSON.parse(savedDraftThemeConfigStr)
                   : (userTemplateData.theme_config || themeConfig);
@@ -423,7 +425,8 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
 
           if (hasUnsavedDraft && savedDraftFormDataStr) {
             try {
-              const pendingFormData: InvitationData = JSON.parse(savedDraftFormDataStr);
+              const rawPending: InvitationData = JSON.parse(savedDraftFormDataStr);
+              const pendingFormData: InvitationData = sanitizeStaleBlobUrls(rawPending, null);
               const pendingThemeConfig: ThemeConfig = savedDraftThemeConfigStr
                 ? JSON.parse(savedDraftThemeConfigStr)
                 : themeConfig;
@@ -464,7 +467,8 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
           const guestThemeStr = localStorage.getItem('mbell_pending_draft_themeConfig');
           if (guestDraftStr) {
             try {
-              const parsedGuest = JSON.parse(guestDraftStr);
+              const rawGuest = JSON.parse(guestDraftStr);
+              const parsedGuest = sanitizeStaleBlobUrls(rawGuest, MOCK_MODERN_DATA);
 
               // Jika draft lokal terdeteksi merupakan sisa data akun sebelumnya:
               const isAccountResidue = Boolean(
