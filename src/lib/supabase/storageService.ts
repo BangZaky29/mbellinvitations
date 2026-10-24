@@ -178,38 +178,163 @@ export async function uploadInvitationImage({
 }
 
 /**
- * Menghapus berkas gambar dari Supabase Storage dan tabel database `invitation_images`.
+ * Mengekstrak path relatif storage (misal: "DATA/email/slug/Galery/image.webp")
+ * dari URL publik Supabase Storage atau string path.
  */
-export async function deleteInvitationImage(
-  storagePath: string,
+export function extractStoragePathFromUrl(publicUrlOrPath: string): string | null {
+  if (!publicUrlOrPath || typeof publicUrlOrPath !== 'string') return null;
+
+  // Jika Base64, bukan file storage
+  if (publicUrlOrPath.startsWith('data:image/')) return null;
+
+  // Bersihkan parameter query (misal ?t=123) atau hash
+  const cleanUrl = publicUrlOrPath.split('?')[0].split('#')[0].trim();
+
+  // Jika sudah berupa path relatif DATA/...
+  if (cleanUrl.startsWith('DATA/')) {
+    return cleanUrl;
+  }
+  if (cleanUrl.startsWith('/DATA/')) {
+    return cleanUrl.substring(1);
+  }
+
+  // Pola standar URL Supabase Storage: /storage/v1/object/public/{bucket_name}/(path)
+  const pattern = new RegExp(`/storage/v1/object/(?:public|sign)/${INVITATIONS_BUCKET}/(.*)`, 'i');
+  const match = cleanUrl.match(pattern);
+  if (match && match[1]) {
+    return decodeURIComponent(match[1]);
+  }
+
+  // Fallback: temukan segmen "DATA/" di mana saja pada URL
+  const dataIdx = cleanUrl.indexOf('/DATA/');
+  if (dataIdx !== -1) {
+    return decodeURIComponent(cleanUrl.substring(dataIdx + 1));
+  }
+  const dataStartIdx = cleanUrl.indexOf('DATA/');
+  if (dataStartIdx !== -1) {
+    return decodeURIComponent(cleanUrl.substring(dataStartIdx));
+  }
+
+  return null;
+}
+
+/**
+ * Menghapus berkas gambar secara permanen hingga ke akarnya:
+ * 1. Menghapus berkas fisik di Supabase Storage Bucket 'invitations'
+ * 2. Menghapus metadata gambar di tabel database `public.invitation_images`
+ *
+ * Menerima URL publik lengkap (HTTPS) atau storage path relatif.
+ */
+export async function deleteImagePermanently(
+  publicUrlOrPath: string,
   imageId?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    if (!publicUrlOrPath && !imageId) return { success: true };
+
+    // Jika base64, tidak ada berkas fisik di storage
+    if (publicUrlOrPath && publicUrlOrPath.startsWith('data:image/')) {
+      return { success: true };
+    }
+
+    const storagePath = publicUrlOrPath ? extractStoragePathFromUrl(publicUrlOrPath) : null;
+
+    // 1. Hapus berkas fisik di Supabase Storage Bucket
     if (storagePath) {
       const { error: storageError } = await supabase.storage
         .from(INVITATIONS_BUCKET)
         .remove([storagePath]);
 
       if (storageError) {
-        console.warn('[StorageService] Gagal menghapus file dari storage:', storageError.message);
+        console.warn('[StorageService] Gagal menghapus file dari storage bucket:', storageError.message);
+      } else {
+        console.info(`[StorageService] Berhasil menghapus berkas fisik di storage: ${storagePath}`);
       }
     }
 
-    if (imageId) {
-      const { error: dbError } = await supabase
-        .from('invitation_images')
-        .delete()
-        .eq('id', imageId);
+    // 2. Hapus metadata dari tabel database 'invitation_images'
+    try {
+      if (imageId) {
+        await supabase.from('invitation_images').delete().eq('id', imageId);
+      } else if (storagePath || publicUrlOrPath) {
+        const conditions: string[] = [];
+        if (storagePath) conditions.push(`storage_path.eq."${storagePath}"`);
+        if (publicUrlOrPath) conditions.push(`public_url.eq."${publicUrlOrPath}"`);
 
-      if (dbError) {
-        console.warn('[StorageService] Gagal menghapus record dari invitation_images:', dbError.message);
+        if (conditions.length > 0) {
+          const { error: dbDeleteErr } = await supabase
+            .from('invitation_images')
+            .delete()
+            .or(conditions.join(','));
+
+          if (dbDeleteErr) {
+            console.warn('[StorageService] Gagal menghapus row invitation_images:', dbDeleteErr.message);
+          }
+        }
       }
+    } catch (dbErr) {
+      console.warn('[StorageService] Peringatan saat menghapus record dari invitation_images:', dbErr);
     }
 
     return { success: true };
   } catch (err: any) {
-    console.error('[StorageService] Error deleting image:', err);
+    console.error('[StorageService] Error deleteImagePermanently:', err);
     return { success: false, error: err?.message || 'Gagal menghapus gambar.' };
+  }
+}
+
+/**
+ * Menghapus berkas gambar dari Supabase Storage dan tabel database `invitation_images`.
+ * (Alias kompatibel untuk deleteImagePermanently)
+ */
+export async function deleteInvitationImage(
+  storagePath: string,
+  imageId?: string
+): Promise<{ success: boolean; error?: string }> {
+  return deleteImagePermanently(storagePath, imageId);
+}
+
+/**
+ * Menyinkronkan perubahan formData ke cache browser (localStorage) secara seketika.
+ * Mencegah data foto lama kembali muncul saat browser di-refresh.
+ */
+export function syncFormDataToLocalCache(updatedFormData: InvitationData): void {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  try {
+    localStorage.setItem('mbell_pending_draft_formData', JSON.stringify(updatedFormData));
+    if (updatedFormData.slug) {
+      localStorage.removeItem(`mbell_cached_inv_${updatedFormData.slug}`);
+    }
+  } catch (e) {
+    console.warn('[StorageService] syncFormDataToLocalCache warning:', e);
+  }
+}
+
+/**
+ * Membersihkan seluruh draft lokal dan cache browser terkait gambar undangan.
+ * Sangat berguna ketika bucket storage sudah di-reset/dikosongkan manual,
+ * agar browser tidak terus-menerus memuat cache draft lama yang sudah usang.
+ */
+export function cleanAllLocalImageDraftCaches(slug?: string): void {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  try {
+    localStorage.removeItem('mbell_pending_draft_formData');
+    localStorage.removeItem('mbell_pending_draft_themeConfig');
+    localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
+    if (slug) {
+      localStorage.removeItem(`mbell_cached_inv_${slug}`);
+    }
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('mbell_cached_inv_') || key.startsWith('mbell_pending_draft_'))) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((k) => localStorage.removeItem(k));
+    console.info('[StorageService] Seluruh cache draft gambar lokal browser berhasil dibersihkan.');
+  } catch (e) {
+    console.warn('[StorageService] Gagal membersihkan cache lokal:', e);
   }
 }
 

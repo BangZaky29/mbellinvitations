@@ -1,5 +1,5 @@
 import { supabase } from './client';
-import { sanitizeAndUploadBase64InFormData } from './storageService';
+import { sanitizeAndUploadBase64InFormData, cleanAllLocalImageDraftCaches } from './storageService';
 import type { InvitationData } from '../../types/invitation';
 
 export interface MigrationReport {
@@ -210,4 +210,5 @@ export async function runBase64Migration(
 // Pasang ke window object peramban agar bisa langsung dipanggil kapan saja dari Developer Console (F12)
 if (typeof window !== 'undefined') {
   (window as any).runMbellBase64Migration = runBase64Migration;
+  (window as any).cleanMbellLocalDraftCache = cleanAllLocalImageDraftCaches;
 }

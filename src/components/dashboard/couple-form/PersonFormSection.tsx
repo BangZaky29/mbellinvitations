@@ -2,7 +2,12 @@ import React, { useRef, useState } from 'react';
 import type { CoupleInfo } from '../../../types/invitation';
 import { convertImageToWebP } from '../../../utils/imageOptimizer';
 import { supabase } from '../../../lib/supabase/client';
-import { uploadInvitationImage } from '../../../lib/supabase/storageService';
+import {
+  uploadInvitationImage,
+  deleteImagePermanently,
+  cleanAllLocalImageDraftCaches,
+} from '../../../lib/supabase/storageService';
+import { ConfirmDeleteImageModal } from '../common/ConfirmDeleteImageModal';
 
 interface PersonFormSectionProps {
   title: string;
@@ -42,10 +47,20 @@ export const PersonFormSection: React.FC<PersonFormSectionProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusText, setStatusText] = useState('Mengompres Foto...');
+  const [isBroken, setIsBroken] = useState(false);
 
+  // State Modal Konfirmasi Hapus Foto Mempelai
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const currentPhoto = person.photo || person.photo_url || '';
+
+  // 1. Upload & Ganti Foto Mempelai (Dengan Auto-Cleanup Foto Lama)
   const handleLocalImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const oldPhotoUrl = currentPhoto;
 
     try {
       setIsProcessing(true);
@@ -80,8 +95,17 @@ export const PersonFormSection: React.FC<PersonFormSectionProps> = ({
         throw new Error(uploadRes.error || 'Gagal mengunggah foto mempelai ke storage.');
       }
 
-      // 4. Simpan URL publik Supabase (HTTPS)
+      // 4. Auto-Cleanup: Hapus berkas foto lama dari Storage agar tidak menumpuk
+      if (oldPhotoUrl && oldPhotoUrl !== uploadRes.publicUrl) {
+        deleteImagePermanently(oldPhotoUrl).catch((err) =>
+          console.warn(`[PersonFormSection] Auto-cleanup old ${category} photo warning:`, err)
+        );
+      }
+
+      // 5. Simpan URL publik Supabase (HTTPS) & bersihkan cache browser
+      setIsBroken(false);
       onChange({ ...person, photo: uploadRes.publicUrl, photo_url: uploadRes.publicUrl });
+      cleanAllLocalImageDraftCaches(templateSlug);
     } catch (err: any) {
       console.error('[PersonFormSection] Upload error:', err);
       alert(err.message || 'Gagal memproses foto mempelai.');
@@ -91,6 +115,78 @@ export const PersonFormSection: React.FC<PersonFormSectionProps> = ({
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+    }
+  };
+
+  const syncPersonToDatabase = async () => {
+    try {
+      const field = genderIcon === 'male' ? 'groom' : 'bride';
+      const updatedPerson = { ...person, photo: '', photo_url: '' };
+
+      if (userTemplateId) {
+        const { data: ut } = await supabase
+          .from('user_templates')
+          .select('content')
+          .eq('id', userTemplateId)
+          .maybeSingle();
+
+        if (ut?.content) {
+          await supabase
+            .from('user_templates')
+            .update({
+              content: { ...ut.content, [field]: updatedPerson },
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', userTemplateId);
+        }
+      }
+      if (templateSlug) {
+        const { data: inv } = await supabase
+          .from('invitations')
+          .select('content')
+          .eq('slug', templateSlug)
+          .maybeSingle();
+
+        if (inv?.content) {
+          await supabase
+            .from('invitations')
+            .update({
+              content: { ...inv.content, [field]: updatedPerson },
+              updated_at: new Date().toISOString(),
+            })
+            .eq('slug', templateSlug);
+        }
+      }
+      try {
+        const draftStr = localStorage.getItem('mbell_pending_draft_formData');
+        if (draftStr) {
+          const draft = JSON.parse(draftStr);
+          draft[field] = updatedPerson;
+          localStorage.setItem('mbell_pending_draft_formData', JSON.stringify(draft));
+        }
+      } catch (e) {}
+    } catch (e) {
+      console.warn('[PersonFormSection] Direct DB sync warning:', e);
+    }
+  };
+
+  // 2. Eksekusi Hapus Permanen Foto Mempelai ke Akar
+  const handleConfirmDeletePhoto = async () => {
+    try {
+      setIsDeleting(true);
+      if (currentPhoto) {
+        await deleteImagePermanently(currentPhoto);
+      }
+      setIsBroken(false);
+      onChange({ ...person, photo: '', photo_url: '' });
+      cleanAllLocalImageDraftCaches(templateSlug);
+      await syncPersonToDatabase();
+      setIsDeleteModalOpen(false);
+    } catch (err: any) {
+      console.error('[PersonFormSection] Gagal menghapus foto:', err);
+      alert(err.message || 'Gagal menghapus foto mempelai.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -116,7 +212,7 @@ export const PersonFormSection: React.FC<PersonFormSectionProps> = ({
         </span>
       </div>
 
-      {/* AVATAR UPLOAD */}
+      {/* AVATAR UPLOAD DENGAN HOVER ACTIONS */}
       <div className="flex items-center gap-4">
         <input
           type="file"
@@ -126,37 +222,96 @@ export const PersonFormSection: React.FC<PersonFormSectionProps> = ({
           onChange={handleLocalImageUpload}
         />
         <div
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => !currentPhoto && fileInputRef.current?.click()}
           className="relative group cursor-pointer w-16 h-16 rounded-full bg-stone-200 overflow-hidden flex items-center justify-center border-2 border-stone-300 shrink-0 shadow-xs"
         >
-          {person.photo || person.photo_url ? (
-            <img
-              src={person.photo || person.photo_url}
-              alt={person.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-            />
+          {currentPhoto ? (
+            isBroken ? (
+              <span className="material-symbols-outlined text-amber-500 text-[24px]">broken_image</span>
+            ) : (
+              <img
+                src={currentPhoto}
+                alt={person.name}
+                onError={() => setIsBroken(true)}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+              />
+            )
           ) : (
             <span className="material-symbols-outlined text-stone-400 text-[30px]">person</span>
           )}
-          <div className="absolute inset-0 rounded-full bg-stone-950/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <span className="material-symbols-outlined text-white text-[20px]">photo_camera</span>
+
+          {/* Hover Overlay Aksi: Ganti & Hapus */}
+          <div className="absolute inset-0 rounded-full bg-stone-950/60 flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                fileInputRef.current?.click();
+              }}
+              disabled={isProcessing || isDeleting}
+              className="w-6 h-6 rounded-full bg-white hover:bg-stone-100 text-stone-800 flex items-center justify-center shadow-xs transition-transform hover:scale-110 cursor-pointer"
+              title="Ganti Foto"
+            >
+              <span className="material-symbols-outlined text-[14px]">photo_camera</span>
+            </button>
+            {currentPhoto && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDeleteModalOpen(true);
+                }}
+                disabled={isProcessing || isDeleting}
+                className="w-6 h-6 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-xs transition-transform hover:scale-110 cursor-pointer"
+                title="Hapus Foto"
+              >
+                <span className="material-symbols-outlined text-[14px]">delete</span>
+              </button>
+            )}
           </div>
         </div>
+
         <div>
-          <button
-            type="button"
-            disabled={isProcessing}
-            onClick={() => fileInputRef.current?.click()}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border border-stone-300 hover:border-stone-400 disabled:opacity-60 text-stone-800 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
-          >
-            <span className={`material-symbols-outlined text-xs ${isProcessing ? 'animate-spin' : ''}`}>
-              {isProcessing ? 'progress_activity' : 'photo_camera'}
-            </span>
-            <span>{isProcessing ? statusText : 'Ganti Foto'}</span>
-          </button>
-          <p className="text-[11px] text-stone-500 mt-1">Foto wajah close-up jernih (maks. 5MB)</p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={isProcessing || isDeleting}
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border border-stone-300 hover:border-stone-400 disabled:opacity-60 text-stone-800 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+            >
+              <span className={`material-symbols-outlined text-xs ${isProcessing ? 'animate-spin' : ''}`}>
+                {isProcessing ? 'progress_activity' : 'photo_camera'}
+              </span>
+              <span>{isProcessing ? statusText : currentPhoto ? 'Ganti Foto' : 'Unggah Foto'}</span>
+            </button>
+
+            {currentPhoto && (
+              <button
+                type="button"
+                disabled={isProcessing || isDeleting}
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+                title="Hapus foto mempelai"
+              >
+                <span className="material-symbols-outlined text-xs">delete</span>
+                <span>Hapus</span>
+              </button>
+            )}
+          </div>
+          <p className="text-[11px] text-stone-500 mt-1">Foto wajah close-up jernih (format WebP biner)</p>
         </div>
       </div>
+
+      {/* Modal Konfirmasi Hapus Foto Mempelai */}
+      <ConfirmDeleteImageModal
+        isOpen={isDeleteModalOpen}
+        title={`Hapus Foto ${title}?`}
+        description="Foto ini akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan."
+        imageUrl={currentPhoto}
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDeletePhoto}
+        onClose={() => !isDeleting && setIsDeleteModalOpen(false)}
+      />
 
       {/* INPUTS MEMPELAI */}
       <div className="space-y-3.5 pt-1">
