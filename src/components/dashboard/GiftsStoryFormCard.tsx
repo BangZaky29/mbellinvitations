@@ -15,7 +15,7 @@ interface GiftsStoryFormCardProps {
   onLoveStoryChange: (story: LoveStoryMilestone[]) => void;
   onGalleryChange?: (gallery: string[]) => void;
   onMusicUrlChange: (url: string) => void;
-  onSaveMusic?: () => void;
+  onSaveMusic?: (url: string) => void;
 }
 
 export const GiftsStoryFormCard: React.FC<GiftsStoryFormCardProps> = ({

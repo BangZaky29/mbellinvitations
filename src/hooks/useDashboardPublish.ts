@@ -241,6 +241,12 @@ const handleConfirmSameTemplatePublish = async () => {
       is_paid: true,
       paid_template_id: safeDbTemplateId,
       unlocked_templates: updatedUnlockedTemplates,
+      music_url: resolvedMusicUrl,
+    };
+
+    const updatedThemeConfig: ThemeConfig = {
+      ...themeConfig,
+      music_url: resolvedMusicUrl,
     };
 
     // 1. Simpan ke invitations dengan status published secara aman tanpa error 409
@@ -249,7 +255,7 @@ const handleConfirmSameTemplatePublish = async () => {
       template_id: safeDbTemplateId,
       slug: targetSlug,
       content: updatedContent,
-      theme_config: themeConfig,
+      theme_config: updatedThemeConfig,
       status: 'published',
       is_paid: true,
       paid_template_id: safeDbTemplateId,
@@ -302,7 +308,7 @@ const handleConfirmSameTemplatePublish = async () => {
         paid_template_id: safeDbTemplateId,
         unlocked_templates: updatedUnlockedTemplates,
         content: updatedContent,
-        theme_config: themeConfig,
+        theme_config: updatedThemeConfig,
         music_url: resolvedMusicUrl,
         music_type: resolvedMusicType,
         thumbnail_url: formData.cover_image || formData.couple_photo || null,
@@ -320,7 +326,7 @@ const handleConfirmSameTemplatePublish = async () => {
       localStorage.setItem(`mbell_cached_inv_${targetSlug}`, JSON.stringify({
         templateId: template_id,
         invitationData: updatedContent,
-        themeConfig,
+        themeConfig: updatedThemeConfig,
       }));
     } catch (e) { }
     setLastSaved(new Date());
@@ -330,7 +336,7 @@ const handleConfirmSameTemplatePublish = async () => {
       new CustomEvent('mbell_template_loaded', {
         detail: {
           formData: updatedContent,
-          themeConfig,
+          themeConfig: updatedThemeConfig,
         },
       })
     );
@@ -338,10 +344,7 @@ const handleConfirmSameTemplatePublish = async () => {
       new CustomEvent('mbell_published_updated', {
         detail: {
           formData: updatedContent,
-          themeConfig: {
-            ...themeConfig,
-            music_url: resolvedMusicUrl,
-          },
+          themeConfig: updatedThemeConfig,
         },
       })
     );
@@ -416,6 +419,12 @@ const handleConfirmPublish = async (paymentDetails?: { themeId?: string; payment
       paid_at: nowIso,
       payment_method: selectedMethod,
       amount_paid: paidAmount,
+      music_url: resolvedMusicUrl,
+    };
+
+    const updatedThemeConfig: ThemeConfig = {
+      ...themeConfig,
+      music_url: resolvedMusicUrl,
     };
 
     // 1. Simpan dan terbitkan ke tabel public.invitations (menggunakan safeDbTemplateId)
@@ -424,7 +433,7 @@ const handleConfirmPublish = async (paymentDetails?: { themeId?: string; payment
       template_id: safeDbTemplateId,
       slug: targetSlug,
       content: publishedContent,
-      theme_config: themeConfig,
+      theme_config: updatedThemeConfig,
       status: 'published',
       is_paid: true,
       paid_template_id: safeDbTemplateId,
@@ -483,7 +492,7 @@ const handleConfirmPublish = async (paymentDetails?: { themeId?: string; payment
         payment_method: selectedMethod,
         amount_paid: paidAmount,
         content: publishedContent,
-        theme_config: themeConfig,
+        theme_config: updatedThemeConfig,
         music_url: resolvedMusicUrl,
         music_type: resolvedMusicType,
         thumbnail_url: formData.cover_image || formData.couple_photo || null,
@@ -503,7 +512,7 @@ const handleConfirmPublish = async (paymentDetails?: { themeId?: string; payment
       localStorage.setItem(`mbell_cached_inv_${targetSlug}`, JSON.stringify({
         templateId: template_id,
         invitationData: publishedContent,
-        themeConfig,
+        themeConfig: updatedThemeConfig,
       }));
     } catch (e) { }
     setLastSaved(new Date());
@@ -513,7 +522,7 @@ const handleConfirmPublish = async (paymentDetails?: { themeId?: string; payment
       new CustomEvent('mbell_template_loaded', {
         detail: {
           formData: publishedContent,
-          themeConfig,
+          themeConfig: updatedThemeConfig,
         },
       })
     );
@@ -521,10 +530,7 @@ const handleConfirmPublish = async (paymentDetails?: { themeId?: string; payment
       new CustomEvent('mbell_published_updated', {
         detail: {
           formData: publishedContent,
-          themeConfig: {
-            ...themeConfig,
-            music_url: resolvedMusicUrl,
-          },
+          themeConfig: updatedThemeConfig,
         },
       })
     );

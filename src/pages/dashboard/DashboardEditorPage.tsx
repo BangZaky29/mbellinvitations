@@ -631,15 +631,9 @@ export const DashboardEditorPage: React.FC = () => {
                       onEventsChange={editor.handleEventsChange}
                       onSetCountdownTarget={editor.handleSetCountdownTarget}
                       onManualSave={handleSafeSave}
-                      onSaveMusicOnly={async () => {
-                        await save.handleManualSave();
-                        if (isLiveOrPublished) {
-                          save.setSaveToast({
-                            show: true,
-                            message: 'Link musik tersimpan di draf! Klik tombol "Terbitkan" di bawah untuk mengaktifkannya di undangan live.',
-                            type: 'info',
-                          }, 4500);
-                        }
+                      onSaveMusicOnly={async (musicUrl?: string) => {
+                        const targetUrl = musicUrl !== undefined ? musicUrl : (editor.formData.music_url || '');
+                        await save.handleSaveMusicDraft(targetUrl);
                       }}
                     />
 
@@ -649,7 +643,7 @@ export const DashboardEditorPage: React.FC = () => {
                       isSavingDraft={isSavingDraft}
                       isPublishing={isPublishing}
                       hasUnsavedChanges={save.hasUnsavedChanges || save.hasUnpublishedChanges}
-                      unsavedCount={save.hasUnpublishedChanges ? save.unpublishedCount : save.unsavedCount}
+                      unsavedCount={save.hasUnpublishedChanges ? Math.max(save.unpublishedCount, 1) : save.unsavedCount}
                       isAlreadyPublished={publish.isAlreadyPublished || Boolean((publish.publishedThemeId || editor.publishedThemeId) && !publish.isTemplateChanged)}
                       isTemplateChanged={publish.isTemplateChanged}
                       invitationSlug={currentSlug}

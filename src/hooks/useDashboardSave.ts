@@ -777,6 +777,106 @@ export function useDashboardSave({
     }
   };
 
+  // 5. Khusus Musik: Simpan sebagai draf (local + user_templates) & langsung aktifkan status perubahan (+1)
+  const handleSaveMusicDraft = async (newMusicUrl: string) => {
+    setIsSaving(true);
+    try {
+      const cleanUrl = (newMusicUrl || '').trim();
+      const updatedFormData: InvitationData = { ...formData, music_url: cleanUrl };
+      const updatedThemeConfig: ThemeConfig = { ...themeConfig, music_url: cleanUrl };
+
+      // 1. Update form & theme react state agar preview real-time langsung memutar musik
+      setFormData(updatedFormData);
+      if (setThemeConfig) {
+        setThemeConfig(updatedThemeConfig);
+      }
+
+      // 2. Simpan cache draf lokal
+      try {
+        localStorage.setItem('mbell_pending_draft_formData', JSON.stringify(updatedFormData));
+        localStorage.setItem('mbell_pending_draft_themeConfig', JSON.stringify(updatedThemeConfig));
+        localStorage.setItem('mbell_pending_draft_hasUnsavedEdits', 'true');
+      } catch (e) {
+        console.warn('Draft local cache warning:', e);
+      }
+
+      // 3. Simpan draf ke user_templates milik user di Supabase (TIDAK langsung menimpa live invitation jika belum diterbitkan)
+      if (user?.id) {
+        const coupleSlug = computeCoupleSlug(updatedFormData.groom?.name, updatedFormData.bride?.name);
+        const targetSlug = updatedFormData.slug || coupleSlug || 'undangan-baru';
+        const safeDbTemplateId = getSafeDbTemplateId(updatedFormData.theme_id);
+        const resolvedMusicType = Boolean(extractYouTubeId(cleanUrl)) ? 'youtube' : 'mp3';
+        const effectiveStatus: 'published' | 'draft' | 'archived' =
+          updatedFormData.status === 'published' ? 'published' : 'draft';
+
+        const res = await saveUserTemplate({
+          id: currentTemplateRecordId || undefined,
+          user_id: user.id,
+          title: `Pernikahan ${updatedFormData.groom?.name || 'Mempelai Pria'} & ${updatedFormData.bride?.name || 'Mempelai Wanita'}`,
+          slug: targetSlug,
+          template_id: safeDbTemplateId,
+          theme_id: updatedFormData.theme_id || 'modern',
+          status: effectiveStatus,
+          content: updatedFormData,
+          theme_config: updatedThemeConfig,
+          music_url: cleanUrl,
+          music_type: resolvedMusicType,
+          thumbnail_url: updatedFormData.cover_image || updatedFormData.couple_photo || null,
+        });
+
+        if (res.success && res.data) {
+          setCurrentTemplateRecordId(res.data.id);
+          localStorage.setItem('mbell_active_template_id', res.data.id);
+          window.dispatchEvent(new CustomEvent('mbell_templates_updated'));
+        }
+      }
+
+      // 4. Update baseline draft lokal
+      baselineSnapshotRef.current = {
+        formData: JSON.parse(JSON.stringify(updatedFormData)),
+        themeConfig: JSON.parse(JSON.stringify(updatedThemeConfig)),
+      };
+
+      // 5. Audit pembanding terhadap baseline LIVE publik
+      const activePubBase = publishedSnapshotRef.current || liveBaseline;
+      const isLiveCurrently = Boolean(isAlreadyPublished || formData.status === 'published' || liveBaseline);
+
+      if (isLiveCurrently && activePubBase) {
+        const pubTrail = computeAuditTrail(activePubBase, {
+          formData: updatedFormData,
+          themeConfig: updatedThemeConfig,
+        });
+        const pubCount = pubTrail.count > 0 ? pubTrail.count : 1;
+        setHasUnpublishedChanges(true);
+        setUnpublishedCount(pubCount);
+      } else {
+        setHasUnsavedChanges(true);
+        setUnsavedCount(1);
+      }
+
+      setLastSaved(new Date());
+
+      setSaveToast({
+        show: true,
+        message: isLiveCurrently
+          ? 'Musik berhasil disimpan di draf! Klik tombol "Terbitkan (+1)" di bawah untuk mengaktifkannya di link undangan.'
+          : 'Musik latar berhasil disimpan di draf!',
+        type: 'info',
+        isError: false,
+      }, 5000);
+    } catch (err: any) {
+      console.error('Save music draft error:', err);
+      setSaveToast({
+        show: true,
+        message: 'Gagal menyimpan draf musik: ' + (err?.message || 'Coba lagi'),
+        type: 'error',
+        isError: true,
+      }, 4000);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return {
     isSaving,
     setIsSaving,
@@ -797,5 +897,6 @@ export function useDashboardSave({
     handleRevertField,
     handleManualSave,
     handleSaveDraft,
+    handleSaveMusicDraft,
   };
 }

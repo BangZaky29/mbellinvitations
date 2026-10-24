@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 interface MusicPickerProps {
   musicUrl?: string;
   onMusicUrlChange: (url: string) => void;
-  onSaveMusic?: () => void;
+  onSaveMusic?: (url: string) => void;
 }
 
 export interface YouTubeValidationResult {
@@ -86,9 +86,10 @@ export const MusicPicker: React.FC<MusicPickerProps> = ({
   };
 
   const handleSaveAction = (urlToSave: string) => {
-    if (!urlToSave.trim()) {
+    const cleanUrl = urlToSave.trim();
+    if (!cleanUrl) {
       onMusicUrlChange('');
-      if (onSaveMusic) onSaveMusic();
+      if (onSaveMusic) onSaveMusic('');
       setSavedUrl('');
       setInputUrl('');
       setMusicSavedSuccess(true);
@@ -96,15 +97,15 @@ export const MusicPicker: React.FC<MusicPickerProps> = ({
       return;
     }
 
-    const check = validateYouTubeUrl(urlToSave);
+    const check = validateYouTubeUrl(cleanUrl);
     if (!check.isValid) return;
 
-    onMusicUrlChange(urlToSave.trim());
+    onMusicUrlChange(cleanUrl);
     if (onSaveMusic) {
-      onSaveMusic();
+      onSaveMusic(cleanUrl);
     }
-    setSavedUrl(urlToSave.trim());
-    setInputUrl(urlToSave.trim());
+    setSavedUrl(cleanUrl);
+    setInputUrl(cleanUrl);
     setMusicSavedSuccess(true);
     setTimeout(() => setMusicSavedSuccess(false), 4000);
   };
