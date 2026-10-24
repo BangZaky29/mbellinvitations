@@ -13,6 +13,7 @@ export interface CoupleInfo {
   parent_info?: string;        // alias ringkas orang tua
   child_order?: string;         // "Putra pertama dari pasangan"
   instagram: string;           // "@raditya.pratama"
+  marga?: string;              // "Siregar Silali" / "Simanjuntak Sitompul"
 }
 
 export interface EventInfo {
@@ -64,13 +65,15 @@ export type TemplateThemeId =
   | 'luxury'
   | 'sunda'
   | 'minang'
+  | 'batak'
   | 'template1'
   | 'template2'
   | 'template3'
   | 'template4'
   | 'template5'
   | 'template6'
-  | 'template7';
+  | 'template7'
+  | 'template8';
 
 export interface InvitationData {
   id?: string;
@@ -152,6 +155,7 @@ export const DEFAULT_ANIMATION_CONFIG: AnimationConfig = {
 export interface ThemeConfig {
   primary_color: string;
   music_url: string;
+  music_title?: string;
   active_sections: string[];
   // Convenience toggles (derived from active_sections but explicit for clarity)
   show_gallery?: boolean;

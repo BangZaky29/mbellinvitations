@@ -1,10 +1,10 @@
 import React from 'react';
 import type { CoverSectionProps } from '../../types';
+import { IslamicMihrabArch } from '../components/IslamicMihrabArch';
 
 export const CoverSection: React.FC<CoverSectionProps> = ({
   data,
   handleOpenInvitation,
-  renderSwipeHint,
   isPreview,
 }) => {
   const recipientName = data.guest_name || 'Tamu Undangan';
@@ -12,74 +12,77 @@ export const CoverSection: React.FC<CoverSectionProps> = ({
   return (
     <section
       id="sampul"
-      className="relative w-full h-full min-h-full flex flex-col justify-between items-center text-center p-4 sm:p-6 overflow-hidden bg-[#FCF8F8] z-20 select-none"
-      style={{ backgroundColor: '#FCF8F8' }}
+      className="relative w-full h-full min-h-full flex flex-col justify-between items-center text-center px-4 py-5 sm:px-6 sm:py-7 overflow-hidden bg-[#24060B] z-20 select-none text-[#FAF6EE]"
+      style={{ backgroundColor: '#24060B', color: '#FAF6EE' }}
     >
-      {/* 100% Solid Islamic Base Background + Gradient Aura (Non-transparent) */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden bg-[#FCF8F8]">
-        {/* Solid Rich Islamic Gradient (Burgundy to Warm Cream) */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#5E2832] via-[#7B3341] via-35% to-[#FCF8F8]"></div>
+      {/* Solid Deep Islamic Maroon Background + Vignette Aura & Star Pattern */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden bg-[#24060B]">
+        {/* Deep Royal Islamic Maroon Radial Gradient */}
+        <div className="absolute inset-0 bg-radial-[circle_at_center_top] from-[#3D141C] via-[#24060B] to-[#150205]"></div>
 
-        {/* Ambient Cover Photo blended subtly with solid backdrop */}
+        {/* Ambient Cover Photo blended very subtly into backdrop */}
         {(data.cover_image || data.couple_photo) && (
           <img
             src={data.cover_image || data.couple_photo}
             alt="Cover Background"
-            className="absolute inset-0 w-full h-full object-cover opacity-15 filter blur-[1.5px] scale-105"
+            className="absolute inset-0 w-full h-full object-cover opacity-10 filter blur-[2px] scale-105"
           />
         )}
 
-        {/* Subtle Islamic Arch / Star Pattern Overlay */}
-        <div className="absolute inset-0 bg-[radial-gradient(#D4AF37_1px,transparent_1px)] [background-size:20px_20px] opacity-15"></div>
+        {/* Subtle Islamic Geometry / Star Pattern Overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(#D4AF37_1px,transparent_1px)] [background-size:24px_24px] opacity-10"></div>
       </div>
 
-      {/* Top Notch-Safe Header with High Contrast Gold & White Typography */}
-      <div className="relative z-10 pt-8 sm:pt-10 shrink-0 flex flex-col items-center">
-        <div className="px-3.5 py-1 rounded-full bg-[#3D141C]/85 border border-[#D4AF37]/50 text-[#F5E296] font-sans text-xs tracking-widest uppercase shadow-sm mb-1.5 font-semibold">
-          Walimatul Ursy
+      {/* Top Header: Walimatul Ursy Pill Badge & The Wedding of */}
+      <div className="relative z-10 pt-4 sm:pt-6 shrink-0 flex flex-col items-center">
+        <div className="px-4 py-1 rounded-full bg-[#1A0306]/85 border border-[#D4AF37]/60 text-[#F5E296] font-cinzel text-xs tracking-[0.2em] uppercase shadow-md mb-2 font-semibold">
+          WALIMATUL URSY
         </div>
-        <p className="font-serif text-xs sm:text-sm text-[#F5E296]/95 tracking-widest italic drop-shadow-xs">
+        <p className="font-serif italic text-xs sm:text-sm text-[#E5C158] tracking-widest drop-shadow-xs">
           The Wedding of
         </p>
-        <h1 className="font-serif text-2xl sm:text-3xl text-white font-bold mt-0.5 tracking-wide drop-shadow-md">
+      </div>
+
+      {/* Middle Tier: Authentic 3D Gold Islamic Mihrab Arch Frame + Names & Date */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center my-auto py-1 sm:py-2 w-full max-w-[280px]">
+        {/* 3D Islamic Pointed Mihrab Arch Frame */}
+        <IslamicMihrabArch
+          imageSrc={
+            data.couple_photo ||
+            data.cover_image ||
+            'https://lh3.googleusercontent.com/aida-public/AB6AXuBR9L8ISRUM7mLqvnPG1IUud4itXFzYibGb-gsVdr2o8XOghzC2pdxs3o4Y2QQOZT5FDELCcHb1hQXs0m_y-Ug4bTBYR_zj1eXdzZ_EYzKQ5aJLGJsYRXpgssNhtGWT6egpeoVh-gBwyzuhPmyDGWnAET59APKBr1X9uYdaxY7TpdT6rg3zm48_6s4Va2AuaAL7-qkj_lnVIPqmYeb4KJVg6qBDlsZ1TKkNe3MGDcM_G9le8id4Vh3few'
+          }
+          altText={`${data.groom.name} & ${data.bride.name}`}
+        />
+
+        {/* Couple Names directly below Arch Frame */}
+        <h1 className="font-serif text-2xl sm:text-3xl text-[#FAF6EE] font-bold tracking-wide drop-shadow-md mt-3 sm:mt-3.5">
           {data.groom.name} &amp; {data.bride.name}
         </h1>
+
+        {/* Wedding Date in Gold */}
+        <p className="font-serif text-xs sm:text-sm text-[#D4AF37] tracking-wider mt-1 drop-shadow-xs">
+          {data.wedding_date_display || 'Minggu, 15 Oktober 2025'}
+        </p>
       </div>
 
-      {/* Middle Tier: Elegant Moroccan Arch Photo Frame with Solid Border */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center py-1 sm:py-2 w-full max-w-[240px]">
-        <div className="relative w-32 h-44 sm:w-40 sm:h-52 rounded-t-full rounded-b-2xl overflow-hidden bg-gradient-to-b from-[#D4AF37] via-[#E2C792] to-white p-1.5 shadow-xl shadow-[#5E2832]/25 border border-[#D4AF37]/70">
-          <div className="relative w-full h-full rounded-t-full rounded-b-xl overflow-hidden bg-[#5E2832]/20 shadow-inner">
-            <img
-              className="w-full h-full object-cover"
-              alt={`${data.groom.name} & ${data.bride.name}`}
-              src={
-                data.cover_image ||
-                data.couple_photo ||
-                'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&q=80&w=800'
-              }
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#5E2832]/45 via-transparent to-transparent pointer-events-none"></div>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Tier: Solid Guest Card & High-Contrast CTA Button */}
-      <div className="relative z-10 w-full max-w-[340px] pb-3 sm:pb-5 flex flex-col items-center space-y-2.5 shrink-0 mt-auto">
-        <div className="w-full bg-white rounded-2xl p-3 sm:p-4 shadow-md border border-[#D4AF37]/40 text-center">
-          <span className="block font-sans text-[10px] sm:text-xs text-[#8C5D66] uppercase tracking-wider font-semibold mb-0.5">
-            Kepada Yth. Bapak/Ibu/Saudara/i:
+      {/* Bottom Tier: Elegant Ivory Guest Card, Maroon CTA Button & Swipe Up Hint */}
+      <div className="relative z-10 w-full max-w-[340px] pb-2 sm:pb-3 flex flex-col items-center space-y-2.5 shrink-0 mt-auto">
+        {/* Guest Card */}
+        <div className="w-full bg-[#FAF6EE] rounded-2xl p-3 sm:p-3.5 shadow-xl border border-[#D4AF37]/50 text-center">
+          <span className="block font-sans text-[10px] sm:text-[11px] text-[#8A6822] uppercase tracking-[0.15em] font-bold mb-0.5">
+            KEPADA YTH: BAPAK/IBU/SAUDARA/I:
           </span>
-          <p className="font-serif text-base sm:text-lg text-[#5E2832] font-bold line-clamp-1">
+          <p className="font-serif text-base sm:text-lg text-[#2E0A10] font-bold line-clamp-1">
             {recipientName}
           </p>
           {(Boolean(data.guest_code) || isPreview) && (
-            <div className="mt-1 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#5E2832]/10 text-[#5E2832] text-[11px] font-mono font-semibold">
-              <span className="material-symbols-outlined text-[13px]">qr_code</span>
-              <span>CHECK-IN PASS: {data.guest_code || 'K8X9P'}</span>
+            <div className="mt-1 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#2E0A10]/10 text-[#2E0A10] text-[10px] font-mono font-semibold">
+              <span className="material-symbols-outlined text-[12px]">qr_code</span>
+              <span>PASS: {data.guest_code || 'ISL-2025'}</span>
             </div>
           )}
-          <span className="block mt-1 font-sans text-[9.5px] sm:text-[11px] text-[#8C5D66] italic">
+          <span className="block mt-1 font-sans text-[9.5px] sm:text-[10px] text-[#7D5C1E] italic">
             Mohon maaf bila ada kesalahan penulisan nama/gelar
           </span>
         </div>
@@ -87,18 +90,28 @@ export const CoverSection: React.FC<CoverSectionProps> = ({
         {/* Primary CTA Button */}
         <button
           onClick={handleOpenInvitation}
-          className="w-full h-11 sm:h-12 rounded-full bg-gradient-to-r from-[#5E2832] via-[#742B38] to-[#5E2832] hover:brightness-110 text-white font-sans text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-[#5E2832]/35 transition-all active:scale-[0.98] cursor-pointer border border-[#D4AF37]/50"
+          className="w-full h-11 sm:h-12 rounded-full bg-gradient-to-r from-[#24060B] via-[#380D14] to-[#24060B] hover:brightness-110 text-[#FAF6EE] font-sans text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-black/50 transition-all active:scale-[0.98] cursor-pointer border border-[#D4AF37]/70"
           id="btn-buka-undangan"
           type="button"
         >
-          <span className="material-symbols-outlined text-[18px] text-[#F5E296]">
-            mark_email_read
+          <span className="material-symbols-outlined text-[17px] text-[#D4AF37]">
+            mail
           </span>
-          <span className="tracking-wide">Buka Undangan</span>
+          <span className="tracking-widest uppercase">BUKA UNDANGAN</span>
+          <span className="material-symbols-outlined text-[17px] text-[#D4AF37]">
+            expand_more
+          </span>
         </button>
 
-        {/* Interaktif Petunjuk Usap ke Atas */}
-        {renderSwipeHint({ variant: 'gold' })}
+        {/* Interactive Swipe Up Hint */}
+        <div className="flex flex-col items-center gap-0.5 text-[#D4AF37] pt-0.5">
+          <span className="material-symbols-outlined text-[16px] animate-bounce">
+            expand_less
+          </span>
+          <span className="font-sans text-[9px] sm:text-[10px] uppercase tracking-[0.25em] font-semibold text-[#D4AF37]/90">
+            USAP KE ATAS UNTUK MEMBUKA
+          </span>
+        </div>
       </div>
     </section>
   );

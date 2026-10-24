@@ -47,8 +47,43 @@ export function useTemplateState({
   const defaultMusicUrl = data.music_url || theme.music_url || fallbackMusicUrl;
   const { isPlaying, toggle, play } = useAudioPlayer(defaultMusicUrl);
 
-  // Real-time countdown hook
-  const { days, hours, minutes, seconds } = useCountdown(data.wedding_date_iso);
+  // Real-time countdown hook targeting active countdown event dynamically
+  const targetCountdownISO = React.useMemo(() => {
+    const rawEvents = data.events;
+    const events = Array.isArray(rawEvents)
+      ? rawEvents
+      : rawEvents && typeof rawEvents === 'object'
+      ? Object.values(rawEvents)
+      : [];
+    const activeIdx = data.countdown_target === 'resepsi' && events.length > 1 ? 1 : 0;
+    const targetEvent = events[activeIdx] || events[0];
+
+    if (targetEvent?.date) {
+      const dateStr = String(targetEvent.date).trim();
+      const timeStr = targetEvent.start_time || '09:00';
+      const tzStr = targetEvent.timezone || 'WIB';
+      const tzOffset = tzStr === 'WIT' ? '+09:00' : tzStr === 'WITA' ? '+08:00' : '+07:00';
+      const formattedTime = timeStr.length === 5 ? `${timeStr}:00` : timeStr;
+
+      const isoMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (isoMatch) {
+        return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}T${formattedTime}${tzOffset}`;
+      }
+      const slashMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (slashMatch) {
+        const y = slashMatch[3];
+        const m = String(slashMatch[2]).padStart(2, '0');
+        const d = String(slashMatch[1]).padStart(2, '0');
+        return `${y}-${m}-${d}T${formattedTime}${tzOffset}`;
+      }
+    }
+    if (data.wedding_date_iso) {
+      return data.wedding_date_iso;
+    }
+    return '2026-11-14T09:00:00+07:00';
+  }, [data.wedding_date_iso, data.events, data.countdown_target]);
+
+  const { days, hours, minutes, seconds } = useCountdown(targetCountdownISO);
 
   // Local Wishes state
   const [wishes, setWishes] = useState<WishItem[]>(initialWishes);

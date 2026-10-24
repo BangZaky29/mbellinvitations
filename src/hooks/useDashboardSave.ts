@@ -6,7 +6,6 @@ import {
   THEME_TO_TEMPLATE_ID,
   TEMPLATE_ID_TO_THEME,
   getSafeDbTemplateId,
-  isTemplateUnlocked,
 } from '../pages/dashboard/constants/themeMapping';
 import type { DashboardUser } from './useDashboardAuth';
 
@@ -74,24 +73,19 @@ async function syncInvitationsRow(
           'sunda';
         const newTheme = payload.content?.theme_id || TEMPLATE_ID_TO_THEME[payload.template_id] || 'sunda';
 
-        // Cek apakah newTheme sudah dibeli untuk desain undangan ini
-        const isNewThemeUnlocked = isTemplateUnlocked(
-          newTheme,
-          payload.content?.unlocked_templates || existing.content?.unlocked_templates,
-          payload.content?.paid_template_id || existing.content?.paid_template_id,
-          payload.content?.is_paid ?? existing.content?.is_paid
-        );
 
-        // Jika status undangan SUDAH LIVE (published), dan user sedang mencoba tema baru yang BELUM DIBELI:
-        // Tautan publik WAJIB TETAP mempertahankan template live yang sah (existing.template_id & existingTheme)
-        const isAttemptingUnpaidThemeOnLive =
-          existing.status === 'published' && !isNewThemeUnlocked;
+        // Jika status undangan SUDAH LIVE (published):
+        // Jika tema yang diedit berbeda dari tema live yang sudah terbit di Supabase (newTheme !== existingTheme):
+        // Tautan publik WAJIB TETAP mempertahankan template live yang sah (existing.template_id, existingTheme, & existing theme_config)
+        // sampai user secara sadar menekan tombol 'Terbitkan'!
+        const isAttemptingDifferentThemeOnLive =
+          existing.status === 'published' && newTheme !== existingTheme;
 
-        const activeLiveTemplateId = isAttemptingUnpaidThemeOnLive
+        const activeLiveTemplateId = isAttemptingDifferentThemeOnLive
           ? existing.template_id
           : safeTemplateId;
 
-        const liveContent = isAttemptingUnpaidThemeOnLive
+        const liveContent = isAttemptingDifferentThemeOnLive
           ? { ...payload.content, theme_id: existingTheme }
           : payload.content;
         const effectiveIsPaid = Boolean(existing.is_paid ?? (existing.status === 'published'));
@@ -112,7 +106,7 @@ async function syncInvitationsRow(
         const updatePayload: any = {
           template_id: activeLiveTemplateId,
           content: synchronizedContent,
-          theme_config: isAttemptingUnpaidThemeOnLive ? (existing.content?.theme_config || (existing as any).theme_config || payload.theme_config) : payload.theme_config,
+          theme_config: isAttemptingDifferentThemeOnLive ? (existing.content?.theme_config || (existing as any).theme_config || payload.theme_config) : payload.theme_config,
           music_url: payload.music_url,
           music_type: payload.music_type,
           is_paid: effectiveIsPaid,
@@ -468,18 +462,13 @@ export function useDashboardSave({
 
       // 3. Jika user terautentikasi (login), simpan/upsert ke tabel public.user_templates
       if (user?.id) {
-        const isThemeUnlocked = isTemplateUnlocked(
-          formData.theme_id,
-          formData.unlocked_templates,
-          formData.paid_template_id,
-          formData.is_paid
-        );
 
-        // Jika status undangan adalah published, dan user sedang memilih tema yang belum dibeli:
-        // Simpan tema yang sudah terbit di kolom utama agar rute publik tetap aman
-        const isUnpaidPreviewOnLive = effectiveStatus === 'published' && !isThemeUnlocked;
-        const resolvedDbTheme = isUnpaidPreviewOnLive
-          ? (baselineSnapshotRef.current?.formData?.theme_id || 'jawa')
+        // Jika status undangan adalah published, dan user sedang memilih tema yang berbeda di editor (pratinjau):
+        // Simpan tema yang sudah terbit di kolom utama agar rute publik & record live tetap aman
+        const publishedLiveTheme = baselineSnapshotRef.current?.formData?.theme_id;
+        const isDifferentThemeOnLive = effectiveStatus === 'published' && Boolean(publishedLiveTheme) && formData.theme_id !== publishedLiveTheme;
+        const resolvedDbTheme = isDifferentThemeOnLive
+          ? (publishedLiveTheme || 'modern')
           : (formData.theme_id || 'modern');
         const resolvedDbTemplateId = getSafeDbTemplateId(resolvedDbTheme);
 
@@ -494,8 +483,8 @@ export function useDashboardSave({
           is_paid: formData.is_paid ?? (effectiveStatus === 'published'),
           paid_template_id: formData.paid_template_id || (effectiveStatus === 'published' ? resolvedDbTemplateId : null),
           unlocked_templates: formData.unlocked_templates || [],
-          content: isUnpaidPreviewOnLive ? { ...formData, theme_id: resolvedDbTheme } : formData,
-          theme_config: themeConfig,
+          content: isDifferentThemeOnLive ? { ...formData, theme_id: resolvedDbTheme } : formData,
+          theme_config: isDifferentThemeOnLive ? (baselineSnapshotRef.current?.themeConfig || themeConfig) : themeConfig,
           music_url: resolvedMusicUrl,
           music_type: resolvedMusicType,
           thumbnail_url: formData.cover_image || formData.couple_photo || null,
@@ -520,11 +509,15 @@ export function useDashboardSave({
       setAuditTrail({ count: 0, changes: [], hasChanges: false });
       localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
       try {
-        localStorage.setItem(`mbell_cached_inv_${targetSlug}`, JSON.stringify({
-          templateId: template_id,
-          invitationData: formData,
-          themeConfig,
-        }));
+        const publishedLiveTheme = baselineSnapshotRef.current?.formData?.theme_id;
+        const isThemeLiveOrDraft = !publishedLiveTheme || formData.theme_id === publishedLiveTheme || effectiveStatus !== 'published';
+        if (isThemeLiveOrDraft) {
+          localStorage.setItem(`mbell_cached_inv_${targetSlug}`, JSON.stringify({
+            templateId: template_id,
+            invitationData: formData,
+            themeConfig,
+          }));
+        }
       } catch (e) {}
       setLastSaved(new Date());
 
@@ -603,15 +596,10 @@ export function useDashboardSave({
       if (user?.id) {
         const targetRecordId = recordId || undefined;
 
-        const isThemeUnlocked = isTemplateUnlocked(
-          formData.theme_id,
-          formData.unlocked_templates,
-          formData.paid_template_id,
-          formData.is_paid
-        );
-        const isUnpaidPreviewOnLive = effectiveStatus === 'published' && !isThemeUnlocked;
-        const resolvedDbTheme = isUnpaidPreviewOnLive
-          ? (baselineSnapshotRef.current?.formData?.theme_id || 'jawa')
+        const publishedLiveTheme = baselineSnapshotRef.current?.formData?.theme_id;
+        const isDifferentThemeOnLive = effectiveStatus === 'published' && Boolean(publishedLiveTheme) && formData.theme_id !== publishedLiveTheme;
+        const resolvedDbTheme = isDifferentThemeOnLive
+          ? (publishedLiveTheme || 'modern')
           : (formData.theme_id || 'modern');
         const resolvedDbTemplateId = getSafeDbTemplateId(resolvedDbTheme);
 
@@ -624,8 +612,8 @@ export function useDashboardSave({
           template_id: resolvedDbTemplateId,
           theme_id: resolvedDbTheme,
           status: effectiveStatus,
-          content: isUnpaidPreviewOnLive ? { ...draftContent, theme_id: resolvedDbTheme } : draftContent,
-          theme_config: themeConfig,
+          content: isDifferentThemeOnLive ? { ...draftContent, theme_id: resolvedDbTheme } : draftContent,
+          theme_config: isDifferentThemeOnLive ? (baselineSnapshotRef.current?.themeConfig || themeConfig) : themeConfig,
           music_url: resolvedMusicUrl,
           music_type: resolvedMusicType,
           thumbnail_url: formData.cover_image || formData.couple_photo || null,
@@ -661,11 +649,15 @@ export function useDashboardSave({
       setAuditTrail({ count: 0, changes: [], hasChanges: false });
       localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
       try {
-        localStorage.setItem(`mbell_cached_inv_${targetSlug}`, JSON.stringify({
-          templateId: template_id,
-          invitationData: draftContent,
-          themeConfig,
-        }));
+        const publishedLiveTheme = baselineSnapshotRef.current?.formData?.theme_id;
+        const isThemeLiveOrDraft = !publishedLiveTheme || formData.theme_id === publishedLiveTheme || effectiveStatus !== 'published';
+        if (isThemeLiveOrDraft) {
+          localStorage.setItem(`mbell_cached_inv_${targetSlug}`, JSON.stringify({
+            templateId: template_id,
+            invitationData: draftContent,
+            themeConfig,
+          }));
+        }
       } catch (e) {}
       setLastSaved(new Date());
 

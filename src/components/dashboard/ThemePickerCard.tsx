@@ -232,6 +232,10 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
                             img.src = img.src.replace('template7-minang.jpg', 'template_7_Minang.jpg');
                           } else if (img.src.includes('template_7_Minang.jpg')) {
                             img.src = img.src.replace('template_7_Minang.jpg', 'template7-minang.jpg');
+                          } else if (img.src.includes('template8-batak.jpg')) {
+                            img.src = img.src.replace('template8-batak.jpg', 'template_8_Batak.jpg');
+                          } else if (img.src.includes('template_8_Batak.jpg')) {
+                            img.src = img.src.replace('template_8_Batak.jpg', 'template8-batak.jpg');
                           } else {
                             setImgErrors((prev) => ({ ...prev, [theme.id]: true }));
                           }
@@ -327,10 +331,10 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
                         ? 'bg-emerald-600 text-white'
                         : 'bg-stone-900 text-white'
                     }`}
-                    title={isLive ? 'Template Live aktif di editor' : 'Template sedang aktif'}
+                    title={isLive ? 'Template Live aktif di editor' : 'Tema dipilih untuk pratinjau editor'}
                   >
                     <span className="material-symbols-outlined text-[12px] sm:text-[15px] font-bold">check</span>
-                    <span>{isLive ? 'Live Aktif' : 'Aktif'}</span>
+                    <span>{isLive ? 'Live Aktif' : 'Dipilih'}</span>
                   </div>
                 ) : (
                   <div className="w-full py-1 sm:py-1.5 rounded-lg sm:rounded-xl border border-stone-200 text-stone-700 text-[10px] sm:text-xs font-semibold group-hover:bg-stone-900 group-hover:text-white group-hover:border-stone-900 transition-all flex items-center justify-center gap-1">

@@ -7,6 +7,7 @@ import {
   MOCK_LUXURY_THEME,
   MOCK_SUNDA_THEME,
   MOCK_MINANG_THEME,
+  MOCK_BATAK_THEME,
 } from '../../../data/mockInvitation';
 import { getDynamicPriceInfo } from '../../../services/templateCatalogService';
 
@@ -19,6 +20,7 @@ export const THEME_TO_TEMPLATE_ID: Record<string, string> = {
   luxury: 'template5',
   sunda: 'template6',
   minang: 'template7',
+  batak: 'template8',
   template1: 'template1',
   template2: 'template2',
   template3: 'template3',
@@ -26,13 +28,14 @@ export const THEME_TO_TEMPLATE_ID: Record<string, string> = {
   template5: 'template5',
   template6: 'template6',
   template7: 'template7',
+  template8: 'template8',
 };
 
 /**
  * Daftar tema eksklusif resmi yang tersedia di Wedding Studio
  */
-export const CANONICAL_THEMES = ['sunda', 'minang', 'jawa', 'islami', 'modern', 'rustic', 'luxury'] as const;
-export const TOTAL_EXCLUSIVE_THEMES = CANONICAL_THEMES.length; // 7 Tema Eksklusif
+export const CANONICAL_THEMES = ['sunda', 'minang', 'batak', 'jawa', 'islami', 'modern', 'rustic', 'luxury'] as const;
+export const TOTAL_EXCLUSIVE_THEMES = CANONICAL_THEMES.length; // 8 Tema Eksklusif
 
 // ID template yang sah terdaftar di master table public.templates Supabase (mencegah error 409 FK violation)
 export const KNOWN_DB_TEMPLATE_IDS = new Set([
@@ -41,6 +44,9 @@ export const KNOWN_DB_TEMPLATE_IDS = new Set([
   'template3',
   'template4',
   'template5',
+  'template6',
+  'template7',
+  'template8',
 ]);
 
 /**
@@ -51,6 +57,8 @@ export const THEME_NAMES: Record<string, string> = {
   template6: 'Adat Sunda Siger',
   minang: 'Adat Minang Baralek Gadang',
   template7: 'Adat Minang Baralek Gadang',
+  batak: 'Adat Batak Toba Royal',
+  template8: 'Adat Batak Toba Royal',
   jawa: 'Adat Jawa',
   template3: 'Adat Jawa',
   modern: 'Modern Arch',
@@ -94,6 +102,18 @@ export const THEME_META: Record<string, ThemeMetaInfo> = {
     tag: 'Suntiang Gadang & Songket Silungkang',
     icon: 'temple_buddhist',
     accentColor: '#D4AF37',
+  },
+  batak: {
+    name: 'Adat Batak Toba Royal',
+    tag: 'Gondang Sabangunan & Ulos Hela',
+    icon: 'church',
+    accentColor: '#C8A253',
+  },
+  template8: {
+    name: 'Adat Batak Toba Royal',
+    tag: 'Gondang Sabangunan & Ulos Hela',
+    icon: 'church',
+    accentColor: '#C8A253',
   },
   jawa: {
     name: 'Adat Jawa',
@@ -193,6 +213,7 @@ export const TEMPLATE_ID_TO_THEME: Record<string, string> = {
   template5: 'luxury',
   template6: 'sunda',
   template7: 'minang',
+  template8: 'batak',
   modern: 'modern',
   rustic: 'rustic',
   jawa: 'jawa',
@@ -200,6 +221,7 @@ export const TEMPLATE_ID_TO_THEME: Record<string, string> = {
   luxury: 'luxury',
   sunda: 'sunda',
   minang: 'minang',
+  batak: 'batak',
 };
 
 export const DEFAULT_THEME_CONFIGS: Record<string, ThemeConfig> = {
@@ -217,6 +239,8 @@ export const DEFAULT_THEME_CONFIGS: Record<string, ThemeConfig> = {
   template6: MOCK_SUNDA_THEME,
   minang: MOCK_MINANG_THEME,
   template7: MOCK_MINANG_THEME,
+  batak: MOCK_BATAK_THEME,
+  template8: MOCK_BATAK_THEME,
 };
 
 // Demo keywords untuk deteksi apakah form masih memakai data bawaan template
@@ -224,6 +248,7 @@ export const DEMO_KEYWORDS = [
   'dimas', 'sarah',
   'raditya', 'jessica',
   'farhan', 'nadia',
+  'johannes', 'melisa', 'siregar', 'simanjuntak',
   'romeo', 'juliet',
   'arya', 'dian', 'suryonegoro', 'daniswara',
   'rayhan', 'yasmin', 'al-fatih', 'anbiya',
@@ -273,6 +298,24 @@ export const TEMPLATE_PRICING: Record<string, TemplatePriceInfo> = {
     categoryLabel: 'Adat Nusantara',
   },
   template7: {
+    price: 79000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 79.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 79rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  batak: {
+    price: 79000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 79.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 79rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  template8: {
     price: 79000,
     originalPrice: 99000,
     priceDisplay: 'Rp 79.000',

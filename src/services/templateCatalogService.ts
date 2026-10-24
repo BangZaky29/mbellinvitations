@@ -146,6 +146,18 @@ export const TEMPLATE_VISUAL_PRESETS: Record<
     styleTag: 'Tradisi Ranah Minang',
     coupleSample: 'Farhan & Nadia',
   },
+  template8: {
+    icon: 'church',
+    bgClass: 'bg-[#19120E] text-[#EAC16E] border-[#EAC16E]/40',
+    styleTag: 'Adat Batak Toba',
+    coupleSample: 'Johannes & Melisa',
+  },
+  'adat-batak': {
+    icon: 'church',
+    bgClass: 'bg-[#19120E] text-[#EAC16E] border-[#EAC16E]/40',
+    styleTag: 'Adat Batak Toba',
+    coupleSample: 'Johannes & Melisa',
+  },
 };
 
 export const SUPABASE_MOCKUP_BASE_URL =
@@ -153,6 +165,21 @@ export const SUPABASE_MOCKUP_BASE_URL =
 
 // Seed default fallback jika Supabase belum selesai fetch pertama kali
 export const DEFAULT_CATALOG_SEEDS: DbTemplateRecord[] = [
+  {
+    id: 'template8',
+    slug: 'adat-batak',
+    name: 'Adat Batak Toba Royal',
+    category: 'adat',
+    description: 'Pemberkatan Nikah Kudus & Pesta Adat Batak Toba Mangulosi',
+    preview_badge: 'Royal Adat',
+    accent_color: '#C8A253',
+    is_active: true,
+    is_premium: true,
+    price: 79000,
+    original_price: 99000,
+    mockup_url: `${SUPABASE_MOCKUP_BASE_URL}/template8-batak.jpg`,
+    thumbnail_url: `${SUPABASE_MOCKUP_BASE_URL}/template8-batak.jpg`,
+  },
   {
     id: 'template6',
     slug: 'adat-sunda',

@@ -8,6 +8,7 @@ import { Template4Islami } from '../components/templates/Template4Islami';
 import { Template5Luxury } from '../components/templates/Template5Luxury';
 import { TemplateSundaSiger } from '../components/templates/TemplateSundaSiger';
 import { TemplateMinangBaralek } from '../components/templates/Template7Minang';
+import { TemplateBatakToba } from '../components/templates/Template8Batak';
 import { DraftNoticeScreen } from '../components/common/DraftNoticeScreen';
 import { isTemplateUnlocked, TEMPLATE_ID_TO_THEME } from './dashboard/constants/themeMapping';
 
@@ -23,7 +24,8 @@ export const PublicInvitationPage: React.FC = () => {
   let requestedTheme: string | null = null;
   if (rawThemeParam) {
     const clean = rawThemeParam.toLowerCase().replace(/^template[-_]?/i, '').trim();
-    if (clean === '7' || clean === 'minang') requestedTheme = 'minang';
+    if (clean === '8' || clean === 'batak') requestedTheme = 'batak';
+    else if (clean === '7' || clean === 'minang') requestedTheme = 'minang';
     else if (clean === '6' || clean === 'sunda') requestedTheme = 'sunda';
     else if (clean === '3' || clean === 'jawa') requestedTheme = 'jawa';
     else if (clean === '2' || clean === 'rustic') requestedTheme = 'rustic';
@@ -112,15 +114,16 @@ export const PublicInvitationPage: React.FC = () => {
     requestedTheme ||
     invitationData?.theme_id ||
     TEMPLATE_ID_TO_THEME[templateId] ||
-    (templateId === 'template7' ? 'minang' : templateId === 'template6' ? 'sunda' : 'modern');
+    (templateId === 'template8' ? 'batak' : templateId === 'template7' ? 'minang' : templateId === 'template6' ? 'sunda' : 'modern');
 
+  const isBatak = activeTheme === 'batak';
   const isMinang = activeTheme === 'minang';
   const isSunda = activeTheme === 'sunda';
   const isJawa = activeTheme === 'jawa';
   const isRustic = activeTheme === 'rustic';
   const isIslami = activeTheme === 'islami';
   const isLuxury = activeTheme === 'luxury';
-  const isModern = !isMinang && !isSunda && !isJawa && !isRustic && !isIslami && !isLuxury;
+  const isModern = !isBatak && !isMinang && !isSunda && !isJawa && !isRustic && !isIslami && !isLuxury;
 
   return (
     <div id="invitation-root" data-public-invitation="true" className="relative w-full min-h-screen no-scrollbar">
@@ -212,6 +215,17 @@ export const PublicInvitationPage: React.FC = () => {
 
       {isMinang && (
         <TemplateMinangBaralek
+          invitationId={slug}
+          data={invitationData}
+          theme={themeConfig}
+          wishes={wishes}
+          onSubmitWish={onSubmitWish}
+          onSubmitRsvp={onSubmitRsvp}
+        />
+      )}
+
+      {isBatak && (
+        <TemplateBatakToba
           invitationId={slug}
           data={invitationData}
           theme={themeConfig}

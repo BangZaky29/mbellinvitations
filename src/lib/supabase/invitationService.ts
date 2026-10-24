@@ -79,7 +79,9 @@ export async function fetchInvitationBySlug(slug: string): Promise<SupabaseInvit
   const effectiveTheme = TEMPLATE_ID_TO_THEME[rawTheme] || rawTheme;
 
   const resolvedTplId =
-    effectiveTheme === 'minang'
+    effectiveTheme === 'batak'
+      ? 'template8'
+      : effectiveTheme === 'minang'
       ? 'template7'
       : effectiveTheme === 'sunda'
       ? 'template6'

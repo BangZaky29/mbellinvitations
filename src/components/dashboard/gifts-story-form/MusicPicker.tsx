@@ -80,7 +80,22 @@ export const MusicPicker: React.FC<MusicPickerProps> = ({
     setMusicSavedSuccess(false);
   };
 
+  const handleClear = () => {
+    setInputUrl('');
+    setMusicSavedSuccess(false);
+  };
+
   const handleSaveAction = (urlToSave: string) => {
+    if (!urlToSave.trim()) {
+      onMusicUrlChange('');
+      if (onSaveMusic) onSaveMusic();
+      setSavedUrl('');
+      setInputUrl('');
+      setMusicSavedSuccess(true);
+      setTimeout(() => setMusicSavedSuccess(false), 4000);
+      return;
+    }
+
     const check = validateYouTubeUrl(urlToSave);
     if (!check.isValid) return;
 
@@ -141,12 +156,25 @@ export const MusicPicker: React.FC<MusicPickerProps> = ({
               value={inputUrl}
               onChange={handleInputChange}
               placeholder="cth: https://www.youtube.com/watch?v=... atau https://youtu.be/..."
-              className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white text-stone-900 border text-sm shadow-2xs transition-all focus:outline-none focus:ring-2 ${
+              className={`w-full pl-9 pr-10 py-2.5 rounded-xl bg-white text-stone-900 border text-sm shadow-2xs transition-all focus:outline-none focus:ring-2 ${
                 inputUrl.trim() && !validation.isValid
                   ? 'border-red-400 focus:border-red-600 focus:ring-red-100 bg-red-50/20'
                   : 'border-stone-200 hover:border-stone-300 focus:border-stone-900 focus:ring-stone-900/10'
               }`}
             />
+            {inputUrl && (
+              <button
+                type="button"
+                onClick={handleClear}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer flex items-center justify-center"
+                title="Hapus teks link musik"
+                aria-label="Hapus teks link musik"
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  cancel
+                </span>
+              </button>
+            )}
           </div>
 
           {/* Tombol Preset Romantis */}

@@ -38,7 +38,9 @@ function getInitialRealtimeState(slug: string, guestParam?: string | null, codeP
         const rawContent = parsed.invitationData || parsed.content;
         const effectiveTheme = requestedTheme || rawContent.theme_id || parsed.theme_id || '';
         const resolvedTplId =
-          effectiveTheme === 'minang'
+          effectiveTheme === 'batak'
+            ? 'template8'
+            : effectiveTheme === 'minang'
             ? 'template7'
             : effectiveTheme === 'sunda'
             ? 'template6'
@@ -144,7 +146,9 @@ export function useInvitationRealtime({
           const rawTheme = requestedTheme || (inv.content?.theme_id || (inv as any).theme_id || inv.template_id || '') as string;
           const effectiveTheme = TEMPLATE_ID_TO_THEME[rawTheme] || rawTheme;
           const resolvedTemplateId =
-            effectiveTheme === 'minang'
+            effectiveTheme === 'batak'
+              ? 'template8'
+              : effectiveTheme === 'minang'
               ? 'template7'
               : effectiveTheme === 'sunda'
               ? 'template6'
@@ -293,7 +297,9 @@ export function useInvitationRealtime({
             const rawTheme = requestedTheme || (updated.content?.theme_id || (updated as any).theme_id || updated.template_id || '') as string;
             const effectiveTheme = TEMPLATE_ID_TO_THEME[rawTheme] || rawTheme;
             const resolvedTemplateId =
-              effectiveTheme === 'minang'
+              effectiveTheme === 'batak'
+                ? 'template8'
+                : effectiveTheme === 'minang'
                 ? 'template7'
                 : effectiveTheme === 'sunda'
                 ? 'template6'

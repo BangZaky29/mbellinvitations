@@ -59,6 +59,13 @@ export const THEME_PRESETS: ThemePresetItem[] = [
     description: 'Kemegahan Suntiang Gadang, Songket Silungkang, Gonjong Rumah Gadang, dan ornamen ukir Minangkabau',
     thumbnail: 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=600&q=80',
   },
+  {
+    id: 'batak',
+    name: 'Adat Batak Toba & Gorga Bolon',
+    category: 'Adat Nusantara',
+    description: 'Kemegahan Sortali Emas, Ulos Ragi Hotang, Ornamen Gorga Boras Pati, dan Arsitektur Rumah Bolon',
+    thumbnail: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80',
+  },
 ];
 
 export const THEME_BANNER_COLORS: Record<string, { bg: string; text: string; badge: string; label: string }> = {
@@ -115,6 +122,18 @@ export const THEME_BANNER_COLORS: Record<string, { bg: string; text: string; bad
     text: 'text-[#f5e6c8]',
     badge: 'bg-[#d4af37]/25 text-[#f5e6c8] border-[#d4af37]/40',
     label: 'Adat Minang Baralek Gadang',
+  },
+  batak: {
+    bg: 'from-[#19120e] via-[#661d24] to-[#c8a253]/80',
+    text: 'text-[#ede1d0]',
+    badge: 'bg-[#c8a253]/25 text-[#f5e6c8] border-[#c8a253]/40',
+    label: 'Adat Batak Toba',
+  },
+  template8: {
+    bg: 'from-[#19120e] via-[#661d24] to-[#c8a253]/80',
+    text: 'text-[#ede1d0]',
+    badge: 'bg-[#c8a253]/25 text-[#f5e6c8] border-[#c8a253]/40',
+    label: 'Adat Batak Toba',
   },
 };
 

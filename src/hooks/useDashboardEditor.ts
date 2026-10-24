@@ -14,7 +14,6 @@ import {
   DEFAULT_THEME_CONFIGS,
   DEMO_KEYWORDS,
   getSafeDbTemplateId,
-  isTemplateUnlocked,
 } from '../pages/dashboard/constants/themeMapping';
 import {
   computeCoupleSlug,
@@ -992,59 +991,28 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
     }
     setThemeConfig(matchedConfig);
 
-    // Sinkronkan cache lokal seketika agar saat membuka tab publik link langsung menampilkan tema baru
+    // Sinkronkan state editor dan draf lokal untuk pratinjau simulator
     const activeSlug = updatedData.slug || computeCoupleSlug(updatedData.groom?.name, updatedData.bride?.name);
-    const safeDbTpl = getSafeDbTemplateId(semanticId);
     if (activeSlug) {
       try {
-        localStorage.setItem(`mbell_cached_inv_${activeSlug}`, JSON.stringify({
-          templateId: safeDbTpl,
-          invitationData: updatedData,
-          themeConfig: matchedConfig,
-        }));
         localStorage.setItem('mbell_pending_draft_formData', JSON.stringify(updatedData));
         localStorage.setItem('mbell_pending_draft_themeConfig', JSON.stringify(matchedConfig));
+        localStorage.setItem('mbell_pending_draft_hasUnsavedEdits', 'true');
+
+        // PENTING: Hanya perbarui cache publik mbell_cached_inv_ jika tema yang dipilih
+        // adalah tema yang memang sedang LIVE / PUBLISHED.
+        // JANGAN menimpa cache publik jika tema yang dipilih masih berupa draf / pratinjau editor!
+        const effectiveLiveTheme = publishedThemeId || liveBaselineRef.current?.theme_id;
+        const isLiveTheme = Boolean(effectiveLiveTheme && semanticId === effectiveLiveTheme);
+        if (isLiveTheme) {
+          const safeDbTpl = getSafeDbTemplateId(semanticId);
+          localStorage.setItem(`mbell_cached_inv_${activeSlug}`, JSON.stringify({
+            templateId: safeDbTpl,
+            invitationData: updatedData,
+            themeConfig: matchedConfig,
+          }));
+        }
       } catch (e) {}
-
-      // Jika tema yang dipilih sudah berstatus dibeli (unlocked) atau undangan published,
-      // langsung lakukan sinkronisasi diam-diam (silent-sync) ke database Supabase
-      const isUnlocked = isTemplateUnlocked(
-        semanticId,
-        updatedData.unlocked_templates,
-        updatedData.paid_template_id,
-        updatedData.is_paid
-      );
-
-      if (isUnlocked) {
-        (async () => {
-          try {
-            await supabase
-              .from('invitations')
-              .update({
-                template_id: safeDbTpl,
-                content: updatedData,
-                theme_config: matchedConfig,
-                updated_at: new Date().toISOString(),
-              })
-              .eq('slug', activeSlug);
-
-            if (currentTemplateRecordId) {
-              await supabase
-                .from('user_templates')
-                .update({
-                  template_id: safeDbTpl,
-                  theme_id: semanticId,
-                  content: updatedData,
-                  theme_config: matchedConfig,
-                  updated_at: new Date().toISOString(),
-                })
-                .eq('id', currentTemplateRecordId);
-            }
-          } catch (err) {
-            console.warn('Silent theme switch sync notice:', err);
-          }
-        })();
-      }
     }
   };
 

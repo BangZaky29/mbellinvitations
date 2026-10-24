@@ -59,57 +59,68 @@ export const WishesSection: React.FC<MinangWishesProps> = ({
       </form>
 
       {/* Feed of Wishes */}
-      <div className="w-full max-w-sm mx-auto flex flex-col gap-3 max-h-[380px] overflow-y-auto no-scrollbar pr-0.5">
-        {wishes.map((w, idx) => (
-          <div
-            key={w.id || idx}
-            className="p-3.5 rounded-xl bg-white shadow-2xs flex flex-col border border-[#D4AF37]/30 relative overflow-hidden"
-          >
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                <div className="w-7 h-7 rounded-full bg-[#2E0A10] text-[#F5E296] border border-[#D4AF37]/50 flex items-center justify-center font-cinzel text-xs font-bold shrink-0">
-                  {(w.guest_name || 'T').charAt(0).toUpperCase()}
+      <div className="w-full max-w-sm mx-auto flex flex-col gap-3.5 max-h-[480px] overflow-y-auto no-scrollbar pr-0.5 overscroll-contain">
+        {wishes && wishes.length > 0 ? (
+          wishes.map((w, idx) => (
+            <div
+              key={w.id || idx}
+              className="p-4 sm:p-4.5 rounded-xl bg-white shadow-sm flex flex-col border border-[#D4AF37]/35 relative shrink-0 transition-all"
+            >
+              <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#D4AF37]/20">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2E0A10] to-[#4A121A] text-[#F5E296] border border-[#D4AF37]/60 flex items-center justify-center font-cinzel text-xs font-bold shrink-0 shadow-xs">
+                    {(w.guest_name || 'T').charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h5 className="font-serif text-[13px] font-bold text-[#2E0A10] truncate">
+                      {w.guest_name}
+                    </h5>
+                    <span className="text-[10px] text-[#7D5C1E]/80 font-sans block">
+                      {w.created_at
+                        ? new Date(w.created_at).toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })
+                        : 'Baru saja'}
+                    </span>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <h5 className="font-serif text-sm font-bold text-[#2E0A10] truncate">
-                    {w.guest_name}
-                  </h5>
-                  <span className="text-[10px] text-[#4A121A]/70 font-sans block">
-                    {w.created_at
-                      ? new Date(w.created_at).toLocaleDateString('id-ID', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })
-                      : 'Baru saja'}
+
+                {w.attendance && (
+                  <span
+                    className={`text-[9.5px] font-sans font-medium px-2.5 py-0.5 rounded-full shrink-0 ${
+                      w.attendance === 'attending'
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-300/70'
+                        : w.attendance === 'declined'
+                        ? 'bg-rose-50 text-rose-800 border border-rose-300/70'
+                        : 'bg-amber-50 text-amber-800 border border-amber-300/70'
+                    }`}
+                  >
+                    {w.attendance === 'attending'
+                      ? 'Hadir'
+                      : w.attendance === 'declined'
+                      ? 'Berhalangan'
+                      : 'Ragu-ragu'}
                   </span>
-                </div>
+                )}
               </div>
 
-              {w.attendance && (
-                <span
-                  className={`text-[9.5px] font-sans font-semibold px-2 py-0.5 rounded-full shrink-0 ${
-                    w.attendance === 'attending'
-                      ? 'bg-emerald-900/15 text-emerald-800 border border-emerald-600/30'
-                      : w.attendance === 'declined'
-                      ? 'bg-rose-900/15 text-rose-800 border border-rose-600/30'
-                      : 'bg-amber-900/15 text-amber-800 border border-amber-600/30'
-                  }`}
-                >
-                  {w.attendance === 'attending'
-                    ? 'Hadir'
-                    : w.attendance === 'declined'
-                    ? 'Berhalangan'
-                    : 'Ragu-ragu'}
-                </span>
-              )}
+              <div className="pt-2.5">
+                <p className="text-xs sm:text-[13px] text-[#2E0A10]/95 font-sans leading-relaxed break-words [overflow-wrap:anywhere]">
+                  {w.message}
+                </p>
+              </div>
             </div>
-
-            <p className="text-xs text-[#2E0A10]/90 font-sans leading-relaxed break-words [overflow-wrap:anywhere]">
-              {w.message}
+          ))
+        ) : (
+          <div className="w-full text-center py-8 px-4 rounded-xl bg-white/70 border border-[#D4AF37]/30">
+            <span className="material-symbols-outlined text-3xl text-[#D4AF37] mb-2">mark_chat_read</span>
+            <p className="text-xs text-[#2E0A10]/70 font-sans">
+              Belum ada ucapan dan doa restu. Kirimkan ucapan pertama Anda di atas!
             </p>
           </div>
-        ))}
+        )}
       </div>
     </section>
   );
