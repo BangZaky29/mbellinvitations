@@ -125,12 +125,27 @@ export async function fetchInvitationBySlug(slug: string): Promise<SupabaseInvit
     invData?.animation_config ||
     invData?.theme_config?.animation_config;
 
+  // 7. Resolusi Musik Latar Belakang (YouTube / Audio)
+  const resolvedMusicUrl =
+    (latestSource as any)?.music_url ||
+    (olderSource as any)?.music_url ||
+    latestSource?.content?.music_url ||
+    olderSource?.content?.music_url ||
+    latestSource?.theme_config?.music_url ||
+    olderSource?.theme_config?.music_url ||
+    '';
+  const resolvedMusicType =
+    (latestSource as any)?.music_type ||
+    (olderSource as any)?.music_type ||
+    'youtube';
+
   const mergedThemeConfig = {
     ...baseThemeConfig,
     ...(animConfig ? { animation_config: animConfig } : {}),
+    ...(resolvedMusicUrl ? { music_url: resolvedMusicUrl } : {}),
   };
 
-  // 7. Konten Gabungan Terpadu
+  // 8. Konten Gabungan Terpadu
   const mergedContent = {
     ...(olderSource?.content || {}),
     ...(latestSource?.content || {}),
@@ -139,6 +154,7 @@ export async function fetchInvitationBySlug(slug: string): Promise<SupabaseInvit
     unlocked_templates: allUnlocked,
     is_paid: isPaid,
     paid_template_id: paidTemplateId,
+    ...(resolvedMusicUrl ? { music_url: resolvedMusicUrl } : {}),
   };
 
   const primaryId = latestSource?.id || olderSource?.id;
@@ -156,6 +172,8 @@ export async function fetchInvitationBySlug(slug: string): Promise<SupabaseInvit
     theme_config: mergedThemeConfig,
     content: mergedContent,
     animation_config: animConfig,
+    music_url: resolvedMusicUrl,
+    music_type: resolvedMusicType,
     views_count: invData?.views_count || 0,
     is_paid: isPaid,
     paid_template_id: paidTemplateId,

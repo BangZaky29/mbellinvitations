@@ -58,32 +58,14 @@ const INCLUDED_FEATURES = [
   'Generator WhatsApp Broadcast Tamu Terintegrasi',
 ];
 
-/** Instruksi m-Banking per bank (singkat) */
-const VA_INSTRUCTIONS: Record<string, string[]> = {
-  BCA: [
-    'Buka aplikasi m-BCA / BCA Mobile',
-    'Pilih menu "Transfer" → "BCA Virtual Account"',
-    'Masukkan Nomor VA lalu konfirmasi jumlah',
-    'Masukkan PIN dan selesaikan pembayaran',
-  ],
-  BNI: [
-    'Buka aplikasi BNI Mobile Banking',
-    'Pilih menu "Transfer" → "Virtual Account Billing"',
-    'Masukkan Nomor VA dan konfirmasi nominal',
-    'Masukkan password transaksi',
-  ],
-  BRI: [
-    'Buka aplikasi BRImo',
-    'Pilih menu "Transfer" → "BRIVA"',
-    'Masukkan Nomor VA dan konfirmasi',
-    'Masukkan PIN untuk menyelesaikan',
-  ],
-  Mandiri: [
-    'Buka aplikasi Livin\' by Mandiri',
-    'Pilih menu "Bayar" → "Multipayment"',
-    'Masukkan Biller Code & Bill Key',
-    'Konfirmasi dan masukkan PIN',
-  ],
+/**
+ * Konfigurasi Rekening Pembayaran Manual SeaBank & WhatsApp Admin
+ */
+export const MANUAL_PAYMENT_CONFIG = {
+  bankName: 'SeaBank',
+  accountNumber: import.meta.env.VITE_SEABANK_ACCOUNT_NUMBER || '901450913003',
+  accountName: import.meta.env.VITE_SEABANK_ACCOUNT_NAME || 'Bella Aprilian',
+  whatsappNumber: import.meta.env.VITE_ADMIN_WHATSAPP_NUMBER || '6288293473765',
 };
 
 // =========================================================================
@@ -102,7 +84,7 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
 }) => {
   // ── Progressive Step State ──
   const [step, setStep] = useState<CheckoutStep>('review_order');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('qris');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('bca_va');
   const [chargeResult, setChargeResult] = useState<ChargeResult | null>(null);
   const [showAllFeatures, setShowAllFeatures] = useState(false);
 
@@ -114,8 +96,8 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
   // ── UI State ──
   const [copiedVa, setCopiedVa] = useState(false);
   const [copiedAmount, setCopiedAmount] = useState(false);
+  const [copiedSeabank, setCopiedSeabank] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
-  const [showVaInstructions, setShowVaInstructions] = useState(false);
 
   const activeThemeId = themeId || 'modern';
   const priceInfo = getTemplatePriceInfo(activeThemeId);
@@ -478,43 +460,41 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                 <span className="font-black text-amber-900 shrink-0">{priceInfo.priceDisplay}</span>
               </div>
 
-              {/* Payment Method Selector */}
+              {/* Payment Method Selector - Hanya BCA VA yang ditampilkan sementara */}
               <div className="space-y-2">
-                {PAYMENT_METHOD_OPTIONS.map((opt) => {
-                  const isSelected = paymentMethod === opt.id;
-                  return (
-                    <div
-                      key={opt.id}
-                      onClick={() => !isSubmitting && setPaymentMethod(opt.id)}
-                      className={`p-2.5 sm:p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-2.5 ${
-                        isSelected
-                          ? 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-400/40 shadow-xs'
-                          : 'border-stone-200 bg-white hover:border-stone-300 hover:bg-stone-50/50'
-                      } ${isSubmitting ? 'opacity-60 pointer-events-none' : ''}`}
-                    >
+                {PAYMENT_METHOD_OPTIONS.filter((opt) => opt.id === 'bca_va').map((opt) => (
+                  <div
+                    key={opt.id}
+                    onClick={() => !isSubmitting && setPaymentMethod(opt.id)}
+                    className={`p-3 rounded-2xl border border-amber-500 bg-amber-50/70 ring-2 ring-amber-400/40 shadow-xs flex items-center justify-between gap-2.5 transition-all cursor-pointer ${isSubmitting ? 'opacity-60 pointer-events-none' : ''}`}
+                  >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div
-                          className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                            isSelected ? 'bg-amber-500 text-stone-950 font-bold' : 'bg-stone-100 text-stone-600'
-                          }`}
-                        >
-                          <span className="material-symbols-outlined text-[18px]">{opt.icon}</span>
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-amber-500 text-stone-950 font-bold">
+                          <span className="material-symbols-outlined text-[20px]">{opt.icon}</span>
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-bold text-stone-900 truncate">{opt.name}</p>
-                          <p className="text-[10px] text-stone-500 truncate">{opt.badge}</p>
+                          <p className="text-xs sm:text-sm font-bold text-stone-900 truncate">{opt.name}</p>
+                          <p className="text-[11px] text-stone-600 truncate">Verifikasi Otomatis via Transfer SeaBank</p>
                         </div>
                       </div>
-                      <div
-                        className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                          isSelected ? 'border-amber-600 bg-amber-500 text-stone-950' : 'border-stone-300'
-                        }`}
-                      >
-                        {isSelected && <span className="material-symbols-outlined text-[12px] font-bold">check</span>}
+                      <div className="w-5 h-5 rounded-full border border-amber-600 bg-amber-500 text-stone-950 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[13px] font-bold">check</span>
                       </div>
                     </div>
-                  );
-                })}
+                ))}
+
+                {/* Info Card Alur 3 Langkah Pembayaran */}
+                <div className="p-3 rounded-2xl bg-stone-50 border border-stone-200 text-xs text-stone-700 space-y-1.5">
+                  <div className="flex items-center gap-1.5 font-bold text-stone-900">
+                    <span className="material-symbols-outlined text-[17px] text-amber-600">info</span>
+                    <span>Alur Pembayaran &amp; Aktivasi:</span>
+                  </div>
+                  <ol className="text-[11px] text-stone-600 space-y-1 list-decimal list-inside pl-0.5">
+                    <li>Klik <strong>Buat Tagihan</strong> untuk menerbitkan Kode VA BCA resmi.</li>
+                    <li>Transfer pembayaran tepat sesuai nominal ke rekening <strong>SeaBank</strong>.</li>
+                    <li>Kirim bukti transfer &amp; salinan kode VA ke WhatsApp admin untuk verifikasi.</li>
+                  </ol>
+                </div>
               </div>
 
               {/* Compact Fee Summary */}
@@ -572,9 +552,7 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                 </div>
 
                 <h2 className="text-base sm:text-lg font-bold text-stone-900 tracking-tight">
-                  {paymentMethod === 'qris'
-                    ? 'Scan Kode QR untuk Membayar'
-                    : `Transfer ke ${chargeResult.bankName || 'Virtual Account'}`}
+                  Transfer SeaBank &amp; Kode VA BCA
                 </h2>
 
                 {/* Countdown Timer */}
@@ -651,93 +629,162 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                 </div>
               )}
 
-              {/* ──── Virtual Account Card (Compact) ──── */}
-              {paymentMethod !== 'qris' && !isExpired && (
-                <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-b from-white to-stone-50 border-2 border-stone-200 shadow-sm space-y-2.5">
-                  {/* Bank Header */}
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-stone-900 text-white flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-lg">account_balance</span>
-                    </div>
-                    <div>
-                      <p className="text-xs sm:text-sm font-bold text-stone-900">{chargeResult.bankName} Virtual Account</p>
-                      <p className="text-[10px] text-stone-500">Transfer tepat sesuai nominal</p>
-                    </div>
-                  </div>
+              {/* ──── Virtual Account Card & SeaBank Manual Step Flow ──── */}
+              {!isExpired && (() => {
+                const cleanWaPhone = MANUAL_PAYMENT_CONFIG.whatsappNumber.replace(/[^0-9]/g, '');
+                const formattedWaPhone = cleanWaPhone.startsWith('0') ? '62' + cleanWaPhone.slice(1) : cleanWaPhone;
+                const vaCode = chargeResult.vaNumber || chargeResult.billKey || '';
+                const waMessage = `Halo Admin Mbell Invitations, saya sudah melakukan transfer ke rekening SeaBank untuk aktivasi undangan:\n\n📋 Order ID: ${chargeResult.orderId}\n🏦 Kode VA BCA: ${vaCode}\n💍 Mempelai: ${coupleName}\n🎨 Template: ${templateName}\n💰 Nominal: ${formatRupiah(priceInfo.price)}\n💳 Bank Tujuan: SeaBank (${MANUAL_PAYMENT_CONFIG.accountNumber} a/n ${MANUAL_PAYMENT_CONFIG.accountName})\n\nBerikut saya lampirkan bukti transfernya. Mohon bantu verifikasi dan aktivasi undangan saya. Terima kasih!`;
+                const waVerificationUrl = `https://wa.me/${formattedWaPhone}?text=${encodeURIComponent(waMessage)}`;
 
-                  {/* VA Number */}
-                  <div className="p-3 rounded-xl bg-stone-50 border border-stone-200">
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-stone-500 block mb-0.5">
-                      {paymentMethod === 'mandiri_va' ? 'Bill Key' : 'Nomor Virtual Account'}
-                    </span>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-base sm:text-lg font-black text-stone-900 font-mono tracking-wider select-all">
-                        {formatVaDisplay(chargeResult.vaNumber || chargeResult.billKey || '')}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard(chargeResult.vaNumber || chargeResult.billKey || '', setCopiedVa)}
-                        className="px-2.5 py-1 rounded-lg bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
-                      >
-                        <span className="material-symbols-outlined text-xs">{copiedVa ? 'check' : 'content_copy'}</span>
-                        <span>{copiedVa ? 'Tersalin!' : 'Salin'}</span>
-                      </button>
-                    </div>
-                    {paymentMethod === 'mandiri_va' && chargeResult.billerCode && (
-                      <div className="mt-2 pt-2 border-t border-stone-200">
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-stone-500 block mb-0.5">Biller Code</span>
-                        <span className="text-xs font-bold text-stone-800 font-mono select-all">{chargeResult.billerCode}</span>
+                return (
+                  <div className="space-y-3">
+                    {/* Banner Alur 3 Langkah */}
+                    <div className="p-3 rounded-2xl bg-amber-50/80 border border-amber-300/80 text-xs text-amber-950 space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold text-amber-900">
+                        <span className="material-symbols-outlined text-[18px] text-amber-600">verified_user</span>
+                        <span>3 Langkah Mudah Pembayaran &amp; Aktivasi:</span>
                       </div>
-                    )}
-                  </div>
+                      <p className="text-[11px] text-amber-800 leading-relaxed">
+                        Sistem telah menerbitkan Kode VA BCA Anda. Silakan transfer pembayaran ke rekening SeaBank di bawah, lalu kirimkan bukti transfer beserta kode VA ke WhatsApp admin untuk verifikasi instan.
+                      </p>
+                    </div>
 
-                  {/* Nominal */}
-                  <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200/80">
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-amber-800 block mb-0.5">
-                      Nominal Transfer (Harus Persis)
-                    </span>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-base font-black text-amber-900 font-mono">{formatRupiah(priceInfo.price)}</span>
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard(priceInfo.price.toString(), setCopiedAmount)}
-                        className="px-2.5 py-1 rounded-lg bg-white border border-amber-200 hover:bg-amber-50 text-amber-800 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+                    {/* KARTU LANGKAH 1: REKENING SEABANK */}
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-orange-50/60 via-white to-amber-50/40 border-2 border-orange-200 shadow-xs space-y-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="w-5 h-5 rounded-full bg-orange-600 text-white flex items-center justify-center text-[10px] font-black shrink-0">
+                            1
+                          </span>
+                          <h4 className="text-xs sm:text-sm font-bold text-stone-900">
+                            Transfer ke Rekening SeaBank
+                          </h4>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-800 text-[10px] font-bold">
+                          Rekening Tujuan
+                        </span>
+                      </div>
+
+                      {/* Box Nomor Rekening SeaBank */}
+                      <div className="p-3 rounded-xl bg-white border border-orange-200 shadow-2xs">
+                        <div className="flex items-center justify-between text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1">
+                          <span>Bank SeaBank Indonesia</span>
+                          <span className="text-stone-500">a/n {MANUAL_PAYMENT_CONFIG.accountName}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-base sm:text-lg font-black text-stone-900 font-mono tracking-wider select-all">
+                            {MANUAL_PAYMENT_CONFIG.accountNumber}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(MANUAL_PAYMENT_CONFIG.accountNumber, setCopiedSeabank)}
+                            className="px-2.5 py-1 rounded-lg bg-orange-50 border border-orange-200 hover:bg-orange-100 text-orange-800 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+                            title="Salin Nomor Rekening SeaBank"
+                          >
+                            <span className="material-symbols-outlined text-xs">{copiedSeabank ? 'check' : 'content_copy'}</span>
+                            <span>{copiedSeabank ? 'Tersalin!' : 'Salin Rekening'}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Box Nominal Transfer */}
+                      <div className="p-3 rounded-xl bg-orange-50/60 border border-orange-200/80">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-orange-900 block mb-0.5">
+                          Nominal Transfer (Harus Persis)
+                        </span>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-base sm:text-lg font-black text-orange-950 font-mono">
+                            {formatRupiah(priceInfo.price)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(priceInfo.price.toString(), setCopiedAmount)}
+                            className="px-2.5 py-1 rounded-lg bg-white border border-orange-200 hover:bg-orange-50 text-orange-800 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+                          >
+                            <span className="material-symbols-outlined text-xs">{copiedAmount ? 'check' : 'content_copy'}</span>
+                            <span>{copiedAmount ? 'Tersalin!' : 'Salin Nominal'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* KARTU LANGKAH 2: KODE VA BCA DARI SISTEM */}
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-white border-2 border-stone-200 shadow-xs space-y-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="w-5 h-5 rounded-full bg-stone-900 text-white flex items-center justify-center text-[10px] font-black shrink-0">
+                            2
+                          </span>
+                          <h4 className="text-xs sm:text-sm font-bold text-stone-900">
+                            Salin Kode Virtual Account BCA
+                          </h4>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-stone-100 text-stone-700 text-[10px] font-bold">
+                          ID Tagihan
+                        </span>
+                      </div>
+
+                      {/* VA Number */}
+                      <div className="p-3 rounded-xl bg-stone-50 border border-stone-200">
+                        <div className="flex items-center justify-between text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1">
+                          <span>Nomor BCA Virtual Account</span>
+                          <span className="text-stone-400 font-mono">Order: {chargeResult.orderId}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-base sm:text-lg font-black text-stone-900 font-mono tracking-wider select-all">
+                            {formatVaDisplay(vaCode)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(vaCode, setCopiedVa)}
+                            className="px-2.5 py-1 rounded-lg bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+                            title="Salin Nomor VA BCA"
+                          >
+                            <span className="material-symbols-outlined text-xs">{copiedVa ? 'check' : 'content_copy'}</span>
+                            <span>{copiedVa ? 'Tersalin!' : 'Salin Kode VA'}</span>
+                          </button>
+                        </div>
+                        <p className="text-[10px] text-stone-500 mt-1.5 leading-relaxed">
+                          *Salin kode VA ini dan kirimkan ke WhatsApp admin bersama bukti transfer SeaBank untuk verifikasi aktivasi.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* KARTU LANGKAH 3: KONFIRMASI KE WHATSAPP ADMIN */}
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-50/70 border-2 border-emerald-200 shadow-xs space-y-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-black shrink-0">
+                            3
+                          </span>
+                          <h4 className="text-xs sm:text-sm font-bold text-emerald-950">
+                            Kirim Bukti Pembayaran ke WhatsApp Admin
+                          </h4>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                          Aktivasi Cepat
+                        </span>
+                      </div>
+
+                      <p className="text-[11px] text-emerald-800 leading-relaxed">
+                        Setelah transfer ke SeaBank selesai, klik tombol di bawah untuk langsung mengirimkan bukti transfer dan Kode VA BCA ke admin via WhatsApp:
+                      </p>
+
+                      {/* Tombol WhatsApp Utama */}
+                      <a
+                        href={waVerificationUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer no-underline text-center"
                       >
-                        <span className="material-symbols-outlined text-xs">{copiedAmount ? 'check' : 'content_copy'}</span>
-                        <span>{copiedAmount ? 'Tersalin!' : 'Salin'}</span>
-                      </button>
+                        <span className="material-symbols-outlined text-[18px]">chat</span>
+                        <span>Kirim Bukti &amp; Kode VA ke WhatsApp</span>
+                      </a>
                     </div>
                   </div>
-
-                  {/* Accordion Instruksi */}
-                  <div className="rounded-xl border border-stone-200 overflow-hidden">
-                    <button
-                      type="button"
-                      onClick={() => setShowVaInstructions(!showVaInstructions)}
-                      className="w-full px-3 py-2 flex items-center justify-between bg-white hover:bg-stone-50 transition-colors cursor-pointer text-left text-xs font-bold text-stone-700"
-                    >
-                      <span>Petunjuk Pembayaran {chargeResult.bankName}</span>
-                      <span className={`material-symbols-outlined text-xs text-stone-400 transition-transform ${showVaInstructions ? 'rotate-180' : ''}`}>
-                        expand_more
-                      </span>
-                    </button>
-                    {showVaInstructions && (
-                      <div className="px-3 pb-2.5 pt-1 bg-stone-50 border-t border-stone-200">
-                        <ol className="space-y-1 text-[10px] text-stone-600">
-                          {(VA_INSTRUCTIONS[chargeResult.bankName || 'BCA'] || VA_INSTRUCTIONS.BCA).map((instruction, idx) => (
-                            <li key={idx} className="flex gap-1.5">
-                              <span className="w-3.5 h-3.5 rounded-full bg-stone-200 text-stone-600 flex items-center justify-center text-[8px] font-bold shrink-0 mt-0.5">
-                                {idx + 1}
-                              </span>
-                              <span>{instruction}</span>
-                            </li>
-                          ))}
-                        </ol>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* ──── Action Buttons Step 3 ──── */}
               <div className="space-y-2 pt-1">

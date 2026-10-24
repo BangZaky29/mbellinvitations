@@ -334,6 +334,17 @@ const handleConfirmSameTemplatePublish = async () => {
         },
       })
     );
+    window.dispatchEvent(
+      new CustomEvent('mbell_published_updated', {
+        detail: {
+          formData: updatedContent,
+          themeConfig: {
+            ...themeConfig,
+            music_url: resolvedMusicUrl,
+          },
+        },
+      })
+    );
 
     setSaveToast({
       show: true,
@@ -503,6 +514,17 @@ const handleConfirmPublish = async (paymentDetails?: { themeId?: string; payment
         detail: {
           formData: publishedContent,
           themeConfig,
+        },
+      })
+    );
+    window.dispatchEvent(
+      new CustomEvent('mbell_published_updated', {
+        detail: {
+          formData: publishedContent,
+          themeConfig: {
+            ...themeConfig,
+            music_url: resolvedMusicUrl,
+          },
         },
       })
     );

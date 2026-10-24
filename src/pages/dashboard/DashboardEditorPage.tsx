@@ -83,6 +83,8 @@ export const DashboardEditorPage: React.FC = () => {
     setFormData: editor.setFormData,
     setThemeConfig: editor.setThemeConfig,
     loading: editor.loading,
+    liveBaseline: editor.liveBaseline,
+    isAlreadyPublished: Boolean(editor.publishedThemeId || editor.formData.status === 'published' || editor.liveBaseline),
   });
 
   // Connect bridges
@@ -631,6 +633,13 @@ export const DashboardEditorPage: React.FC = () => {
                       onManualSave={handleSafeSave}
                       onSaveMusicOnly={async () => {
                         await save.handleManualSave();
+                        if (isLiveOrPublished) {
+                          save.setSaveToast({
+                            show: true,
+                            message: 'Link musik tersimpan di draf! Klik tombol "Terbitkan" di bawah untuk mengaktifkannya di undangan live.',
+                            type: 'info',
+                          }, 4500);
+                        }
                       }}
                     />
 
@@ -639,8 +648,8 @@ export const DashboardEditorPage: React.FC = () => {
                       isSaving={save.isSaving}
                       isSavingDraft={isSavingDraft}
                       isPublishing={isPublishing}
-                      hasUnsavedChanges={save.hasUnsavedChanges}
-                      unsavedCount={save.unsavedCount}
+                      hasUnsavedChanges={save.hasUnsavedChanges || save.hasUnpublishedChanges}
+                      unsavedCount={save.hasUnpublishedChanges ? save.unpublishedCount : save.unsavedCount}
                       isAlreadyPublished={publish.isAlreadyPublished || Boolean((publish.publishedThemeId || editor.publishedThemeId) && !publish.isTemplateChanged)}
                       isTemplateChanged={publish.isTemplateChanged}
                       invitationSlug={currentSlug}

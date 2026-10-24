@@ -155,9 +155,16 @@ export function useInvitationRealtime({
               : (THEME_TO_TEMPLATE_ID[effectiveTheme] || inv.template_id || 'template1');
           setTemplateId(resolvedTemplateId);
 
+          const resolvedMusicUrl =
+            (inv as any).music_url ||
+            inv.content?.music_url ||
+            inv.theme_config?.music_url ||
+            '';
+
           // Merge content with guest name & code serta status dan kepemilikan template
           const mergedData: InvitationData = {
             ...inv.content,
+            music_url: resolvedMusicUrl || inv.content?.music_url || '',
             status: inv.status || inv.content?.status || 'draft',
             unlocked_templates: inv.unlocked_templates || inv.content?.unlocked_templates || [],
             paid_template_id: inv.paid_template_id || inv.content?.paid_template_id || null,
@@ -175,6 +182,7 @@ export function useInvitationRealtime({
 
           const mergedTheme: ThemeConfig = {
             ...(inv.theme_config || MOCK_MODERN_THEME),
+            music_url: resolvedMusicUrl || inv.theme_config?.music_url || '',
             animation_config: resolvedAnim,
           };
 

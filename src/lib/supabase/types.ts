@@ -33,6 +33,8 @@ export interface SupabaseInvitationRecord {
   animation_config?: AnimationConfig;
   views_count: number;
   alternate_id?: string;
+  music_url?: string | null;
+  music_type?: string | null;
   // Kolom Pembayaran Pay-Per-Template (Migrasi price.sql)
   is_paid: boolean;
   paid_template_id: string | null;

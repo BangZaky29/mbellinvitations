@@ -118,6 +118,11 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
     themeConfig: ThemeConfig;
     theme_id: string;
   } | null>(null);
+  const [liveBaseline, setLiveBaseline] = useState<{
+    formData: InvitationData;
+    themeConfig: ThemeConfig;
+    theme_id: string;
+  } | null>(null);
 
   // 1. Initial Load: Auth check and fetch invitation from Supabase
   useEffect(() => {
@@ -213,6 +218,7 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
               themeConfig: liveConfig,
               theme_id: livePublishedTheme,
             };
+            setLiveBaseline(liveBaselineRef.current);
           }
 
           // Cek template yang ingin dimuat ke editor
@@ -361,6 +367,7 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
                 themeConfig: JSON.parse(JSON.stringify(officialThemeConfig)),
                 theme_id: activeTheme,
               };
+              setLiveBaseline(liveBaselineRef.current);
             }
 
             setFormData(officialForm);
@@ -624,7 +631,7 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
     );
   };
 
-  // Listener sinkronisasi liveBaselineRef ketika ada event mbell_template_loaded
+  // Listener sinkronisasi liveBaselineRef ketika ada event mbell_template_loaded atau mbell_published_updated
   useEffect(() => {
     const handleTemplateLoaded = (e: any) => {
       const detail = e.detail;
@@ -632,20 +639,40 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
         const isPub = detail.formData.status === 'published' || detail.template?.status === 'published';
         if (isPub) {
           const pubTheme = detail.formData.theme_id || publishedThemeId || 'modern';
-          liveBaselineRef.current = {
+          const newBase = {
             formData: JSON.parse(JSON.stringify(detail.formData)),
             themeConfig: JSON.parse(JSON.stringify(detail.themeConfig)),
             theme_id: pubTheme,
           };
+          liveBaselineRef.current = newBase;
+          setLiveBaseline(newBase);
           setPublishedThemeId(pubTheme);
         }
       }
     };
+
+    const handlePublishedUpdated = (e: any) => {
+      const detail = e.detail;
+      if (detail?.formData) {
+        const pubTheme = detail.formData.theme_id || publishedThemeId || 'modern';
+        const newBase = {
+          formData: JSON.parse(JSON.stringify(detail.formData)),
+          themeConfig: JSON.parse(JSON.stringify(detail.themeConfig || themeConfig)),
+          theme_id: pubTheme,
+        };
+        liveBaselineRef.current = newBase;
+        setLiveBaseline(newBase);
+        setPublishedThemeId(pubTheme);
+      }
+    };
+
     window.addEventListener('mbell_template_loaded', handleTemplateLoaded);
+    window.addEventListener('mbell_published_updated', handlePublishedUpdated);
     return () => {
       window.removeEventListener('mbell_template_loaded', handleTemplateLoaded);
+      window.removeEventListener('mbell_published_updated', handlePublishedUpdated);
     };
-  }, [publishedThemeId]);
+  }, [publishedThemeId, themeConfig]);
 
   // Handler Implementasikan Template Aktif
   const handleImplementActiveTemplate = () => {
@@ -1045,6 +1072,7 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
     setShowOpeningSplash,
     publishedThemeId,
     setPublishedThemeId,
+    liveBaseline,
     // Handlers
     handleSelectSavedTemplate,
     handleImplementActiveTemplate,

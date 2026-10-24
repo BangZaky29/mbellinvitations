@@ -9,7 +9,7 @@ import {
 } from '../pages/dashboard/constants/themeMapping';
 import type { DashboardUser } from './useDashboardAuth';
 
-import { computeCoupleSlug } from '../pages/dashboard/helpers/computeCoupleSlug';
+import { computeCoupleSlug, getCanonicalPublishedSlug } from '../pages/dashboard/helpers/computeCoupleSlug';
 import {
   computeAuditTrail,
   type FieldChangeDetail,
@@ -27,6 +27,12 @@ interface UseDashboardSaveOptions {
   setFormData: React.Dispatch<React.SetStateAction<InvitationData>>;
   setThemeConfig?: React.Dispatch<React.SetStateAction<ThemeConfig>>;
   loading?: boolean;
+  liveBaseline?: {
+    formData: InvitationData;
+    themeConfig: ThemeConfig;
+    theme_id?: string;
+  } | null;
+  isAlreadyPublished?: boolean;
 }
 
 /**
@@ -158,6 +164,8 @@ export function useDashboardSave({
   setFormData,
   setThemeConfig,
   loading = false,
+  liveBaseline,
+  isAlreadyPublished = false,
 }: UseDashboardSaveOptions) {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -196,13 +204,58 @@ export function useDashboardSave({
     hasChanges: false,
   });
 
-  // Snapshot baseline data yang tersimpan di server/database
+  // Snapshot baseline data yang tersimpan di server/database (draf)
   const baselineSnapshotRef = useRef<{
     formData: InvitationData;
     themeConfig: ThemeConfig;
   } | null>(null);
 
+  // Snapshot data yang sudah benar-benar live di tautan publik (public.invitations)
+  const publishedSnapshotRef = useRef<{
+    formData: InvitationData;
+    themeConfig: ThemeConfig;
+  } | null>(null);
+
+  const [hasUnpublishedChanges, setHasUnpublishedChanges] = useState(false);
+  const [unpublishedCount, setUnpublishedCount] = useState(0);
+
   const prevRecordIdRef = useRef<string | null>(currentTemplateRecordId);
+
+  // Inisialisasi published snapshot jika undangan berstatus published atau ada liveBaseline resmi
+  useEffect(() => {
+    if (liveBaseline) {
+      publishedSnapshotRef.current = {
+        formData: JSON.parse(JSON.stringify(liveBaseline.formData)),
+        themeConfig: JSON.parse(JSON.stringify(liveBaseline.themeConfig)),
+      };
+    } else if (isAlreadyPublished || formData.status === 'published') {
+      if (!publishedSnapshotRef.current && !loading) {
+        publishedSnapshotRef.current = {
+          formData: JSON.parse(JSON.stringify(formData)),
+          themeConfig: JSON.parse(JSON.stringify(themeConfig)),
+        };
+      }
+    }
+  }, [liveBaseline, isAlreadyPublished, formData.status, loading]);
+
+  // Listener saat undangan berhasil diterbitkan ke live Supabase
+  useEffect(() => {
+    const handlePublishedUpdated = (e: any) => {
+      const detail = e.detail;
+      if (detail?.formData) {
+        publishedSnapshotRef.current = {
+          formData: JSON.parse(JSON.stringify(detail.formData)),
+          themeConfig: JSON.parse(JSON.stringify(detail.themeConfig || themeConfig)),
+        };
+        setHasUnpublishedChanges(false);
+        setUnpublishedCount(0);
+      }
+    };
+    window.addEventListener('mbell_published_updated', handlePublishedUpdated);
+    return () => {
+      window.removeEventListener('mbell_published_updated', handlePublishedUpdated);
+    };
+  }, [themeConfig]);
 
   // Listener sinkronisasi baseline saat template di-load dari MyTemplates atau di-reset
   useEffect(() => {
@@ -213,6 +266,14 @@ export function useDashboardSave({
           formData: JSON.parse(JSON.stringify(detail.formData)),
           themeConfig: JSON.parse(JSON.stringify(detail.themeConfig)),
         };
+        if (detail.formData.status === 'published') {
+          publishedSnapshotRef.current = {
+            formData: JSON.parse(JSON.stringify(detail.formData)),
+            themeConfig: JSON.parse(JSON.stringify(detail.themeConfig)),
+          };
+          setHasUnpublishedChanges(false);
+          setUnpublishedCount(0);
+        }
       } else {
         baselineSnapshotRef.current = {
           formData: JSON.parse(JSON.stringify(formData)),
@@ -229,8 +290,11 @@ export function useDashboardSave({
 
     const handleResetBlank = () => {
       baselineSnapshotRef.current = null;
+      publishedSnapshotRef.current = null;
       setHasUnsavedChanges(false);
       setUnsavedCount(0);
+      setHasUnpublishedChanges(false);
+      setUnpublishedCount(0);
       setAuditTrail({ count: 0, changes: [], hasChanges: false });
       try {
         localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
@@ -286,6 +350,22 @@ export function useDashboardSave({
     setAuditTrail(trail);
     setUnsavedCount(trail.count);
     setHasUnsavedChanges(trail.hasChanges);
+
+    // Hitung audit trail unpublished changes jika undangan sudah berstatus published / live
+    const isLive = Boolean(isAlreadyPublished || formData.status === 'published' || liveBaseline);
+    const pubBaseline = publishedSnapshotRef.current || liveBaseline;
+
+    if (isLive && pubBaseline) {
+      const pubTrail = computeAuditTrail(pubBaseline, {
+        formData,
+        themeConfig,
+      });
+      setHasUnpublishedChanges(pubTrail.hasChanges);
+      setUnpublishedCount(pubTrail.count);
+    } else {
+      setHasUnpublishedChanges(false);
+      setUnpublishedCount(0);
+    }
 
     if (trail.hasChanges) {
       try {
@@ -417,7 +497,10 @@ export function useDashboardSave({
     try {
       const template_id = THEME_TO_TEMPLATE_ID[formData.theme_id || 'modern'] || 'template1';
       const coupleSlug = computeCoupleSlug(formData.groom?.name, formData.bride?.name);
-      const targetSlug = formData.slug || coupleSlug || 'undangan-baru';
+      const isCurrentlyPublished = Boolean(formData.status === 'published' || isAlreadyPublished || liveBaseline);
+      const targetSlug = isCurrentlyPublished
+        ? getCanonicalPublishedSlug(formData.slug, formData.groom?.name, formData.bride?.name)
+        : (formData.slug || coupleSlug || 'undangan-baru');
 
       // Blokir permanen raditya-jessica agar tidak pernah disimpan kembali
       const isRadityaJessica =
@@ -507,6 +590,18 @@ export function useDashboardSave({
       setHasUnsavedChanges(false);
       setUnsavedCount(0);
       setAuditTrail({ count: 0, changes: [], hasChanges: false });
+
+      // Hitung ulang unpublished changes terhadap live baseline
+      const isLiveCurrently = Boolean(isAlreadyPublished || formData.status === 'published' || liveBaseline);
+      const activePubBase = publishedSnapshotRef.current || liveBaseline;
+      if (isLiveCurrently && activePubBase) {
+        const pubTrail = computeAuditTrail(activePubBase, {
+          formData,
+          themeConfig,
+        });
+        setHasUnpublishedChanges(pubTrail.hasChanges);
+        setUnpublishedCount(pubTrail.count);
+      }
       localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
       try {
         const publishedLiveTheme = baselineSnapshotRef.current?.formData?.theme_id;
@@ -693,6 +788,10 @@ export function useDashboardSave({
     setHasUnsavedChanges,
     unsavedCount,
     setUnsavedCount,
+    hasUnpublishedChanges,
+    setHasUnpublishedChanges,
+    unpublishedCount,
+    setUnpublishedCount,
     auditTrail,
     handleRevertAll,
     handleRevertField,
