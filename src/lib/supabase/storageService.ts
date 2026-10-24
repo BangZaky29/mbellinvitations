@@ -115,7 +115,12 @@ export async function uploadInvitationImage({
 
     if (uploadError) {
       console.error('[StorageService] Gagal upload file ke bucket:', uploadError);
-      return { success: false, error: uploadError.message };
+      let userFriendlyMessage = uploadError.message;
+      if (uploadError.message.includes('row-level security')) {
+        userFriendlyMessage =
+          'Storage Policy RLS di bucket Supabase memblokir upload ke folder DATA/. Silakan jalankan SQL pembaruan storage policy yang disediakan di Supabase SQL Editor.';
+      }
+      return { success: false, error: userFriendlyMessage };
     }
 
     // 2. Ambil URL Publik permanen dari Supabase Storage
