@@ -269,21 +269,25 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
 
                   {/* Top-Left: Badge Status Dibeli ATAU Badge Harga Coret */}
                   {isBought ? (
-                    <span className="absolute top-1.5 left-1.5 z-10 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-emerald-600 text-white text-[9px] sm:text-[10px] font-bold flex items-center gap-0.5 sm:gap-1 shadow-sm ring-1 ring-emerald-400/40">
+                    <span className="absolute top-1.5 left-1.5 z-10 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-emerald-600 text-white text-[8.5px] sm:text-[10px] font-bold flex items-center gap-0.5 sm:gap-1 shadow-sm ring-1 ring-emerald-400/40">
                       <span className="material-symbols-outlined text-[11px] sm:text-[13px]">check</span>
                       <span className="hidden sm:inline">Sudah </span><span>Dibeli</span>
                     </span>
                   ) : (
-                    <span className="absolute top-1.5 left-1.5 z-10 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-stone-900/90 text-white text-[9px] sm:text-[10px] font-semibold backdrop-blur-md shadow-xs flex items-center gap-1 border border-white/10">
-                      <span className="line-through text-stone-400 text-[8px] sm:text-[9px] hidden sm:inline">{theme.badgeOriginal}</span>
-                      <span className="text-amber-300 font-bold">{theme.badgePrice}</span>
+                    <span className="absolute top-1.5 left-1.5 z-10 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-stone-900/90 text-white text-[8.5px] sm:text-[10px] font-semibold backdrop-blur-md shadow-xs flex items-center gap-1 border border-white/10 shrink-0">
+                      <span className="line-through text-stone-400/90 text-[7.5px] sm:text-[9px] font-medium leading-none">
+                        {theme.badgeOriginal}
+                      </span>
+                      <span className="text-amber-300 font-bold text-[8.5px] sm:text-[10px] leading-none">
+                        {theme.badgePrice}
+                      </span>
                     </span>
                   )}
 
                   {/* Top-Right: Indikator Live (selalu Live) ATAU Badge Bawaan Tema (tidak berubah jadi Aktif) */}
                   {isLive ? (
                     <span
-                      className={`absolute top-1.5 right-1.5 z-10 px-2 sm:px-2.5 py-0.5 rounded-full text-white text-[9px] sm:text-[10px] font-bold flex items-center gap-1 shadow-sm border ${
+                      className={`absolute top-1.5 right-1.5 z-10 px-2 sm:px-2.5 py-0.5 rounded-full text-white text-[8.5px] sm:text-[10px] font-bold flex items-center gap-1 shadow-sm border ${
                         isActive
                           ? 'bg-emerald-600 border-emerald-400 ring-2 ring-emerald-400/40 shadow-emerald-500/20'
                           : 'bg-emerald-700/95 border-emerald-400/50 backdrop-blur-xs'
@@ -294,7 +298,7 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
                       <span>Live</span>
                     </span>
                   ) : theme.badge ? (
-                    <span className="absolute top-1.5 right-1.5 z-10 px-1.5 sm:px-2 py-0.5 rounded-full bg-stone-900/80 text-white text-[8px] sm:text-[10px] font-medium backdrop-blur-xs shadow-2xs border border-white/15 inline-flex items-center">
+                    <span className="absolute top-1.5 right-1.5 z-10 px-1.5 sm:px-2 py-0.5 rounded-full bg-stone-900/80 text-white text-[7.5px] sm:text-[10px] font-medium backdrop-blur-xs shadow-2xs border border-white/15 inline-flex items-center truncate max-w-[65px] sm:max-w-none leading-none">
                       {theme.badge}
                     </span>
                   ) : null}
@@ -303,7 +307,7 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
                 {/* Card Meta (Judul & Caption) */}
                 <div className="space-y-0.5 sm:space-y-1">
                   <div className="flex items-start justify-between gap-1">
-                    <h3 className="text-xs sm:text-sm font-bold text-stone-900 leading-snug group-hover:text-stone-700 transition-colors line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] flex-1">
+                    <h3 className="text-[11.5px] sm:text-sm font-bold text-stone-900 leading-snug group-hover:text-stone-700 transition-colors line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] flex-1">
                       {theme.name}
                     </h3>
                     {isLive ? (
@@ -316,7 +320,7 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
                       </span>
                     ) : null}
                   </div>
-                  <p className="text-[10px] sm:text-xs text-stone-500 line-clamp-2 leading-relaxed min-h-[1.75rem] sm:min-h-[2rem]">
+                  <p className="text-[9.5px] sm:text-xs text-stone-500 line-clamp-2 leading-relaxed min-h-[1.75rem] sm:min-h-[2rem]">
                     {theme.subtitle}
                   </p>
                 </div>
@@ -326,7 +330,7 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
               <div className="pt-2 sm:pt-2.5">
                 {isActive ? (
                   <div
-                    className={`w-full py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-center text-[10px] sm:text-xs font-bold flex items-center justify-center gap-1 shadow-2xs ${
+                    className={`w-full py-1.5 sm:py-2 rounded-xl text-center text-[10px] sm:text-xs font-bold flex items-center justify-center gap-1 shadow-2xs ${
                       isLive
                         ? 'bg-emerald-600 text-white'
                         : 'bg-stone-900 text-white'
@@ -337,7 +341,7 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
                     <span>{isLive ? 'Live Aktif' : 'Dipilih'}</span>
                   </div>
                 ) : (
-                  <div className="w-full py-1 sm:py-1.5 rounded-lg sm:rounded-xl border border-stone-200 text-stone-700 text-[10px] sm:text-xs font-semibold group-hover:bg-stone-900 group-hover:text-white group-hover:border-stone-900 transition-all flex items-center justify-center gap-1">
+                  <div className="w-full py-1.5 sm:py-2 rounded-xl border border-stone-200 text-stone-700 text-[10px] sm:text-xs font-semibold group-hover:bg-stone-900 group-hover:text-white group-hover:border-stone-900 transition-all flex items-center justify-center gap-1">
                     <span>Pilih Tema</span>
                     <span className="material-symbols-outlined text-[12px] sm:text-[14px] opacity-70">arrow_forward</span>
                   </div>

@@ -125,7 +125,7 @@ export const PhoneMockupPreview: React.FC<PhoneMockupPreviewProps> = ({
   const displayUrl = previewUrl || getInvitationDisplayUrl(currentSlug);
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full select-none py-2">
+    <div className="flex flex-col items-center justify-center w-full h-full select-none py-1 sm:py-2">
       {/* 1. TOOLBAR DI ATAS PHONE */}
       <PreviewToolbar
         onClose={onClose}
@@ -147,7 +147,7 @@ export const PhoneMockupPreview: React.FC<PhoneMockupPreviewProps> = ({
       </PhoneFrame>
 
       {/* 3. PREVIEW URL PILL */}
-      <div className="mt-3 flex items-center gap-2 px-3 py-1 rounded-full bg-white font-label-sm text-label-sm text-stone-600 shadow-xs border border-stone-200/60">
+      <div className="mt-2 sm:mt-2.5 flex items-center gap-2 px-3 py-1 rounded-full bg-white font-label-sm text-label-sm text-stone-600 shadow-xs border border-stone-200/60 max-w-[95%]">
         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
         <span className="font-mono text-xs text-stone-700">{displayUrl}</span>
         <a

@@ -771,8 +771,8 @@ export const DashboardEditorPage: React.FC = () => {
 
           {/* FULLSCREEN PREVIEW MODAL */}
           {editor.showFullscreenModal && (
-            <div className="fixed inset-0 z-[100] bg-neutral-950/95 backdrop-blur-md flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden animate-in fade-in duration-200">
-              <div className="w-full max-w-[400px] sm:max-w-[420px] h-[calc(100vh-20px)] max-h-[780px] flex items-center justify-center overflow-hidden">
+            <div className="fixed inset-0 z-[100] bg-neutral-950/95 backdrop-blur-md flex flex-col items-center justify-center p-1 sm:p-4 overflow-hidden animate-in fade-in duration-200">
+              <div className="w-full max-w-[420px] sm:max-w-[440px] h-[calc(100dvh-10px)] max-h-[860px] flex items-center justify-center overflow-hidden">
                 <PhoneMockupPreview
                   data={editor.formData}
                   theme={editor.themeConfig}

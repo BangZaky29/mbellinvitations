@@ -18,15 +18,15 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
 }) => {
   return (
     <div
-      className={`relative w-[340px] xl:w-[355px] h-[640px] xl:h-[680px] max-h-[calc(100vh-140px)] ${
-        deviceMode === 'ios' ? 'rounded-[46px]' : 'rounded-[32px]'
-      } bg-slate-900 border-[7px] border-slate-950 p-1 shadow-2xl shrink-0 flex flex-col`}
+      className={`relative w-[355px] min-[390px]:w-[375px] sm:w-[390px] xl:w-[400px] 2xl:w-[412px] h-[700px] min-[390px]:h-[730px] sm:h-[760px] xl:h-[780px] 2xl:h-[810px] max-h-[calc(100dvh-105px)] ${
+        deviceMode === 'ios' ? 'rounded-[46px] sm:rounded-[50px]' : 'rounded-[32px] sm:rounded-[36px]'
+      } bg-slate-900 border-[6px] sm:border-[7px] border-slate-950 p-0.5 sm:p-1 shadow-2xl shrink-0 flex flex-col`}
     >
       {/* INNER SCREEN BEZEL - ACTS AS CONTAINING BLOCK FOR FIXED ELEMENTS */}
       <div
         data-phone-preview="true"
         className={`w-full h-full ${
-          deviceMode === 'ios' ? 'rounded-[38px]' : 'rounded-[24px]'
+          deviceMode === 'ios' ? 'rounded-[40px] sm:rounded-[43px]' : 'rounded-[26px] sm:rounded-[29px]'
         } bg-white overflow-hidden flex flex-col relative shadow-inner [transform:translateZ(0)]`}
       >
         {/* DYNAMIC ISLAND / CAMERA NOTCH */}

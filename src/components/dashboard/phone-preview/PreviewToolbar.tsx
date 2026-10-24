@@ -35,7 +35,7 @@ export const PreviewToolbar: React.FC<PreviewToolbarProps> = ({
 
   return (
     <div
-      className={`w-full max-w-[370px] sm:max-w-[390px] xl:max-w-[400px] h-11 flex items-center justify-between mb-3 px-2 sm:px-2.5 rounded-2xl transition-all select-none ${
+      className={`w-full max-w-[355px] min-[390px]:max-w-[375px] sm:max-w-[390px] xl:max-w-[400px] 2xl:max-w-[412px] h-10 sm:h-11 flex items-center justify-between mb-2 sm:mb-2.5 px-2 sm:px-2.5 rounded-2xl transition-all select-none ${
         onClose
           ? 'bg-neutral-900/95 text-white border border-white/15 shadow-2xl backdrop-blur-xl'
           : 'bg-white/95 shadow-xs border border-stone-200/90 text-stone-900 backdrop-blur-md'
