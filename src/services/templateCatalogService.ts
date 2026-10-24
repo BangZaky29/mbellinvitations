@@ -18,6 +18,8 @@ export interface ThemeOption {
   originalPriceDisplay: string;
   badgePrice: string;
   badgeOriginal: string;
+  mockupUrl?: string | null;
+  thumbnailUrl?: string | null;
 }
 
 export interface DbTemplateRecord {
@@ -27,6 +29,7 @@ export interface DbTemplateRecord {
   category: string;
   description?: string | null;
   thumbnail_url?: string | null;
+  mockup_url?: string | null;
   preview_badge?: string | null;
   accent_color?: string | null;
   default_audio_url?: string | null;
@@ -145,6 +148,9 @@ export const TEMPLATE_VISUAL_PRESETS: Record<
   },
 };
 
+export const SUPABASE_MOCKUP_BASE_URL =
+  'https://fsbvnkwxwvffghrdxnxr.supabase.co/storage/v1/object/public/invitations/mock-up_Template';
+
 // Seed default fallback jika Supabase belum selesai fetch pertama kali
 export const DEFAULT_CATALOG_SEEDS: DbTemplateRecord[] = [
   {
@@ -159,6 +165,8 @@ export const DEFAULT_CATALOG_SEEDS: DbTemplateRecord[] = [
     is_premium: false,
     price: 79000,
     original_price: 99000,
+    mockup_url: `${SUPABASE_MOCKUP_BASE_URL}/template6-sunda-siger.jpg`,
+    thumbnail_url: `${SUPABASE_MOCKUP_BASE_URL}/template6-sunda-siger.jpg`,
   },
   {
     id: 'template7',
@@ -166,13 +174,14 @@ export const DEFAULT_CATALOG_SEEDS: DbTemplateRecord[] = [
     name: 'Adat Minang Baralek Gadang',
     category: 'adat',
     description: 'Suntiang Gadang & Songket Silungkang',
-    thumbnail_url: 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=800&q=80',
     preview_badge: 'New Royal',
     accent_color: '#D4AF37',
     is_active: true,
     is_premium: true,
     price: 79000,
     original_price: 99000,
+    mockup_url: `${SUPABASE_MOCKUP_BASE_URL}/template_7_Minang.jpg`,
+    thumbnail_url: `${SUPABASE_MOCKUP_BASE_URL}/template_7_Minang.jpg`,
   },
   {
     id: 'template3',
@@ -186,6 +195,8 @@ export const DEFAULT_CATALOG_SEEDS: DbTemplateRecord[] = [
     is_premium: false,
     price: 79000,
     original_price: 99000,
+    mockup_url: `${SUPABASE_MOCKUP_BASE_URL}/template3-jawa.jpg`,
+    thumbnail_url: `${SUPABASE_MOCKUP_BASE_URL}/template3-jawa.jpg`,
   },
   {
     id: 'template4',
@@ -199,6 +210,8 @@ export const DEFAULT_CATALOG_SEEDS: DbTemplateRecord[] = [
     is_premium: false,
     price: 49000,
     original_price: 79000,
+    mockup_url: `${SUPABASE_MOCKUP_BASE_URL}/template4-islami.jpg`,
+    thumbnail_url: `${SUPABASE_MOCKUP_BASE_URL}/template4-islami.jpg`,
   },
   {
     id: 'template1',
@@ -212,6 +225,8 @@ export const DEFAULT_CATALOG_SEEDS: DbTemplateRecord[] = [
     is_premium: false,
     price: 49000,
     original_price: 79000,
+    mockup_url: `${SUPABASE_MOCKUP_BASE_URL}/template1-modern.jpg`,
+    thumbnail_url: `${SUPABASE_MOCKUP_BASE_URL}/template1-modern.jpg`,
   },
   {
     id: 'template2',
@@ -225,6 +240,8 @@ export const DEFAULT_CATALOG_SEEDS: DbTemplateRecord[] = [
     is_premium: false,
     price: 49000,
     original_price: 79000,
+    mockup_url: `${SUPABASE_MOCKUP_BASE_URL}/template2-rustic.jpg`,
+    thumbnail_url: `${SUPABASE_MOCKUP_BASE_URL}/template2-rustic.jpg`,
   },
   {
     id: 'template5',
@@ -238,6 +255,8 @@ export const DEFAULT_CATALOG_SEEDS: DbTemplateRecord[] = [
     is_premium: true,
     price: 49000,
     original_price: 79000,
+    mockup_url: `${SUPABASE_MOCKUP_BASE_URL}/template5-luxury.jpg`,
+    thumbnail_url: `${SUPABASE_MOCKUP_BASE_URL}/template5-luxury.jpg`,
   },
 ];
 
@@ -372,6 +391,8 @@ export function buildThemeOptionsFromDb(catalog: DbTemplateRecord[]): ThemeOptio
       originalPriceDisplay: priceMeta.originalPriceDisplay,
       badgePrice: priceMeta.badgePrice,
       badgeOriginal: priceMeta.badgeOriginal,
+      mockupUrl: record.mockup_url || record.thumbnail_url || null,
+      thumbnailUrl: record.thumbnail_url || record.mockup_url || null,
     };
   });
 }

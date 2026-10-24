@@ -35,6 +35,7 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
   const [dynamicOptions, setDynamicOptions] = useState<ThemeOption[]>(() =>
     buildThemeOptionsFromDb(getCachedCatalog())
   );
+  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
   // Sinkronisasi otomatis murni dengan tabel public.templates di Supabase secara Realtime
   useEffect(() => {
@@ -215,16 +216,61 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
               <div className="space-y-2 sm:space-y-2.5">
                 {/* Card Mini Preview Mockup */}
                 <div
-                  className={`relative w-full h-24 sm:h-36 rounded-lg sm:rounded-xl overflow-hidden flex flex-col items-center justify-center p-1.5 sm:p-3 text-center shadow-inner transition-transform group-hover:scale-[1.01] border ${theme.bgClass}`}
+                  className={`relative w-full h-28 sm:h-40 rounded-lg sm:rounded-xl overflow-hidden flex flex-col items-center justify-center p-1.5 sm:p-3 text-center shadow-inner transition-transform group-hover:scale-[1.01] border ${theme.bgClass}`}
                 >
+                  {/* Foto Mockup Template Asli dari Supabase Storage */}
+                  {theme.mockupUrl && !imgErrors[theme.id] ? (
+                    <>
+                      <img
+                        src={theme.mockupUrl}
+                        alt={theme.name}
+                        loading="lazy"
+                        onError={(e) => {
+                          const img = e.currentTarget;
+                          // Deteksi jika template7 menggunakan nama file variasi di storage
+                          if (img.src.includes('template7-minang.jpg')) {
+                            img.src = img.src.replace('template7-minang.jpg', 'template_7_Minang.jpg');
+                          } else if (img.src.includes('template_7_Minang.jpg')) {
+                            img.src = img.src.replace('template_7_Minang.jpg', 'template7-minang.jpg');
+                          } else {
+                            setImgErrors((prev) => ({ ...prev, [theme.id]: true }));
+                          }
+                        }}
+                        className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-500 ease-out group-hover:scale-105"
+                      />
+                      {/* Gradien Vignette halus agar badge tetap kontras & terbaca jelas */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/35 pointer-events-none" />
+                    </>
+                  ) : (
+                    /* Fallback Mockup CSS jika gambar offline / belum tersedia */
+                    <>
+                      <span
+                        className="material-symbols-outlined text-[20px] sm:text-[28px] mb-0.5 sm:mb-1 drop-shadow-xs"
+                        style={{ color: theme.accentColor }}
+                      >
+                        {theme.icon}
+                      </span>
+                      <span className="text-[8px] sm:text-[10px] tracking-wider uppercase font-semibold opacity-85 truncate max-w-full px-1">
+                        {theme.styleTag}
+                      </span>
+                      <p className="font-serif text-[11px] sm:text-sm font-bold tracking-tight mt-0.5 sm:mt-1 truncate w-full px-1">
+                        {theme.coupleSample}
+                      </p>
+                      <div
+                        className="w-5 sm:w-8 h-0.5 mt-0.5 sm:mt-2 rounded-full"
+                        style={{ backgroundColor: theme.accentColor }}
+                      />
+                    </>
+                  )}
+
                   {/* Top-Left: Badge Status Dibeli ATAU Badge Harga Coret */}
                   {isBought ? (
-                    <span className="absolute top-1.5 left-1.5 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-emerald-600 text-white text-[9px] sm:text-[10px] font-bold flex items-center gap-0.5 sm:gap-1 shadow-sm ring-1 ring-emerald-400/40">
+                    <span className="absolute top-1.5 left-1.5 z-10 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-emerald-600 text-white text-[9px] sm:text-[10px] font-bold flex items-center gap-0.5 sm:gap-1 shadow-sm ring-1 ring-emerald-400/40">
                       <span className="material-symbols-outlined text-[11px] sm:text-[13px]">check</span>
                       <span className="hidden sm:inline">Sudah </span><span>Dibeli</span>
                     </span>
                   ) : (
-                    <span className="absolute top-1.5 left-1.5 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-stone-900/90 text-white text-[9px] sm:text-[10px] font-semibold backdrop-blur-md shadow-xs flex items-center gap-1 border border-white/10">
+                    <span className="absolute top-1.5 left-1.5 z-10 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-stone-900/90 text-white text-[9px] sm:text-[10px] font-semibold backdrop-blur-md shadow-xs flex items-center gap-1 border border-white/10">
                       <span className="line-through text-stone-400 text-[8px] sm:text-[9px] hidden sm:inline">{theme.badgeOriginal}</span>
                       <span className="text-amber-300 font-bold">{theme.badgePrice}</span>
                     </span>
@@ -233,7 +279,7 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
                   {/* Top-Right: Indikator Live (selalu Live) ATAU Badge Bawaan Tema (tidak berubah jadi Aktif) */}
                   {isLive ? (
                     <span
-                      className={`absolute top-1.5 right-1.5 px-2 sm:px-2.5 py-0.5 rounded-full text-white text-[9px] sm:text-[10px] font-bold flex items-center gap-1 shadow-sm border ${
+                      className={`absolute top-1.5 right-1.5 z-10 px-2 sm:px-2.5 py-0.5 rounded-full text-white text-[9px] sm:text-[10px] font-bold flex items-center gap-1 shadow-sm border ${
                         isActive
                           ? 'bg-emerald-600 border-emerald-400 ring-2 ring-emerald-400/40 shadow-emerald-500/20'
                           : 'bg-emerald-700/95 border-emerald-400/50 backdrop-blur-xs'
@@ -244,27 +290,10 @@ export const ThemePickerCard: React.FC<ThemePickerCardProps> = ({
                       <span>Live</span>
                     </span>
                   ) : theme.badge ? (
-                    <span className="absolute top-1.5 right-1.5 px-1.5 sm:px-2 py-0.5 rounded-full bg-stone-900/70 text-white text-[8px] sm:text-[10px] font-medium backdrop-blur-xs shadow-2xs border border-white/10 inline-flex items-center">
+                    <span className="absolute top-1.5 right-1.5 z-10 px-1.5 sm:px-2 py-0.5 rounded-full bg-stone-900/80 text-white text-[8px] sm:text-[10px] font-medium backdrop-blur-xs shadow-2xs border border-white/15 inline-flex items-center">
                       {theme.badge}
                     </span>
                   ) : null}
-
-                  <span
-                    className="material-symbols-outlined text-[20px] sm:text-[28px] mb-0.5 sm:mb-1 drop-shadow-xs"
-                    style={{ color: theme.accentColor }}
-                  >
-                    {theme.icon}
-                  </span>
-                  <span className="text-[8px] sm:text-[10px] tracking-wider uppercase font-semibold opacity-85 truncate max-w-full px-1">
-                    {theme.styleTag}
-                  </span>
-                  <p className="font-serif text-[11px] sm:text-sm font-bold tracking-tight mt-0.5 sm:mt-1 truncate w-full px-1">
-                    {theme.coupleSample}
-                  </p>
-                  <div
-                    className="w-5 sm:w-8 h-0.5 mt-0.5 sm:mt-2 rounded-full"
-                    style={{ backgroundColor: theme.accentColor }}
-                  />
                 </div>
 
                 {/* Card Meta (Judul & Caption) */}

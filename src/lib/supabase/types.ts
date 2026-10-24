@@ -7,6 +7,7 @@ export interface SupabaseTemplateRecord {
   category: 'adat' | 'modern' | string;
   description?: string | null;
   thumbnail_url?: string | null;
+  mockup_url?: string | null;
   preview_badge?: string | null;
   accent_color?: string;
   default_audio_url?: string | null;
