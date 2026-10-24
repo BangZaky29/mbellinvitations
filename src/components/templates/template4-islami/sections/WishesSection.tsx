@@ -1,6 +1,7 @@
 import React from 'react';
 import type { BaseSectionProps } from '../../types';
 import type { WishItem } from '../../../../types/invitation';
+import { formatWishTime } from '../../../../utils/dateHelper';
 
 export interface IslamiWishesProps extends BaseSectionProps {
   wishesList: WishItem[];
@@ -69,12 +70,7 @@ export const WishesSection: React.FC<IslamiWishesProps> = ({
                       </span>
                     )}
                     <span className="shrink-0 font-label-sm text-label-sm text-on-surface-variant text-[10px]">
-                      {item.created_at
-                        ? new Date(item.created_at).toLocaleDateString('id-ID', {
-                          day: 'numeric',
-                          month: 'short',
-                        })
-                        : 'Baru saja'}
+                      {formatWishTime(item.created_at)}
                     </span>
                   </div>
                 </div>

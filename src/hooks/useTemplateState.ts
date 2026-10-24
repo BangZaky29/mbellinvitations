@@ -235,7 +235,7 @@ export function useTemplateState({
           guest_name: rsvpForm.name.trim(),
           message: wishMsg,
           attendance: rsvpForm.status === 'hadir' || rsvpForm.status === 'attending' ? 'attending' : 'declined',
-          created_at: 'Baru saja',
+          created_at: new Date().toISOString(),
         };
         setWishes((prev) => [newWish, ...prev.filter((w) => w.id !== newWish.id)]);
       }

@@ -1,5 +1,6 @@
 import React from 'react';
 import type { WishItem } from '../../types';
+import { formatWishTime } from '../../../../utils/dateHelper';
 
 export interface MinangWishesProps {
   wishes: WishItem[];
@@ -43,13 +44,7 @@ export const WishesSection: React.FC<MinangWishesProps> = ({
                       {w.guest_name}
                     </h5>
                     <span className="text-[10px] text-[#7D5C1E]/80 font-sans block">
-                      {w.created_at
-                        ? new Date(w.created_at).toLocaleDateString('id-ID', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          })
-                        : 'Baru saja'}
+                      {formatWishTime(w.created_at)}
                     </span>
                   </div>
                 </div>

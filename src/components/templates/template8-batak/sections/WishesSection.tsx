@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { WishItem } from '../../../../types/invitation';
+import { formatWishTime } from '../../../../utils/dateHelper';
 
 interface WishesSectionProps {
   wishes: WishItem[];
@@ -56,7 +57,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({ wishes }) => {
       <div className="w-full max-w-[360px] flex flex-col gap-3">
         {displayedItems.map((wish, idx) => {
           const guestName = wish.guest_name || (wish as any).name || 'Tamu Undangan';
-          const timeText = wish.created_at || (wish as any).time;
+          const timeText = formatWishTime(wish.created_at || (wish as any).time);
           const isAttending = wish.attendance === 'attending' || (wish.attendance as any) === 'hadir';
           const isDeclined = wish.attendance === 'declined' || (wish.attendance as any) === 'tidak_hadir';
 

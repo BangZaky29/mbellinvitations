@@ -1,6 +1,7 @@
 import React from 'react';
 import type { BaseSectionProps } from '../../types';
 import type { CoupleInfo, WishItem } from '../../../../types/invitation';
+import { formatWishTime } from '../../../../utils/dateHelper';
 
 export interface JawaWishesProps extends BaseSectionProps {
   firstPerson?: CoupleInfo;
@@ -63,12 +64,7 @@ export const WishesSection: React.FC<JawaWishesProps> = ({
                     </span>
                   )}
                   <span className="shrink-0 font-caption text-caption text-on-surface-variant/60 text-[10px]">
-                    {wish.created_at
-                      ? new Date(wish.created_at).toLocaleDateString('id-ID', {
-                          day: 'numeric',
-                          month: 'short',
-                        })
-                      : 'Nembe kemawon'}
+                    {formatWishTime(wish.created_at)}
                   </span>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { BaseSectionProps } from '../../types';
 import type { WishItem } from '../../../../types/invitation';
+import { formatWishTime } from '../../../../utils/dateHelper';
 
 export interface RusticWishesProps extends BaseSectionProps {
   wishes: WishItem[];
@@ -77,12 +78,7 @@ export const WishesSection: React.FC<RusticWishesProps> = ({
                       </span>
                     )}
                     <span className="text-[10px] text-[#4D5E53]/70 font-sans">
-                      {wish.created_at
-                        ? new Date(wish.created_at).toLocaleDateString('id-ID', {
-                            day: 'numeric',
-                            month: 'short',
-                          })
-                        : 'Baru saja'}
+                      {formatWishTime(wish.created_at)}
                     </span>
                   </div>
                 </div>

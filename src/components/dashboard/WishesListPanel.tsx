@@ -3,6 +3,7 @@ import { supabase, type UserTemplateRecord } from '../../lib/supabaseClient';
 import type { InvitationData } from '../../types/invitation';
 import { TemplateCardSelector, type TemplateSelectorItem } from './common/TemplateCardSelector';
 import { getInvitationFullUrl, getInvitationDisplayUrl } from '../../utils/urlHelper';
+import { formatWishTime } from '../../utils/dateHelper';
 
 interface WishEntry {
   id: string;
@@ -728,11 +729,7 @@ export const WishesListPanel: React.FC<WishesListPanelProps> = ({
                     </div>
 
                     <span className="text-[10px] text-stone-400 font-mono shrink-0">
-                      {new Date(wish.created_at).toLocaleDateString('id-ID', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
+                      {formatWishTime(wish.created_at)}
                     </span>
                   </div>
 

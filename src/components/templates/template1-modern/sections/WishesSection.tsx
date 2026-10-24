@@ -1,5 +1,6 @@
 import React from 'react';
 import type { BaseSectionProps, WishItem } from '../../types';
+import { formatWishTime } from '../../../../utils/dateHelper';
 
 export interface ModernWishesSectionProps extends BaseSectionProps {
   wishes: WishItem[];
@@ -47,14 +48,7 @@ export const WishesSection: React.FC<ModernWishesSectionProps> = ({
                         {wish.guest_name}
                       </h5>
                       <span className="text-[9px] text-charcoal-muted">
-                        {wish.created_at
-                          ? new Date(wish.created_at).toLocaleDateString('id-ID', {
-                            day: 'numeric',
-                            month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })
-                          : 'Baru saja'}
+                        {formatWishTime(wish.created_at)}
                       </span>
                     </div>
                   </div>

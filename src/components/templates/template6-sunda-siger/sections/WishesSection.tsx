@@ -1,5 +1,6 @@
 import React from 'react';
 import type { WishItem } from '../../types';
+import { formatWishTime } from '../../../../utils/dateHelper';
 
 export interface SundaWishesProps {
   wishes: WishItem[];
@@ -41,13 +42,7 @@ export const WishesSection: React.FC<SundaWishesProps> = ({
                       {w.guest_name}
                     </span>
                     <span className="text-[10px] text-[#735855]">
-                      {w.created_at
-                        ? new Date(w.created_at).toLocaleDateString('id-ID', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          })
-                        : 'Baru saja'}
+                      {formatWishTime(w.created_at)}
                     </span>
                   </div>
                 </div>
