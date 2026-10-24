@@ -89,3 +89,29 @@ export interface UserTemplateRecord {
   created_at?: string;
   updated_at?: string;
 }
+
+export type ImageCategory =
+  | 'gallery'
+  | 'cover'
+  | 'groom'
+  | 'bride'
+  | 'couple'
+  | 'thumbnail'
+  | 'qris'
+  | 'other';
+
+export interface InvitationImageRecord {
+  id: string;
+  user_id: string;
+  user_template_id?: string | null;
+  invitation_id?: string | null;
+  category: ImageCategory;
+  file_name: string;
+  storage_path: string;
+  public_url: string;
+  file_size?: number;
+  mime_type?: string;
+  display_order?: number;
+  created_at?: string;
+  updated_at?: string;
+}

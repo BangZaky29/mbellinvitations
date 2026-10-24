@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, saveUserTemplate } from '../lib/supabaseClient';
+import { sanitizeAndUploadBase64InFormData } from '../lib/supabase/storageService';
 import type { InvitationData, ThemeConfig } from '../types/invitation';
 import { extractYouTubeId } from './useAudioPlayer';
 import {
@@ -233,8 +234,17 @@ const handleConfirmSameTemplatePublish = async () => {
       new Set(rawUnlockedList.map((id) => TEMPLATE_ID_TO_THEME[id] || id))
     );
 
+    // FIREWALL BASE64: Pastikan aset gambar bersih dari Base64 sebelum dipublikasikan
+    let cleanFormData = formData;
+    if (user?.id) {
+      cleanFormData = await sanitizeAndUploadBase64InFormData(formData, user.id, user.email, targetSlug);
+      if (JSON.stringify(cleanFormData) !== JSON.stringify(formData)) {
+        setFormData(cleanFormData);
+      }
+    }
+
     const updatedContent: InvitationData = {
-      ...formData,
+      ...cleanFormData,
       slug: targetSlug,
       status: 'published' as const,
       theme_id: currentThemeId as any,
@@ -311,7 +321,7 @@ const handleConfirmSameTemplatePublish = async () => {
         theme_config: updatedThemeConfig,
         music_url: resolvedMusicUrl,
         music_type: resolvedMusicType,
-        thumbnail_url: formData.cover_image || formData.couple_photo || null,
+        thumbnail_url: cleanFormData.cover_image || cleanFormData.couple_photo || null,
       });
       if (res.success && res.data) {
         setCurrentTemplateRecordId(res.data.id);
@@ -408,8 +418,17 @@ const handleConfirmPublish = async (paymentDetails?: { themeId?: string; payment
 
     const nowIso = new Date().toISOString();
 
+    // FIREWALL BASE64: Pastikan form data bersih dari Base64 sebelum dipublikasikan
+    let cleanFormData = formData;
+    if (user?.id) {
+      cleanFormData = await sanitizeAndUploadBase64InFormData(formData, user.id, user.email, targetSlug);
+      if (JSON.stringify(cleanFormData) !== JSON.stringify(formData)) {
+        setFormData(cleanFormData);
+      }
+    }
+
     const publishedContent = {
-      ...formData,
+      ...cleanFormData,
       slug: targetSlug,
       theme_id: activeThemeId,
       status: 'published' as const,
@@ -495,7 +514,7 @@ const handleConfirmPublish = async (paymentDetails?: { themeId?: string; payment
         theme_config: updatedThemeConfig,
         music_url: resolvedMusicUrl,
         music_type: resolvedMusicType,
-        thumbnail_url: formData.cover_image || formData.couple_photo || null,
+        thumbnail_url: cleanFormData.cover_image || cleanFormData.couple_photo || null,
       };
 
       const res = await saveUserTemplate(userTemplatePayload);

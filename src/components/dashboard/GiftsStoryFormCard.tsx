@@ -11,6 +11,10 @@ interface GiftsStoryFormCardProps {
   gallery?: string[];
   musicUrl?: string;
   activeTabMode?: 'all' | 'story_gallery' | 'gifts';
+  templateSlug?: string;
+  userId?: string | null;
+  userEmail?: string | null;
+  userTemplateId?: string | null;
   onBankAccountsChange: (accounts: BankAccount[]) => void;
   onLoveStoryChange: (story: LoveStoryMilestone[]) => void;
   onGalleryChange?: (gallery: string[]) => void;
@@ -24,6 +28,10 @@ export const GiftsStoryFormCard: React.FC<GiftsStoryFormCardProps> = ({
   gallery = [],
   musicUrl,
   activeTabMode = 'all',
+  templateSlug,
+  userId,
+  userEmail,
+  userTemplateId,
   onBankAccountsChange,
   onLoveStoryChange,
   onGalleryChange,
@@ -37,7 +45,14 @@ export const GiftsStoryFormCard: React.FC<GiftsStoryFormCardProps> = ({
     <section className="bg-white rounded-2xl p-6 sm:p-7 shadow-xs border border-stone-200/90 space-y-7">
       {showStoryGallery && (
         <>
-          <GalleryEditor gallery={gallery} onGalleryChange={onGalleryChange} />
+          <GalleryEditor
+            gallery={gallery}
+            templateSlug={templateSlug}
+            userId={userId}
+            userEmail={userEmail}
+            userTemplateId={userTemplateId}
+            onGalleryChange={onGalleryChange}
+          />
           <LoveStoryEditor loveStory={loveStory} onLoveStoryChange={onLoveStoryChange} />
           <MusicPicker
             musicUrl={musicUrl}

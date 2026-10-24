@@ -9,6 +9,10 @@ interface CoupleFormCardProps {
   isBrideFirst: boolean;
   coverImage: string;
   slug?: string;
+  templateSlug?: string;
+  userId?: string | null;
+  userEmail?: string | null;
+  userTemplateId?: string | null;
   onSlugChange?: (slug: string) => void;
   onGroomChange: (groom: CoupleInfo) => void;
   onBrideChange: (bride: CoupleInfo) => void;
@@ -21,11 +25,17 @@ export const CoupleFormCard: React.FC<CoupleFormCardProps> = ({
   bride,
   isBrideFirst,
   coverImage,
+  slug,
+  templateSlug,
+  userId,
+  userEmail,
+  userTemplateId,
   onGroomChange,
   onBrideChange,
   onToggleBrideFirst,
   onCoverChange,
 }) => {
+  const effectiveTemplateSlug = templateSlug || slug || 'template_1';
   // 0 = Mempelai Pria, 1 = Mempelai Wanita
   const [activeCardIndex, setActiveCardIndex] = useState<number>(0);
 
@@ -71,7 +81,14 @@ export const CoupleFormCard: React.FC<CoupleFormCardProps> = ({
       </div>
 
       {/* Hero Cover Prewedding Upload */}
-      <CoverImageUploader coverImage={coverImage} onCoverChange={onCoverChange} />
+      <CoverImageUploader
+        coverImage={coverImage}
+        templateSlug={effectiveTemplateSlug}
+        userId={userId}
+        userEmail={userEmail}
+        userTemplateId={userTemplateId}
+        onCoverChange={onCoverChange}
+      />
 
       {/* TAMPILAN MOBILE: Card Stack Slider (md:hidden) */}
       <div className="md:hidden space-y-3">
@@ -129,6 +146,10 @@ export const CoupleFormCard: React.FC<CoupleFormCardProps> = ({
                   genderIcon="male"
                   familyTitle="Silsilah Orang Tua Pria"
                   person={groom}
+                  templateSlug={effectiveTemplateSlug}
+                  userId={userId}
+                  userEmail={userEmail}
+                  userTemplateId={userTemplateId}
                   onChange={onGroomChange}
                   nicknamePlaceholder="cth: Raditya"
                   fullnamePlaceholder="cth: Raditya Putra Wicaksono, S.T."
@@ -157,6 +178,10 @@ export const CoupleFormCard: React.FC<CoupleFormCardProps> = ({
                   genderIcon="female"
                   familyTitle="Silsilah Orang Tua Wanita"
                   person={bride}
+                  templateSlug={effectiveTemplateSlug}
+                  userId={userId}
+                  userEmail={userEmail}
+                  userTemplateId={userTemplateId}
                   onChange={onBrideChange}
                   nicknamePlaceholder="cth: Jessica"
                   fullnamePlaceholder="cth: Jessica Anindita, S.Ds."
@@ -269,6 +294,10 @@ export const CoupleFormCard: React.FC<CoupleFormCardProps> = ({
           genderIcon="male"
           familyTitle="Silsilah Orang Tua Pria"
           person={groom}
+          templateSlug={effectiveTemplateSlug}
+          userId={userId}
+          userEmail={userEmail}
+          userTemplateId={userTemplateId}
           onChange={onGroomChange}
           nicknamePlaceholder="cth: Raditya"
           fullnamePlaceholder="cth: Raditya Putra Wicaksono, S.T."
@@ -283,6 +312,10 @@ export const CoupleFormCard: React.FC<CoupleFormCardProps> = ({
           genderIcon="female"
           familyTitle="Silsilah Orang Tua Wanita"
           person={bride}
+          templateSlug={effectiveTemplateSlug}
+          userId={userId}
+          userEmail={userEmail}
+          userTemplateId={userTemplateId}
           onChange={onBrideChange}
           nicknamePlaceholder="cth: Jessica"
           fullnamePlaceholder="cth: Jessica Anindita, S.Ds."

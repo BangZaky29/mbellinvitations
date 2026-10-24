@@ -1,19 +1,30 @@
 import React, { useRef, useState } from 'react';
 import { convertImageToWebP } from '../../../utils/imageOptimizer';
+import { supabase } from '../../../lib/supabase/client';
+import { uploadInvitationImage } from '../../../lib/supabase/storageService';
 
 interface GalleryEditorProps {
   gallery: string[];
+  templateSlug?: string;
+  userId?: string | null;
+  userEmail?: string | null;
+  userTemplateId?: string | null;
   onGalleryChange?: (gallery: string[]) => void;
 }
 
 export const GalleryEditor: React.FC<GalleryEditorProps> = ({
   gallery = [],
+  templateSlug = 'template_1',
+  userId: propUserId,
+  userEmail: propUserEmail,
+  userTemplateId,
   onGalleryChange,
 }) => {
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
   const safeGallery = Array.isArray(gallery) ? gallery : [];
 
   const [isOptimizingImage, setIsOptimizingImage] = useState(false);
+  const [statusText, setStatusText] = useState<string>('Mengonversi ke WebP...');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleAddGalleryImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,14 +38,46 @@ export const GalleryEditor: React.FC<GalleryEditorProps> = ({
 
     setErrorMessage(null);
     setIsOptimizingImage(true);
+    setStatusText('Mengompres ke WebP...');
 
     try {
+      // 1. Kompres gambar ke format .webp biner ringan
       const optimized = await convertImageToWebP(file, 0.82, 1920);
-      onGalleryChange([...safeGallery, optimized.dataUrl]);
+
+      // 2. Dapatkan identitas pengguna saat ini
+      setStatusText('Mengunggah ke Storage...');
+      let effectiveUserId = propUserId;
+      let effectiveUserEmail = propUserEmail;
+
+      if (!effectiveUserId) {
+        const { data: authData } = await supabase.auth.getUser();
+        effectiveUserId = authData?.user?.id || 'guest_user';
+        effectiveUserEmail = authData?.user?.email || null;
+      }
+
+      // 3. Unggah ke bucket 'invitations' di path DATA/{email}/{slug}/Galery/
+      const uploadRes = await uploadInvitationImage({
+        file: optimized.file,
+        userId: effectiveUserId,
+        userEmail: effectiveUserEmail,
+        templateSlug: templateSlug || 'template_1',
+        category: 'gallery',
+        userTemplateId: userTemplateId || null,
+        displayOrder: safeGallery.length,
+      });
+
+      if (!uploadRes.success || !uploadRes.publicUrl) {
+        throw new Error(uploadRes.error || 'Gagal mengunggah foto ke storage Supabase.');
+      }
+
+      // 4. Masukkan URL publik Supabase (HTTPS) ke galeri, bukan Base64!
+      onGalleryChange([...safeGallery, uploadRes.publicUrl]);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Gagal memproses dan mengonversi gambar.');
+      console.error('[GalleryEditor] Upload error:', err);
+      setErrorMessage(err.message || 'Gagal memproses dan mengunggah gambar.');
     } finally {
       setIsOptimizingImage(false);
+      setStatusText('Mengonversi ke WebP...');
       if (galleryFileInputRef.current) {
         galleryFileInputRef.current.value = '';
       }
@@ -80,7 +123,7 @@ export const GalleryEditor: React.FC<GalleryEditorProps> = ({
           {isOptimizingImage ? (
             <>
               <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              <span>Mengonversi ke WebP...</span>
+              <span>{statusText}</span>
             </>
           ) : (
             <>

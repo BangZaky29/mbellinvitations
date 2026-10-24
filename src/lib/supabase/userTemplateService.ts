@@ -1,5 +1,6 @@
 import { supabase } from './client';
 import type { UserTemplateRecord } from './types';
+import { sanitizeAndUploadBase64InFormData } from './storageService';
 
 /**
  * Fetch all saved templates for a given user
@@ -57,8 +58,32 @@ export async function saveUserTemplate(
     }
 
     const now = new Date().toISOString();
+    let cleanContent = payload.content;
+    if (cleanContent && typeof cleanContent === 'object' && payload.user_id) {
+      try {
+        cleanContent = await sanitizeAndUploadBase64InFormData(
+          cleanContent as any,
+          payload.user_id,
+          null,
+          payload.slug
+        );
+      } catch (e) {
+        console.warn('[userTemplateService] sanitize notice:', e);
+      }
+    }
+
+    let cleanThumb = payload.thumbnail_url;
+    if (cleanThumb && typeof cleanThumb === 'string' && cleanThumb.startsWith('data:image/')) {
+      cleanThumb = (cleanContent as any)?.cover_image || (cleanContent as any)?.couple_photo || null;
+      if (cleanThumb && cleanThumb.startsWith('data:image/')) {
+        cleanThumb = null;
+      }
+    }
+
     const record: any = {
       ...payload,
+      content: cleanContent,
+      thumbnail_url: cleanThumb,
       unlocked_templates: payload.unlocked_templates || (payload.content as any)?.unlocked_templates || [],
       is_paid: payload.is_paid ?? (payload.content as any)?.is_paid ?? false,
       paid_template_id: payload.paid_template_id || (payload.content as any)?.paid_template_id || null,

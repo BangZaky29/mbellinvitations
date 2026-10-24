@@ -1,17 +1,28 @@
 import React, { useRef, useState } from 'react';
 import { convertImageToWebP } from '../../../utils/imageOptimizer';
+import { supabase } from '../../../lib/supabase/client';
+import { uploadInvitationImage } from '../../../lib/supabase/storageService';
 
 interface CoverImageUploaderProps {
   coverImage: string;
+  templateSlug?: string;
+  userId?: string | null;
+  userEmail?: string | null;
+  userTemplateId?: string | null;
   onCoverChange: (url: string) => void;
 }
 
 export const CoverImageUploader: React.FC<CoverImageUploaderProps> = ({
   coverImage,
+  templateSlug = 'template_1',
+  userId: propUserId,
+  userEmail: propUserEmail,
+  userTemplateId,
   onCoverChange,
 }) => {
   const coverFileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [statusText, setStatusText] = useState('Mengompres Foto...');
 
   const handleLocalImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -19,21 +30,43 @@ export const CoverImageUploader: React.FC<CoverImageUploaderProps> = ({
 
     try {
       setIsProcessing(true);
-      // Kompres dan konversi foto menjadi WebP resolusi tinggi (~80-120KB)
-      // Format Data URL tersimpan permanen di Supabase dan dapat dibuka di semua perangkat (Desktop, HP Android/iOS, & WhatsApp)
+      setStatusText('Mengompres Foto...');
+      // 1. Kompres dan konversi foto menjadi WebP resolusi tinggi (~80-120KB)
       const optimized = await convertImageToWebP(file, 0.82, 1280);
-      onCoverChange(optimized.dataUrl);
+
+      // 2. Ambil user session
+      setStatusText('Mengunggah ke Storage...');
+      let effectiveUserId = propUserId;
+      let effectiveUserEmail = propUserEmail;
+
+      if (!effectiveUserId) {
+        const { data: authData } = await supabase.auth.getUser();
+        effectiveUserId = authData?.user?.id || 'guest_user';
+        effectiveUserEmail = authData?.user?.email || null;
+      }
+
+      // 3. Upload ke bucket invitations di folder DATA/{email}/{slug}/image_lainnya/
+      const uploadRes = await uploadInvitationImage({
+        file: optimized.file,
+        userId: effectiveUserId,
+        userEmail: effectiveUserEmail,
+        templateSlug: templateSlug || 'template_1',
+        category: 'cover',
+        userTemplateId: userTemplateId || null,
+      });
+
+      if (!uploadRes.success || !uploadRes.publicUrl) {
+        throw new Error(uploadRes.error || 'Gagal mengunggah foto cover ke storage.');
+      }
+
+      // 4. Simpan URL publik Supabase (HTTPS)
+      onCoverChange(uploadRes.publicUrl);
     } catch (err: any) {
-      console.warn('WebP compression notice, falling back to FileReader:', err);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          onCoverChange(event.target.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
+      console.error('[CoverImageUploader] Upload error:', err);
+      alert(err.message || 'Gagal memproses foto sampul.');
     } finally {
       setIsProcessing(false);
+      setStatusText('Mengompres Foto...');
       if (coverFileInputRef.current) {
         coverFileInputRef.current.value = '';
       }
@@ -91,7 +124,7 @@ export const CoverImageUploader: React.FC<CoverImageUploaderProps> = ({
               <span className={`material-symbols-outlined text-sm ${isProcessing ? 'animate-spin' : ''}`}>
                 {isProcessing ? 'progress_activity' : 'upload'}
               </span>
-              <span>{isProcessing ? 'Mengompres Foto...' : 'Unggah Foto Sampul'}</span>
+              <span>{isProcessing ? statusText : 'Unggah Foto Sampul'}</span>
             </button>
             <button
               type="button"

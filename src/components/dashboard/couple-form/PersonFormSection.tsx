@@ -1,6 +1,8 @@
 import React, { useRef, useState } from 'react';
 import type { CoupleInfo } from '../../../types/invitation';
 import { convertImageToWebP } from '../../../utils/imageOptimizer';
+import { supabase } from '../../../lib/supabase/client';
+import { uploadInvitationImage } from '../../../lib/supabase/storageService';
 
 interface PersonFormSectionProps {
   title: string;
@@ -8,6 +10,10 @@ interface PersonFormSectionProps {
   genderIcon: 'male' | 'female';
   familyTitle: string;
   person: CoupleInfo;
+  templateSlug?: string;
+  userId?: string | null;
+  userEmail?: string | null;
+  userTemplateId?: string | null;
   onChange: (updated: CoupleInfo) => void;
   nicknamePlaceholder: string;
   fullnamePlaceholder: string;
@@ -22,6 +28,10 @@ export const PersonFormSection: React.FC<PersonFormSectionProps> = ({
   genderIcon,
   familyTitle,
   person,
+  templateSlug = 'template_1',
+  userId: propUserId,
+  userEmail: propUserEmail,
+  userTemplateId,
   onChange,
   nicknamePlaceholder,
   fullnamePlaceholder,
@@ -31,6 +41,7 @@ export const PersonFormSection: React.FC<PersonFormSectionProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [statusText, setStatusText] = useState('Mengompres Foto...');
 
   const handleLocalImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -38,20 +49,45 @@ export const PersonFormSection: React.FC<PersonFormSectionProps> = ({
 
     try {
       setIsProcessing(true);
+      setStatusText('Mengompres Foto...');
+      // 1. Kompres ke format .webp biner
       const optimized = await convertImageToWebP(file, 0.82, 1080);
-      onChange({ ...person, photo: optimized.dataUrl, photo_url: optimized.dataUrl });
+
+      // 2. Dapatkan identitas pengguna
+      setStatusText('Mengunggah ke Storage...');
+      let effectiveUserId = propUserId;
+      let effectiveUserEmail = propUserEmail;
+
+      if (!effectiveUserId) {
+        const { data: authData } = await supabase.auth.getUser();
+        effectiveUserId = authData?.user?.id || 'guest_user';
+        effectiveUserEmail = authData?.user?.email || null;
+      }
+
+      const category = genderIcon === 'male' ? 'groom' : 'bride';
+
+      // 3. Upload ke bucket invitations di folder DATA/{email}/{slug}/image_lainnya/
+      const uploadRes = await uploadInvitationImage({
+        file: optimized.file,
+        userId: effectiveUserId,
+        userEmail: effectiveUserEmail,
+        templateSlug: templateSlug || 'template_1',
+        category,
+        userTemplateId: userTemplateId || null,
+      });
+
+      if (!uploadRes.success || !uploadRes.publicUrl) {
+        throw new Error(uploadRes.error || 'Gagal mengunggah foto mempelai ke storage.');
+      }
+
+      // 4. Simpan URL publik Supabase (HTTPS)
+      onChange({ ...person, photo: uploadRes.publicUrl, photo_url: uploadRes.publicUrl });
     } catch (err: any) {
-      console.warn('WebP optimize error, using FileReader fallback:', err);
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        if (evt.target?.result) {
-          const fallbackUrl = evt.target.result as string;
-          onChange({ ...person, photo: fallbackUrl, photo_url: fallbackUrl });
-        }
-      };
-      reader.readAsDataURL(file);
+      console.error('[PersonFormSection] Upload error:', err);
+      alert(err.message || 'Gagal memproses foto mempelai.');
     } finally {
       setIsProcessing(false);
+      setStatusText('Mengompres Foto...');
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -116,7 +152,7 @@ export const PersonFormSection: React.FC<PersonFormSectionProps> = ({
             <span className={`material-symbols-outlined text-xs ${isProcessing ? 'animate-spin' : ''}`}>
               {isProcessing ? 'progress_activity' : 'photo_camera'}
             </span>
-            <span>{isProcessing ? 'Mengompres...' : 'Ganti Foto'}</span>
+            <span>{isProcessing ? statusText : 'Ganti Foto'}</span>
           </button>
           <p className="text-[11px] text-stone-500 mt-1">Foto wajah close-up jernih (maks. 5MB)</p>
         </div>

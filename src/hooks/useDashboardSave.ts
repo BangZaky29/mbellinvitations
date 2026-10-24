@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase, saveUserTemplate } from '../lib/supabaseClient';
+import { sanitizeAndUploadBase64InFormData } from '../lib/supabase/storageService';
 import type { InvitationData, ThemeConfig } from '../types/invitation';
 import { extractYouTubeId } from './useAudioPlayer';
 import {
@@ -524,11 +525,20 @@ export function useDashboardSave({
       const resolvedMusicType = Boolean(extractYouTubeId(resolvedMusicUrl)) ? 'youtube' : 'mp3';
       const effectiveStatus = (formData.status || 'draft') as any;
 
-      // 1. Simpan ke tabel public.invitations secara aman
+      // 0. FIREWALL BASE64: Pastikan seluruh aset gambar telah bersih dari string Base64
+      let safeFormData = formData;
+      if (user?.id) {
+        safeFormData = await sanitizeAndUploadBase64InFormData(formData, user.id, user.email, targetSlug);
+        if (JSON.stringify(safeFormData) !== JSON.stringify(formData)) {
+          setFormData(safeFormData);
+        }
+      }
+
+      // 1. Simpan ke tabel public.invitations secara aman (tanpa Base64)
       await syncInvitationsRow(targetSlug, {
         user_id: user?.id || null,
         template_id,
-        content: formData,
+        content: safeFormData,
         theme_config: themeConfig,
         status: effectiveStatus,
         music_url: resolvedMusicUrl,
@@ -537,7 +547,7 @@ export function useDashboardSave({
 
       // 2. Simpan ke localStorage sebagai cadangan offline
       try {
-        localStorage.setItem('mbell_pending_draft_formData', JSON.stringify(formData));
+        localStorage.setItem('mbell_pending_draft_formData', JSON.stringify(safeFormData));
         localStorage.setItem('mbell_pending_draft_themeConfig', JSON.stringify(themeConfig));
       } catch (e) {
         console.warn('Manual save local cache notice:', e);
@@ -549,10 +559,10 @@ export function useDashboardSave({
         // Jika status undangan adalah published, dan user sedang memilih tema yang berbeda di editor (pratinjau):
         // Simpan tema yang sudah terbit di kolom utama agar rute publik & record live tetap aman
         const publishedLiveTheme = baselineSnapshotRef.current?.formData?.theme_id;
-        const isDifferentThemeOnLive = effectiveStatus === 'published' && Boolean(publishedLiveTheme) && formData.theme_id !== publishedLiveTheme;
+        const isDifferentThemeOnLive = effectiveStatus === 'published' && Boolean(publishedLiveTheme) && safeFormData.theme_id !== publishedLiveTheme;
         const resolvedDbTheme = isDifferentThemeOnLive
           ? (publishedLiveTheme || 'modern')
-          : (formData.theme_id || 'modern');
+          : (safeFormData.theme_id || 'modern');
         const resolvedDbTemplateId = getSafeDbTemplateId(resolvedDbTheme);
 
         const userTemplatePayload = {
@@ -563,14 +573,14 @@ export function useDashboardSave({
           template_id: resolvedDbTemplateId,
           theme_id: resolvedDbTheme,
           status: effectiveStatus,
-          is_paid: formData.is_paid ?? (effectiveStatus === 'published'),
-          paid_template_id: formData.paid_template_id || (effectiveStatus === 'published' ? resolvedDbTemplateId : null),
-          unlocked_templates: formData.unlocked_templates || [],
-          content: isDifferentThemeOnLive ? { ...formData, theme_id: resolvedDbTheme } : formData,
+          is_paid: safeFormData.is_paid ?? (effectiveStatus === 'published'),
+          paid_template_id: safeFormData.paid_template_id || (effectiveStatus === 'published' ? resolvedDbTemplateId : null),
+          unlocked_templates: safeFormData.unlocked_templates || [],
+          content: isDifferentThemeOnLive ? { ...safeFormData, theme_id: resolvedDbTheme } : safeFormData,
           theme_config: isDifferentThemeOnLive ? (baselineSnapshotRef.current?.themeConfig || themeConfig) : themeConfig,
           music_url: resolvedMusicUrl,
           music_type: resolvedMusicType,
-          thumbnail_url: formData.cover_image || formData.couple_photo || null,
+          thumbnail_url: safeFormData.cover_image || safeFormData.couple_photo || null,
         };
 
         const res = await saveUserTemplate(userTemplatePayload);
@@ -809,19 +819,22 @@ export function useDashboardSave({
         const effectiveStatus: 'published' | 'draft' | 'archived' =
           updatedFormData.status === 'published' ? 'published' : 'draft';
 
+        let safeUpdatedData = updatedFormData;
+        safeUpdatedData = await sanitizeAndUploadBase64InFormData(updatedFormData, user.id, user.email, targetSlug);
+
         const res = await saveUserTemplate({
           id: currentTemplateRecordId || undefined,
           user_id: user.id,
-          title: `Pernikahan ${updatedFormData.groom?.name || 'Mempelai Pria'} & ${updatedFormData.bride?.name || 'Mempelai Wanita'}`,
+          title: `Pernikahan ${safeUpdatedData.groom?.name || 'Mempelai Pria'} & ${safeUpdatedData.bride?.name || 'Mempelai Wanita'}`,
           slug: targetSlug,
           template_id: safeDbTemplateId,
-          theme_id: updatedFormData.theme_id || 'modern',
+          theme_id: safeUpdatedData.theme_id || 'modern',
           status: effectiveStatus,
-          content: updatedFormData,
+          content: safeUpdatedData,
           theme_config: updatedThemeConfig,
           music_url: cleanUrl,
           music_type: resolvedMusicType,
-          thumbnail_url: updatedFormData.cover_image || updatedFormData.couple_photo || null,
+          thumbnail_url: safeUpdatedData.cover_image || safeUpdatedData.couple_photo || null,
         });
 
         if (res.success && res.data) {
