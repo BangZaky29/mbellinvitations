@@ -243,11 +243,30 @@ export const EditorStepContent: React.FC<EditorStepContentProps> = ({
           onEventsChange={onEventsChange}
           streamingUrl={formData.streaming_url || formData.livestream_url || ''}
           onStreamingUrlChange={(url) => {
-            setFormData((prev) => ({
-              ...prev,
-              streaming_url: url,
-              livestream_url: url,
-            }));
+            const hasUrl = Boolean(url && url.trim());
+            setFormData((prev) => {
+              const currentSections = new Set(
+                prev.theme_config?.active_sections || themeConfig?.active_sections || []
+              );
+              if (hasUrl) {
+                currentSections.add('livestream');
+                currentSections.add('live_stream');
+              }
+              const updatedSections = Array.from(currentSections);
+              const nextThemeConfig: ThemeConfig = {
+                ...themeConfig,
+                ...prev.theme_config,
+                active_sections: updatedSections,
+                show_livestream: hasUrl ? true : prev.theme_config?.show_livestream ?? true,
+              };
+              setThemeConfig(nextThemeConfig);
+              return {
+                ...prev,
+                streaming_url: url,
+                livestream_url: url,
+                theme_config: nextThemeConfig,
+              };
+            });
           }}
         />
       )}
