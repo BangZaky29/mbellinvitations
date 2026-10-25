@@ -5,15 +5,22 @@ import {
   applyAnimationConfigStyles,
   replayUniversalScrollAnimation,
 } from '../../utils/scrollAnimationEngine';
+import { MusicPicker } from './gifts-story-form/MusicPicker';
 
 interface AnimationSettingsCardProps {
   themeConfig: ThemeConfig;
+  musicUrl?: string;
   onThemeConfigChange: (config: ThemeConfig) => void;
+  onMusicUrlChange?: (url: string) => void;
+  onSaveMusic?: (url: string) => void;
 }
 
 export const AnimationSettingsCard: React.FC<AnimationSettingsCardProps> = ({
   themeConfig,
+  musicUrl,
   onThemeConfigChange,
+  onMusicUrlChange,
+  onSaveMusic,
 }) => {
   const animConfig: AnimationConfig = {
     ...DEFAULT_ANIMATION_CONFIG,
@@ -176,19 +183,19 @@ export const AnimationSettingsCard: React.FC<AnimationSettingsCardProps> = ({
 
   return (
     <section className="bg-white rounded-2xl p-6 sm:p-7 shadow-xs border border-stone-200/90 space-y-7">
-      {/* Header Tahap 6 */}
+      {/* Header Tahap 8 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200/80">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
             <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-stone-900 text-white text-xs font-bold shadow-xs">
-              6
+              8
             </span>
             <h2 className="text-xl sm:text-2xl font-serif font-bold text-stone-900">
-              Pengaturan Animasi &amp; Efek Visual
+              Musik Latar &amp; Efek Animasi
             </h2>
           </div>
           <p className="text-sm text-stone-500">
-            Atur kelembutan scroll, gaya gerak, dan ornamen visual sebelum menerbitkan undangan Anda.
+            Pilih alunan musik pengiring dan atur kelembutan scroll serta efek visual undangan Anda.
           </p>
         </div>
 
@@ -213,6 +220,28 @@ export const AnimationSettingsCard: React.FC<AnimationSettingsCardProps> = ({
             <span>Reset</span>
           </button>
         </div>
+      </div>
+
+      {/* 0. MUSIK LATAR PENGIRING */}
+      <div className="p-5 rounded-2xl bg-gradient-to-br from-[#FAF9F5] via-white to-[#F6F4ED] border border-stone-200/90 shadow-2xs space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-outlined text-amber-700 text-xl">music_note</span>
+          <div>
+            <h3 className="text-sm font-bold text-stone-900">Musik Pengiring Latar (Background Music)</h3>
+            <p className="text-xs text-stone-500">Masukkan tautan YouTube resmi (lagu/instrumental) yang akan diputar otomatis secara syahdu saat tamu membuka undangan.</p>
+          </div>
+        </div>
+        <MusicPicker
+          musicUrl={musicUrl ?? themeConfig.music_url ?? ''}
+          onMusicUrlChange={(url) => {
+            if (onMusicUrlChange) {
+              onMusicUrlChange(url);
+            } else {
+              onThemeConfigChange({ ...themeConfig, music_url: url });
+            }
+          }}
+          onSaveMusic={onSaveMusic}
+        />
       </div>
 
       {/* 1. SLIDER KELEMBUTAN UTAMA (1 - 100) */}

@@ -31,10 +31,28 @@ export const MOCK_SUNDA_DATA: InvitationData = {
   wedding_date_iso: '2026-10-24T08:00:00+07:00',
   wedding_date_display: 'Sabtu, 24 Oktober 2026',
 
+  quote_title: 'Kutipan Suci & Doa',
+  quote_religion: 'islam',
+  quote_arabic:
+    'وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً ۚ إِنَّ فِي ذَٰلِكَ لَآيَاتٍ لِّقَوْمٍ يَتَفَكَّرُونَ',
   quote:
     'Dan di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya, dan Dia menjadikan di antaramu rasa kasih dan sayang.',
   quote_source: 'QS. Ar-Rum: 21 • “Runtut Raut Sauyunan”',
   hashtag: '#RadityaJessicaSundaSiger',
+
+  dresscode: {
+    enabled: true,
+    title: 'Panduan Busana (Dress Code)',
+    subtitle:
+      'Tamu undangan diharapkan mengenakan pakaian bernuansa adat Sunda Parahyangan berikut:',
+    colors: [
+      { name: 'Parahyangan Gold', hex: '#C5A059' },
+      { name: 'Melati White', hex: '#FFFFFF' },
+      { name: 'Forest Olive', hex: '#4A5D4E' },
+      { name: 'Warm Cream', hex: '#F5EFE6' },
+      { name: 'Charcoal Stone', hex: '#2B2A27' },
+    ],
+  },
 
   events: [
     {
@@ -130,7 +148,20 @@ export const MOCK_SUNDA_DATA: InvitationData = {
 export const MOCK_SUNDA_THEME: ThemeConfig = {
   primary_color: '#775A19',
   music_url: 'https://assets.mixkit.co/music/preview/mixkit-serene-view-443.mp3',
-  active_sections: ['cover', 'couple', 'event', 'gallery', 'rsvp', 'wishes', 'gift'],
+  active_sections: [
+    'cover',
+    'hero',
+    'quote',
+    'couple',
+    'event',
+    'dresscode',
+    'gallery',
+    'rsvp',
+    'wishes',
+    'gift',
+  ],
+  show_quote: true,
+  show_dresscode: true,
   show_gallery: true,
   show_love_story: true,
   show_rsvp: true,

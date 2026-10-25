@@ -179,12 +179,39 @@ export function computeAuditTrail(
     registerChange('gallery', 'Koleksi Galeri Foto', 'media', `${bGallery.length} Foto`, `${cGallery.length} Foto`);
   }
 
-  // 9. KUTIPAN / AYAT SUCI
+  // 9. KUTIPAN / AYAT SUCI & DOA
+  if (isStringDifferent(bForm.quote_title, cForm.quote_title)) {
+    registerChange('quote_title', 'Judul Bagian Doa', 'cerita', bForm.quote_title, cForm.quote_title);
+  }
+  if (isStringDifferent(bForm.quote_religion, cForm.quote_religion)) {
+    registerChange('quote_religion', 'Kategori / Preset Doa', 'cerita', bForm.quote_religion, cForm.quote_religion);
+  }
+  if (isStringDifferent(bForm.quote_arabic, cForm.quote_arabic)) {
+    registerChange('quote_arabic', 'Teks Doa / Naskah Asli (Arab)', 'cerita', bForm.quote_arabic, cForm.quote_arabic);
+  }
   if (isStringDifferent(bForm.quote, cForm.quote)) {
-    registerChange('quote', 'Teks Kutipan / Doa', 'cerita', bForm.quote, cForm.quote);
+    registerChange('quote', 'Teks Terjemahan / Kutipan Doa', 'cerita', bForm.quote, cForm.quote);
   }
   if (isStringDifferent(bForm.quote_source, cForm.quote_source)) {
-    registerChange('quote_source', 'Sumber Kutipan', 'cerita', bForm.quote_source, cForm.quote_source);
+    registerChange('quote_source', 'Sumber Kutipan / Referensi Ayat', 'cerita', bForm.quote_source, cForm.quote_source);
+  }
+
+  // 10. PANDUAN BUSANA / DRESSCODE
+  const bDresscode = bForm.dresscode;
+  const cDresscode = cForm.dresscode;
+  if (Boolean(bDresscode?.enabled) !== Boolean(cDresscode?.enabled)) {
+    registerChange('dresscode.enabled', 'Status Tampilan Dresscode', 'pengaturan', bDresscode?.enabled, cDresscode?.enabled);
+  }
+  if (isStringDifferent(bDresscode?.title, cDresscode?.title)) {
+    registerChange('dresscode.title', 'Judul Panduan Busana', 'pengaturan', bDresscode?.title, cDresscode?.title);
+  }
+  if (isStringDifferent(bDresscode?.subtitle, cDresscode?.subtitle)) {
+    registerChange('dresscode.subtitle', 'Catatan Panduan Busana', 'pengaturan', bDresscode?.subtitle, cDresscode?.subtitle);
+  }
+  const bDressColors = Array.isArray(bDresscode?.colors) ? bDresscode.colors : [];
+  const cDressColors = Array.isArray(cDresscode?.colors) ? cDresscode.colors : [];
+  if (isDeepDifferent(bDressColors, cDressColors)) {
+    registerChange('dresscode.colors', 'Palet Warna Dresscode', 'pengaturan', `${bDressColors.length} Warna`, `${cDressColors.length} Warna`);
   }
 
   // 10. KISAH CINTA (LOVE STORY)
@@ -256,6 +283,34 @@ export function computeAuditTrail(
   // 15. WARNA UTAMA TEMA (JIKA DIKONFIGURASI KHUSUS)
   if (isStringDifferent(bTheme.primary_color, cTheme.primary_color)) {
     registerChange('theme.primary_color', 'Warna Aksen Desain', 'tema', bTheme.primary_color, cTheme.primary_color);
+  }
+
+  // 16. PENGATURAN VISIBILITAS BAGIAN (SECTION VISIBILITY)
+  const bSections = Array.isArray(bTheme.active_sections) ? bTheme.active_sections : [];
+  const cSections = Array.isArray(cTheme.active_sections) ? cTheme.active_sections : [];
+  if (isDeepDifferent(bSections, cSections)) {
+    registerChange('theme.active_sections', 'Visibilitas Bagian Template', 'pengaturan', `${bSections.length} Bagian`, `${cSections.length} Bagian`);
+  }
+  if (Boolean(bTheme.show_quote) !== Boolean(cTheme.show_quote)) {
+    registerChange('theme.show_quote', 'Tampilkan Doa & Kutipan', 'pengaturan', bTheme.show_quote, cTheme.show_quote);
+  }
+  if (Boolean(bTheme.show_dresscode) !== Boolean(cTheme.show_dresscode)) {
+    registerChange('theme.show_dresscode', 'Tampilkan Panduan Busana', 'pengaturan', bTheme.show_dresscode, cTheme.show_dresscode);
+  }
+  if (Boolean(bTheme.show_gallery) !== Boolean(cTheme.show_gallery)) {
+    registerChange('theme.show_gallery', 'Tampilkan Galeri Foto', 'pengaturan', bTheme.show_gallery, cTheme.show_gallery);
+  }
+  if (Boolean(bTheme.show_love_story) !== Boolean(cTheme.show_love_story)) {
+    registerChange('theme.show_love_story', 'Tampilkan Cerita Cinta', 'pengaturan', bTheme.show_love_story, cTheme.show_love_story);
+  }
+  if (Boolean(bTheme.show_rsvp) !== Boolean(cTheme.show_rsvp)) {
+    registerChange('theme.show_rsvp', 'Tampilkan Konfirmasi RSVP', 'pengaturan', bTheme.show_rsvp, cTheme.show_rsvp);
+  }
+  if (Boolean(bTheme.show_gift) !== Boolean(cTheme.show_gift)) {
+    registerChange('theme.show_gift', 'Tampilkan Amplop & Hadiah', 'pengaturan', bTheme.show_gift, cTheme.show_gift);
+  }
+  if (Boolean(bTheme.show_wishes) !== Boolean(cTheme.show_wishes)) {
+    registerChange('theme.show_wishes', 'Tampilkan Ucapan & Doa Tamu', 'pengaturan', bTheme.show_wishes, cTheme.show_wishes);
   }
 
   return {

@@ -31,10 +31,28 @@ export const MOCK_ISLAMI_DATA: InvitationData = {
   wedding_date_iso: '2025-05-24T08:00:00+07:00',
   wedding_date_display: 'Sabtu, 24 Mei 2025',
 
+  quote_title: 'Ayat Suci Al-Qur\'an',
+  quote_religion: 'islam',
+  quote_arabic:
+    'وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً ۚ إِنَّ فِي ذَٰلِكَ لَآيَاتٍ لِّقَوْمٍ يَتَفَكَّرُونَ',
   quote:
     'Dan di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya, dan Dia menjadikan di antaramu rasa kasih dan sayang.',
   quote_source: 'QS. Ar-Rum: 21',
   hashtag: '#RayhanYasminHalal',
+
+  dresscode: {
+    enabled: true,
+    title: 'Panduan Busana (Dress Code)',
+    subtitle:
+      'Tamu undangan dipersilakan mengenakan busana muslim / formal bernuansa warna islami nan teduh:',
+    colors: [
+      { name: 'Rose Damask', hex: '#93335B' },
+      { name: 'Moroccan Gold', hex: '#D4AF37' },
+      { name: 'Desert Sand', hex: '#E9D8A6' },
+      { name: 'Mint Sage', hex: '#7A9A8B' },
+      { name: 'Soft Pearl', hex: '#FCF9F2' },
+    ],
+  },
 
   events: [
     {
@@ -139,14 +157,18 @@ export const MOCK_ISLAMI_THEME: ThemeConfig = {
   active_sections: [
     'cover',
     'hero',
+    'quote',
     'couple',
-    'story',
     'event',
+    'dresscode',
+    'story',
     'gallery',
     'rsvp',
     'gift',
     'wishes',
   ],
+  show_quote: true,
+  show_dresscode: true,
   show_gallery: true,
   show_love_story: true,
   show_rsvp: true,

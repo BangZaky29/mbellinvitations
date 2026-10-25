@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type EditorStep = 1 | 2 | 3 | 4 | 5 | 6;
+export type EditorStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 export interface StepSelectorNavProps {
   currentStep?: EditorStep;
@@ -25,15 +25,17 @@ export const StepSelectorNav: React.FC<StepSelectorNavProps> = ({
 
   const steps: { id: EditorStep; title: string; shortTitle: string; icon: string }[] = [
     { id: 1, title: 'Pilih Tema', shortTitle: 'Tema', icon: 'palette' },
-    { id: 2, title: 'Data Mempelai', shortTitle: 'Mempelai', icon: 'favorite' },
-    { id: 3, title: 'Jadwal Acara', shortTitle: 'Acara', icon: 'event' },
-    { id: 4, title: 'Galeri & Kisah', shortTitle: 'Galeri', icon: 'photo_library' },
-    { id: 5, title: 'Amplop Hadiah', shortTitle: 'Amplop', icon: 'redeem' },
-    { id: 6, title: 'Efek & Animasi', shortTitle: 'Animasi', icon: 'auto_awesome' },
+    { id: 2, title: 'Fitur & Visibilitas', shortTitle: 'Fitur', icon: 'toggle_on' },
+    { id: 3, title: 'Data Mempelai', shortTitle: 'Mempelai', icon: 'favorite' },
+    { id: 4, title: 'Doa & Dresscode', shortTitle: 'Doa & Busana', icon: 'menu_book' },
+    { id: 5, title: 'Rangkaian Acara', shortTitle: 'Acara', icon: 'event' },
+    { id: 6, title: 'Galeri & Kisah', shortTitle: 'Galeri', icon: 'photo_library' },
+    { id: 7, title: 'Amplop Hadiah', shortTitle: 'Amplop', icon: 'redeem' },
+    { id: 8, title: 'Musik & Animasi', shortTitle: 'Musik & Efek', icon: 'auto_awesome' },
   ];
 
-  // Hitung progress bar percentage
-  const progressPercent = Math.round((effectiveStep / 6) * 100);
+  // Hitung progress bar percentage (1 - 8)
+  const progressPercent = Math.round((effectiveStep / 8) * 100);
 
   return (
     <section className="bg-white border border-stone-200/90 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3.5">
@@ -42,7 +44,7 @@ export const StepSelectorNav: React.FC<StepSelectorNavProps> = ({
         <div className="flex items-center gap-2.5">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
           <span className="text-xs font-bold tracking-wider uppercase text-stone-700">
-            Langkah {effectiveStep} dari 6
+            Langkah {effectiveStep} dari 8
           </span>
           <span className="hidden sm:inline-block text-stone-300">•</span>
           <span className="hidden sm:inline-block text-xs font-medium text-stone-500">

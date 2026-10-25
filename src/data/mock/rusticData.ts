@@ -30,10 +30,27 @@ export const MOCK_RUSTIC_DATA: InvitationData = {
   wedding_date_iso: '2025-10-25T08:00:00+07:00',
   wedding_date_display: 'Sabtu, 25 Oktober 2025',
 
+  quote_title: 'Ungkapan Kasih & Janji',
+  quote_religion: 'universal',
+  quote_arabic: '',
   quote:
     'Dan di antara tanda-tanda kebesaran-Nya diciptakan-Nya untukmu pasangan hidup dari jenismu sendiri supaya kamu merasa tenteram kepadanya, dan dijadikan-Nya diantaramu rasa kasih dan sayang.',
   quote_source: 'QS. Ar-Rum: 21',
   hashtag: '#RomeoJulietForever',
+
+  dresscode: {
+    enabled: true,
+    title: 'Panduan Busana (Dress Code)',
+    subtitle:
+      'Tamu undangan diharapkan mengenakan pakaian bernuansa warna alam / botanical rustic:',
+    colors: [
+      { name: 'Earth Terracotta', hex: '#9E3B2B' },
+      { name: 'Forest Green', hex: '#4E6B50' },
+      { name: 'Warm Sand', hex: '#D8C4B6' },
+      { name: 'Kraft Brown', hex: '#8C6D58' },
+      { name: 'Pure Linen', hex: '#FAF7F2' },
+    ],
+  },
 
   events: [
     {
@@ -122,14 +139,18 @@ export const MOCK_RUSTIC_THEME: ThemeConfig = {
   active_sections: [
     'cover',
     'hero',
+    'quote',
     'couple',
-    'story',
     'event',
+    'dresscode',
+    'story',
     'gallery',
     'rsvp',
     'gift',
     'wishes',
   ],
+  show_quote: true,
+  show_dresscode: true,
   show_gallery: true,
   show_love_story: true,
   show_rsvp: true,

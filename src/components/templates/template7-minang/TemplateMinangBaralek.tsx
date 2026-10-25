@@ -167,10 +167,12 @@ export const TemplateMinangBaralek: React.FC<InvitationProps> = ({
               <TornPaperDivider fillColor="#FAF6EE" />
 
               {/* HERO SCRIPTURE & LIVE COUNTDOWN */}
-              {isSectionActive('cover') && (
+              {(isSectionActive('cover') || isSectionActive('hero')) && (
                 <HeroSection
                   data={data}
+                  theme={theme}
                   isPreview={isPreview}
+                  isSectionActive={isSectionActive}
                   countdown={countdown}
                   handleSaveToCalendar={handleSaveToCalendar}
                 />
@@ -201,10 +203,12 @@ export const TemplateMinangBaralek: React.FC<InvitationProps> = ({
               <TornPaperDivider fillColor="#FAF6EE" />
 
               {/* DRESS CODE PALETTE SECTION */}
-              <DresscodeSection
-                data={data}
-                isPreview={isPreview}
-              />
+              {isSectionActive('dresscode') && (
+                <DresscodeSection
+                  data={data}
+                  isPreview={isPreview}
+                />
+              )}
 
               {/* PHOTO GALLERY (BENTO MEMORIES SHOWCASE) */}
               {isSectionActive('gallery') && data.gallery && data.gallery.length > 0 && (

@@ -71,9 +71,12 @@ export function buildSafePreviewData(data: InvitationData): {
       photo: (data.bride as any)?.photo || data.bride?.photo_url || defaultThematicData.bride.photo_url,
     },
     wedding_date_display: data.wedding_date_display !== undefined ? data.wedding_date_display : defaultThematicData.wedding_date_display,
-    wedding_date_iso: data.wedding_date_iso !== undefined ? data.wedding_date_iso : defaultThematicData.wedding_date_iso,
     quote: data.quote !== undefined ? data.quote : defaultThematicData.quote,
     quote_source: data.quote_source !== undefined ? data.quote_source : defaultThematicData.quote_source,
+    quote_arabic: data.quote_arabic !== undefined ? data.quote_arabic : defaultThematicData.quote_arabic,
+    quote_title: data.quote_title !== undefined ? data.quote_title : defaultThematicData.quote_title,
+    quote_religion: data.quote_religion !== undefined ? data.quote_religion : defaultThematicData.quote_religion,
+    dresscode: data.dresscode !== undefined ? data.dresscode : defaultThematicData.dresscode,
     hashtag: data.hashtag !== undefined ? data.hashtag : defaultThematicData.hashtag,
     guest_name: (() => {
       if (data.guest_name) return data.guest_name;
@@ -127,5 +130,13 @@ export function resolveEffectiveTheme(
     show_gallery: theme.show_gallery !== undefined ? theme.show_gallery : defaultTheme.show_gallery,
     show_wishes: theme.show_wishes !== undefined ? theme.show_wishes : defaultTheme.show_wishes,
     show_rsvp: theme.show_rsvp !== undefined ? theme.show_rsvp : defaultTheme.show_rsvp,
+    show_dresscode:
+      theme.show_dresscode !== undefined
+        ? theme.show_dresscode
+        : defaultTheme.show_dresscode,
+    show_quote:
+      theme.show_quote !== undefined
+        ? theme.show_quote
+        : defaultTheme.show_quote,
   };
 }

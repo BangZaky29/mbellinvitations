@@ -28,10 +28,28 @@ export const MOCK_INVITATION_DATA: InvitationData = {
   wedding_date_iso: '2026-10-24T08:00:00+07:00',
   wedding_date_display: 'Sabtu, 24 Oktober 2026',
 
+  quote_title: 'Doa & Kutipan Suci',
+  quote_religion: 'islam',
+  quote_arabic:
+    'وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً ۚ إِنَّ فِي ذَٰلِكَ لَآيَاتٍ لِّقَوْمٍ يَتَفَكَّرُونَ',
   quote:
     'Dan di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya, dan Dia menjadikan di antaramu rasa kasih dan sayang.',
   quote_source: 'QS. Ar-Rum: 21',
   hashtag: '#DimasSarahForever',
+
+  dresscode: {
+    enabled: true,
+    title: 'Panduan Busana (Dress Code)',
+    subtitle:
+      'Tamu undangan diharapkan mengenakan pakaian bernuansa semi-formal / modern chic berikut:',
+    colors: [
+      { name: 'Champagne Gold', hex: '#D4AF37' },
+      { name: 'Alabaster', hex: '#ECE8E1' },
+      { name: 'Dusty Sage', hex: '#7A8471' },
+      { name: 'Charcoal Black', hex: '#1A1A1A' },
+      { name: 'Soft Cashmere', hex: '#E3DAC9' },
+    ],
+  },
 
   events: [
     {
@@ -140,14 +158,18 @@ export const MOCK_THEME_CONFIG: ThemeConfig = {
   active_sections: [
     'cover',
     'hero',
+    'quote',
     'couple',
-    'story',
     'event',
+    'dresscode',
+    'story',
     'gallery',
     'rsvp',
     'gift',
     'wishes',
   ],
+  show_quote: true,
+  show_dresscode: true,
   show_gallery: true,
   show_love_story: true,
   show_rsvp: true,

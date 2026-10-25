@@ -81,12 +81,12 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
 
   return (
     <>
-      <div className="fixed bottom-[72px] left-3 right-3 max-w-lg mx-auto sm:static sm:bottom-auto sm:left-auto sm:right-auto sm:max-w-none sm:mx-0 z-30 bg-white/95 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none border border-stone-200/90 sm:border-0 sm:border-t sm:border-stone-200/90 shadow-lg sm:shadow-none rounded-full sm:rounded-none px-3.5 py-1.5 sm:p-0 sm:pt-4 sm:mb-2 transition-all w-auto sm:w-full">
-      <div className="flex items-center justify-between gap-2 sm:gap-3 w-full min-w-0">
-        {/* SISI KIRI: INDIKATOR STEP TAHAP (Mobile: 1/6, Desktop: Tahap 1/6) */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 py-1">
+      <div className="fixed bottom-[72px] left-2 right-2 max-w-lg mx-auto sm:static sm:bottom-auto sm:left-auto sm:right-auto sm:max-w-none sm:mx-0 z-30 bg-white/95 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none border border-stone-200/90 sm:border-0 sm:border-t sm:border-stone-200/90 shadow-lg sm:shadow-none rounded-full sm:rounded-none px-2 sm:px-0 sm:pt-4 sm:mb-2 py-1 sm:py-0 transition-all w-auto sm:w-full">
+      <div className="flex items-center justify-between gap-1 sm:gap-3 w-full min-w-0">
+        {/* SISI KIRI: INDIKATOR STEP TAHAP (Mobile: 1/8, Desktop: Tahap 1/8) */}
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 pl-1 py-0.5">
           <span
-            className={`w-2 h-2 rounded-full shrink-0 ${
+            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
               isBusy
                 ? 'bg-amber-500 animate-pulse'
                 : displayCount > 0
@@ -103,24 +103,24 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
                 : 'Tersimpan di database'
             }
           />
-          <span className="text-xs font-semibold text-stone-500 whitespace-nowrap">
-            <span className="inline sm:hidden">{activeStep}/6</span>
-            <span className="hidden sm:inline">Tahap {activeStep}/6</span>
+          <span className="text-[11px] sm:text-xs font-bold text-stone-600 whitespace-nowrap">
+            <span className="inline sm:hidden">{activeStep}/8</span>
+            <span className="hidden sm:inline">Tahap {activeStep}/8</span>
           </span>
         </div>
 
         {/* SISI KANAN: BARIS TOMBOL AKSI */}
-        <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center justify-end gap-1 sm:gap-2 shrink-0">
           {/* Tombol Batalkan / Revert Perubahan */}
           {hasUnsavedChanges && unsavedCount > 0 && onRevertAll && (
             <button
               type="button"
               onClick={onRevertAll}
               disabled={isBusy}
-              className="p-1.5 sm:px-2.5 sm:py-2 rounded-full sm:rounded-xl font-medium text-xs text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200/80 transition-all cursor-pointer flex items-center justify-center gap-1 shadow-2xs shrink-0 active:scale-95 disabled:opacity-50"
+              className="p-1 sm:px-2.5 sm:py-2 rounded-full sm:rounded-xl font-medium text-xs text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200/80 transition-all cursor-pointer flex items-center justify-center gap-1 shadow-2xs shrink-0 active:scale-95 disabled:opacity-50"
               title="Kembalikan semua nilai ke kondisi semula (Batalkan)"
             >
-              <span className="material-symbols-outlined text-[17px]">undo</span>
+              <span className="material-symbols-outlined text-[15px] sm:text-[17px]">undo</span>
               <span className="hidden md:inline">Batalkan</span>
             </button>
           )}
@@ -130,15 +130,15 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
             type="button"
             onClick={onSaveDraft}
             disabled={isBusy}
-            className="px-2 py-1.5 sm:px-3 sm:py-2 rounded-full sm:rounded-xl font-semibold text-xs sm:text-sm transition-all shadow-xs active:scale-95 cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 shrink-0 bg-white hover:bg-stone-50 text-stone-700 hover:text-stone-900 border border-stone-300 disabled:opacity-50"
+            className="px-1.5 sm:px-3 py-1 sm:py-2 rounded-full sm:rounded-xl font-semibold text-[11px] sm:text-sm transition-all shadow-xs active:scale-95 cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 shrink-0 bg-white hover:bg-stone-50 text-stone-700 hover:text-stone-900 border border-stone-300 disabled:opacity-50"
             title="Simpan setup ini sebagai template draf baru di menu Template Saya (+1)"
           >
             {isSavingDraft ? (
               <span className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-stone-700 border-t-transparent rounded-full animate-spin shrink-0" />
             ) : (
-              <span className="material-symbols-outlined text-[18px] text-stone-700">note_add</span>
+              <span className="material-symbols-outlined text-[15px] sm:text-[18px] text-stone-700">note_add</span>
             )}
-            <span className="inline sm:hidden">{isSavingDraft ? 'Menyimpan...' : 'Draf'}</span>
+            <span className="inline sm:hidden">{isSavingDraft ? '...' : 'Draf'}</span>
             <span className="hidden sm:inline">{isSavingDraft ? 'Menyimpan...' : 'Simpan Draf'}</span>
           </button>
 
@@ -148,7 +148,7 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
               type="button"
               onClick={onRequestPublish}
               disabled={isBusy}
-              className={`px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-full sm:rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 shrink-0 disabled:opacity-50 ${
+              className={`px-2 sm:px-3.5 py-1 sm:py-2 rounded-full sm:rounded-xl font-bold text-[11px] sm:text-sm transition-all shadow-sm active:scale-95 cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 shrink-0 disabled:opacity-50 ${
                 displayCount > 0 || isTemplateChanged
                   ? 'bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-stone-950 border border-amber-400 ring-2 ring-amber-400/40 shadow-amber-500/20 hover:brightness-105'
                   : 'bg-amber-500 hover:bg-amber-400 text-stone-950'
@@ -158,11 +158,11 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
               {isPublishing ? (
                 <span className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-stone-950 border-t-transparent rounded-full animate-spin shrink-0" />
               ) : (
-                <span className="material-symbols-outlined text-[18px] text-stone-950">rocket_launch</span>
+                <span className="material-symbols-outlined text-[15px] sm:text-[18px] text-stone-950">rocket_launch</span>
               )}
-              <span>{isPublishing ? 'Menerbitkan...' : 'Terbitkan'}</span>
+              <span>{isPublishing ? '...' : 'Terbitkan'}</span>
               {displayCount > 0 && !isPublishing && (
-                <span className="px-1.5 py-0.2 rounded-full bg-stone-950 text-amber-300 text-[10px] font-black tracking-tight shadow-xs">
+                <span className="px-1 py-0.2 rounded-full bg-stone-950 text-amber-300 text-[9px] font-black tracking-tight shadow-xs">
                   +{displayCount}
                 </span>
               )}
@@ -175,10 +175,10 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
                 type="button"
                 onClick={onRequestPublish}
                 disabled={isBusy}
-                className="px-2 py-1 sm:px-2.5 sm:py-1 rounded-full sm:rounded-lg font-bold text-xs sm:text-sm text-emerald-400 hover:bg-stone-800/80 transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95 shrink-0"
+                className="px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full sm:rounded-lg font-bold text-[11px] sm:text-sm text-emerald-400 hover:bg-stone-800/80 transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95 shrink-0"
                 title="Undangan live dan aktif di tautan publik. Klik untuk lihat detail link."
               >
-                <span className="material-symbols-outlined text-[17px] sm:text-[18px] text-emerald-400">verified</span>
+                <span className="material-symbols-outlined text-[15px] sm:text-[18px] text-emerald-400">verified</span>
                 <span>Live</span>
               </button>
 
@@ -189,10 +189,10 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
               <button
                 type="button"
                 onClick={handleCopyInviteMessage}
-                className="px-1.5 py-1 sm:px-2.5 sm:py-1 rounded-full sm:rounded-lg text-stone-300 hover:text-white hover:bg-stone-800/80 transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95 text-xs font-medium shrink-0"
+                className="px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full sm:rounded-lg text-stone-300 hover:text-white hover:bg-stone-800/80 transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95 text-[11px] sm:text-xs font-medium shrink-0"
                 title="Salin teks pesan undangan & tautan siap kirim ke tamu"
               >
-                <span className="material-symbols-outlined text-[17px] sm:text-[18px] text-stone-300">content_copy</span>
+                <span className="material-symbols-outlined text-[15px] sm:text-[18px] text-stone-300">content_copy</span>
                 <span className="hidden sm:inline">Salin</span>
               </button>
 
@@ -203,10 +203,10 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
               <button
                 type="button"
                 onClick={() => setShowWaTemplateModal(true)}
-                className="px-1.5 py-1 sm:px-2.5 sm:py-1 rounded-full sm:rounded-lg text-stone-300 hover:text-white hover:bg-stone-800/80 transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95 text-xs font-medium shrink-0"
+                className="px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full sm:rounded-lg text-stone-300 hover:text-white hover:bg-stone-800/80 transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95 text-[11px] sm:text-xs font-medium shrink-0"
                 title="Ubah template teks pesan pengantar WhatsApp"
               >
-                <span className="material-symbols-outlined text-[17px] sm:text-[18px] text-stone-300">edit_note</span>
+                <span className="material-symbols-outlined text-[15px] sm:text-[18px] text-stone-300">edit_note</span>
                 <span className="hidden sm:inline">Edit</span>
               </button>
             </div>
@@ -217,24 +217,24 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
             <button
               type="button"
               onClick={onPrevStep}
-              className="p-1.5 sm:px-3 sm:py-2 rounded-full sm:rounded-xl bg-white text-stone-700 font-semibold text-xs sm:text-sm border border-stone-200 hover:bg-stone-50 transition-colors cursor-pointer shadow-2xs shrink-0 flex items-center justify-center gap-1 active:scale-95"
+              className="p-1 sm:px-3 sm:py-2 rounded-full sm:rounded-xl bg-white text-stone-700 font-semibold text-xs sm:text-sm border border-stone-200 hover:bg-stone-50 transition-colors cursor-pointer shadow-2xs shrink-0 flex items-center justify-center gap-1 active:scale-95"
               title="Kembali ke tahap sebelumnya"
             >
-              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+              <span className="material-symbols-outlined text-[16px] sm:text-[18px]">arrow_back</span>
               <span className="hidden md:inline">Sebelumnya</span>
             </button>
           )}
 
           {/* Tombol Lanjutkan (Icon Panah di mobile, Teks + Panah di desktop) */}
-          {activeStep < 6 && (
+          {activeStep < 8 && (
             <button
               type="button"
               onClick={onNextStep}
-              className="p-1.5 sm:px-3.5 sm:py-2 rounded-full sm:rounded-xl bg-stone-900 text-white font-semibold text-xs sm:text-sm hover:bg-stone-800 transition-transform active:scale-95 shadow-sm cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+              className="p-1 sm:px-3.5 sm:py-2 rounded-full sm:rounded-xl bg-stone-900 text-white font-semibold text-xs sm:text-sm hover:bg-stone-800 transition-transform active:scale-95 shadow-sm cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
               title="Lanjutkan ke tahap berikutnya"
             >
               <span className="hidden md:inline">Lanjutkan</span>
-              <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              <span className="material-symbols-outlined text-[16px] sm:text-[18px]">arrow_forward</span>
             </button>
           )}
 
@@ -243,10 +243,10 @@ export const EditorBottomBar: React.FC<EditorBottomBarProps> = ({
             <button
               type="button"
               onClick={onOpenPreview}
-              className="flex sm:hidden p-1.5 rounded-full bg-stone-900 hover:bg-stone-800 text-white font-semibold text-xs transition-all active:scale-95 shadow-sm cursor-pointer items-center justify-center gap-1.5 shrink-0 border border-white/10"
+              className="flex sm:hidden p-1 rounded-full bg-stone-900 hover:bg-stone-800 text-white font-semibold transition-all active:scale-95 shadow-sm cursor-pointer items-center justify-center shrink-0 border border-white/10"
               title="Buka Pratinjau Undangan (Preview)"
             >
-              <span className="material-symbols-outlined text-[18px]">visibility</span>
+              <span className="material-symbols-outlined text-[16px]">visibility</span>
             </button>
           )}
         </div>

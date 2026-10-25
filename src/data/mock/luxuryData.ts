@@ -31,10 +31,27 @@ export const MOCK_LUXURY_DATA: InvitationData = {
   wedding_date_iso: '2026-10-24T10:00:00+07:00',
   wedding_date_display: 'Saturday, 24 October 2026',
 
+  quote_title: 'Royal Love Quote',
+  quote_religion: 'universal',
+  quote_arabic: '',
   quote:
     'Two souls bound under the quiet grandeur of the midnight sky, beginning their forever.',
   quote_source: 'Union & Grace',
   hashtag: '#RomeoJulietGala',
+
+  dresscode: {
+    enabled: true,
+    title: 'Panduan Busana (Dress Code)',
+    subtitle:
+      'Tamu undangan diharapkan mengenakan pakaian formal pesta / black-tie attire bernuansa royal berikut:',
+    colors: [
+      { name: 'Royal Emerald', hex: '#0F4C3A' },
+      { name: 'Pure Gold Foil', hex: '#D4AF37' },
+      { name: 'Obsidian Black', hex: '#121816' },
+      { name: 'Royal Platinum', hex: '#E2E8F0' },
+      { name: 'Ivory Silk', hex: '#FAF8F5' },
+    ],
+  },
 
   events: [
     {
@@ -124,14 +141,18 @@ export const MOCK_LUXURY_THEME: ThemeConfig = {
   active_sections: [
     'cover',
     'hero',
+    'quote',
     'couple',
-    'story',
     'event',
+    'dresscode',
+    'story',
     'gallery',
     'rsvp',
     'gift',
     'wishes',
   ],
+  show_quote: true,
+  show_dresscode: true,
   show_gallery: true,
   show_love_story: true,
   show_rsvp: true,

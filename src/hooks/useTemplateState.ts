@@ -285,8 +285,37 @@ export function useTemplateState({
   const firstPersonRole = data.is_bride_first ? 'Sang Mempelai Wanita' : 'Sang Mempelai Pria';
   const secondPersonRole = data.is_bride_first ? 'Sang Mempelai Pria' : 'Sang Mempelai Wanita';
 
-  // Section visibility checks
+  // Section visibility checks with SSOT resolution for dresscode and quote
   const isSectionActive = (sectionName: string) => {
+    // 1. Khusus dresscode: periksa themeConfig.show_dresscode, data.dresscode.enabled, dan active_sections
+    if (sectionName === 'dresscode') {
+      if (theme.show_dresscode === false) return false;
+      if (data.dresscode && data.dresscode.enabled === false) return false;
+      if (theme.active_sections && !theme.active_sections.includes('dresscode')) return false;
+      return true;
+    }
+
+    // 2. Khusus quote / doa: periksa themeConfig.show_quote dan active_sections
+    if (sectionName === 'quote') {
+      if (theme.show_quote === false) return false;
+      if (theme.active_sections && !theme.active_sections.includes('quote')) return false;
+      return true;
+    }
+
+    // 3. Khusus livestream: periksa themeConfig.show_livestream dan active_sections
+    if (sectionName === 'livestream' || sectionName === 'live_stream') {
+      if (theme.show_livestream === false) return false;
+      if (
+        theme.active_sections &&
+        !theme.active_sections.includes('livestream') &&
+        !theme.active_sections.includes('live_stream')
+      ) {
+        return false;
+      }
+      return true;
+    }
+
+    // 4. Section umum lainnya
     if (!theme.active_sections || theme.active_sections.length === 0) return true;
     return theme.active_sections.includes(sectionName);
   };

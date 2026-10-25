@@ -152,22 +152,12 @@ export const CoupleSection: React.FC<CoupleSectionProps> = ({
 
   return (
     <section className="relative w-full px-4 py-8 flex flex-col items-center bg-[#19120E] text-[#FAF6EE]">
-      {/* Pengantar Doa / Salam Pembuka Adat & Kasih Kristus */}
+      {/* Salam Pembuka Adat & Kasih */}
       <div className="text-center max-w-[340px] mx-auto mb-7 flex flex-col items-center">
         <GorgaFiligree className="w-14 h-7 text-[#EAC16E] opacity-85 mb-2.5" />
 
-        <span className="font-sans text-[11px] uppercase tracking-[0.25em] text-[#EAC16E] font-semibold mb-2">
-          Salam Sejahtera Dalam Kasih Kristus
-        </span>
-
-        {/* Ayat Doa Pemberkatan Pernikahan Kudus */}
-        <p className="font-serif text-[13px] sm:text-sm italic text-[#FAF6EE]/90 leading-relaxed max-w-[320px] mb-1.5">
-          {data.quote ||
-            '“Demikianlah mereka bukan lagi dua, melainkan satu. Karena itu, apa yang telah dipersatukan Allah, tidak boleh diceraikan manusia.”'}
-        </p>
-
-        <span className="font-sans text-[10px] tracking-widest text-[#EAC16E] uppercase font-bold mb-3">
-          {data.quote_source || 'Matius 19 : 6'}
+        <span className="font-sans text-[11px] uppercase tracking-[0.25em] text-[#EAC16E] font-semibold mb-3">
+          {data.quote_religion === 'islam' ? 'Doa Restu Pernikahan' : 'Salam Sejahtera Dalam Kasih'}
         </span>
 
         <p className="font-sans text-xs text-[#D1C5B3] leading-relaxed max-w-[310px]">

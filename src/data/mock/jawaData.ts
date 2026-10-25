@@ -31,10 +31,28 @@ export const MOCK_JAWA_DATA: InvitationData = {
   wedding_date_iso: '2025-05-24T08:00:00+07:00',
   wedding_date_display: 'Sabtu Kliwon, 24 Mei 2025',
 
+  quote_title: 'Serat Wulang & Doa Suci',
+  quote_religion: 'islam',
+  quote_arabic:
+    'وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً ۚ إِنَّ فِي ذَٰلِكَ لَآيَاتٍ لِّقَوْمٍ يَتَفَكَّرُونَ',
   quote:
     'Mugi tansah pinaringan berkah saha pangreksa saking Gusti Ingkang Maha Agung. Dados pasangan ingkang runtut, atut, runtang runtung dumugipurnaning mangsa.',
-  quote_source: 'Surah Ar-Rum: 21',
+  quote_source: 'Surah Ar-Rum: 21 • Serat Panembahan',
   hashtag: 'Kraton Ngayogyakarta Hadiningrat',
+
+  dresscode: {
+    enabled: true,
+    title: 'Panduan Busana (Dress Code)',
+    subtitle:
+      'Tamu undangan dipersilakan mengenakan busana batik Jawa / beskap bernuansa sogan klasik berikut:',
+    colors: [
+      { name: 'Sogan Gold', hex: '#C5A059' },
+      { name: 'Coklat Truntum', hex: '#5A3825' },
+      { name: 'Gading Anget', hex: '#FAF6EE' },
+      { name: 'Hitam Wulung', hex: '#1F1A17' },
+      { name: 'Merah Maroon', hex: '#6B1D28' },
+    ],
+  },
 
   events: [
     {
@@ -137,14 +155,18 @@ export const MOCK_JAWA_THEME: ThemeConfig = {
   active_sections: [
     'cover',
     'hero',
+    'quote',
     'couple',
-    'story',
     'event',
+    'dresscode',
+    'story',
     'gallery',
     'rsvp',
     'gift',
     'wishes',
   ],
+  show_quote: true,
+  show_dresscode: true,
   show_gallery: true,
   show_love_story: true,
   show_rsvp: true,

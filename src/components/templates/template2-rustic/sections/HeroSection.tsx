@@ -1,12 +1,29 @@
 import React from 'react';
 import type { HeroSectionProps } from '../../types';
+import { LiveStreamBanner } from '../../../common/LiveStreamBanner';
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
   data,
+  theme,
+  isSectionActive,
   firstPerson: rawFirst,
   secondPerson: rawSecond,
   countdown,
 }) => {
+  const effectiveTheme = theme || data.theme_config;
+  const isQuoteVisible = isSectionActive
+    ? isSectionActive('quote')
+    : effectiveTheme?.show_quote !== false &&
+      (!effectiveTheme?.active_sections || effectiveTheme.active_sections.includes('quote'));
+
+  const streamingUrl = data.streaming_url || data.livestream_url;
+  const isLivestreamActive = isSectionActive
+    ? isSectionActive('livestream')
+    : effectiveTheme?.show_livestream !== false &&
+      (!effectiveTheme?.active_sections ||
+        effectiveTheme.active_sections.includes('livestream') ||
+        effectiveTheme.active_sections.includes('live_stream'));
+
   const firstPerson = rawFirst || data.groom || { name: 'Mempelai Pria' };
   const secondPerson = rawSecond || data.bride || { name: 'Mempelai Wanita' };
   const { days, hours, minutes, seconds } = countdown;
@@ -33,15 +50,32 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </div>
       </div>
 
-      {/* Romantic Quote Card */}
-      <div className="bg-white/95 border border-[#2C4034]/15 rounded-2xl p-5 shadow-sm max-w-sm mb-space-lg reveal delay-100">
-        <p className="font-serif text-base sm:text-lg text-[#1B2A20] italic font-normal mb-2 leading-relaxed">
-          &ldquo;{data.quote}&rdquo;
-        </p>
-        <span className="text-xs uppercase tracking-wider font-semibold text-[#855233]">
-          — {data.quote_source}
-        </span>
-      </div>
+      {/* Romantic / Religious Quote Card */}
+      {isQuoteVisible && (
+        <div className="bg-white/95 border border-[#2C4034]/15 rounded-2xl p-5 shadow-sm max-w-sm mb-space-lg reveal delay-100 text-center">
+          {data.quote_title && (
+            <span className="block text-[11px] uppercase tracking-wider font-bold text-[#855233] mb-2">
+              {data.quote_title}
+            </span>
+          )}
+          {data.quote_arabic && (
+            <p
+              dir="rtl"
+              className="font-serif text-lg sm:text-xl leading-loose text-[#1B2A20] my-2 px-1 font-normal"
+            >
+              {data.quote_arabic}
+            </p>
+          )}
+          <p className="font-serif text-base sm:text-lg text-[#1B2A20] italic font-normal mb-2 leading-relaxed">
+            &ldquo;{data.quote}&rdquo;
+          </p>
+          {data.quote_source && (
+            <span className="text-xs uppercase tracking-wider font-semibold text-[#855233]">
+              — {data.quote_source}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Countdown Timer 4 Cards */}
       <div className="w-full grid grid-cols-4 gap-2 sm:gap-2.5 mb-space-lg px-2 reveal delay-200" id="countdownGrid">
@@ -79,29 +113,24 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </div>
       </div>
 
-      {/* Livestream or Calendar Action */}
-      {data.livestream_url ? (
-        <a
-          href={data.livestream_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="h-11 px-6 rounded-full bg-[#8C4E2D] text-white font-semibold text-xs sm:text-sm flex items-center gap-2 hover:bg-[#733D1F] transition-all active:scale-95 shadow-xs"
-        >
-          <span className="material-symbols-outlined text-[18px]">videocam</span>
-          <span>Saksikan Live Streaming</span>
-        </a>
-      ) : (
-        <a
-          href="https://calendar.google.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="h-11 px-6 rounded-full bg-[#EFE8DE] text-[#2C4034] hover:bg-[#2C4034] hover:text-white border border-[#2C4034]/15 font-semibold text-xs sm:text-sm flex items-center gap-2 transition-all active:scale-95 shadow-xs"
-        >
-          <span className="material-symbols-outlined text-[18px] text-[#8C4E2D]">
-            event_available
-          </span>
-          <span>Simpan ke Google Calendar</span>
-        </a>
+      {/* Calendar Action */}
+      <a
+        href="https://calendar.google.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="h-11 px-6 rounded-full bg-[#EFE8DE] text-[#2C4034] hover:bg-[#2C4034] hover:text-white border border-[#2C4034]/15 font-semibold text-xs sm:text-sm flex items-center gap-2 transition-all active:scale-95 shadow-xs"
+      >
+        <span className="material-symbols-outlined text-[18px] text-[#8C4E2D]">
+          event_available
+        </span>
+        <span>Simpan ke Google Calendar</span>
+      </a>
+
+      {/* Optional Livestream Banner */}
+      {isLivestreamActive && Boolean(streamingUrl) && (
+        <div className="mt-6 w-full flex justify-center">
+          <LiveStreamBanner url={streamingUrl} variant="rustic" />
+        </div>
       )}
     </section>
   );

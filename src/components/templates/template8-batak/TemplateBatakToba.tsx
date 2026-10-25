@@ -164,7 +164,9 @@ export const TemplateBatakToba: React.FC<InvitationProps> = ({
               {(isSectionActive('cover') || isSectionActive('hero')) && (
                 <HeroSection
                   data={data}
+                  theme={theme}
                   isPreview={isPreview}
+                  isSectionActive={isSectionActive}
                   countdown={countdown}
                   handleSaveToCalendar={handleSaveToCalendar}
                 />
@@ -196,10 +198,12 @@ export const TemplateBatakToba: React.FC<InvitationProps> = ({
               )}
 
               {/* DRESS CODE PALETTE SECTION */}
-              <DresscodeSection
-                data={data}
-                isPreview={isPreview}
-              />
+              {isSectionActive('dresscode') && (
+                <DresscodeSection
+                  data={data}
+                  isPreview={isPreview}
+                />
+              )}
 
               {/* PHOTO GALLERY (BENTO MEMORIES SHOWCASE) */}
               {isSectionActive('gallery') && (

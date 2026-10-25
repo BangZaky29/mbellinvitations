@@ -17,6 +17,7 @@ import {
   WishesSection,
   ClosingFooterSection,
 } from './sections';
+import { UniversalDresscodeSection } from '../../common/UniversalDresscodeSection';
 
 export const Template4Islami: React.FC<InvitationProps> = ({
   data,
@@ -45,6 +46,7 @@ export const Template4Islami: React.FC<InvitationProps> = ({
     secondPerson,
     renderSwipeHint,
     renderBrandFooter,
+    isSectionActive,
   } = useTemplateState({
     data,
     theme,
@@ -182,6 +184,7 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                 data={data}
                 theme={theme}
                 isPreview={isPreview}
+                isSectionActive={isSectionActive}
                 firstPerson={firstPerson}
                 secondPerson={secondPerson}
                 countdown={countdown}
@@ -212,6 +215,11 @@ export const Template4Islami: React.FC<InvitationProps> = ({
                 isPreview={isPreview}
                 handleAddToCalendar={handleAddToCalendar}
               />
+
+              {/* SECTION: DRESS CODE */}
+              {isSectionActive('dresscode') && (
+                <UniversalDresscodeSection data={data} themeStyle="islami" />
+              )}
 
               {/* SECTION 6: Photo Gallery */}
               {theme?.show_gallery !== false && data.gallery && (

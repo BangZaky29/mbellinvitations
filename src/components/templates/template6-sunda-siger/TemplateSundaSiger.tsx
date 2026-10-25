@@ -17,6 +17,7 @@ import {
   GiftSection,
   ClosingFooterSection,
 } from './sections';
+import { UniversalDresscodeSection } from '../../common/UniversalDresscodeSection';
 
 export const TemplateSundaSiger: React.FC<InvitationProps> = ({
   data,
@@ -149,10 +150,12 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
               }`}
             >
               {/* HERO SCRIPTURE & LIVE COUNTDOWN */}
-              {isSectionActive('cover') && (
+              {(isSectionActive('cover') || isSectionActive('hero')) && (
                 <HeroSection
                   data={data}
+                  theme={theme}
                   isPreview={isPreview}
+                  isSectionActive={isSectionActive}
                   countdown={countdown}
                   handleSaveToCalendar={handleSaveToCalendar}
                 />
@@ -173,6 +176,11 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                   data={data}
                   isPreview={isPreview}
                 />
+              )}
+
+              {/* DRESS CODE PALETTE SECTION */}
+              {isSectionActive('dresscode') && (
+                <UniversalDresscodeSection data={data} themeStyle="sunda" />
               )}
 
               {/* PHOTO GALLERY SECTION */}

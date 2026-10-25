@@ -48,9 +48,26 @@ export const INITIAL_BLANK_DRAFT: InvitationData = {
   cover_image: '',
   wedding_date_iso: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
   wedding_date_display: 'Pilih Tanggal Acara',
-  quote: 'Dan di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri...',
+  quote_title: 'Doa & Ayat Suci',
+  quote_religion: 'islam',
+  quote_arabic:
+    'وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً ۚ إِنَّ فِي ذَٰلِكَ لَآيَاتٍ لِّقَوْمٍ يَتَفَكَّرُونَ',
+  quote:
+    'Dan di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri...',
   quote_source: 'QS. Ar-Rum: 21',
   hashtag: '',
+  dresscode: {
+    enabled: true,
+    title: 'Panduan Busana (Dress Code)',
+    subtitle:
+      'Tamu undangan diharapkan mengenakan pakaian formal bernuansa warna berikut:',
+    colors: [
+      { name: 'Champagne Gold', hex: '#D4AF37' },
+      { name: 'Alabaster', hex: '#ECE8E1' },
+      { name: 'Dusty Sage', hex: '#7A8471' },
+      { name: 'Terracotta', hex: '#9E3B2B' },
+    ],
+  },
   events: [
     {
       name: 'Akad Nikah',
@@ -874,7 +891,7 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
 
   // Handler Next Step
   const handleNextStep = () => {
-    if (activeStep < 6) {
+    if (activeStep < 8) {
       setActiveStep((prev) => prev + 1);
     }
   };

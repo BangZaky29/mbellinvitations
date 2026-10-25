@@ -34,11 +34,29 @@ export const MOCK_BATAK_DATA: InvitationData = {
   wedding_date_display: 'Sabtu, 14 November 2026',
   countdown_target: 'resepsi',
 
+  quote_title: 'Ayat Pemberkatan & Tradisi Batak',
+  quote_religion: 'kristen',
+  quote_arabic: '',
   quote:
     '“Dua gabe sada, marsitangiangan di bagas holong ni Kristus” — Dua Menjadi Satu Berpadu Kasih di Hadapan Tuhan',
   quote_source:
     '1 Korintus 13 : 4-8 • “Holong na sintong i, ndang marnaloas; sabam do rohana, marhabasaon, jala ndang mangiburu.”',
   hashtag: '#JohannesMelisaMangalapBoru',
+
+  dresscode: {
+    enabled: true,
+    title: 'Panduan Busana (Dress Code)',
+    subtitle:
+      'Tamu undangan dipersilakan mengenakan busana Formal Nusantara / Batik Tulis / Tenun Songket / Kebaya bernuansa warna berikut:',
+    colors: [
+      { name: 'Terracotta', hex: '#9E3B2B' },
+      { name: 'Ebony Wood', hex: '#241C18' },
+      { name: 'Sortali Gold', hex: '#C8A253' },
+      { name: 'Warm Ivory', hex: '#F4EFE6' },
+      { name: 'Ulos Maroon', hex: '#661D24' },
+      { name: 'Forest Sage', hex: '#5B6349' },
+    ],
+  },
 
   events: [
     {
@@ -120,8 +138,10 @@ export const MOCK_BATAK_THEME: ThemeConfig = {
   active_sections: [
     'cover',
     'hero',
+    'quote',
     'couple',
     'event',
+    'dresscode',
     'story',
     'gallery',
     'rsvp',
@@ -130,6 +150,8 @@ export const MOCK_BATAK_THEME: ThemeConfig = {
   ],
   music_url:
     'https://assets.mixkit.co/music/preview/mixkit-serene-view-443.mp3',
+  show_quote: true,
+  show_dresscode: true,
   show_rsvp: true,
   show_gift: true,
   show_wishes: true,

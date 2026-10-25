@@ -17,6 +17,7 @@ import {
   WishesSection,
   ClosingFooterSection,
 } from './sections';
+import { UniversalDresscodeSection } from '../../common/UniversalDresscodeSection';
 
 export const Template5Luxury: React.FC<InvitationProps> = ({
   data,
@@ -43,6 +44,7 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
     showToast,
     renderSwipeHint,
     renderBrandFooter,
+    isSectionActive,
   } = useTemplateState({
     data,
     theme,
@@ -134,6 +136,8 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
               {/* SECTION 2: HERO & COUNTDOWN */}
               <HeroSection
                 data={data}
+                theme={theme}
+                isSectionActive={isSectionActive}
                 countdown={countdown}
               />
 
@@ -155,6 +159,11 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
                 isPreview={isPreview}
                 handleAddToCalendar={handleAddToCalendar}
               />
+
+              {/* SECTION: DRESS CODE */}
+              {isSectionActive('dresscode') && (
+                <UniversalDresscodeSection data={data} themeStyle="luxury" />
+              )}
 
               {/* SECTION 6: PHOTO GALLERY */}
               <GallerySection

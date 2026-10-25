@@ -8,6 +8,8 @@ interface EventsFormCardProps {
   countdownTarget?: 'akad' | 'resepsi' | string;
   onSetCountdownTarget?: (target: 'akad' | 'resepsi') => void;
   onEventsChange: (events: any) => void;
+  streamingUrl?: string;
+  onStreamingUrlChange?: (url: string) => void;
 }
 
 export const EventsFormCard: React.FC<EventsFormCardProps> = ({
@@ -15,11 +17,14 @@ export const EventsFormCard: React.FC<EventsFormCardProps> = ({
   countdownTarget = 'akad',
   onSetCountdownTarget,
   onEventsChange,
+  streamingUrl = '',
+  onStreamingUrlChange,
 }) => {
   const [activeEventIndex, setActiveEventIndex] = useState<number>(0);
   const [locatingIndex, setLocatingIndex] = useState<number | null>(null);
   const [locationSuccessIndex, setLocationSuccessIndex] = useState<number | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [copyStreamingSuccess, setCopyStreamingSuccess] = useState<boolean>(false);
 
   const getTodayDateString = () => {
     const today = new Date();
@@ -250,6 +255,75 @@ export const EventsFormCard: React.FC<EventsFormCardProps> = ({
     nextList[toIndex] = updated;
     onEventsChange(nextList);
   };
+
+  // Helper deteksi platform streaming otomatis
+  const getStreamingPlatformInfo = (url: string) => {
+    const cleanUrl = (url || '').toLowerCase().trim();
+    if (!cleanUrl) return null;
+    if (cleanUrl.includes('youtube.com') || cleanUrl.includes('youtu.be')) {
+      return {
+        name: 'YouTube Live',
+        icon: 'play_circle',
+        badgeClass: 'bg-red-50 text-red-600 border-red-200',
+        dotClass: 'bg-red-500',
+      };
+    }
+    if (cleanUrl.includes('zoom.us')) {
+      return {
+        name: 'Zoom Meeting',
+        icon: 'videocam',
+        badgeClass: 'bg-blue-50 text-blue-600 border-blue-200',
+        dotClass: 'bg-blue-500',
+      };
+    }
+    if (cleanUrl.includes('instagram.com')) {
+      return {
+        name: 'Instagram Live',
+        icon: 'camera_alt',
+        badgeClass: 'bg-pink-50 text-pink-600 border-pink-200',
+        dotClass: 'bg-pink-500',
+      };
+    }
+    if (cleanUrl.includes('meet.google.com')) {
+      return {
+        name: 'Google Meet',
+        icon: 'video_call',
+        badgeClass: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+        dotClass: 'bg-emerald-500',
+      };
+    }
+    if (cleanUrl.includes('tiktok.com')) {
+      return {
+        name: 'TikTok Live',
+        icon: 'live_tv',
+        badgeClass: 'bg-stone-100 text-stone-800 border-stone-300',
+        dotClass: 'bg-stone-900',
+      };
+    }
+    return {
+      name: 'Siaran Langsung Online',
+      icon: 'sensors',
+      badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
+      dotClass: 'bg-amber-500',
+    };
+  };
+
+  const handlePasteStreamingUrl = async () => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        const text = await navigator.clipboard.readText();
+        if (text && onStreamingUrlChange) {
+          onStreamingUrlChange(text.trim());
+          setCopyStreamingSuccess(true);
+          setTimeout(() => setCopyStreamingSuccess(false), 2000);
+        }
+      }
+    } catch {
+      // Fallback
+    }
+  };
+
+  const platformInfo = getStreamingPlatformInfo(streamingUrl);
 
   const handleGetDeviceLocation = (index: number) => {
     if (!navigator.geolocation) {
@@ -584,6 +658,110 @@ export const EventsFormCard: React.FC<EventsFormCardProps> = ({
           <span className="px-3.5 py-1.5 rounded-xl bg-stone-900 text-white text-xs font-semibold group-hover:bg-stone-800 transition-colors shadow-2xs">
             + Tambah Sesi
           </span>
+        </div>
+      </div>
+
+      {/* ======================================================== */}
+      {/* TAUTAN SIARAN LANGSUNG (LIVE STREAMING) — YOUTUBE / ZOOM */}
+      {/* ======================================================== */}
+      <div className="mt-8 p-5 sm:p-6 rounded-2xl bg-white border border-stone-200/90 shadow-sm transition-all hover:border-stone-300">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-stone-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center border border-red-100/80 shadow-2xs shrink-0">
+              <span className="material-symbols-outlined text-xl">videocam</span>
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-sm sm:text-base font-bold text-stone-900 tracking-tight">
+                  Tautan Siaran Langsung (Live Streaming)
+                </h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wider uppercase bg-stone-100 text-stone-600 border border-stone-200">
+                  Opsional
+                </span>
+                {streamingUrl && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-600 border border-red-200 animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                    LIVE
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-stone-500 mt-0.5">
+                Sematkan tautan YouTube Live, Zoom, Instagram Live, atau platform lainnya bagi tamu yang hadir daring.
+              </p>
+            </div>
+          </div>
+
+          {/* Badge platform otomatis jika ada link terisi */}
+          {platformInfo && (
+            <div className={`self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${platformInfo.badgeClass}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${platformInfo.dotClass}`}></span>
+              <span>{platformInfo.name}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-4 space-y-3">
+          <div className="relative flex items-center">
+            <span className="absolute left-3.5 text-stone-400 material-symbols-outlined text-lg pointer-events-none">
+              link
+            </span>
+            <input
+              type="url"
+              value={streamingUrl}
+              onChange={(e) => onStreamingUrlChange && onStreamingUrlChange(e.target.value)}
+              placeholder="cth: https://www.youtube.com/watch?v=... atau https://zoom.us/j/..."
+              className="w-full pl-10 pr-24 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition-all"
+            />
+            <div className="absolute right-2 flex items-center gap-1">
+              {streamingUrl ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => onStreamingUrlChange && onStreamingUrlChange('')}
+                    title="Hapus Link"
+                    className="p-1.5 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-200/60 transition-colors cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-base">close</span>
+                  </button>
+                  <a
+                    href={streamingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Uji Buka Tautan"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition-colors shadow-2xs cursor-pointer"
+                  >
+                    <span>Uji</span>
+                    <span className="material-symbols-outlined text-xs">open_in_new</span>
+                  </a>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handlePasteStreamingUrl}
+                  title="Tempel dari Clipboard"
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-stone-200 bg-white text-stone-700 text-xs font-medium hover:bg-stone-100 transition-colors cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-xs">content_paste</span>
+                  <span>{copyStreamingSuccess ? 'Tertempel!' : 'Tempel'}</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] text-stone-500">
+            <div className="flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-sm text-amber-500">toggle_on</span>
+              <span>
+                Card Live Streaming otomatis tampil di undangan jika link terisi dan toggle <strong>Siaran Langsung</strong> di <strong>Tahap 2 (Visibilitas)</strong> dalam posisi aktif.
+              </span>
+            </div>
+            {streamingUrl && (
+              <span className="text-emerald-600 font-medium flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">check_circle</span>
+                Tautan tersimpan
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </section>

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { BaseSectionProps } from '../../types';
 import { MinangDivider } from '../components';
+import { LiveStreamBanner } from '../../../common/LiveStreamBanner';
 
 export interface MinangHeroProps extends BaseSectionProps {
   countdown: { days: number; hours: number; minutes: number; seconds: number };
@@ -9,9 +10,25 @@ export interface MinangHeroProps extends BaseSectionProps {
 
 export const HeroSection: React.FC<MinangHeroProps> = ({
   data,
+  theme,
+  isSectionActive,
   countdown,
   handleSaveToCalendar,
 }) => {
+  const effectiveTheme = theme || data.theme_config;
+  const isQuoteVisible = isSectionActive
+    ? isSectionActive('quote')
+    : effectiveTheme?.show_quote !== false &&
+      (!effectiveTheme?.active_sections || effectiveTheme.active_sections.includes('quote'));
+
+  const streamingUrl = data.streaming_url || data.livestream_url;
+  const isLivestreamActive = isSectionActive
+    ? isSectionActive('livestream')
+    : effectiveTheme?.show_livestream !== false &&
+      (!effectiveTheme?.active_sections ||
+        effectiveTheme.active_sections.includes('livestream') ||
+        effectiveTheme.active_sections.includes('live_stream'));
+
   // Hitung tanggal target secara dinamis dari wedding_date_iso atau events
   const targetDate = React.useMemo(() => {
     if (data.wedding_date_iso) {
@@ -55,33 +72,56 @@ export const HeroSection: React.FC<MinangHeroProps> = ({
       style={{ backgroundColor: '#FAF6EE', color: '#1B0609' }}
     >
       {/* Islamic Blessing & Minang Adat Pantun */}
-      <div className="text-center max-w-[340px] mx-auto mb-8">
-        <p className="font-serif italic text-[#7D5C1E] text-base font-semibold mb-1">
-          Bismillaahirrohmaanirrohiim
-        </p>
-        <p className="font-cinzel text-[10.5px] tracking-[0.2em] text-[#2E0A10] uppercase mb-3 font-bold">
-          Assalamu’alaikum Warahmatullahi Wabarakatuh
-        </p>
+      {/* Islamic / Multi-Faith Scripture & Blessing */}
+      {isQuoteVisible && (
+        <div className="text-center max-w-[340px] mx-auto mb-8">
+          {(!data.quote_religion || data.quote_religion === 'islam') ? (
+            <>
+              <p className="font-serif italic text-[#7D5C1E] text-base font-semibold mb-1">
+                Bismillaahirrohmaanirrohiim
+              </p>
+              <p className="font-cinzel text-[10.5px] tracking-[0.2em] text-[#2E0A10] uppercase mb-3 font-bold">
+                {data.quote_title || 'Assalamu’alaikum Warahmatullahi Wabarakatuh'}
+              </p>
+            </>
+          ) : (
+            <p className="font-cinzel text-[11px] tracking-[0.2em] text-[#2E0A10] uppercase mb-3 font-bold">
+              {data.quote_title || 'Salam Sejahtera & Doa Restu'}
+            </p>
+          )}
 
-        <MinangDivider className="my-2.5" color="gold-bronze" />
+          {/* Teks Arab Berharakat RTL */}
+          {data.quote_arabic && (
+            <p
+              dir="rtl"
+              className="font-serif text-lg sm:text-xl leading-loose text-[#2E0A10] my-3 px-2 font-normal"
+            >
+              {data.quote_arabic}
+            </p>
+          )}
 
-        <p className="font-serif text-sm leading-relaxed text-[#2E0A10]/90 italic">
-          "{data.quote || 'Dan di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya, dan dijadikan-Nya di antaramu rasa kasih dan sayang.'}"
-        </p>
-        <span className="block mt-1 font-sans text-[11px] font-semibold text-[#8A6822] tracking-wider">
-          ({data.quote_source || 'QS. Ar-Rum: 21'})
-        </span>
+          <MinangDivider className="my-2.5" color="gold-bronze" />
 
-        {/* Minangkabau Traditional Pantun Box */}
-        <div className="mt-5 p-4 rounded-xl border border-[#D4AF37]/50 bg-[#F3EAD8] text-center shadow-xs">
-          <p className="font-serif text-xs text-[#2E0A10] italic leading-relaxed">
-            "Anak daro kamek babaju koto gadang,<br />
-            Marapulai gagah manyaru basamo sanak.<br />
-            Alah tibo masonyo baralek gadang,<br />
-            Mahimpun janji manjalin kasiah nan tulus elok."
+          <p className="font-serif text-sm leading-relaxed text-[#2E0A10]/90 italic">
+            "{data.quote || 'Dan di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya, dan dijadikan-Nya di antaramu rasa kasih dan sayang.'}"
           </p>
+          {data.quote_source && (
+            <span className="block mt-1 font-sans text-[11px] font-semibold text-[#8A6822] tracking-wider">
+              ({data.quote_source})
+            </span>
+          )}
+
+          {/* Minangkabau Traditional Pantun Box */}
+          <div className="mt-5 p-4 rounded-xl border border-[#D4AF37]/50 bg-[#F3EAD8] text-center shadow-xs">
+            <p className="font-serif text-xs text-[#2E0A10] italic leading-relaxed">
+              "Anak daro kamek babaju koto gadang,<br />
+              Marapulai gagah manyaru basamo sanak.<br />
+              Alah tibo masonyo baralek gadang,<br />
+              Mahimpun janji manjalin kasiah nan tulus elok."
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Save The Date Calendar Widget */}
       <div className="mt-8 pt-6 border-t border-[#D4AF37]/30">
@@ -187,6 +227,12 @@ export const HeroSection: React.FC<MinangHeroProps> = ({
           </button>
         </div>
       </div>
+      {/* Optional Livestream Banner */}
+      {isLivestreamActive && Boolean(streamingUrl) && (
+        <div className="mt-8 w-full flex justify-center">
+          <LiveStreamBanner url={streamingUrl} variant="minang" />
+        </div>
+      )}
     </section>
   );
 };

@@ -1,10 +1,27 @@
 import React from 'react';
 import type { HeroSectionProps } from '../../types';
+import { LiveStreamBanner } from '../../../common/LiveStreamBanner';
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
   data,
+  theme,
+  isSectionActive,
   countdown,
 }) => {
+  const effectiveTheme = theme || data.theme_config;
+  const isQuoteVisible = isSectionActive
+    ? isSectionActive('quote')
+    : effectiveTheme?.show_quote !== false &&
+      (!effectiveTheme?.active_sections || effectiveTheme.active_sections.includes('quote'));
+
+  const streamingUrl = data.streaming_url || data.livestream_url;
+  const isLivestreamActive = isSectionActive
+    ? isSectionActive('livestream')
+    : effectiveTheme?.show_livestream !== false &&
+      (!effectiveTheme?.active_sections ||
+        effectiveTheme.active_sections.includes('livestream') ||
+        effectiveTheme.active_sections.includes('live_stream'));
+
   return (
     <section
       className="px-margin py-space-xl flex flex-col items-center text-center"
@@ -44,37 +61,40 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       </div>
 
       {/* Islamic Warm Greeting */}
-      <h2 className="font-headline-sm text-headline-sm text-primary mb-3">
-        Assalamu’alaikum Warahmatullahi Wabarakatuh
+      <h2 className="font-headline-sm text-headline-sm text-primary mb-3 text-center">
+        {data.quote_title || 'Assalamu’alaikum Warahmatullahi Wabarakatuh'}
       </h2>
-      <p className="font-body-md text-body-md text-on-surface-variant max-w-[340px] mb-6">
+      <p className="font-body-md text-body-md text-on-surface-variant max-w-[340px] mb-6 text-center">
         Maha Suci Allah yang telah menciptakan makhluk-Nya berpasang-pasangan.
         Dengan memohon rahmat dan ridho-Nya, kami mengundang Anda untuk
         merayakan momen suci kami.
       </p>
 
       {/* Dome Shaped Quranic Verse Card */}
-      <div className="w-full rounded-t-full rounded-b-2xl bg-surface-container-lowest p-6 shadow-md shadow-primary/5 mb-8 flex flex-col items-center border border-secondary-container/20 reveal-scale delay-100">
-        <div className="w-10 h-10 rounded-full bg-secondary-container/50 flex items-center justify-center text-primary mb-4">
-          <span className="material-symbols-outlined text-[22px]">
-            auto_stories
+      {isQuoteVisible && (
+        <div className="w-full rounded-t-full rounded-b-2xl bg-surface-container-lowest p-6 shadow-md shadow-primary/5 mb-8 flex flex-col items-center border border-secondary-container/20 reveal-scale delay-100">
+          <div className="w-10 h-10 rounded-full bg-secondary-container/50 flex items-center justify-center text-primary mb-4">
+            <span className="material-symbols-outlined text-[22px]">
+              auto_stories
+            </span>
+          </div>
+          {(data.quote_arabic || !data.quote_religion || data.quote_religion === 'islam') && (
+            <p
+              className="font-serif text-lg leading-relaxed text-primary mb-4 text-center"
+              dir="rtl"
+            >
+              {data.quote_arabic ||
+                'وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً ۚ إِنَّ فِي ذَٰلِكَ لَآيَاتٍ لِّقَوْمٍ يَتَفَكَّرُونَ'}
+            </p>
+          )}
+          <p className="font-body-sm text-body-sm text-on-surface-variant italic mb-2 text-center">
+            "{data.quote}"
+          </p>
+          <span className="font-label-sm text-label-sm text-primary font-semibold tracking-wider">
+            ({data.quote_source || 'QS. Ar-Rum: 21'})
           </span>
         </div>
-        <p
-          className="font-serif text-lg leading-relaxed text-primary mb-4"
-          dir="rtl"
-        >
-          وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا
-          لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً ۚ
-          إِنَّ فِي ذَٰلِكَ لَآيَاتٍ لِّقَوْمٍ يَتَفَكَّرُونَ
-        </p>
-        <p className="font-body-sm text-body-sm text-on-surface-variant italic mb-2">
-          "{data.quote}"
-        </p>
-        <span className="font-label-sm text-label-sm text-primary font-semibold tracking-wider">
-          ({data.quote_source || 'QS. Ar-Rum: 21'})
-        </span>
-      </div>
+      )}
 
       {/* Wedding Date Header */}
       <div className="mb-4">
@@ -124,6 +144,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </span>
         </div>
       </div>
+
+      {/* Optional Livestream Banner */}
+      {isLivestreamActive && Boolean(streamingUrl) && (
+        <div className="mt-8 w-full flex justify-center">
+          <LiveStreamBanner url={streamingUrl} variant="islami" />
+        </div>
+      )}
     </section>
   );
 };

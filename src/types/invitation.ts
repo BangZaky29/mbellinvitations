@@ -42,6 +42,18 @@ export interface LoveStoryMilestone {
   icon?: string;               // "school" | "favorite" | "loyalty" | "check"
 }
 
+export interface DresscodeColor {
+  name: string;                // "Sage Green", "Burgundy"
+  hex: string;                 // "#7A8471", "#4A121A"
+}
+
+export interface DresscodeConfig {
+  enabled: boolean;            // true | false
+  title: string;               // "Panduan Busana (Dress Code)"
+  subtitle?: string;           // "Tamu undangan diharapkan mengenakan pakaian bernuansa warna berikut:"
+  colors: DresscodeColor[];    // Array of swatches
+}
+
 export interface BankAccount {
   bank_name: string;           // "BCA"
   account_number: string;      // "8801 2345 6789"
@@ -104,10 +116,16 @@ export interface InvitationData {
   wedding_date_display?: string;   // "Sabtu, 24 Oktober 2026"
   countdown_target?: 'akad' | 'resepsi'; // Menetapkan acara patokan countdown (Akad vs Resepsi)
 
-  // --- Content ---
-  quote?: string;
-  quote_source?: string;           // "QS. Ar-Rum: 21"
+  // --- Content & Doa / Ayat Suci ---
+  quote_title?: string;            // "Doa & Ayat Suci" / "Ungkapan Kasih"
+  quote_religion?: 'islam' | 'kristen' | 'katolik' | 'hindu' | 'buddha' | 'universal' | 'custom' | string;
+  quote_arabic?: string;           // Teks doa / ayat asli berharakat RTL (misal: Ar-Rum 21)
+  quote?: string;                  // Terjemahan / kutipan utama
+  quote_source?: string;           // "QS. Ar-Rum: 21" / "1 Korintus 13:4-8"
   hashtag?: string;                // "#RadityaJessicaForever"
+
+  // --- Dresscode / Panduan Busana ---
+  dresscode?: DresscodeConfig;
 
   // --- Events ---
   events: any;                     // EventInfo[] or { akad: EventInfo; resepsi: EventInfo }
@@ -159,11 +177,14 @@ export interface ThemeConfig {
   music_title?: string;
   active_sections: string[];
   // Convenience toggles (derived from active_sections but explicit for clarity)
+  show_quote?: boolean;
+  show_dresscode?: boolean;
   show_gallery?: boolean;
   show_love_story?: boolean;
   show_rsvp?: boolean;
   show_gift?: boolean;
   show_wishes?: boolean;
+  show_livestream?: boolean;
   animation_config?: AnimationConfig;
 }
 

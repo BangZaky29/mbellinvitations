@@ -1,5 +1,6 @@
 import React from 'react';
 import type { BaseSectionProps } from '../../types';
+import { LiveStreamBanner } from '../../../common/LiveStreamBanner';
 
 export interface LuxuryHeroProps extends BaseSectionProps {
   countdown: { days: number; hours: number; minutes: number; seconds: number };
@@ -9,8 +10,24 @@ export interface LuxuryHeroProps extends BaseSectionProps {
 
 export const HeroSection: React.FC<LuxuryHeroProps> = ({
   data,
+  theme,
+  isSectionActive,
   countdown,
 }) => {
+  const effectiveTheme = theme || data.theme_config;
+  const isQuoteVisible = isSectionActive
+    ? isSectionActive('quote')
+    : effectiveTheme?.show_quote !== false &&
+    (!effectiveTheme?.active_sections || effectiveTheme.active_sections.includes('quote'));
+
+  const streamingUrl = data.streaming_url || data.livestream_url;
+  const isLivestreamActive = isSectionActive
+    ? isSectionActive('livestream')
+    : effectiveTheme?.show_livestream !== false &&
+    (!effectiveTheme?.active_sections ||
+      effectiveTheme.active_sections.includes('livestream') ||
+      effectiveTheme.active_sections.includes('live_stream'));
+
   return (
     <section
       className="w-full px-margin pt-14 pb-12 flex flex-col items-center text-center relative z-10"
@@ -36,9 +53,31 @@ export const HeroSection: React.FC<LuxuryHeroProps> = ({
         </div>
       </div>
 
-      <blockquote className="font-headline-sm italic text-on-surface-variant text-base leading-relaxed max-w-[320px] mb-6">
-        “{data.quote}”
-      </blockquote>
+      {isQuoteVisible && (
+        <div className="max-w-[320px] mb-6 text-center">
+          {data.quote_title && (
+            <span className="font-label-eyebrow text-primary text-[10px] tracking-[0.25em] block mb-2 uppercase">
+              {data.quote_title}
+            </span>
+          )}
+          {data.quote_arabic && (
+            <p
+              dir="rtl"
+              className="font-serif text-lg leading-loose text-primary my-2 px-1 font-normal"
+            >
+              {data.quote_arabic}
+            </p>
+          )}
+          <blockquote className="font-headline-sm italic text-on-surface-variant text-base leading-relaxed">
+            “{data.quote}”
+          </blockquote>
+          {data.quote_source && (
+            <span className="font-label-sm text-primary text-[10px] uppercase tracking-widest block mt-2">
+              — {data.quote_source}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Date Badge */}
       <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-container-high/80 backdrop-blur-md mb-8 border border-white/5">
@@ -83,6 +122,12 @@ export const HeroSection: React.FC<LuxuryHeroProps> = ({
           </span>
         </div>
       </div>
+      {/* Optional Livestream Banner */}
+      {isLivestreamActive && Boolean(streamingUrl) && (
+        <div className="mt-8 w-full flex justify-center">
+          <LiveStreamBanner url={streamingUrl} variant="islami" />
+        </div>
+      )}
     </section>
   );
 };

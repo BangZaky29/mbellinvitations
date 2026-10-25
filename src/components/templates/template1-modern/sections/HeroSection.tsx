@@ -1,12 +1,29 @@
 import React from 'react';
 import type { HeroSectionProps } from '../../types';
+import { LiveStreamBanner } from '../../../common/LiveStreamBanner';
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
   data,
+  theme,
+  isSectionActive,
   firstPerson: rawFirst,
   secondPerson: rawSecond,
   countdown,
 }) => {
+  const effectiveTheme = theme || data.theme_config;
+  const isQuoteVisible = isSectionActive
+    ? isSectionActive('quote')
+    : effectiveTheme?.show_quote !== false &&
+      (!effectiveTheme?.active_sections || effectiveTheme.active_sections.includes('quote'));
+
+  const streamingUrl = data.streaming_url || data.livestream_url;
+  const isLivestreamActive = isSectionActive
+    ? isSectionActive('livestream')
+    : effectiveTheme?.show_livestream !== false &&
+      (!effectiveTheme?.active_sections ||
+        effectiveTheme.active_sections.includes('livestream') ||
+        effectiveTheme.active_sections.includes('live_stream'));
+
   const firstPerson = rawFirst || data.groom || { name: 'Mempelai Pria' };
   const secondPerson = rawSecond || data.bride || { name: 'Mempelai Wanita' };
   const { days, hours, minutes, seconds } = countdown;
@@ -45,14 +62,31 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       </div>
 
       {/* Religious / Romantic Quote */}
-      <div className="max-w-[340px] px-2 mb-10 reveal delay-100">
-        <p className="font-editorial italic text-base leading-relaxed text-charcoal-dark/90">
-          &ldquo;{data.quote}&rdquo;
-        </p>
-        <span className="block text-[11px] tracking-[0.2em] text-gold-champagne uppercase font-medium mt-3">
-          — {data.quote_source}
-        </span>
-      </div>
+      {isQuoteVisible && (
+        <div className="max-w-[340px] px-2 mb-10 reveal delay-100 text-center">
+          {data.quote_title && (
+            <span className="block text-[11px] tracking-[0.25em] text-gold-champagne uppercase font-medium mb-3">
+              {data.quote_title}
+            </span>
+          )}
+          {data.quote_arabic && (
+            <p
+              dir="rtl"
+              className="font-serif text-lg sm:text-xl leading-loose text-charcoal-dark my-3 px-2 font-normal"
+            >
+              {data.quote_arabic}
+            </p>
+          )}
+          <p className="font-editorial italic text-base leading-relaxed text-charcoal-dark/90">
+            &ldquo;{data.quote}&rdquo;
+          </p>
+          {data.quote_source && (
+            <span className="block text-[11px] tracking-[0.2em] text-gold-champagne uppercase font-medium mt-3">
+              — {data.quote_source}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* 4-Column Minimalist Countdown Timer */}
       <div className="w-full max-w-[350px] bg-white border border-border-subtle rounded-2xl p-5 shadow-sm reveal delay-200">
@@ -100,25 +134,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       </div>
 
       {/* Optional Livestream Banner */}
-      {data.livestream_url && (
-        <div className="mt-8 w-full max-w-[350px] bg-gradient-to-r from-neutral-900 to-neutral-800 border border-neutral-700 rounded-2xl p-4 text-white shadow-md flex items-center justify-between">
-          <div className="flex items-center space-x-3 text-left">
-            <div className="w-10 h-10 rounded-full bg-red-600/20 border border-red-500/40 flex items-center justify-center text-red-500">
-              <i className="fa-solid fa-video text-sm animate-pulse"></i>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-widest text-white/60">Live Streaming</p>
-              <h4 className="text-xs font-semibold text-white">Saksikan Siaran Langsung</h4>
-            </div>
-          </div>
-          <a
-            href={data.livestream_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-3.5 py-1.5 rounded-full bg-white text-neutral-900 text-[10px] font-semibold tracking-wider uppercase hover:bg-gold-light transition-colors"
-          >
-            Tonton
-          </a>
+      {isLivestreamActive && Boolean(streamingUrl) && (
+        <div className="mt-8 w-full flex justify-center">
+          <LiveStreamBanner url={streamingUrl} variant="modern" />
         </div>
       )}
     </section>

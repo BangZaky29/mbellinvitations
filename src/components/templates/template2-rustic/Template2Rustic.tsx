@@ -17,6 +17,7 @@ import {
   WishesSection,
   FooterSection,
 } from './sections';
+import { UniversalDresscodeSection } from '../../common/UniversalDresscodeSection';
 
 export const Template2Rustic: React.FC<InvitationProps> = ({
   data,
@@ -131,6 +132,7 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                   data={data}
                   theme={theme}
                   isPreview={isPreview}
+                  isSectionActive={isSectionActive}
                   firstPerson={firstPerson}
                   secondPerson={secondPerson}
                   countdown={countdown}
@@ -167,6 +169,11 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
                   theme={theme}
                   isPreview={isPreview}
                 />
+              )}
+
+              {/* SECTION: DRESS CODE */}
+              {isSectionActive('dresscode') && (
+                <UniversalDresscodeSection data={data} themeStyle="rustic" />
               )}
 
               {/* SECTION 6: PHOTO GALLERY */}

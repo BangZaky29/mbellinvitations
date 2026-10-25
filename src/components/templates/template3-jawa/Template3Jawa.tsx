@@ -17,6 +17,7 @@ import {
   WishesSection,
   ClosingFooterSection,
 } from './sections';
+import { UniversalDresscodeSection } from '../../common/UniversalDresscodeSection';
 
 export const Template3Jawa: React.FC<InvitationProps> = ({
   data,
@@ -120,6 +121,7 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
                 data={data}
                 theme={theme}
                 isPreview={isPreview}
+                isSectionActive={isSectionActive}
                 firstPerson={firstPerson}
                 secondPerson={secondPerson}
                 countdown={countdown}
@@ -162,6 +164,11 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
                 theme={theme}
                 isPreview={isPreview}
               />
+            )}
+
+            {/* SECTION: DRESS CODE */}
+            {isSectionActive('dresscode') && (
+              <UniversalDresscodeSection data={data} themeStyle="jawa" />
             )}
 
             {/* ========================================== */}

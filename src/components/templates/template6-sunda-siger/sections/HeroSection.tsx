@@ -1,5 +1,6 @@
 import React from 'react';
 import type { BaseSectionProps } from '../../types';
+import { LiveStreamBanner } from '../../../common/LiveStreamBanner';
 
 export interface SundaHeroProps extends BaseSectionProps {
   countdown: { days: number; hours: number; minutes: number; seconds: number };
@@ -8,9 +9,25 @@ export interface SundaHeroProps extends BaseSectionProps {
 
 export const HeroSection: React.FC<SundaHeroProps> = ({
   data,
+  theme,
+  isSectionActive,
   countdown,
   handleSaveToCalendar,
 }) => {
+  const effectiveTheme = theme || data.theme_config;
+  const isQuoteVisible = isSectionActive
+    ? isSectionActive('quote')
+    : effectiveTheme?.show_quote !== false &&
+      (!effectiveTheme?.active_sections || effectiveTheme.active_sections.includes('quote'));
+
+  const streamingUrl = data.streaming_url || data.livestream_url;
+  const isLivestreamActive = isSectionActive
+    ? isSectionActive('livestream')
+    : effectiveTheme?.show_livestream !== false &&
+      (!effectiveTheme?.active_sections ||
+        effectiveTheme.active_sections.includes('livestream') ||
+        effectiveTheme.active_sections.includes('live_stream'));
+
   const { days, hours, minutes, seconds } = countdown;
 
   return (
@@ -28,20 +45,35 @@ export const HeroSection: React.FC<SundaHeroProps> = ({
         </svg>
       </div>
 
-      {/* Sundanese Cultural Proverb */}
-      <span className="text-xl sm:text-2xl text-[#8a6822] font-serif italic mb-2 reveal delay-100">
-        “Runtut Raut Sauyunan”
-      </span>
+      {/* Cultural Proverb & Scripture Quote Block */}
+      {isQuoteVisible && (
+        <div className="flex flex-col items-center">
+          {/* Cultural Proverb / Title */}
+          <span className="text-xl sm:text-2xl text-[#8a6822] font-serif italic mb-2 reveal delay-100">
+            “{data.quote_title || 'Runtut Raut Sauyunan'}”
+          </span>
 
-      {/* Quranic / Scripture Verse */}
-      <p data-anim="quote" className="text-xs sm:text-sm text-[#4e4639] max-w-sm italic leading-relaxed reveal delay-150">
-        “{data.quote || 'Dan di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya, dan Dia menjadikan di antaramu rasa kasih dan sayang.'}”
-      </p>
-      <span className="text-[11px] font-semibold text-[#8a6822] tracking-widest mt-2 uppercase reveal delay-200">
-        {data.quote_source || '(QS. Ar-Rum: 21)'}
-      </span>
+          {/* Teks Arab Berharakat RTL */}
+          {data.quote_arabic && (
+            <p
+              dir="rtl"
+              className="font-serif text-lg sm:text-xl leading-loose text-[#3E342B] my-2 px-2 font-normal reveal delay-120"
+            >
+              {data.quote_arabic}
+            </p>
+          )}
 
-      <div className="w-12 h-0.5 bg-[#c5a059]/40 my-6 rounded-full" />
+          {/* Quranic / Scripture Verse */}
+          <p data-anim="quote" className="text-xs sm:text-sm text-[#4e4639] max-w-sm italic leading-relaxed reveal delay-150">
+            “{data.quote || 'Dan di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya, dan Dia menjadikan di antaramu rasa kasih dan sayang.'}”
+          </p>
+          <span className="text-[11px] font-semibold text-[#8a6822] tracking-widest mt-2 uppercase reveal delay-200">
+            {data.quote_source || '(QS. Ar-Rum: 21)'}
+          </span>
+
+          <div className="w-12 h-0.5 bg-[#c5a059]/40 my-6 rounded-full" />
+        </div>
+      )}
 
       {/* Countdown Card with Regal Gold Frame */}
       <div className="w-full max-w-sm rounded-3xl p-5 bg-[#fbf9f6] shadow-sm flex flex-col items-center border border-[#c5a059]/30 reveal-scale delay-200">
@@ -99,6 +131,12 @@ export const HeroSection: React.FC<SundaHeroProps> = ({
           <span>Simpan ke Google Calendar</span>
         </button>
       </div>
+      {/* Optional Livestream Banner */}
+      {isLivestreamActive && Boolean(streamingUrl) && (
+        <div className="mt-8 w-full flex justify-center">
+          <LiveStreamBanner url={streamingUrl} variant="sunda" />
+        </div>
+      )}
     </section>
   );
 };

@@ -1,19 +1,38 @@
 import React from 'react';
-import type { InvitationData } from '../../../../types/invitation';
+import type { InvitationData, ThemeConfig } from '../../../../types/invitation';
 import { RumahBolonCrest, GorgaFiligree, TornPaperDivider } from '../components';
+import { LiveStreamBanner } from '../../../common/LiveStreamBanner';
 
 interface HeroSectionProps {
   data: InvitationData;
+  theme?: ThemeConfig;
   isPreview?: boolean;
+  isSectionActive?: (section: string) => boolean;
   countdown: { days: number; hours: number; minutes: number; seconds: number };
   handleSaveToCalendar: () => void;
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
   data,
+  theme,
+  isSectionActive,
   countdown,
   handleSaveToCalendar,
 }) => {
+  const effectiveTheme = theme || data.theme_config;
+  const isQuoteVisible = isSectionActive
+    ? isSectionActive('quote')
+    : effectiveTheme?.show_quote !== false &&
+      (!effectiveTheme?.active_sections || effectiveTheme.active_sections.includes('quote'));
+
+  const streamingUrl = data.streaming_url || data.livestream_url;
+  const isLivestreamActive = isSectionActive
+    ? isSectionActive('livestream')
+    : effectiveTheme?.show_livestream !== false &&
+      (!effectiveTheme?.active_sections ||
+        effectiveTheme.active_sections.includes('livestream') ||
+        effectiveTheme.active_sections.includes('live_stream'));
+
   const couplePhoto =
     data.couple_photo ||
     data.cover_image ||
@@ -24,8 +43,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const events = Array.isArray(rawEvents)
     ? rawEvents
     : rawEvents && typeof rawEvents === 'object'
-    ? Object.values(rawEvents)
-    : [];
+      ? Object.values(rawEvents)
+      : [];
 
   const activeTargetIdx =
     data.countdown_target === 'resepsi' && events.length > 1 ? 1 : 0;
@@ -109,15 +128,32 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </p>
         </div>
 
-        {/* Ceremonial Batak Blessing Quote */}
-        <div className="my-3 px-4 py-3 bg-[#312824]/70 backdrop-blur-sm rounded-xl max-w-[340px] shadow-sm border border-[#EAC16E]/20">
-          <p className="font-serif text-sm sm:text-[15px] italic text-[#EAC16E] leading-snug">
-            {data.quote || '“Dua gabe sada, marsitangiangan di bagas holong ni Kristus”'}
-          </p>
-          <p className="font-sans text-[11px] text-[#D1C5B3] opacity-85 mt-1">
-            {data.quote_source || 'Dua Menjadi Satu Berpadu Kasih di Hadapan Tuhan'}
-          </p>
-        </div>
+        {/* Ceremonial Batak Blessing Quote (Sinkron dengan toggle Doa & Kutipan Suci) */}
+        {isQuoteVisible && (
+          <div className="my-3 px-4 py-3 bg-[#312824]/70 backdrop-blur-sm rounded-xl max-w-[340px] shadow-sm border border-[#EAC16E]/20 text-center">
+            {data.quote_title && (
+              <span className="block font-sans text-[10px] text-[#EAC16E] tracking-[0.2em] uppercase font-bold mb-2">
+                {data.quote_title}
+              </span>
+            )}
+            {data.quote_arabic && (
+              <p
+                dir="rtl"
+                className="font-serif text-lg sm:text-xl leading-loose text-[#FAF6EE] my-2 px-1 font-normal"
+              >
+                {data.quote_arabic}
+              </p>
+            )}
+            <p className="font-serif text-sm sm:text-[15px] italic text-[#EAC16E] leading-snug">
+              “{data.quote || 'Dua gabe sada, marsitangiangan di bagas holong ni Kristus'}”
+            </p>
+            {data.quote_source && (
+              <p className="font-sans text-[11px] text-[#D1C5B3] opacity-85 mt-1.5 font-semibold">
+                {data.quote_source}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Tall Arched Centerpiece Portrait */}
         <div className="relative w-full max-w-[320px] aspect-[3/4] rounded-t-[160px] rounded-b-xl overflow-hidden shadow-[0_16px_36px_rgba(0,0,0,0.7)] p-1 bg-gradient-to-b from-[#EAC16E] via-[#C8A253]/40 to-transparent my-2">
@@ -145,22 +181,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           ========================================== */}
       <section className="relative w-full bg-[#EDE1D0] text-[#362F25] px-4 py-6 flex flex-col items-center text-center">
         {/* Gorga Boras Pati Filigree */}
-        <GorgaFiligree className="w-16 h-8 text-[#85291B] opacity-75 mb-2" />
-
-        {/* Holy Bible Verse */}
-        <p className="font-serif text-base sm:text-[17px] italic text-[#362F25] max-w-[320px] leading-relaxed">
-          {data.quote_source?.includes('•')
-            ? data.quote_source.split('•')[1]?.trim()
-            : data.quote ||
-              '“Holong na sintong i, ndang marnaloas; sabam do rohana, marhabasaon, jala ndang mangiburu.”'}
-        </p>
-        <span className="font-sans text-[11px] tracking-widest text-[#630F05] uppercase mt-1 font-bold">
-          {data.quote_source?.includes('•')
-            ? data.quote_source.split('•')[0]?.trim()
-            : data.quote_source || '1 Korintus 13 : 4-8'}
-        </span>
-
-        <div className="w-12 h-0.5 bg-[#C8A253] my-4 opacity-50 rounded-full" />
+        <GorgaFiligree className="w-16 h-8 text-[#85291B] opacity-75 mb-3" />
 
         {/* Badge Acara Patokan Countdown */}
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#85291B]/15 border border-[#85291B]/30 text-[#85291B] font-sans text-[10.5px] font-bold uppercase tracking-wider mb-3">
@@ -201,11 +222,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               return (
                 <span
                   key={day}
-                  className={`py-1 rounded-full flex items-center justify-center font-medium ${
-                    isEventDay
+                  className={`py-1 rounded-full flex items-center justify-center font-medium ${isEventDay
                       ? 'bg-[#85291B] text-[#FFDAD4] font-bold shadow-md scale-105 ring-2 ring-[#85291B]/30'
                       : 'text-[#4D463A]/80'
-                  }`}
+                    }`}
                 >
                   {day}
                 </span>
@@ -251,6 +271,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           <span className="material-symbols-outlined text-[18px]">calendar_add_on</span>
           <span>Simpan ke Google Calendar</span>
         </button>
+        {/* Optional Livestream Banner */}
+        {isLivestreamActive && Boolean(streamingUrl) && (
+          <div className="mt-8 w-full flex justify-center">
+            <LiveStreamBanner url={streamingUrl} variant="batak" />
+          </div>
+        )}
       </section>
 
       {/* Wavy Torn Paper Deckle Edge: Transition back to Deep Espresso */}

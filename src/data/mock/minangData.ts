@@ -34,10 +34,28 @@ export const MOCK_MINANG_DATA: InvitationData = {
   wedding_date_display: 'Sabtu, 24 Oktober 2026',
   countdown_target: 'resepsi',
 
+  quote_title: 'Kalam Ilahi & Pepatah Adat',
+  quote_religion: 'islam',
+  quote_arabic:
+    'وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً ۚ إِنَّ فِي ذَٰلِكَ لَآيَاتٍ لِّقَوْمٍ يَتَفَكَّرُونَ',
   quote:
     'Dan di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya, dan dijadikan-Nya di antaramu rasa kasih dan sayang.',
   quote_source: 'QS. Ar-Rum: 21 • “Saikek Bak Siriah, Sarumpun Bak Sarai”',
   hashtag: '#FarhanNadiaBaralekGadang',
+
+  dresscode: {
+    enabled: true,
+    title: 'PANDUAN BUSANA (DRESS CODE)',
+    subtitle:
+      'Batik Songket Tradisional atau Pakaian Formal bernuansa warna kerajaan Minang berikut:',
+    colors: [
+      { name: 'Burgundy', hex: '#4A121A' },
+      { name: 'Gold', hex: '#D4AF37' },
+      { name: 'Ivory', hex: '#FAF6EE' },
+      { name: 'Dusty Rose', hex: '#B76E79' },
+      { name: 'Emerald', hex: '#1E4B38' },
+    ],
+  },
 
   events: [
     {
@@ -144,7 +162,20 @@ export const MOCK_MINANG_DATA: InvitationData = {
 export const MOCK_MINANG_THEME: ThemeConfig = {
   primary_color: '#4A121A',
   music_url: 'https://assets.mixkit.co/music/preview/mixkit-serene-view-443.mp3',
-  active_sections: ['cover', 'couple', 'event', 'gallery', 'rsvp', 'wishes', 'gift'],
+  active_sections: [
+    'cover',
+    'hero',
+    'quote',
+    'couple',
+    'event',
+    'dresscode',
+    'gallery',
+    'rsvp',
+    'wishes',
+    'gift',
+  ],
+  show_quote: true,
+  show_dresscode: true,
   show_gallery: true,
   show_love_story: true,
   show_rsvp: true,

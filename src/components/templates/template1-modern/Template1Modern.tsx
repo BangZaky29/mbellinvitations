@@ -17,6 +17,7 @@ import {
   WishesSection,
   ClosingFooterSection,
 } from './sections';
+import { UniversalDresscodeSection } from '../../common/UniversalDresscodeSection';
 
 const SectionDivider: React.FC = () => (
   <div className="flex justify-center items-center py-4">
@@ -121,6 +122,7 @@ export const Template1Modern: React.FC<InvitationProps> = ({
               data={data}
               theme={theme}
               isPreview={isPreview}
+              isSectionActive={isSectionActive}
               firstPerson={firstPerson}
               secondPerson={secondPerson}
               countdown={countdown}
@@ -167,6 +169,14 @@ export const Template1Modern: React.FC<InvitationProps> = ({
                 theme={theme}
                 isPreview={isPreview}
               />
+            </>
+          )}
+
+          {/* DRESS CODE PALETTE SECTION */}
+          {isSectionActive('dresscode') && (
+            <>
+              <SectionDivider />
+              <UniversalDresscodeSection data={data} themeStyle="modern" />
             </>
           )}
 

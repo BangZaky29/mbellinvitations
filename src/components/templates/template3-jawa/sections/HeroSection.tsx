@@ -1,12 +1,29 @@
 import React from 'react';
 import type { HeroSectionProps } from '../../types';
+import { LiveStreamBanner } from '../../../common/LiveStreamBanner';
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
   data,
+  theme,
+  isSectionActive,
   firstPerson: rawFirst,
   secondPerson: rawSecond,
   countdown,
 }) => {
+  const effectiveTheme = theme || data.theme_config;
+  const isQuoteVisible = isSectionActive
+    ? isSectionActive('quote')
+    : effectiveTheme?.show_quote !== false &&
+      (!effectiveTheme?.active_sections || effectiveTheme.active_sections.includes('quote'));
+
+  const streamingUrl = data.streaming_url || data.livestream_url;
+  const isLivestreamActive = isSectionActive
+    ? isSectionActive('livestream')
+    : effectiveTheme?.show_livestream !== false &&
+      (!effectiveTheme?.active_sections ||
+        effectiveTheme.active_sections.includes('livestream') ||
+        effectiveTheme.active_sections.includes('live_stream'));
+
   const firstPerson = rawFirst || data.groom || { name: 'Mempelai Pria' };
   const secondPerson = rawSecond || data.bride || { name: 'Mempelai Wanita' };
   const { days, hours, minutes, seconds } = countdown;
@@ -44,18 +61,33 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       </div>
 
       {/* Philosophical Sacred Quote */}
-      <div className="w-full bg-[#1C1612]/90 border border-[#F3D068]/30 rounded-2xl p-5 mb-8 shadow-xl text-center reveal delay-100">
-        <p className="font-serif text-base sm:text-lg text-[#FAF6F0] italic leading-relaxed">
-          &ldquo;{data.quote}&rdquo;
-        </p>
-        <div className="mt-3 flex items-center justify-center gap-2">
-          <span className="w-8 h-[1px] bg-[#D4AF37]/50"></span>
-          <span className="text-xs uppercase tracking-widest text-[#FFE082] font-semibold">
-            {data.quote_source}
-          </span>
-          <span className="w-8 h-[1px] bg-[#D4AF37]/50"></span>
+      {isQuoteVisible && (
+        <div className="w-full bg-[#1C1612]/90 border border-[#F3D068]/30 rounded-2xl p-5 mb-8 shadow-xl text-center reveal delay-100">
+          {data.quote_title && (
+            <span className="block text-[11px] uppercase tracking-widest text-[#FFE082] font-semibold mb-2">
+              {data.quote_title}
+            </span>
+          )}
+          {data.quote_arabic && (
+            <p
+              dir="rtl"
+              className="font-serif text-lg sm:text-xl leading-loose text-[#FFE082] my-2 px-1 font-normal"
+            >
+              {data.quote_arabic}
+            </p>
+          )}
+          <p className="font-serif text-base sm:text-lg text-[#FAF6F0] italic leading-relaxed">
+            &ldquo;{data.quote}&rdquo;
+          </p>
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <span className="w-8 h-[1px] bg-[#D4AF37]/50"></span>
+            <span className="text-xs uppercase tracking-widest text-[#FFE082] font-semibold">
+              {data.quote_source}
+            </span>
+            <span className="w-8 h-[1px] bg-[#D4AF37]/50"></span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Royal Countdown Timer Cards */}
       <div className="w-full reveal delay-200">
@@ -99,29 +131,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       </div>
 
       {/* Optional Livestream Banner */}
-      {data.livestream_url && (
-        <div className="mt-6 w-full p-4 rounded-2xl bg-[#1C1612] border border-[#F3D068]/30 flex items-center justify-between text-left shadow-xl">
-          <div className="flex items-center gap-3">
-            <span className="material-symbols-outlined text-[#F3D068] text-2xl animate-pulse">
-              videocam
-            </span>
-            <div>
-              <p className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-semibold">
-                Siaran Langsung
-              </p>
-              <h4 className="font-serif text-sm font-bold text-[#FAF6F0]">
-                Pawiwahan Live Streaming
-              </h4>
-            </div>
-          </div>
-          <a
-            href={data.livestream_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-4 py-1.5 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3D068] text-[#14100D] text-xs font-bold shadow-md hover:brightness-105 active:scale-95"
-          >
-            Mirsani
-          </a>
+      {isLivestreamActive && Boolean(streamingUrl) && (
+        <div className="mt-6 w-full flex justify-center">
+          <LiveStreamBanner url={streamingUrl} variant="jawa" />
         </div>
       )}
     </section>
