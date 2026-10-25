@@ -27,8 +27,6 @@ export const GallerySection: React.FC<GallerySectionProps> = ({
 
   const displayedList = showAllGallery ? galleryList : galleryList.slice(0, 4);
 
-  const photoLabels = ['Kasih Abadi', 'Anak Sasada', 'Boru Sasada', 'Pesta Adat'];
-
   return (
     <section className="relative w-full px-4 py-8 flex flex-col items-center bg-[#19120E] text-[#FAF6EE]">
       {/* Title */}
@@ -55,14 +53,9 @@ export const GallerySection: React.FC<GallerySectionProps> = ({
           >
             <img
               src={imgUrl}
-              alt={photoLabels[idx % 4] || `Gallery ${idx + 1}`}
+              alt={`Galeri Foto ${idx + 1}`}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#140D09]/80 via-transparent to-transparent flex items-end p-2.5">
-              <span className="font-serif italic text-xs text-[#EAC16E]">
-                {photoLabels[idx % 4] || `Momen ${idx + 1}`}
-              </span>
-            </div>
           </div>
         ))}
       </div>
