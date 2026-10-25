@@ -59,19 +59,17 @@ export const BankAccountEditor: React.FC<BankAccountEditorProps> = ({
 
   return (
     <div className="space-y-4 pt-1">
-      {/* Header Card */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-3 sm:pb-4 border-b border-stone-200/80">
+      {/* Header Rekening Bank */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-3 border-b border-stone-200/80">
         <div className="space-y-1">
-          <div className="flex items-center gap-2.5">
-            <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-stone-900 text-white text-xs font-bold shadow-xs">
-              5
-            </span>
-            <h2 className="text-xl sm:text-2xl font-serif font-bold text-stone-900">
-              Amplop Digital &amp; Hadiah
-            </h2>
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-stone-800 text-[22px]">account_balance</span>
+            <h3 className="text-lg font-serif font-bold text-stone-900">
+              Rekening Bank &amp; Dompet Digital
+            </h3>
           </div>
           <p className="text-xs sm:text-sm text-stone-500">
-            Tamu undangan dapat mengirimkan hadiah tanda kasih langsung via rekening bank atau dompet digital.
+            Tamu undangan dapat mengirimkan hadiah tanda kasih langsung via transfer rekening bank atau dompet digital.
           </p>
         </div>
 

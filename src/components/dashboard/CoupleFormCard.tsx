@@ -46,7 +46,7 @@ export const CoupleFormCard: React.FC<CoupleFormCardProps> = ({
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
             <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-stone-900 text-white text-xs font-bold shadow-xs">
-              2
+              3
             </span>
             <h2 className="text-xl sm:text-2xl font-serif font-bold text-stone-900">
               Data Pasangan Mempelai

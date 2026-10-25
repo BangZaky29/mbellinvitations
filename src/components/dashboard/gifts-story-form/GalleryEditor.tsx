@@ -91,17 +91,15 @@ export const GalleryEditor: React.FC<GalleryEditorProps> = ({
   return (
     <div className="space-y-4">
       {/* Header Galeri */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200/80">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-3 border-b border-stone-200/80">
         <div className="space-y-1">
-          <div className="flex items-center gap-2.5">
-            <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-stone-900 text-white text-xs font-bold shadow-xs">
-              4
-            </span>
-            <h2 className="text-xl sm:text-2xl font-serif font-bold text-stone-900">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-stone-800 text-[22px]">photo_library</span>
+            <h3 className="text-lg font-serif font-bold text-stone-900">
               Galeri Foto Prewedding
-            </h2>
+            </h3>
           </div>
-          <p className="text-sm text-stone-500">
+          <p className="text-xs sm:text-sm text-stone-500">
             Maksimal 12 foto. Batas ukuran maks. 30MB per foto (otomatis dikonversi ke format <strong>.webp</strong> ringan).
           </p>
         </div>
