@@ -1,5 +1,9 @@
 import React from 'react';
 import type { InvitationData } from '../../../../types/invitation';
+import {
+  BetawiBatikWatermark,
+  BetawiCornerFloral,
+} from '../components';
 
 interface RsvpSectionProps {
   data: InvitationData;
@@ -14,7 +18,6 @@ interface RsvpSectionProps {
 }
 
 export const RsvpSection: React.FC<RsvpSectionProps> = ({
-  data,
   rsvpForm,
   setRsvpForm,
   handleRsvpSubmit,
@@ -26,12 +29,15 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
     rsvpForm.status === 'declined' ||
     rsvpForm.status === 'absen';
 
-  const guestName = data.guest_name || rsvpForm.name || 'Tamu Terhormat';
-
   return (
-    <section className="relative w-full px-4 pt-4 pb-6 flex flex-col items-center bg-[#410403] text-[#FAF6EE]">
+    <section className="relative w-full px-4 pt-4 pb-6 flex flex-col items-center bg-[#410403] text-[#FAF6EE] overflow-hidden">
+      {/* Pernak-pernik Batik Betawi Motif Pucuk Rebung Watermark */}
+      <BetawiBatikWatermark opacityClass="opacity-[0.06]" />
+
       {/* INTERACTIVE RSVP FORM */}
-      <div className="w-full max-w-[360px] bg-white text-[#1C1C18] p-5 rounded-2xl shadow-xl flex flex-col mb-6 border border-[#FED65B]/30 overflow-hidden">
+      <div className="relative w-full max-w-[360px] bg-white text-[#1C1C18] p-5 rounded-2xl shadow-xl flex flex-col mb-6 border border-[#FED65B]/30 overflow-hidden z-10">
+        <BetawiCornerFloral position="top-left" className="absolute top-2.5 left-2.5 w-7 h-7 text-[#FED65B]/60" />
+        <BetawiCornerFloral position="top-right" className="absolute top-2.5 right-2.5 w-7 h-7 text-[#FED65B]/60" />
         <div className="flex flex-col text-center mb-4">
           <span className="font-sans text-[11px] font-bold tracking-[0.2em] text-[#735c00] uppercase">
             KONFIRMASI KEHADIRAN
@@ -65,11 +71,10 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
               Status Kehadiran
             </label>
             <label
-              className={`flex items-center gap-2.5 p-2 rounded-xl cursor-pointer border transition-all ${
-                isAttendingFull
+              className={`flex items-center gap-2.5 p-2 rounded-xl cursor-pointer border transition-all ${isAttendingFull
                   ? 'bg-[#FED65B]/25 border-[#FED65B] font-bold text-[#410403]'
                   : 'bg-[#F6F3ED] border-[#E5E2DC] text-[#554240] hover:bg-[#F0EEE8]'
-              }`}
+                }`}
             >
               <input
                 type="radio"
@@ -87,11 +92,10 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
             </label>
 
             <label
-              className={`flex items-center gap-2.5 p-2 rounded-xl cursor-pointer border transition-all ${
-                isAttendingReceptionOnly
+              className={`flex items-center gap-2.5 p-2 rounded-xl cursor-pointer border transition-all ${isAttendingReceptionOnly
                   ? 'bg-[#FED65B]/25 border-[#FED65B] font-bold text-[#410403]'
                   : 'bg-[#F6F3ED] border-[#E5E2DC] text-[#554240] hover:bg-[#F0EEE8]'
-              }`}
+                }`}
             >
               <input
                 type="radio"
@@ -107,11 +111,10 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
             </label>
 
             <label
-              className={`flex items-center gap-2.5 p-2 rounded-xl cursor-pointer border transition-all ${
-                isDeclined
+              className={`flex items-center gap-2.5 p-2 rounded-xl cursor-pointer border transition-all ${isDeclined
                   ? 'bg-rose-50 border-rose-300 font-bold text-rose-800'
                   : 'bg-[#F6F3ED] border-[#E5E2DC] text-[#554240] hover:bg-[#F0EEE8]'
-              }`}
+                }`}
             >
               <input
                 type="radio"
@@ -180,60 +183,6 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
             <span>Kirim Doa &amp; Konfirmasi</span>
           </button>
         </form>
-      </div>
-
-      {/* PERSONALIZED VIP GUEST PASS */}
-      <div className="w-full max-w-[360px] bg-[#FCF9F3] text-[#1C1C18] p-4 sm:p-5 rounded-2xl shadow-xl flex flex-col relative overflow-hidden border border-[#FED65B]/40">
-        <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#E5E2DC]">
-          <div className="flex flex-col min-w-0">
-            <span className="font-sans text-[10px] tracking-widest text-[#735c00] uppercase font-bold">
-              DIGITAL PASS ACCREDITATION
-            </span>
-            <span className="font-serif text-base sm:text-lg font-bold text-[#410403] truncate">
-              {guestName}
-            </span>
-          </div>
-          <div className="px-2.5 py-1 rounded-full bg-[#FED65B] text-[#410403] font-sans text-xs font-bold shrink-0">
-            VIP-09
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between bg-[#F0EEE8] p-3 rounded-xl mb-3">
-          <div className="flex flex-col min-w-0">
-            <span className="font-sans text-[10px] uppercase tracking-wider text-[#554240] font-semibold">
-              Penempatan Meja
-            </span>
-            <span className="font-sans text-xs font-bold text-[#410403] truncate">
-              MEJA UTAMA FATAHILLAH • T-09
-            </span>
-          </div>
-          <span className="material-symbols-outlined text-[#735c00] text-[24px] shrink-0">
-            table_restaurant
-          </span>
-        </div>
-
-        {/* Simulated Barcode */}
-        <div className="w-full bg-white p-2.5 rounded-xl border border-[#E5E2DC] flex flex-col items-center">
-          <div className="flex items-center justify-center gap-1 h-9 w-full px-2 overflow-hidden">
-            <div className="w-1 h-full bg-[#1C1C18]" />
-            <div className="w-2 h-full bg-[#1C1C18]" />
-            <div className="w-0.5 h-full bg-[#1C1C18]" />
-            <div className="w-1.5 h-full bg-[#1C1C18]" />
-            <div className="w-3 h-full bg-[#1C1C18]" />
-            <div className="w-1 h-full bg-[#1C1C18]" />
-            <div className="w-0.5 h-full bg-[#1C1C18]" />
-            <div className="w-2 h-full bg-[#1C1C18]" />
-            <div className="w-1.5 h-full bg-[#1C1C18]" />
-            <div className="w-2.5 h-full bg-[#1C1C18]" />
-            <div className="w-0.5 h-full bg-[#1C1C18]" />
-            <div className="w-1.5 h-full bg-[#1C1C18]" />
-            <div className="w-3 h-full bg-[#1C1C18]" />
-            <div className="w-1 h-full bg-[#1C1C18]" />
-          </div>
-          <span className="font-mono text-[10px] tracking-widest uppercase text-[#88726F] mt-1 font-semibold">
-            BTW-2026-VIP-099
-          </span>
-        </div>
       </div>
     </section>
   );

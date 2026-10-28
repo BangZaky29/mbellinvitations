@@ -1,5 +1,10 @@
 import React from 'react';
 import type { InvitationData, CoupleInfo } from '../../../../types/invitation';
+import {
+  BetawiBatikWatermark,
+  BetawiCornerFloral,
+  BetawiGigiBalangDivider,
+} from '../components';
 
 interface CoupleSectionProps {
   data: InvitationData;
@@ -45,8 +50,11 @@ export const CoupleSection: React.FC<CoupleSectionProps> = ({
   const renderGroomCard = () => (
     <div
       key="groom"
-      className="w-full bg-white p-5 rounded-2xl shadow-sm border border-[#E5E2DC] flex flex-col items-center text-center relative overflow-hidden"
+      className="w-full bg-white p-5 rounded-2xl shadow-sm border border-[#E5E2DC] flex flex-col items-center text-center relative overflow-hidden z-10"
     >
+      <BetawiCornerFloral position="top-left" className="absolute top-2 left-2 w-6 h-6 text-[#FED65B]/60" />
+      <BetawiCornerFloral position="top-right" className="absolute top-2 right-2 w-6 h-6 text-[#FED65B]/60" />
+
       <div className="w-28 h-36 rounded-t-full overflow-hidden shadow-md mb-3 bg-[#5E1914] p-1 border border-[#FED65B]/40">
         <img
           alt={groomName}
@@ -82,8 +90,11 @@ export const CoupleSection: React.FC<CoupleSectionProps> = ({
   const renderBrideCard = () => (
     <div
       key="bride"
-      className="w-full bg-white p-5 rounded-2xl shadow-sm border border-[#E5E2DC] flex flex-col items-center text-center relative overflow-hidden"
+      className="w-full bg-white p-5 rounded-2xl shadow-sm border border-[#E5E2DC] flex flex-col items-center text-center relative overflow-hidden z-10"
     >
+      <BetawiCornerFloral position="top-left" className="absolute top-2 left-2 w-6 h-6 text-[#FED65B]/60" />
+      <BetawiCornerFloral position="top-right" className="absolute top-2 right-2 w-6 h-6 text-[#FED65B]/60" />
+
       <div className="w-28 h-36 rounded-t-full overflow-hidden shadow-md mb-3 bg-[#5E1914] p-1 border border-[#FED65B]/40">
         <img
           alt={brideName}
@@ -117,32 +128,23 @@ export const CoupleSection: React.FC<CoupleSectionProps> = ({
   );
 
   return (
-    <section className="relative w-full bg-[#FCF9F3] text-[#1C1C18] px-4 py-4 flex flex-col items-center">
-      <div className="w-full max-w-[360px] flex flex-col gap-4">
+    <section className="relative w-full bg-[#FCF9F3] text-[#1C1C18] px-4 py-4 flex flex-col items-center overflow-hidden">
+      {/* Pernak-pernik Batik Betawi Motif Pucuk Rebung Watermark (Ivory Tone) */}
+      <BetawiBatikWatermark color="#5E1914" opacityClass="opacity-[0.035]" />
+
+      <div className="w-full max-w-[360px] flex flex-col gap-3 relative z-10">
         {isBrideFirst ? (
           <>
             {renderBrideCard()}
-            {/* Betawi Love Knot Divider */}
-            <div className="flex items-center justify-center gap-2 py-1">
-              <div className="h-px w-12 bg-[#FED65B]" />
-              <span className="material-symbols-outlined text-[#5E1914] text-[18px]">
-                favorite
-              </span>
-              <div className="h-px w-12 bg-[#FED65B]" />
-            </div>
+            {/* Betawi Gigi Balang & Melati Love Divider */}
+            <BetawiGigiBalangDivider className="w-full my-1" color="#5E1914" />
             {renderGroomCard()}
           </>
         ) : (
           <>
             {renderGroomCard()}
-            {/* Betawi Love Knot Divider */}
-            <div className="flex items-center justify-center gap-2 py-1">
-              <div className="h-px w-12 bg-[#FED65B]" />
-              <span className="material-symbols-outlined text-[#5E1914] text-[18px]">
-                favorite
-              </span>
-              <div className="h-px w-12 bg-[#FED65B]" />
-            </div>
+            {/* Betawi Gigi Balang & Melati Love Divider */}
+            <BetawiGigiBalangDivider className="w-full my-1" color="#5E1914" />
             {renderBrideCard()}
           </>
         )}

@@ -6,6 +6,10 @@ import { SleekToast } from '../../common/SleekToast';
 import { GalleryLightbox } from '../../common/GalleryLightbox';
 import { DraggableCoverSheet } from '../../common/DraggableCoverSheet';
 import {
+  BetawiBatikWatermark,
+  FloatingJasminePetals,
+} from './components';
+import {
   CoverSection,
   HeroSection,
   QuoteSection,
@@ -130,7 +134,11 @@ export const TemplateBetawi: React.FC<InvitationProps> = ({
         className="w-full max-w-[430px] min-h-screen flex flex-col relative bg-[#410403] shadow-[0_0_80px_rgba(0,0,0,0.95)] overflow-x-clip no-scrollbar border-x border-[#FED65B]/20"
         style={{ backgroundColor: '#410403' }}
       >
-        <main className="flex-1 flex flex-col w-full bg-[#410403] relative">
+        {/* Pernak-pernik Latar Belakang Khas Betawi (Batik Pucuk Rebung & Melati Ronce) */}
+        <BetawiBatikWatermark />
+        <FloatingJasminePetals isPreview={isPreview} />
+
+        <main className="flex-1 flex flex-col w-full bg-transparent relative z-10">
           <div
             className={`flex flex-col w-full text-[#FCF9F3] relative ${
               !isOpen
@@ -231,7 +239,7 @@ export const TemplateBetawi: React.FC<InvitationProps> = ({
                 />
               )}
 
-              {/* RSVP & DIGITAL PASS MEJA VIP */}
+              {/* RSVP & DOA RESTU */}
               {isSectionActive('rsvp') && (
                 <RsvpSection
                   data={data}

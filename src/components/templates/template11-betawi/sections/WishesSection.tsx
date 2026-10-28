@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import type { WishItem } from '../../../../types/invitation';
 import { formatWishTime } from '../../../../utils/dateHelper';
+import {
+  BetawiBatikWatermark,
+  BetawiCornerFloral,
+} from '../components';
 
 interface WishesSectionProps {
   wishes: WishItem[];
@@ -40,21 +44,24 @@ export const WishesSection: React.FC<WishesSectionProps> = ({ wishes }) => {
   const displayedItems = items.slice(0, visibleCount);
 
   return (
-    <section className="relative w-full px-4 pt-2 pb-6 flex flex-col items-center bg-[#410403] text-[#FAF6EE]">
+    <section className="relative w-full px-4 pt-2 pb-6 flex flex-col items-center bg-[#410403] text-[#FAF6EE] overflow-hidden">
+      {/* Pernak-pernik Batik Betawi Motif Pucuk Rebung Watermark */}
+      <BetawiBatikWatermark opacityClass="opacity-[0.06]" />
+
       {/* Title */}
-      <div className="flex items-center gap-1.5 mb-1 text-[#FED65B]">
+      <div className="flex items-center gap-1.5 mb-1 text-[#FED65B] z-10">
         <span className="material-symbols-outlined text-[18px]">forum</span>
         <span className="font-sans text-[11px] uppercase tracking-widest font-bold">
           BUKU TAMU &amp; DOA RESTU
         </span>
       </div>
 
-      <h2 className="font-serif text-2xl sm:text-3xl text-[#FCF9F3] font-bold text-center mb-5">
+      <h2 className="font-serif text-2xl sm:text-3xl text-[#FCF9F3] font-bold text-center mb-5 z-10">
         Untaian Doa Kebaikan
       </h2>
 
       {/* Wishes List Container */}
-      <div className="w-full max-w-[360px] flex flex-col gap-3">
+      <div className="w-full max-w-[360px] flex flex-col gap-3 z-10">
         {displayedItems.map((wish, idx) => {
           const guestName =
             wish.guest_name ||
@@ -74,8 +81,10 @@ export const WishesSection: React.FC<WishesSectionProps> = ({ wishes }) => {
           return (
             <div
               key={wish.id || idx}
-              className="bg-white text-[#1C1C18] rounded-2xl p-4 shadow-sm border border-[#FED65B]/30 flex flex-col gap-1.5 overflow-hidden"
+              className="bg-white text-[#1C1C18] rounded-2xl p-4 shadow-sm border border-[#FED65B]/30 flex flex-col gap-1.5 relative overflow-hidden"
             >
+              <BetawiCornerFloral position="top-left" className="absolute top-1.5 left-1.5 w-5 h-5 text-[#FED65B]/40" />
+              <BetawiCornerFloral position="top-right" className="absolute top-1.5 right-1.5 w-5 h-5 text-[#FED65B]/40" />
               <div className="flex items-center justify-between gap-2">
                 <span className="font-serif text-sm font-bold text-[#410403] break-words [overflow-wrap:anywhere] min-w-0 flex-1">
                   {guestName}

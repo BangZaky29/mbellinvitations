@@ -1,7 +1,11 @@
 import React from 'react';
 import type { InvitationData } from '../../../../types/invitation';
 import { VenueMapEmbed } from '../../../common/VenueMapEmbed';
-import { TornPaperDivider } from '../components';
+import {
+  TornPaperDivider,
+  BetawiBatikWatermark,
+  BetawiCornerFloral,
+} from '../components';
 
 interface EventSectionProps {
   data: InvitationData;
@@ -28,9 +32,12 @@ export const EventSection: React.FC<EventSectionProps> = ({
       <TornPaperDivider direction="ivory-to-maroon" fillColor="#410403" />
 
       {/* RITUAL & TRADISI PALANG PINTU (Rich Betawi Maroon) */}
-      <section className="relative w-full bg-[#410403] text-[#FAF6EE] px-4 pt-6 pb-10 flex flex-col items-center">
+      <section className="relative w-full bg-[#410403] text-[#FAF6EE] px-4 pt-6 pb-10 flex flex-col items-center overflow-hidden">
+        {/* Pernak-pernik Batik Betawi Motif Pucuk Rebung Watermark */}
+        <BetawiBatikWatermark opacityClass="opacity-[0.06]" />
+
         {/* Section Header */}
-        <div className="flex flex-col items-center text-center mb-6">
+        <div className="flex flex-col items-center text-center mb-6 z-10">
           <div className="w-10 h-10 rounded-full bg-[#FED65B]/20 text-[#FED65B] flex items-center justify-center mb-2 border border-[#FED65B]/30">
             <span className="material-symbols-outlined text-[20px]">
               sports_martial_arts
@@ -48,7 +55,7 @@ export const EventSection: React.FC<EventSectionProps> = ({
         </div>
 
         {/* Dynamic Events Timeline with Precision Axis */}
-        <div className="relative w-full max-w-[360px] flex flex-col gap-6">
+        <div className="relative w-full max-w-[360px] flex flex-col gap-6 z-10">
           {/* Continuous Track Line if more than 1 event: perfectly centered at left-4 (16px) */}
           {events.length > 1 && (
             <div className="absolute top-[18px] bottom-[18px] left-4 -translate-x-1/2 w-0.5 bg-gradient-to-b from-[#FED65B] via-[#FFE088] to-[#FED65B]/40 opacity-50 pointer-events-none z-0" />
@@ -95,12 +102,14 @@ export const EventSection: React.FC<EventSectionProps> = ({
 
                 {/* Event Card (Card Integrity: overflow-hidden, break-words) */}
                 <div
-                  className={`bg-[#5E1914]/70 backdrop-blur-md rounded-2xl p-4 sm:p-5 flex-1 min-w-0 shadow-lg flex flex-col border transition-all overflow-hidden ${
+                  className={`bg-[#5E1914]/70 backdrop-blur-md rounded-2xl p-4 sm:p-5 flex-1 min-w-0 shadow-lg flex flex-col border transition-all relative overflow-hidden ${
                     isCountdownEvent
                       ? 'border-[#FED65B] ring-1 ring-[#FED65B]/50'
                       : 'border-[#FED65B]/25'
                   }`}
                 >
+                  <BetawiCornerFloral position="top-left" className="absolute top-1.5 left-1.5 w-5 h-5 text-[#FED65B]/35" />
+                  <BetawiCornerFloral position="top-right" className="absolute top-1.5 right-1.5 w-5 h-5 text-[#FED65B]/35" />
                   {/* Badges: Time & Procession */}
                   <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
                     <span className="font-sans text-[11px] font-bold text-[#FED65B] tracking-wider uppercase">

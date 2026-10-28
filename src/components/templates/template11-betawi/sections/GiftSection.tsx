@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import type { InvitationData } from '../../../../types/invitation';
-import { TornPaperDivider } from '../components';
+import {
+  TornPaperDivider,
+  BetawiBatikWatermark,
+  BetawiCornerFloral,
+} from '../components';
 
 interface GiftSectionProps {
   data: InvitationData;
@@ -49,24 +53,27 @@ export const GiftSection: React.FC<GiftSectionProps> = ({
       <TornPaperDivider direction="ivory-to-maroon" fillColor="#410403" />
 
       {/* AMPLOD DIGITAL (Maroon Canvas) */}
-      <section className="relative w-full bg-[#410403] text-[#FAF6EE] px-4 pt-6 pb-8 flex flex-col items-center text-center">
-        <div className="w-10 h-10 rounded-full bg-[#FED65B]/20 text-[#FED65B] flex items-center justify-center mb-2 border border-[#FED65B]/30">
+      <section className="relative w-full bg-[#410403] text-[#FAF6EE] px-4 pt-6 pb-8 flex flex-col items-center text-center overflow-hidden">
+        {/* Pernak-pernik Batik Betawi Motif Pucuk Rebung Watermark */}
+        <BetawiBatikWatermark opacityClass="opacity-[0.06]" />
+
+        <div className="w-10 h-10 rounded-full bg-[#FED65B]/20 text-[#FED65B] flex items-center justify-center mb-2 border border-[#FED65B]/30 z-10">
           <span className="material-symbols-outlined text-[20px]">
             card_giftcard
           </span>
         </div>
-        <span className="font-sans text-[11px] font-bold tracking-[0.2em] text-[#FED65B] uppercase mb-1">
+        <span className="font-sans text-[11px] font-bold tracking-[0.2em] text-[#FED65B] uppercase mb-1 z-10">
           TANDA KASIH
         </span>
-        <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#FCF9F3] mb-2">
+        <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#FCF9F3] mb-2 z-10">
           Amplop Digital
         </h2>
-        <p className="font-serif text-xs text-[#E5E2DC]/80 max-w-[300px] mb-5 leading-relaxed">
+        <p className="font-serif text-xs text-[#E5E2DC]/80 max-w-[300px] mb-5 leading-relaxed z-10">
           Doa restu Anda merupakan karunia terindah bagi kami. Apabila berkenan memberikan tanda kasih, dapat disalurkan melalui:
         </p>
 
         {/* Bank Cards Container */}
-        <div className="w-full max-w-[360px] flex flex-col gap-3 mb-4">
+        <div className="w-full max-w-[360px] flex flex-col gap-3 mb-4 z-10">
           {bankAccounts.map((acc: any, idx: number) => {
             const bankTitle = acc.bank_name || acc.name || 'Bank Transfer';
             const accNum = acc.account_number || acc.number || '';
@@ -75,8 +82,11 @@ export const GiftSection: React.FC<GiftSectionProps> = ({
             return (
               <div
                 key={idx}
-                className="w-full bg-white text-[#1C1C18] p-4 rounded-2xl shadow-lg border border-[#FED65B]/30 flex flex-col text-left overflow-hidden"
+                className="w-full bg-white text-[#1C1C18] p-4 rounded-2xl shadow-lg border border-[#FED65B]/30 flex flex-col text-left relative overflow-hidden"
               >
+                <BetawiCornerFloral position="top-left" className="absolute top-2 left-2 w-6 h-6 text-[#FED65B]/60" />
+                <BetawiCornerFloral position="top-right" className="absolute top-2 right-2 w-6 h-6 text-[#FED65B]/60" />
+
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-sans text-xs font-bold text-[#410403] uppercase tracking-wide break-words [overflow-wrap:anywhere]">
                     {bankTitle}

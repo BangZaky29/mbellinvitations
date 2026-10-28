@@ -1,6 +1,11 @@
 import React from 'react';
 import type { InvitationData, CoupleInfo } from '../../../../types/invitation';
-import { KembangKelapaCrest, GigiBalangHorizontalBorder } from '../components';
+import {
+  KembangKelapaCrest,
+  GigiBalangHorizontalBorder,
+  BetawiBatikWatermark,
+  BetawiCornerFloral,
+} from '../components';
 
 interface CoverSectionProps {
   data: InvitationData;
@@ -32,8 +37,9 @@ export const CoverSection: React.FC<CoverSectionProps> = ({
 
   return (
     <div className="relative w-full h-full min-h-full bg-[#410403] text-[#FAF6EE] flex flex-col justify-between items-center px-4 py-3 sm:py-5 overflow-hidden select-none">
-      {/* Background Ambience Vignette */}
+      {/* Background Ambience Vignette & Betawi Batik Motif */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#410403] via-[#5E1914]/85 to-[#300202] pointer-events-none z-0" />
+      <BetawiBatikWatermark opacityClass="opacity-[0.06]" />
 
       {/* Top Header: Traditional Betawi Crest & Greeting */}
       <div className="relative z-10 w-full flex flex-col items-center text-center pt-1 shrink-0">
@@ -74,7 +80,9 @@ export const CoverSection: React.FC<CoverSectionProps> = ({
       {/* Bottom Card: Recipient Info & Buka Undangan CTA */}
       <div className="relative z-10 w-full max-w-[340px] flex flex-col items-center text-center space-y-2 sm:space-y-2.5 pb-1 shrink-0 mt-auto">
         {/* Card Tamu Undangan */}
-        <div className="w-full bg-[#5E1914]/80 backdrop-blur-md border border-[#FED65B]/30 rounded-xl px-3.5 py-2 sm:py-2.5 shadow-lg flex flex-col items-center">
+        <div className="relative w-full bg-[#5E1914]/80 backdrop-blur-md border border-[#FED65B]/30 rounded-xl px-3.5 py-2.5 sm:py-3 shadow-lg flex flex-col items-center overflow-hidden">
+          <BetawiCornerFloral position="top-left" className="absolute top-1 left-1 w-5 h-5 opacity-40 text-[#FED65B]" />
+          <BetawiCornerFloral position="top-right" className="absolute top-1 right-1 w-5 h-5 opacity-40 text-[#FED65B]" />
           <span className="text-[9.5px] uppercase tracking-widest text-[#FFE088]/80">
             Kepada Yth. Bapak/Ibu/Saudara/i:
           </span>

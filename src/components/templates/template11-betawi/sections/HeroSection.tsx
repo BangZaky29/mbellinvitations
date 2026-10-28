@@ -4,6 +4,9 @@ import {
   KembangKelapaCrest,
   GigiBalangVerticalBorder,
   TornPaperDivider,
+  BetawiBatikWatermark,
+  BetawiCornerFloral,
+  BetawiGigiBalangDivider,
 } from '../components';
 import { LiveStreamBanner } from '../../../common/LiveStreamBanner';
 
@@ -29,9 +32,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const isLivestreamActive = isSectionActive
     ? isSectionActive('livestream')
     : effectiveTheme?.show_livestream !== false &&
-      (!effectiveTheme?.active_sections ||
-        effectiveTheme.active_sections.includes('livestream') ||
-        effectiveTheme.active_sections.includes('live_stream'));
+    (!effectiveTheme?.active_sections ||
+      effectiveTheme.active_sections.includes('livestream') ||
+      effectiveTheme.active_sections.includes('live_stream'));
 
   const couplePhoto =
     data.couple_photo ||
@@ -43,8 +46,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const events = Array.isArray(rawEvents)
     ? rawEvents
     : rawEvents && typeof rawEvents === 'object'
-    ? Object.values(rawEvents)
-    : [];
+      ? Object.values(rawEvents)
+      : [];
 
   const activeTargetIdx =
     data.countdown_target === 'resepsi' && events.length > 1 ? 1 : 0;
@@ -95,7 +98,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const targetDate =
     parseEventDate(targetEvent?.date) ||
     (data.wedding_date_iso &&
-    !isNaN(new Date(data.wedding_date_iso).getTime())
+      !isNaN(new Date(data.wedding_date_iso).getTime())
       ? new Date(data.wedding_date_iso)
       : new Date(2026, 11, 19));
 
@@ -138,6 +141,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           SUB-SECTION 1: HERO & CREST (Deep Betawi Maroon)
           ======================================================== */}
       <section className="relative w-full bg-[#410403] text-[#FAF6EE] px-4 pt-8 pb-10 flex flex-col items-center text-center overflow-hidden">
+        {/* Pernak-pernik Batik Betawi Motif Pucuk Rebung Watermark */}
+        <BetawiBatikWatermark opacityClass="opacity-[0.06]" />
+
         {/* Left & Right Sawtooth Borders (Gigi Balang Hairline Motifs) */}
         <GigiBalangVerticalBorder />
 
@@ -164,16 +170,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           <h1 className="font-serif text-3xl sm:text-4xl text-[#FCF9F3] tracking-tight leading-none font-bold">
             {brideName.toUpperCase()}
           </h1>
-        </div>
-
-        {/* Ambient Audio Pill */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/40 backdrop-blur-md text-[#FED65B] shadow-md mb-6 z-10 border border-[#FED65B]/20">
-          <span className="material-symbols-outlined text-[16px] animate-pulse">
-            music_note
-          </span>
-          <span className="font-sans text-[11px] tracking-wider uppercase font-semibold">
-            Gambang Kromong • Lagu Sirih Kuning
-          </span>
         </div>
 
         {/* Arch-framed Centerpiece Photo */}
@@ -205,9 +201,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       {/* ========================================================
           SUB-SECTION 2: SAVE THE DATE, COUNTDOWN & CALENDAR (Ivory)
           ======================================================== */}
-      <section className="relative w-full bg-[#FCF9F3] text-[#1C1C18] px-4 pt-6 pb-8 flex flex-col items-center text-center">
+      <section className="relative w-full bg-[#FCF9F3] text-[#1C1C18] px-4 pt-6 pb-8 flex flex-col items-center text-center overflow-hidden">
+        {/* Pernak-pernik Batik Betawi Motif Pucuk Rebung Watermark (Ivory Tone) */}
+        <BetawiBatikWatermark color="#5E1914" opacityClass="opacity-[0.035]" />
+
         {/* Calendar & Countdown Card */}
-        <div className="w-full max-w-[360px] bg-white p-5 rounded-2xl shadow-sm border border-[#E5E2DC] flex flex-col items-center">
+        <div className="relative w-full max-w-[360px] bg-white p-5 rounded-2xl shadow-sm border border-[#E5E2DC] flex flex-col items-center overflow-hidden z-10">
+          <BetawiCornerFloral position="top-left" className="absolute top-2 left-2 w-6 h-6 text-[#FED65B]/60" />
+          <BetawiCornerFloral position="top-right" className="absolute top-2 right-2 w-6 h-6 text-[#FED65B]/60" />
+
           <span className="font-sans text-[11px] font-semibold tracking-[0.2em] text-[#735c00] uppercase mb-1">
             SAVE THE DATE
           </span>
@@ -216,7 +218,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </h3>
 
           {/* Calendar Month Grid */}
-          <div className="w-full max-w-[320px] mb-5">
+          <div className="w-full max-w-[320px] mb-3">
             <div className="grid grid-cols-7 text-center font-sans text-[11px] text-[#88726F] mb-2 font-bold">
               <span>MIN</span>
               <span>SEN</span>
@@ -260,6 +262,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               })}
             </div>
           </div>
+
+          {/* Pernak-pernik Divider Khas Gigi Balang Lisplang Betawi */}
+          <BetawiGigiBalangDivider className="w-full my-2" color="#5E1914" />
 
           {/* 4-Tile Live Countdown Timer */}
           <div className="grid grid-cols-4 gap-2 w-full max-w-[320px] mb-4">

@@ -1,6 +1,10 @@
 import React from 'react';
 import type { InvitationData } from '../../../../types/invitation';
-import { TornPaperDivider } from '../components';
+import {
+  TornPaperDivider,
+  BetawiBatikWatermark,
+  BetawiGigiBalangDivider,
+} from '../components';
 
 interface DresscodeSectionProps {
   data: InvitationData;
@@ -33,12 +37,13 @@ export const DresscodeSection: React.FC<DresscodeSectionProps> = ({ data }) => {
       {/* Torn Paper Transition (Maroon to Ivory) */}
       <TornPaperDivider direction="maroon-to-ivory" fillColor="#FCF9F3" />
 
-      <section className="relative w-full bg-[#FCF9F3] text-[#1C1C18] px-4 pt-4 pb-8 flex flex-col items-center text-center">
-        {/* Cultural Sawtooth Motif */}
-        <div className="flex items-center gap-1.5 mb-2 opacity-60">
-          <svg className="w-8 h-2 text-[#735c00] fill-current" viewBox="0 0 32 8">
-            <polygon fill="currentColor" points="0,0 8,8 16,0 24,8 32,0" />
-          </svg>
+      <section className="relative w-full bg-[#FCF9F3] text-[#1C1C18] px-4 pt-4 pb-8 flex flex-col items-center text-center overflow-hidden">
+        {/* Pernak-pernik Batik Betawi Motif Pucuk Rebung Watermark (Ivory Tone) */}
+        <BetawiBatikWatermark color="#5E1914" opacityClass="opacity-[0.035]" />
+
+        {/* Pernak-pernik Gigi Balang Eaves */}
+        <div className="relative z-10 w-full max-w-[200px] mb-2">
+          <BetawiGigiBalangDivider className="w-full my-1" color="#5E1914" />
         </div>
 
         <span className="font-sans text-[11px] font-bold tracking-[0.2em] text-[#735c00] uppercase mb-1">

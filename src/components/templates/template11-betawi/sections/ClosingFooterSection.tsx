@@ -1,5 +1,10 @@
 import React from 'react';
 import type { InvitationData, CoupleInfo } from '../../../../types/invitation';
+import {
+  BetawiBatikWatermark,
+  BetawiCornerFloral,
+  BetawiGigiBalangDivider,
+} from '../components';
 
 interface ClosingFooterSectionProps {
   data: InvitationData;
@@ -21,8 +26,14 @@ export const ClosingFooterSection: React.FC<ClosingFooterSectionProps> = ({
 
   return (
     <footer className="relative w-full px-4 pt-4 pb-20 flex flex-col items-center bg-[#410403] text-[#FAF6EE] overflow-hidden">
+      {/* Pernak-pernik Batik Betawi Motif Pucuk Rebung Watermark */}
+      <BetawiBatikWatermark opacityClass="opacity-[0.06]" />
+
       {/* Emotional Closing Card */}
-      <div className="w-full max-w-[360px] bg-white text-[#1C1C18] rounded-2xl p-6 text-center shadow-2xl relative overflow-hidden flex flex-col items-center border border-[#FED65B]/40 mb-8">
+      <div className="w-full max-w-[360px] bg-white text-[#1C1C18] rounded-2xl p-6 text-center shadow-2xl relative overflow-hidden flex flex-col items-center border border-[#FED65B]/40 mb-8 z-10">
+        <BetawiCornerFloral position="top-left" className="absolute top-2.5 left-2.5 w-7 h-7 text-[#FED65B]/60" />
+        <BetawiCornerFloral position="top-right" className="absolute top-2.5 right-2.5 w-7 h-7 text-[#FED65B]/60" />
+
         <svg
           className="w-10 h-6 text-[#735c00] mb-2 fill-current"
           viewBox="0 0 40 24"
@@ -38,11 +49,11 @@ export const ClosingFooterSection: React.FC<ClosingFooterSectionProps> = ({
           “Jaga Sehat Selalu, Abang &amp; Mpok Sekeluarga”
         </p>
 
-        <p className="font-serif text-xs text-[#554240] leading-relaxed mb-4 max-w-[280px]">
+        <p className="font-serif text-xs text-[#554240] leading-relaxed mb-3 max-w-[280px]">
           Merupakan sebuah kehormatan dan kebahagiaan bagi kami sekeluarga atas doa, restu, dan kehadiran yang tercurah.
         </p>
 
-        <div className="h-px w-20 bg-[#FED65B] mb-3" />
+        <BetawiGigiBalangDivider className="w-full my-2" color="#5E1914" />
 
         <p className="font-sans text-[10.5px] text-[#88726F] tracking-wider uppercase font-semibold">
           Kami yang berbahagia,

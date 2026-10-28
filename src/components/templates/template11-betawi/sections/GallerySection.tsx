@@ -1,5 +1,6 @@
 import React from 'react';
 import type { InvitationData } from '../../../../types/invitation';
+import { BetawiBatikWatermark } from '../components';
 
 interface GallerySectionProps {
   data: InvitationData;
@@ -31,9 +32,12 @@ export const GallerySection: React.FC<GallerySectionProps> = ({
   const displayPhotos = showAllGallery ? photos : photos.slice(0, 4);
 
   return (
-    <section className="relative w-full bg-[#FCF9F3] text-[#1C1C18] px-4 pt-4 pb-8 flex flex-col items-center">
+    <section className="relative w-full bg-[#FCF9F3] text-[#1C1C18] px-4 pt-4 pb-8 flex flex-col items-center overflow-hidden">
+      {/* Pernak-pernik Batik Betawi Motif Pucuk Rebung Watermark (Ivory Tone) */}
+      <BetawiBatikWatermark color="#5E1914" opacityClass="opacity-[0.035]" />
+
       {/* Header */}
-      <div className="flex flex-col items-center text-center mb-5">
+      <div className="flex flex-col items-center text-center mb-5 z-10">
         <span className="font-sans text-[11px] font-bold tracking-[0.2em] text-[#735c00] uppercase mb-1">
           POTRET KENANGAN
         </span>

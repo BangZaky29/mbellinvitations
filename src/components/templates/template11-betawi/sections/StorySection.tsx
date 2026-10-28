@@ -1,5 +1,9 @@
 import React from 'react';
 import type { InvitationData } from '../../../../types/invitation';
+import {
+  BetawiBatikWatermark,
+  BetawiCornerFloral,
+} from '../components';
 
 interface StorySectionProps {
   data: InvitationData;
@@ -10,9 +14,12 @@ export const StorySection: React.FC<StorySectionProps> = ({ data }) => {
   if (!data.love_story || data.love_story.length === 0) return null;
 
   return (
-    <section className="relative w-full px-4 py-8 flex flex-col items-center bg-[#FCF9F3] text-[#1C1C18]">
+    <section className="relative w-full px-4 py-8 flex flex-col items-center bg-[#FCF9F3] text-[#1C1C18] overflow-hidden">
+      {/* Pernak-pernik Batik Betawi Motif Pucuk Rebung Watermark (Ivory Tone) */}
+      <BetawiBatikWatermark color="#5E1914" opacityClass="opacity-[0.035]" />
+
       {/* Header */}
-      <div className="flex flex-col items-center text-center mb-6">
+      <div className="flex flex-col items-center text-center mb-6 z-10">
         <div className="flex items-center gap-1.5 mb-1 text-[#735c00]">
           <span className="material-symbols-outlined text-[18px]">favorite</span>
           <span className="font-sans text-[11px] uppercase tracking-[0.2em] font-bold">
@@ -28,7 +35,7 @@ export const StorySection: React.FC<StorySectionProps> = ({ data }) => {
       </div>
 
       {/* Timeline Container */}
-      <div className="relative w-full max-w-[360px] flex flex-col gap-5">
+      <div className="relative w-full max-w-[360px] flex flex-col gap-5 z-10">
         {/* Continuous luminous spine: perfectly centered at left-4 (16px) */}
         {data.love_story.length > 1 && (
           <div className="absolute top-[18px] bottom-[18px] left-4 -translate-x-1/2 w-0.5 bg-gradient-to-b from-[#FED65B] via-[#5E1914] to-[#FED65B] opacity-40 pointer-events-none z-0" />
@@ -48,7 +55,9 @@ export const StorySection: React.FC<StorySectionProps> = ({ data }) => {
               </div>
 
               {/* Story Content Card */}
-              <div className="bg-white rounded-2xl p-4 flex-1 min-w-0 shadow-sm border border-[#E5E2DC] hover:border-[#FED65B] transition-colors overflow-hidden">
+              <div className="bg-white rounded-2xl p-4 flex-1 min-w-0 shadow-sm border border-[#E5E2DC] hover:border-[#FED65B] transition-colors relative overflow-hidden">
+                <BetawiCornerFloral position="top-left" className="absolute top-1.5 left-1.5 w-5 h-5 text-[#FED65B]/50" />
+                <BetawiCornerFloral position="top-right" className="absolute top-1.5 right-1.5 w-5 h-5 text-[#FED65B]/50" />
                 <div className="flex items-center justify-between mb-1.5 gap-2">
                   <span className="px-2.5 py-0.5 rounded-full bg-[#5E1914] text-[#FED65B] font-sans text-[10px] font-bold tracking-widest uppercase border border-[#FED65B]/40 shadow-2xs">
                     Tahun {milestone.year}
