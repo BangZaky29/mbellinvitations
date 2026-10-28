@@ -15,7 +15,7 @@ import {
 } from '../pages/dashboard/constants/themeMapping';
 import type { DashboardUser } from './useDashboardAuth';
 
-import { computeCoupleSlug, getCanonicalPublishedSlug } from '../pages/dashboard/helpers/computeCoupleSlug';
+import { computeCoupleSlug, getCanonicalPublishedSlug, generateUniqueSlug } from '../pages/dashboard/helpers/computeCoupleSlug';
 import {
   computeAuditTrail,
   type FieldChangeDetail,
@@ -513,9 +513,21 @@ export function useDashboardSave({
       const template_id = THEME_TO_TEMPLATE_ID[formData.theme_id || 'modern'] || 'template1';
       const coupleSlug = computeCoupleSlug(formData.groom?.name, formData.bride?.name);
       const isCurrentlyPublished = Boolean(formData.status === 'published' || isAlreadyPublished || liveBaseline);
-      const targetSlug = isCurrentlyPublished
+      const rawTargetSlug = isCurrentlyPublished
         ? getCanonicalPublishedSlug(formData.slug, formData.groom?.name, formData.bride?.name)
         : (formData.slug || coupleSlug || 'undangan-baru');
+
+      // 🔒 Slug Collision Prevention: Pastikan slug unik antar user berbeda
+      const { slug: targetSlug, wasSuffixed } = await generateUniqueSlug(
+        rawTargetSlug,
+        user?.id,
+        currentTemplateRecordId
+      );
+
+      // Sinkronisasi slug baru ke formData jika ada suffix
+      if (wasSuffixed) {
+        setFormData((prev) => ({ ...prev, slug: targetSlug }));
+      }
 
       // Blokir permanen raditya-jessica agar tidak pernah disimpan kembali
       const isRadityaJessica =
@@ -652,13 +664,16 @@ export function useDashboardSave({
       const isLiveAlready = formData.status === 'published';
       setSaveToast({
         show: true,
-        message: isLiveAlready
+        message: wasSuffixed
+          ? `Tersimpan! Slug otomatis menjadi "${targetSlug}" karena slug asli sudah digunakan user lain.`
+          : isLiveAlready
           ? 'Perubahan berhasil disimpan & langsung aktif di tautan live!'
           : user?.id
           ? 'Perubahan berhasil disimpan ke database!'
           : 'Berhasil Disimpan! Perubahan template telah tersimpan.',
         isError: false,
-      }, 3500);
+        type: wasSuffixed ? 'info' : 'success',
+      }, wasSuffixed ? 5000 : 3500);
     } catch (err: any) {
       console.error('Manual save exception:', err);
       setSaveToast({
@@ -678,7 +693,18 @@ export function useDashboardSave({
       const template_id = THEME_TO_TEMPLATE_ID[formData.theme_id || 'modern'] || 'template1';
       // Pastikan slug mengikuti nama kedua mempelai secara dinamis
       const coupleSlug = computeCoupleSlug(formData.groom?.name, formData.bride?.name);
-      const targetSlug = formData.slug || coupleSlug || 'undangan-baru';
+      const rawTargetSlug = formData.slug || coupleSlug || 'undangan-baru';
+
+      // 🔒 Slug Collision Prevention
+      const { slug: targetSlug, wasSuffixed } = await generateUniqueSlug(
+        rawTargetSlug,
+        user?.id,
+        currentTemplateRecordId
+      );
+
+      if (wasSuffixed) {
+        setFormData((prev) => ({ ...prev, slug: targetSlug }));
+      }
 
       // Blokir permanen raditya-jessica agar tidak pernah disimpan kembali
       const isRadityaJessica =

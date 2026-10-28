@@ -19,6 +19,7 @@ import {
 import {
   computeCoupleSlug,
   getCanonicalPublishedSlug,
+  isSlugAvailable,
 } from '../pages/dashboard/helpers/computeCoupleSlug';
 import { parseSupabaseUser, type DashboardUser } from './useDashboardAuth';
 
@@ -792,6 +793,23 @@ export function useDashboardEditor(options?: UseDashboardEditorOptions) {
     if (!cleanSlug) return;
 
     const oldSlug = formData.slug || computeCoupleSlug(formData.groom?.name, formData.bride?.name) || 'undangan-baru';
+
+    // 🔒 Slug Collision Prevention: Periksa apakah slug tersedia sebelum mengubah
+    if (cleanSlug !== oldSlug) {
+      const isAvailable = await isSlugAvailable(cleanSlug, user?.id, currentTemplateRecordId);
+      if (!isAvailable) {
+        if (setSaveToast) {
+          setSaveToast({
+            show: true,
+            message: `Alamat tautan "/${cleanSlug}" sudah digunakan akun lain. Silakan pilih slug lain.`,
+            type: 'error',
+            isError: true,
+          });
+        }
+        return;
+      }
+    }
+
     const updatedFormData = { ...formData, slug: cleanSlug };
     setFormData(updatedFormData);
 

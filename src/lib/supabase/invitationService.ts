@@ -34,24 +34,12 @@ export async function fetchInvitationBySlug(slug: string): Promise<SupabaseInvit
     utData = utMatches.find((r) => r.slug === slug) || utMatches.find((r) => r.status === 'published') || utMatches[0];
   }
 
-  let fallbackUt: any = null;
   if (!invData && !utData) {
-    // Cek fallback jika slug lama dibuka atau baru diubah: ambil template terbaru yang aktif/terbit
-    const { data: latestUt } = await supabase
-      .from('user_templates')
-      .select('*')
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (!latestUt) {
-      console.warn(`[Supabase] Invitation slug "${slug}" not found in invitations or user_templates`);
-      return null;
-    }
-    fallbackUt = latestUt;
+    console.warn(`[Supabase] Invitation slug "${slug}" not found in invitations or user_templates`);
+    return null;
   }
 
-  const effectiveUt = utData || fallbackUt;
+  const effectiveUt = utData;
 
   // 3. Status Publikasi: Jika salah satu tabel (invitations ATAU user_templates) berstatus 'published',
   // maka halaman publik WAJIB dianggap LIVE ('published') untuk tamu undangan

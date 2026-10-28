@@ -13,6 +13,7 @@ import {
 import type { DashboardUser } from './useDashboardAuth';
 import {
   getCanonicalPublishedSlug,
+  generateUniqueSlug,
 } from '../pages/dashboard/helpers/computeCoupleSlug';
 
 interface UseDashboardPublishOptions {
@@ -216,7 +217,20 @@ const handleConfirmSameTemplatePublish = async () => {
   setShowConfirmPublishModal(false);
   setIsSaving(true);
   try {
-    const targetSlug = getCanonicalPublishedSlug(formData.slug, formData.groom?.name, formData.bride?.name);
+    const rawSlug = getCanonicalPublishedSlug(formData.slug, formData.groom?.name, formData.bride?.name);
+
+    // 🔒 Slug Collision Prevention: Pastikan slug unik sebelum publish
+    const { slug: targetSlug, wasSuffixed } = await generateUniqueSlug(
+      rawSlug,
+      user?.id,
+      currentTemplateRecordId
+    );
+
+    // Sinkronisasi slug baru ke formData jika ada suffix
+    if (wasSuffixed) {
+      setFormData((prev) => ({ ...prev, slug: targetSlug }));
+    }
+
     const coupleTitle = `Pernikahan ${formData.groom?.name || 'Mempelai Pria'} & ${formData.bride?.name || 'Mempelai Wanita'}`;
     const template_id = THEME_TO_TEMPLATE_ID[formData.theme_id || 'sunda'] || 'template6';
     const safeDbTemplateId = getSafeDbTemplateId(formData.theme_id);
@@ -370,10 +384,12 @@ const handleConfirmSameTemplatePublish = async () => {
 
     setSaveToast({
       show: true,
-      message: `Undangan live berhasil diperbarui! Tautan tetap aktif di /${targetSlug}`,
-      type: 'success',
+      message: wasSuffixed
+        ? `Undangan live aktif di /${targetSlug} (slug disesuaikan otomatis karena slug asli sudah digunakan)`
+        : `Undangan live berhasil diperbarui! Tautan tetap aktif di /${targetSlug}`,
+      type: wasSuffixed ? 'info' : 'success',
       isError: false,
-    }, 4000);
+    }, wasSuffixed ? 6000 : 4000);
   } catch (err: any) {
     console.error('Publish update error:', err);
     setSaveToast({
@@ -409,7 +425,19 @@ const handleConfirmPublish = async (paymentDetails?: { themeId?: string; payment
 
     const template_id = THEME_TO_TEMPLATE_ID[activeThemeId] || 'template1';
     const safeDbTemplateId = getSafeDbTemplateId(activeThemeId);
-    const targetSlug = getCanonicalPublishedSlug(formData.slug, formData.groom?.name, formData.bride?.name);
+    const rawSlug = getCanonicalPublishedSlug(formData.slug, formData.groom?.name, formData.bride?.name);
+
+    // 🔒 Slug Collision Prevention
+    const { slug: targetSlug, wasSuffixed } = await generateUniqueSlug(
+      rawSlug,
+      user?.id,
+      currentTemplateRecordId
+    );
+
+    if (wasSuffixed) {
+      setFormData((prev) => ({ ...prev, slug: targetSlug }));
+    }
+
     const coupleTitle = `Pernikahan ${formData.groom?.name || 'Mempelai Pria'} & ${formData.bride?.name || 'Mempelai Wanita'}`;
     const resolvedMusicUrl = formData.music_url || themeConfig.music_url || '';
     const resolvedMusicType = Boolean(extractYouTubeId(resolvedMusicUrl)) ? 'youtube' : 'mp3';
@@ -573,8 +601,10 @@ const handleConfirmPublish = async (paymentDetails?: { themeId?: string; payment
     );
     setSaveToast({
       show: true,
-      message: 'Pembayaran berhasil diverifikasi! Undangan Anda resmi live & aktif selamanya.',
-      type: 'success',
+      message: wasSuffixed
+        ? `Undangan live aktif di /${targetSlug}! (slug disesuaikan otomatis)`
+        : 'Pembayaran berhasil diverifikasi! Undangan Anda resmi live & aktif selamanya.',
+      type: wasSuffixed ? 'info' : 'success',
       isError: false,
     }, 5000);
   } catch (err: any) {

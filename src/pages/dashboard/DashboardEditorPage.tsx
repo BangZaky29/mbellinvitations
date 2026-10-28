@@ -21,6 +21,7 @@ import {
   computeCoupleSlug,
   getCanonicalPublishedSlug,
   cleanDraftSlug,
+  generateUniqueSlug,
 } from './helpers/computeCoupleSlug';
 import { getInvitationDisplayUrl } from '../../utils/urlHelper';
 import { EditorStepContent } from './components/EditorStepContent';
@@ -117,7 +118,11 @@ export const DashboardEditorPage: React.FC = () => {
     setUser(parsed);
 
     try {
-      const targetSlug = editor.formData.slug || computeCoupleSlug(editor.formData.groom?.name, editor.formData.bride?.name) || 'undangan-baru';
+      const rawSlug = editor.formData.slug || computeCoupleSlug(editor.formData.groom?.name, editor.formData.bride?.name) || 'undangan-baru';
+
+      // 🔒 Slug Collision Prevention: Pastikan slug unik sebelum simpan pertama kali
+      const { slug: targetSlug, wasSuffixed } = await generateUniqueSlug(rawSlug, loggedInUser.id);
+
       const saveResult = await saveUserTemplate({
         user_id: loggedInUser.id,
         slug: targetSlug,
@@ -134,15 +139,22 @@ export const DashboardEditorPage: React.FC = () => {
       if (saveResult.success && saveResult.data) {
         editor.setCurrentTemplateRecordId(saveResult.data.id);
         localStorage.setItem('mbell_active_template_id', saveResult.data.id);
+
+        // Sinkronisasi slug di formData jika ada suffix baru
+        if (wasSuffixed) {
+          editor.setFormData((prev: any) => ({ ...prev, slug: targetSlug }));
+        }
       }
       localStorage.removeItem('mbell_pending_draft_hasUnsavedEdits');
 
       save.setSaveToast({
         show: true,
-        message: 'Draf otomatis tersimpan',
-        type: 'success',
+        message: wasSuffixed
+          ? `Draf tersimpan! Slug otomatis menjadi "${targetSlug}" karena slug asli sudah digunakan.`
+          : 'Draf otomatis tersimpan',
+        type: wasSuffixed ? 'info' : 'success',
         isError: false,
-      });
+      }, wasSuffixed ? 5000 : 2400);
     } catch (err) {
       console.warn('Auto upsert exception:', err);
     }
