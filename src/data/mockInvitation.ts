@@ -49,6 +49,12 @@ export {
   MOCK_BATAK_WISHES,
 } from './mock/batakData';
 
+export {
+  MOCK_BETAWI_DATA,
+  MOCK_BETAWI_THEME,
+  MOCK_BETAWI_WISHES,
+} from './mock/betawiData';
+
 import {
   MOCK_INVITATION_DATA,
   MOCK_THEME_CONFIG,
@@ -89,6 +95,11 @@ import {
   MOCK_BATAK_THEME,
   MOCK_BATAK_WISHES,
 } from './mock/batakData';
+import {
+  MOCK_BETAWI_DATA,
+  MOCK_BETAWI_THEME,
+  MOCK_BETAWI_WISHES,
+} from './mock/betawiData';
 
 // Aliases for modern
 export const MOCK_MODERN_DATA = MOCK_INVITATION_DATA;
@@ -115,6 +126,9 @@ export const MOCK_THEME_DATA_MAP: Record<string, InvitationData> = {
   template7: MOCK_MINANG_DATA,
   batak: MOCK_BATAK_DATA,
   template8: MOCK_BATAK_DATA,
+  betawi: MOCK_BETAWI_DATA,
+  template11: MOCK_BETAWI_DATA,
+  template9: MOCK_BETAWI_DATA,
 };
 
 export const MOCK_THEME_CONFIG_MAP: Record<string, ThemeConfig> = {
@@ -134,6 +148,9 @@ export const MOCK_THEME_CONFIG_MAP: Record<string, ThemeConfig> = {
   template7: MOCK_MINANG_THEME,
   batak: MOCK_BATAK_THEME,
   template8: MOCK_BATAK_THEME,
+  betawi: MOCK_BETAWI_THEME,
+  template11: MOCK_BETAWI_THEME,
+  template9: MOCK_BETAWI_THEME,
 };
 
 export const MOCK_THEME_WISHES_MAP: Record<string, WishItem[]> = {
@@ -153,4 +170,7 @@ export const MOCK_THEME_WISHES_MAP: Record<string, WishItem[]> = {
   template7: MOCK_MINANG_WISHES,
   batak: MOCK_BATAK_WISHES,
   template8: MOCK_BATAK_WISHES,
+  betawi: MOCK_BETAWI_WISHES,
+  template11: MOCK_BETAWI_WISHES,
+  template9: MOCK_BETAWI_WISHES,
 };

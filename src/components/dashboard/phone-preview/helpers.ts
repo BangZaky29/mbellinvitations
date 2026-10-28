@@ -9,6 +9,7 @@ import {
   MOCK_SUNDA_THEME,
   MOCK_MINANG_THEME,
   MOCK_BATAK_THEME,
+  MOCK_BETAWI_THEME,
   MOCK_THEME_DATA_MAP,
   MOCK_THEME_CONFIG_MAP,
 } from '../../../data/mockInvitation';
@@ -22,6 +23,9 @@ export const DEFAULT_THEMES: Record<string, ThemeConfig> = {
   sunda: MOCK_SUNDA_THEME,
   minang: MOCK_MINANG_THEME,
   batak: MOCK_BATAK_THEME,
+  betawi: MOCK_BETAWI_THEME,
+  template11: MOCK_BETAWI_THEME,
+  template9: MOCK_BETAWI_THEME,
 };
 
 export const THEME_ID_MAP: Record<string, string> = {
@@ -33,6 +37,8 @@ export const THEME_ID_MAP: Record<string, string> = {
   template6: 'sunda',
   template7: 'minang',
   template8: 'batak',
+  template11: 'betawi',
+  template9: 'betawi',
   modern: 'modern',
   rustic: 'rustic',
   jawa: 'jawa',
@@ -41,6 +47,7 @@ export const THEME_ID_MAP: Record<string, string> = {
   sunda: 'sunda',
   minang: 'minang',
   batak: 'batak',
+  betawi: 'betawi',
 };
 
 export function resolveNormalizedThemeId(themeId?: string): string {

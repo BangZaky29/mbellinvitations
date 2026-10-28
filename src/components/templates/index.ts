@@ -7,4 +7,4 @@ export { Template5Luxury } from './Template5Luxury';
 export { TemplateSundaSiger } from './TemplateSundaSiger';
 export { TemplateMinangBaralek } from './Template7Minang';
 export { TemplateBatakToba } from './Template8Batak';
-
+export { TemplateBetawi } from './Template11Betawi';

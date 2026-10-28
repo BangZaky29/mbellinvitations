@@ -8,6 +8,7 @@ import { Template5Luxury } from '../templates/Template5Luxury';
 import { TemplateSundaSiger } from '../templates/TemplateSundaSiger';
 import { TemplateMinangBaralek } from '../templates/Template7Minang';
 import { TemplateBatakToba } from '../templates/Template8Batak';
+import { TemplateBetawi } from '../templates/Template11Betawi';
 import { PreviewToolbar } from './phone-preview/PreviewToolbar';
 import { PhoneFrame } from './phone-preview/PhoneFrame';
 import {
@@ -161,6 +162,10 @@ export const PhoneMockupPreview: React.FC<PhoneMockupPreviewProps> = ({
       case 'batak':
       case 'template8':
         return <TemplateBatakToba {...props} />;
+      case 'betawi':
+      case 'template11':
+      case 'template9':
+        return <TemplateBetawi {...props} />;
       default:
         return <Template1Modern {...props} />;
     }

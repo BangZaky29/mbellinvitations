@@ -158,6 +158,18 @@ export const TEMPLATE_VISUAL_PRESETS: Record<
     styleTag: 'Adat Batak Toba',
     coupleSample: 'Johannes & Melisa',
   },
+  template11: {
+    icon: 'sports_martial_arts',
+    bgClass: 'bg-[#410403] text-[#FED65B] border-[#FED65B]/40',
+    styleTag: 'Adat Betawi Palang Pintu',
+    coupleSample: 'Rizky & Fatimah',
+  },
+  'adat-betawi': {
+    icon: 'sports_martial_arts',
+    bgClass: 'bg-[#410403] text-[#FED65B] border-[#FED65B]/40',
+    styleTag: 'Adat Betawi Palang Pintu',
+    coupleSample: 'Rizky & Fatimah',
+  },
 };
 
 export const SUPABASE_MOCKUP_BASE_URL =
@@ -165,6 +177,21 @@ export const SUPABASE_MOCKUP_BASE_URL =
 
 // Seed default fallback jika Supabase belum selesai fetch pertama kali
 export const DEFAULT_CATALOG_SEEDS: DbTemplateRecord[] = [
+  {
+    id: 'template11',
+    slug: 'adat-betawi',
+    name: 'Adat Betawi Palang Pintu',
+    category: 'adat',
+    description: 'Kembang Kelapa, Palang Pintu & Busana Pengantin Abang None',
+    preview_badge: 'New Royal Adat',
+    accent_color: '#FED65B',
+    is_active: true,
+    is_premium: true,
+    price: 79000,
+    original_price: 99000,
+    mockup_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC38c0z_VRFW7pK5iEY8U1GecNyYvslcile2i98NOilLin6v5K2-EdEA-pw0lc5Ii-4Umtr-A2OHq10oR7AA91GmtqiLjbZdP5_M8cSzYDScBUa_6FPB3o222cYlN1FPrCxJ9yQzTbNhDErUc9P0RZ0PQjwaFOx8fa-KNvfb0o5Qj6Oy-E_2ONKQziS5NG2HznKRidJwLqFcdNwRhVHoqYJmRHb-35Ba81FILaNF79pktib-mMovGrI',
+    thumbnail_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC38c0z_VRFW7pK5iEY8U1GecNyYvslcile2i98NOilLin6v5K2-EdEA-pw0lc5Ii-4Umtr-A2OHq10oR7AA91GmtqiLjbZdP5_M8cSzYDScBUa_6FPB3o222cYlN1FPrCxJ9yQzTbNhDErUc9P0RZ0PQjwaFOx8fa-KNvfb0o5Qj6Oy-E_2ONKQziS5NG2HznKRidJwLqFcdNwRhVHoqYJmRHb-35Ba81FILaNF79pktib-mMovGrI',
+  },
   {
     id: 'template8',
     slug: 'adat-batak',
@@ -306,6 +333,28 @@ export function normalizeCategory(cat?: string | null): 'adat' | 'modern' {
   return 'modern';
 }
 
+/**
+ * Menggabungkan katalog database dengan seed frontend bawaan.
+ * Memastikan template baru yang telah diimplementasikan di kode (misal: template11 Betawi)
+ * langsung tampil di UI dashboard meskipun barisnya belum di-insert di tabel SQL Supabase.
+ */
+function mergeWithSeeds(records: DbTemplateRecord[]): DbTemplateRecord[] {
+  if (!records || records.length === 0) return DEFAULT_CATALOG_SEEDS;
+
+  const result = [...records];
+  for (const seed of DEFAULT_CATALOG_SEEDS) {
+    const exists = result.some(
+      (item) =>
+        item.id?.toLowerCase() === seed.id?.toLowerCase() ||
+        item.slug?.toLowerCase() === seed.slug?.toLowerCase()
+    );
+    if (!exists) {
+      result.push(seed);
+    }
+  }
+  return result;
+}
+
 let inMemoryCatalogCache: DbTemplateRecord[] | null = null;
 
 export function getCachedCatalog(): DbTemplateRecord[] {
@@ -317,8 +366,9 @@ export function getCachedCatalog(): DbTemplateRecord[] {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        inMemoryCatalogCache = parsed;
-        return parsed;
+        const merged = mergeWithSeeds(parsed);
+        inMemoryCatalogCache = merged;
+        return merged;
       }
     }
   } catch (e) {}
@@ -339,12 +389,13 @@ export async function fetchTemplatesCatalog(): Promise<DbTemplateRecord[]> {
     }
 
     if (data && Array.isArray(data) && data.length > 0) {
-      inMemoryCatalogCache = data;
+      const merged = mergeWithSeeds(data);
+      inMemoryCatalogCache = merged;
       try {
-        localStorage.setItem('mbell_cached_templates_catalog', JSON.stringify(data));
+        localStorage.setItem('mbell_cached_templates_catalog', JSON.stringify(merged));
       } catch (e) {}
-      window.dispatchEvent(new CustomEvent('mbell_templates_catalog_updated', { detail: data }));
-      return data;
+      window.dispatchEvent(new CustomEvent('mbell_templates_catalog_updated', { detail: merged }));
+      return merged;
     }
   } catch (err) {
     console.warn('Error saat fetch templates catalog:', err);

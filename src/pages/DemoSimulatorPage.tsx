@@ -8,6 +8,7 @@ import { Template5Luxury } from '../components/templates/Template5Luxury';
 import { TemplateSundaSiger } from '../components/templates/TemplateSundaSiger';
 import { TemplateMinangBaralek } from '../components/templates/Template7Minang';
 import { TemplateBatakToba } from '../components/templates/Template8Batak';
+import { TemplateBetawi } from '../components/templates/Template11Betawi';
 import {
   MOCK_MODERN_DATA,
   MOCK_MODERN_THEME,
@@ -33,6 +34,9 @@ import {
   MOCK_BATAK_DATA,
   MOCK_BATAK_THEME,
   MOCK_BATAK_WISHES,
+  MOCK_BETAWI_DATA,
+  MOCK_BETAWI_THEME,
+  MOCK_BETAWI_WISHES,
 } from '../data/mockInvitation';
 
 const TEMPLATE_LIST = [
@@ -44,6 +48,7 @@ const TEMPLATE_LIST = [
   { id: 'template6', num: '6', name: 'Adat Sunda Siger', short: 'Sunda', accentColor: '#C5A059' },
   { id: 'template7', num: '7', name: 'Adat Minang Baralek Gadang', short: 'Minang', accentColor: '#D4AF37' },
   { id: 'template8', num: '8', name: 'Adat Batak Toba', short: 'Batak', accentColor: '#C8A253' },
+  { id: 'template11', num: '11', name: 'Adat Betawi Palang Pintu', short: 'Betawi', accentColor: '#FED65B' },
 ];
 
 export const DemoSimulatorPage: React.FC = () => {
@@ -271,6 +276,17 @@ export const DemoSimulatorPage: React.FC = () => {
             data={MOCK_BATAK_DATA}
             theme={MOCK_BATAK_THEME}
             wishes={MOCK_BATAK_WISHES}
+            isCoverOpen={isCoverOpen}
+            isPreview={isPreview}
+          />
+        )}
+
+        {selectedTemplate === 'template11' && (
+          <TemplateBetawi
+            invitationId="demo-invitation-011"
+            data={MOCK_BETAWI_DATA}
+            theme={MOCK_BETAWI_THEME}
+            wishes={MOCK_BETAWI_WISHES}
             isCoverOpen={isCoverOpen}
             isPreview={isPreview}
           />

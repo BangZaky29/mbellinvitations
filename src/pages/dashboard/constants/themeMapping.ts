@@ -8,6 +8,7 @@ import {
   MOCK_SUNDA_THEME,
   MOCK_MINANG_THEME,
   MOCK_BATAK_THEME,
+  MOCK_BETAWI_THEME,
 } from '../../../data/mockInvitation';
 import { getDynamicPriceInfo } from '../../../services/templateCatalogService';
 
@@ -21,6 +22,7 @@ export const THEME_TO_TEMPLATE_ID: Record<string, string> = {
   sunda: 'template6',
   minang: 'template7',
   batak: 'template8',
+  betawi: 'template11',
   template1: 'template1',
   template2: 'template2',
   template3: 'template3',
@@ -29,13 +31,15 @@ export const THEME_TO_TEMPLATE_ID: Record<string, string> = {
   template6: 'template6',
   template7: 'template7',
   template8: 'template8',
+  template11: 'template11',
+  template9: 'template11',
 };
 
 /**
  * Daftar tema eksklusif resmi yang tersedia di Wedding Studio
  */
-export const CANONICAL_THEMES = ['sunda', 'minang', 'batak', 'jawa', 'islami', 'modern', 'rustic', 'luxury'] as const;
-export const TOTAL_EXCLUSIVE_THEMES = CANONICAL_THEMES.length; // 8 Tema Eksklusif
+export const CANONICAL_THEMES = ['sunda', 'minang', 'batak', 'betawi', 'jawa', 'islami', 'modern', 'rustic', 'luxury'] as const;
+export const TOTAL_EXCLUSIVE_THEMES = CANONICAL_THEMES.length; // 9 Tema Eksklusif
 
 // ID template yang sah terdaftar di master table public.templates Supabase (mencegah error 409 FK violation)
 export const KNOWN_DB_TEMPLATE_IDS = new Set([
@@ -47,6 +51,8 @@ export const KNOWN_DB_TEMPLATE_IDS = new Set([
   'template6',
   'template7',
   'template8',
+  'template11',
+  'template9',
 ]);
 
 /**
@@ -59,6 +65,9 @@ export const THEME_NAMES: Record<string, string> = {
   template7: 'Adat Minang Baralek Gadang',
   batak: 'Adat Batak Toba Royal',
   template8: 'Adat Batak Toba Royal',
+  betawi: 'Adat Betawi Palang Pintu',
+  template11: 'Adat Betawi Palang Pintu',
+  template9: 'Adat Betawi Palang Pintu',
   jawa: 'Adat Jawa',
   template3: 'Adat Jawa',
   modern: 'Modern Arch',
@@ -114,6 +123,24 @@ export const THEME_META: Record<string, ThemeMetaInfo> = {
     tag: 'Gondang Sabangunan & Ulos Hela',
     icon: 'church',
     accentColor: '#C8A253',
+  },
+  betawi: {
+    name: 'Adat Betawi Palang Pintu',
+    tag: 'Kembang Kelapa & Busana Abang None',
+    icon: 'sports_martial_arts',
+    accentColor: '#FED65B',
+  },
+  template11: {
+    name: 'Adat Betawi Palang Pintu',
+    tag: 'Kembang Kelapa & Busana Abang None',
+    icon: 'sports_martial_arts',
+    accentColor: '#FED65B',
+  },
+  template9: {
+    name: 'Adat Betawi Palang Pintu',
+    tag: 'Kembang Kelapa & Busana Abang None',
+    icon: 'sports_martial_arts',
+    accentColor: '#FED65B',
   },
   jawa: {
     name: 'Adat Jawa',
@@ -214,6 +241,8 @@ export const TEMPLATE_ID_TO_THEME: Record<string, string> = {
   template6: 'sunda',
   template7: 'minang',
   template8: 'batak',
+  template11: 'betawi',
+  template9: 'betawi',
   modern: 'modern',
   rustic: 'rustic',
   jawa: 'jawa',
@@ -222,6 +251,7 @@ export const TEMPLATE_ID_TO_THEME: Record<string, string> = {
   sunda: 'sunda',
   minang: 'minang',
   batak: 'batak',
+  betawi: 'betawi',
 };
 
 export const DEFAULT_THEME_CONFIGS: Record<string, ThemeConfig> = {
@@ -241,6 +271,9 @@ export const DEFAULT_THEME_CONFIGS: Record<string, ThemeConfig> = {
   template7: MOCK_MINANG_THEME,
   batak: MOCK_BATAK_THEME,
   template8: MOCK_BATAK_THEME,
+  betawi: MOCK_BETAWI_THEME,
+  template11: MOCK_BETAWI_THEME,
+  template9: MOCK_BETAWI_THEME,
 };
 
 // Demo keywords untuk deteksi apakah form masih memakai data bawaan template
@@ -249,6 +282,7 @@ export const DEMO_KEYWORDS = [
   'raditya', 'jessica',
   'farhan', 'nadia',
   'johannes', 'melisa', 'siregar', 'simanjuntak',
+  'rizky', 'fatimah', 'marzuki', 'syamsuddin',
   'romeo', 'juliet',
   'arya', 'dian', 'suryonegoro', 'daniswara',
   'rayhan', 'yasmin', 'al-fatih', 'anbiya',
@@ -316,6 +350,33 @@ export const TEMPLATE_PRICING: Record<string, TemplatePriceInfo> = {
     categoryLabel: 'Adat Nusantara',
   },
   template8: {
+    price: 79000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 79.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 79rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  betawi: {
+    price: 79000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 79.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 79rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  template11: {
+    price: 79000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 79.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 79rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  template9: {
     price: 79000,
     originalPrice: 99000,
     priceDisplay: 'Rp 79.000',

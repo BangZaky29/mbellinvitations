@@ -8,7 +8,8 @@ export type LiveStreamVariant =
   | 'luxury'
   | 'sunda'
   | 'minang'
-  | 'batak';
+  | 'batak'
+  | 'betawi';
 
 interface LiveStreamBannerProps {
   url?: string;
@@ -165,6 +166,18 @@ export const LiveStreamBanner: React.FC<LiveStreamBannerProps> = ({
       defaultTitle: 'Siaran Langsung Ulaon Unjuk',
       defaultSubtitle: 'Manonton siaran langsung pamasu-masuon sacara daring',
       defaultBtn: 'Saksikan Siaran',
+    },
+    betawi: {
+      card: 'bg-[#410403] border border-[#FED65B]/40 text-[#FAF6EE] shadow-xl',
+      iconBox: 'bg-[#5E1914] border border-[#FED65B]/40 text-[#FED65B]',
+      iconText: 'text-[#FED65B]',
+      platformBadge: 'bg-[#FED65B]/20 text-[#FFE088] border-[#FED65B]/30',
+      title: 'text-[#FCF9F3] font-serif',
+      subtitle: 'text-[#E5E2DC]/80',
+      button: 'bg-[#FED65B] hover:bg-[#FFE088] text-[#410403] font-bold shadow-md',
+      defaultTitle: 'Siaran Langsung Hajatan Betawi',
+      defaultSubtitle: 'Saksikan momen sakral akad & walimah secara daring',
+      defaultBtn: 'Tonton Siaran',
     },
   };
 
