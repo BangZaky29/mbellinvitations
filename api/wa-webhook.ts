@@ -1,4 +1,3 @@
-// Tipe resmi Vercel Serverless Function (Self-contained, bebas error tanpa dependensi eksternal @vercel/node)
 export interface VercelRequest {
     method?: string;
     body?: any;
@@ -11,6 +10,7 @@ export interface VercelResponse {
     json: (jsonBody: any) => VercelResponse;
     send: (body: any) => VercelResponse;
 }
+
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
@@ -26,24 +26,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     try {
         const body = req.body || {};
-        // Fonnte mengirimkan pesan di dalam properti 'message' dan pengirim/grup di 'sender'
-        const rawMessage = String(body.message || '').trim();
+
+        // Ambil pesan dan bersihkan
+        const rawMessage = String(body.message || body.text || '').trim();
         const text = rawMessage.toLowerCase();
-        const sender = String(body.sender || '120363430931304512@g.us');
+
+        // Tentukan target balasan: Jika dari grup, balas ke grup tersebut. Jika dari personal, balas ke pengirim.
+        const chatSender = String(body.sender || body.from || '');
+        const isGroup = chatSender.includes('@g.us') || String(body.is_group || '').toLowerCase() === 'true';
+        const targetDestination = isGroup ? chatSender : (body.device || chatSender);
 
         if (!text) {
             return res.status(200).json({ status: false, reason: 'Empty message' });
         }
 
-        // Deteksi apakah pesan men-tag @bangzaky29, @bangzaky, atau mention nomor WA bot (628988761937 / 08988761937)
+        // Deteksi fleksibel: apakah pesan men-tag bot (@bangzaky29, @bangzaky, atau nomor bot 08988761937 / 628988761937)
         const isTagged =
-            text.includes('@bangzaky29') ||
-            text.includes('@bangzaky') ||
+            text.includes('bangzaky') ||
             text.includes('628988761937') ||
-            text.includes('08988761937');
+            text.includes('08988761937') ||
+            text.includes('bot') ||
+            text.includes('total login') ||
+            text.includes('slug') ||
+            text.includes('omset');
 
         if (!isTagged) {
-            return res.status(200).json({ status: true, ignored: true });
+            return res.status(200).json({ status: true, ignored: true, reason: 'Not tagged or keyword not found' });
         }
 
         // Ambil data statistik live dari Supabase RPC
@@ -96,34 +104,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 `━━━━━━━━━━━━━━━━━━━━\n` +
                 `_Diperbarui: ${stats.checked_at}_`;
         }
-        // 4. Jika ditanya gabungan atau tag @bangzaky29 secara umum (Menu Bantuan + Ringkasan)
+        // 4. Ringkasan Umum jika mengetik keyword umum
         else {
             const formattedRevenue = Number(stats.total_revenue || 0).toLocaleString('id-ID');
             replyMessage =
-                `🤖 *HALO! INI REKAP LIVE MBELL INVITATIONS*\n` +
+                `🤖 *REKAP LIVE MBELL INVITATIONS*\n` +
                 `━━━━━━━━━━━━━━━━━━━━\n` +
                 `👥 *Total User:* ${stats.total_users} Akun (${stats.logged_in_today} login hari ini)\n` +
                 `🚀 *Slug Published:* ${stats.published_slugs} Aktif / ${stats.draft_slugs} Draft\n` +
                 `💰 *Transaksi Lunas:* ${stats.paid_count} (Rp ${formattedRevenue})\n\n` +
                 `📋 *Slug Terbaru:*\n${stats.slug_list}\n` +
                 `━━━━━━━━━━━━━━━━━━━━\n` +
-                `💡 _Tips: Tag *@bangzaky29* disertai kata kunci *"total login"*, *"slug aktif"*, atau *"cek omset"*._`;
+                `💡 _Tips: Ketik *@bangzaky29 total login*, *@bangzaky29 slug aktif*, atau *@bangzaky29 omset*._`;
         }
 
-        // Kirim balasan kembali ke Grup WA / Pengirim melalui Fonnte
-        await fetch('https://api.fonnte.com/send', {
+        // Kirim balasan melalui API Fonnte
+        const fonnteRes = await fetch('https://api.fonnte.com/send', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 Authorization: FONNTE_TOKEN,
             },
             body: JSON.stringify({
-                target: sender,
+                target: targetDestination || '120363430931304512@g.us',
                 message: replyMessage,
             }),
         });
 
-        return res.status(200).json({ status: true, replied: true });
+        const fonnteJson = await fonnteRes.json();
+
+        return res.status(200).json({ status: true, replied: true, fonnte: fonnteJson });
     } catch (err: any) {
         console.error('WA Webhook Error:', err);
         return res.status(200).json({ status: false, error: err.message });
