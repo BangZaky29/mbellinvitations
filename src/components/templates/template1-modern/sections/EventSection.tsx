@@ -1,6 +1,7 @@
 import React from 'react';
 import type { EventSectionProps } from '../../types';
 import { VenueMapEmbed } from '../../../common/VenueMapEmbed';
+import { openGoogleCalendar } from '../../../../utils/calendarHelper';
 
 export const EventSection: React.FC<EventSectionProps> = ({
   data,
@@ -83,16 +84,27 @@ export const EventSection: React.FC<EventSectionProps> = ({
                 </div>
               )}
 
-              {/* Google Maps Button (Selalu tampil di setiap card acara) */}
-              <a
-                href={event.maps_url || 'https://maps.google.com'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-3 rounded-full bg-charcoal-dark text-white text-xs tracking-[0.15em] uppercase font-medium flex items-center justify-center space-x-2 hover:bg-gold-champagne transition-colors shadow"
-              >
-                <i className="fa-solid fa-location-arrow text-xs"></i>
-                <span>Buka Google Maps</span>
-              </a>
+              {/* Action Buttons: Google Maps & Google Calendar */}
+              <div className="flex flex-col gap-2 w-full">
+                <a
+                  href={event.maps_url || 'https://maps.google.com'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3 rounded-full bg-charcoal-dark text-white text-xs tracking-[0.15em] uppercase font-medium flex items-center justify-center space-x-2 hover:bg-gold-champagne transition-colors shadow"
+                >
+                  <i className="fa-solid fa-location-arrow text-xs"></i>
+                  <span>Buka Google Maps</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => openGoogleCalendar(data, event)}
+                  className="w-full py-2.5 rounded-full border border-border-subtle bg-alabaster hover:bg-white text-charcoal-dark text-xs tracking-[0.1em] uppercase font-medium flex items-center justify-center space-x-2 transition-all active:scale-95 cursor-pointer shadow-2xs"
+                >
+                  <span className="material-symbols-outlined text-[16px] text-gold-champagne">event_available</span>
+                  <span>Simpan ke Google Calendar</span>
+                </button>
+              </div>
             </div>
           );
         })}

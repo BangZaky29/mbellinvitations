@@ -1,6 +1,7 @@
 import React from 'react';
 import type { InvitationProps } from '../../../types/invitation';
 import { useTemplateState } from '../../../hooks/useTemplateState';
+import { openGoogleCalendar } from '../../../utils/calendarHelper';
 import { FloatingDock } from '../../common/FloatingDock';
 import { SleekToast } from '../../common/SleekToast';
 import { GalleryLightbox } from '../../common/GalleryLightbox';
@@ -66,33 +67,11 @@ export const TemplateBatakToba: React.FC<InvitationProps> = ({
       'https://assets.mixkit.co/music/preview/mixkit-serene-view-443.mp3',
   });
 
-  // Handle Google Calendar Save
+  // Handle Google Calendar Save (Universal Engine)
   const handleSaveToCalendar = () => {
-    const rawEvents = data.events;
-    const events = Array.isArray(rawEvents)
-      ? rawEvents
-      : rawEvents && typeof rawEvents === 'object'
-      ? Object.values(rawEvents)
-      : [];
-    const activeIdx = data.countdown_target === 'resepsi' && events.length > 1 ? 1 : 0;
-    const targetEvent = events[activeIdx] || events[0] || {};
-
-    const eventTitle = targetEvent.title || targetEvent.name || 'Pesta Adat Batak Toba';
-    const title = encodeURIComponent(
-      `${eventTitle} — ${firstPerson.name} & ${secondPerson.name}`
-    );
-    const details = encodeURIComponent(
-      `Pernikahan Kudus & Pesta Adat Batak Toba ${data.groom.full_name || data.groom.name} & ${data.bride.full_name || data.bride.name}. Dua gabe sada di bagas holong ni Kristus.`
-    );
-    const location = encodeURIComponent(
-      targetEvent.venue_name || targetEvent.location_name || targetEvent.venue_address || 'Jakarta'
-    );
-    const dateFormatted = data.wedding_date_iso
-      ? data.wedding_date_iso.replace(/[-:]/g, '').split('+')[0]
-      : '20261114T090000';
-    const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateFormatted}/${dateFormatted}&details=${details}&location=${location}`;
-    window.open(googleCalUrl, '_blank');
-    showToast('Membuka Google Calendar', 'info');
+    openGoogleCalendar(data, undefined, () => {
+      showToast('Membuka Google Calendar', 'info');
+    });
   };
 
   const recipientName = data.guest_name || 'Bapak/Ibu/Saudara/i';

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { EventSectionProps } from '../../types';
 import { VenueMapEmbed } from '../../../common/VenueMapEmbed';
+import { openGoogleCalendar } from '../../../../utils/calendarHelper';
 
 export interface IslamiEventProps extends EventSectionProps {
   handleAddToCalendar?: () => void;
@@ -11,20 +12,16 @@ export const EventSection: React.FC<IslamiEventProps> = ({
   isPreview,
   handleAddToCalendar,
 }) => {
-  const onCalendarClick = () => {
+  const onCalendarClick = (eventItem?: any) => {
+    if (eventItem) {
+      openGoogleCalendar(data, eventItem);
+      return;
+    }
     if (handleAddToCalendar) {
       handleAddToCalendar();
       return;
     }
-    const title = encodeURIComponent(`Walimatul Ursy: ${data.groom.name} & ${data.bride.name}`);
-    const details = encodeURIComponent(
-      `Akad Nikah & Resepsi Pernikahan ${data.groom.full_name} dan ${data.bride.full_name}.`
-    );
-    const location = encodeURIComponent(
-      data.events[1]?.venue_name || data.events[0]?.venue_name || 'Grand Asrilia Hotel Bandung'
-    );
-    const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=20250524T010000Z/20250524T070000Z&details=${details}&location=${location}`;
-    window.open(googleCalUrl, '_blank');
+    openGoogleCalendar(data);
   };
 
   return (
@@ -118,20 +115,16 @@ export const EventSection: React.FC<IslamiEventProps> = ({
                 </span>
                 <span>Buka Google Maps</span>
               </a>
-              {/* If it's the last event or countdown event, provide Add to Calendar */}
-              {idx === data.events.length - 1 && (
-                <button
-                  className="w-full py-3 px-4 rounded-full bg-surface-container text-primary font-label-md text-label-md flex items-center justify-center gap-2 hover:bg-secondary-container transition-colors cursor-pointer"
-                  id="btn-calendar"
-                  onClick={onCalendarClick}
-                  type="button"
-                >
-                  <span className="material-symbols-outlined text-[18px]">
-                    event_available
-                  </span>
-                  <span>Simpan ke Kalender</span>
-                </button>
-              )}
+              <button
+                className="w-full py-2.5 px-4 rounded-full bg-surface-container text-primary font-label-md text-label-md flex items-center justify-center gap-2 hover:bg-secondary-container transition-colors cursor-pointer border border-secondary-container/30 active:scale-95"
+                onClick={() => onCalendarClick(event)}
+                type="button"
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  event_available
+                </span>
+                <span>Simpan ke Google Calendar</span>
+              </button>
             </div>
           </div>
         );

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { EventSectionProps } from '../../types';
 import { VenueMapEmbed } from '../../../common/VenueMapEmbed';
+import { openGoogleCalendar } from '../../../../utils/calendarHelper';
 
 export const EventSection: React.FC<EventSectionProps> = ({
   data,
@@ -79,20 +80,31 @@ export const EventSection: React.FC<EventSectionProps> = ({
                 </div>
               )}
 
-              {/* Google Maps Button */}
-              <a
-                href={ev.maps_url || 'https://maps.google.com'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`w-full py-2.5 rounded-full font-medium text-xs flex items-center justify-center gap-2 shadow-xs transition-colors ${
-                  isResepsi
-                    ? 'bg-[#a37c2c] hover:bg-[#8a6822] text-white'
-                    : 'bg-[#8a6822] hover:bg-[#6e5318] text-white'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[17px]">near_me</span>
-                <span>Buka Google Maps</span>
-              </a>
+              {/* Action Buttons: Google Maps & Google Calendar */}
+              <div className="flex flex-col gap-2 w-full">
+                <a
+                  href={ev.maps_url || 'https://maps.google.com'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`w-full py-2.5 rounded-full font-medium text-xs flex items-center justify-center gap-2 shadow-xs transition-colors ${
+                    isResepsi
+                      ? 'bg-[#a37c2c] hover:bg-[#8a6822] text-white'
+                      : 'bg-[#8a6822] hover:bg-[#6e5318] text-white'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[17px]">near_me</span>
+                  <span>Buka Google Maps</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => openGoogleCalendar(data, ev)}
+                  className="w-full py-2 rounded-full font-medium text-xs flex items-center justify-center gap-1.5 border border-[#c5a059]/40 bg-[#fbf9f6] text-[#5d4201] hover:bg-[#f3ede0] transition-colors cursor-pointer active:scale-95 shadow-2xs"
+                >
+                  <span className="material-symbols-outlined text-[16px] text-[#a37c2c]">event_available</span>
+                  <span>Simpan ke Google Calendar</span>
+                </button>
+              </div>
             </div>
           );
         })}

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { EventSectionProps } from '../../types';
 import { VenueMapEmbed } from '../../../common/VenueMapEmbed';
+import { openGoogleCalendar } from '../../../../utils/calendarHelper';
 
 export const EventSection: React.FC<EventSectionProps> = ({
   data,
@@ -93,16 +94,27 @@ export const EventSection: React.FC<EventSectionProps> = ({
               </div>
             )}
 
-            {/* Google Maps CTA Button (Selalu tampil di setiap card acara) */}
-            <a
-              href={event.maps_url || 'https://maps.google.com'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full mt-4 py-3 px-6 rounded-full bg-gradient-to-r from-primary-fixed-dim via-primary to-secondary text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-lg hover:brightness-105 active:scale-95 transition-transform"
-            >
-              <span className="material-symbols-outlined text-lg">map</span>
-              <span className="tracking-wider">BUKA GOOGLE MAPS</span>
-            </a>
+            {/* Action Buttons: Google Maps & Google Calendar */}
+            <div className="flex flex-col gap-2 w-full mt-4">
+              <a
+                href={event.maps_url || 'https://maps.google.com'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 px-6 rounded-full bg-gradient-to-r from-primary-fixed-dim via-primary to-secondary text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-lg hover:brightness-105 active:scale-95 transition-transform"
+              >
+                <span className="material-symbols-outlined text-lg">map</span>
+                <span className="tracking-wider uppercase">Buka Google Maps</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => openGoogleCalendar(data, event)}
+                className="w-full py-2.5 px-6 rounded-full border border-primary/30 bg-surface hover:bg-surface-container text-primary font-serif font-semibold text-xs tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-all shadow-xs cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-base">event_available</span>
+                <span>Simpan ke Google Calendar</span>
+              </button>
+            </div>
           </div>
         );
       })}

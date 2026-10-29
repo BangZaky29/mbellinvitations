@@ -1,6 +1,7 @@
 import React from 'react';
 import type { EventSectionProps } from '../../types';
 import { VenueMapEmbed } from '../../../common/VenueMapEmbed';
+import { openGoogleCalendar } from '../../../../utils/calendarHelper';
 
 export interface LuxuryEventProps extends EventSectionProps {
   handleAddToCalendar?: () => void;
@@ -11,20 +12,16 @@ export const EventSection: React.FC<LuxuryEventProps> = ({
   isPreview,
   handleAddToCalendar,
 }) => {
-  const onCalendarClick = () => {
+  const onCalendarClick = (eventItem?: any) => {
+    if (eventItem) {
+      openGoogleCalendar(data, eventItem);
+      return;
+    }
     if (handleAddToCalendar) {
       handleAddToCalendar();
       return;
     }
-    const title = encodeURIComponent(`The Wedding of ${data.groom.name} & ${data.bride.name}`);
-    const details = encodeURIComponent(
-      `Holy Matrimony & Gala Reception of ${data.groom.full_name} and ${data.bride.full_name} at The St. Regis Jakarta.`
-    );
-    const location = encodeURIComponent(
-      data.events[1]?.venue_name || data.events[0]?.venue_name || 'The St. Regis Jakarta'
-    );
-    const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=20261024T030000Z/20261024T160000Z&details=${details}&location=${location}`;
-    window.open(googleCalUrl, '_blank');
+    openGoogleCalendar(data);
   };
 
   return (
@@ -102,16 +99,27 @@ export const EventSection: React.FC<LuxuryEventProps> = ({
               </div>
             )}
 
-            {/* Google Maps Button */}
-            <a
-              className="w-full py-2.5 px-4 rounded-lg bg-surface-container-high/80 hover:bg-surface-container-highest text-on-surface flex items-center justify-center gap-2 font-label-md uppercase tracking-wider text-xs transition-colors shadow-md border border-white/5"
-              href={event.maps_url || 'https://maps.google.com'}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              <span className="material-symbols-outlined text-primary text-base">map</span>
-              <span>Open in Google Maps</span>
-            </a>
+            {/* Action Buttons: Google Maps & Calendar */}
+            <div className="flex flex-col gap-2 w-full">
+              <a
+                className="w-full py-2.5 px-4 rounded-lg bg-surface-container-high/80 hover:bg-surface-container-highest text-on-surface flex items-center justify-center gap-2 font-label-md uppercase tracking-wider text-xs transition-colors shadow-md border border-white/5"
+                href={event.maps_url || 'https://maps.google.com'}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <span className="material-symbols-outlined text-primary text-base">map</span>
+                <span>Open in Google Maps</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => onCalendarClick(event)}
+                className="w-full py-2 px-4 rounded-lg bg-surface-container-low/60 hover:bg-surface-container-low text-secondary flex items-center justify-center gap-2 font-label-md uppercase tracking-wider text-xs transition-colors border border-white/5 cursor-pointer active:scale-95"
+              >
+                <span className="material-symbols-outlined text-base">event_available</span>
+                <span>Save to Google Calendar</span>
+              </button>
+            </div>
           </div>
         );
       })}

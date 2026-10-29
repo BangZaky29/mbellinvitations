@@ -1,6 +1,7 @@
 import React from 'react';
 import type { EventSectionProps } from '../../types';
 import { VenueMapEmbed } from '../../../common/VenueMapEmbed';
+import { openGoogleCalendar } from '../../../../utils/calendarHelper';
 
 export const EventSection: React.FC<EventSectionProps> = ({
   data,
@@ -94,16 +95,27 @@ export const EventSection: React.FC<EventSectionProps> = ({
               </div>
             )}
 
-            {/* Google Maps Button */}
-            <a
-              href={event.maps_url || 'https://maps.google.com'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full min-h-[46px] py-2.5 px-4 rounded-full bg-[#2C4034] hover:bg-[#1E2D24] text-white text-xs sm:text-sm font-semibold tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-all shadow-md shadow-[#2C4034]/20 text-center"
-            >
-              <span className="material-symbols-outlined text-[18px] shrink-0">near_me</span>
-              <span>Buka Google Maps</span>
-            </a>
+            {/* Action Buttons: Google Maps & Google Calendar */}
+            <div className="flex flex-col gap-2 w-full">
+              <a
+                href={event.maps_url || 'https://maps.google.com'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full min-h-[44px] py-2.5 px-4 rounded-full bg-[#2C4034] hover:bg-[#1E2D24] text-white text-xs sm:text-sm font-semibold tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-all shadow-md shadow-[#2C4034]/20 text-center"
+              >
+                <span className="material-symbols-outlined text-[18px] shrink-0">near_me</span>
+                <span>Buka Google Maps</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => openGoogleCalendar(data, event)}
+                className="w-full min-h-[40px] py-2 px-4 rounded-full border border-[#2C4034]/20 bg-[#EFE8DE]/60 hover:bg-[#EFE8DE] text-[#2C4034] text-xs font-semibold tracking-wide flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-2xs"
+              >
+                <span className="material-symbols-outlined text-[16px] text-[#8C4E2D]">event_available</span>
+                <span>Simpan ke Google Calendar</span>
+              </button>
+            </div>
           </div>
         );
       })}

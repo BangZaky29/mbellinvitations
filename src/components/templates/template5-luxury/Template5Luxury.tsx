@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { InvitationProps } from '../../../types/invitation';
 import { useTemplateState } from '../../../hooks/useTemplateState';
+import { openGoogleCalendar } from '../../../utils/calendarHelper';
 import { FloatingDock } from '../../common/FloatingDock';
 import { SleekToast } from '../../common/SleekToast';
 import { GalleryLightbox } from '../../common/GalleryLightbox';
@@ -81,17 +82,11 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [lightboxImg]);
 
-  // Calendar Handler
+  // Calendar Handler (Universal Engine)
   const handleAddToCalendar = () => {
-    const title = encodeURIComponent(`The Wedding of ${data.groom.name} & ${data.bride.name}`);
-    const details = encodeURIComponent(
-      `Holy Matrimony & Gala Reception of ${data.groom.full_name} and ${data.bride.full_name} at The St. Regis Jakarta.`
-    );
-    const location = encodeURIComponent(
-      data.events[1]?.venue_name || data.events[0]?.venue_name || 'The St. Regis Jakarta'
-    );
-    const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=20261024T030000Z/20261024T160000Z&details=${details}&location=${location}`;
-    window.open(googleCalUrl, '_blank');
+    openGoogleCalendar(data, undefined, () => {
+      showToast('Membuka Google Calendar', 'info');
+    });
   };
 
   // Groom and Bride Initials Monogram

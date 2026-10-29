@@ -1,6 +1,7 @@
 import React from 'react';
 import type { HeroSectionProps } from '../../types';
 import { LiveStreamBanner } from '../../../common/LiveStreamBanner';
+import { openGoogleCalendar } from '../../../../utils/calendarHelper';
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
   data,
@@ -130,6 +131,20 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               Detik
             </span>
           </div>
+        </div>
+
+        {/* CTA Simpan ke Google Calendar */}
+        <div className="mt-6 flex justify-center w-full">
+          <button
+            type="button"
+            onClick={() => openGoogleCalendar(data)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-gold-champagne/40 bg-white/80 hover:bg-white text-charcoal-dark font-sans text-xs uppercase tracking-widest font-medium transition-all shadow-sm active:scale-95 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[17px] text-gold-champagne">
+              event_available
+            </span>
+            <span>Simpan ke Google Calendar</span>
+          </button>
         </div>
       </div>
 

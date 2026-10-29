@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { InvitationProps } from '../../../types/invitation';
 import { useTemplateState } from '../../../hooks/useTemplateState';
+import { openGoogleCalendar } from '../../../utils/calendarHelper';
 import { FloatingDock } from '../../common/FloatingDock';
 import { SleekToast } from '../../common/SleekToast';
 import { GalleryLightbox } from '../../common/GalleryLightbox';
@@ -69,21 +70,11 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
 
   const [activeRsvpTab, setActiveRsvpTab] = useState<'hadir' | 'ragu' | 'tidak'>('hadir');
 
-  // Handle Calendar Save
+  // Handle Calendar Save (Universal Engine)
   const handleSaveToCalendar = () => {
-    const title = encodeURIComponent(`The Wedding of ${data.groom.name} & ${data.bride.name}`);
-    const details = encodeURIComponent(
-      `Pernikahan Adat Sunda Siger ${data.groom.full_name} & ${data.bride.full_name}. Runtut Raut Sauyunan.`
-    );
-    const location = encodeURIComponent(
-      data.events?.[1]?.venue_name || data.events?.[0]?.venue_name || 'Indonesia'
-    );
-    const dateFormatted = data.wedding_date_iso
-      ? data.wedding_date_iso.replace(/[-:]/g, '').split('+')[0]
-      : '20261024T080000';
-    const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateFormatted}/${dateFormatted}&details=${details}&location=${location}`;
-    window.open(googleCalUrl, '_blank');
-    showToast('Membuka Google Calendar', 'info');
+    openGoogleCalendar(data, undefined, () => {
+      showToast('Membuka Google Calendar', 'info');
+    });
   };
 
   const recipientName = data.guest_name || 'Bapak/Ibu/Saudara/i';

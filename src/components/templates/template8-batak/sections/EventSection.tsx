@@ -1,6 +1,7 @@
 import React from 'react';
 import type { InvitationData } from '../../../../types/invitation';
 import { VenueMapEmbed } from '../../../common/VenueMapEmbed';
+import { openGoogleCalendar } from '../../../../utils/calendarHelper';
 
 interface EventSectionProps {
   data: InvitationData;
@@ -164,16 +165,27 @@ export const EventSection: React.FC<EventSectionProps> = ({
                   </div>
                 )}
 
-                {/* Tombol CTA Google Maps */}
-                <a
-                  href={ev.maps_url || 'https://maps.google.com'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-2.5 sm:py-3 rounded-xl bg-[#85291B] hover:bg-[#630F05] text-[#FFDAD4] font-sans text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md mt-1 cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[18px]">near_me</span>
-                  <span>Petunjuk Lokasi (Google Maps)</span>
-                </a>
+                {/* Tombol Aksi: Google Maps & Simpan ke Google Calendar */}
+                <div className="flex flex-col gap-2 w-full mt-1">
+                  <a
+                    href={ev.maps_url || 'https://maps.google.com'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-2.5 sm:py-3 rounded-xl bg-[#85291B] hover:bg-[#630F05] text-[#FFDAD4] font-sans text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">near_me</span>
+                    <span>Petunjuk Lokasi (Google Maps)</span>
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={() => openGoogleCalendar(data, ev)}
+                    className="w-full py-2 rounded-xl border border-[#EAC16E]/30 bg-[#19120E] hover:bg-[#251b14] text-[#EAC16E] font-sans text-xs font-semibold tracking-wide flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-2xs"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">calendar_add_on</span>
+                    <span>Simpan ke Google Calendar</span>
+                  </button>
+                </div>
               </div>
             </div>
           );

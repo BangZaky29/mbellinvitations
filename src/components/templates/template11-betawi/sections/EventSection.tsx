@@ -1,6 +1,7 @@
 import React from 'react';
 import type { InvitationData } from '../../../../types/invitation';
 import { VenueMapEmbed } from '../../../common/VenueMapEmbed';
+import { openGoogleCalendar } from '../../../../utils/calendarHelper';
 import {
   TornPaperDivider,
   BetawiBatikWatermark,
@@ -163,18 +164,31 @@ export const EventSection: React.FC<EventSectionProps> = ({
                     </div>
                   )}
 
-                  {/* Tombol CTA Google Maps SELALU TAMPIL di setiap card acara */}
-                  <a
-                    href={ev.maps_url || 'https://maps.google.com'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full py-2.5 rounded-full bg-[#FED65B] text-[#410403] text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-md hover:bg-[#FFE088] active:scale-95 transition-all"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">
-                      near_me
-                    </span>
-                    <span>Petunjuk Lokasi (Google Maps)</span>
-                  </a>
+                  {/* Tombol Aksi: Google Maps & Simpan ke Google Calendar */}
+                  <div className="flex flex-col gap-2 w-full">
+                    <a
+                      href={ev.maps_url || 'https://maps.google.com'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2.5 rounded-full bg-[#FED65B] text-[#410403] text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-md hover:bg-[#FFE088] active:scale-95 transition-all"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">
+                        near_me
+                      </span>
+                      <span>Petunjuk Lokasi (Google Maps)</span>
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={() => openGoogleCalendar(data, ev)}
+                      className="w-full py-2 rounded-full bg-white/10 hover:bg-white/15 text-[#FFE088] border border-[#FED65B]/30 text-xs font-sans font-semibold tracking-wide flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[15px]">
+                        calendar_add_on
+                      </span>
+                      <span>Ingatkan Sesi Ini di Google Calendar</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );

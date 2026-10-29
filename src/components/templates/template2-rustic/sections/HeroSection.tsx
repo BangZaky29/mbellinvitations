@@ -1,6 +1,7 @@
 import React from 'react';
 import type { HeroSectionProps } from '../../types';
 import { LiveStreamBanner } from '../../../common/LiveStreamBanner';
+import { openGoogleCalendar } from '../../../../utils/calendarHelper';
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
   data,
@@ -113,18 +114,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </div>
       </div>
 
-      {/* Calendar Action */}
-      <a
-        href="https://calendar.google.com"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="h-11 px-6 rounded-full bg-[#EFE8DE] text-[#2C4034] hover:bg-[#2C4034] hover:text-white border border-[#2C4034]/15 font-semibold text-xs sm:text-sm flex items-center gap-2 transition-all active:scale-95 shadow-xs"
+      {/* Calendar Action (Universal Engine) */}
+      <button
+        type="button"
+        onClick={() => openGoogleCalendar(data)}
+        className="h-11 px-6 rounded-full bg-[#EFE8DE] text-[#2C4034] hover:bg-[#2C4034] hover:text-white border border-[#2C4034]/15 font-semibold text-xs sm:text-sm flex items-center gap-2 transition-all active:scale-95 shadow-xs cursor-pointer"
       >
         <span className="material-symbols-outlined text-[18px] text-[#8C4E2D]">
           event_available
         </span>
         <span>Simpan ke Google Calendar</span>
-      </a>
+      </button>
 
       {/* Optional Livestream Banner */}
       {isLivestreamActive && Boolean(streamingUrl) && (

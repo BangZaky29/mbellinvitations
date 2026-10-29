@@ -1,6 +1,7 @@
 import React from 'react';
 import type { EventSectionProps } from '../../types';
 import { VenueMapEmbed } from '../../../common/VenueMapEmbed';
+import { openGoogleCalendar } from '../../../../utils/calendarHelper';
 
 export const EventSection: React.FC<EventSectionProps> = ({
   data,
@@ -113,18 +114,31 @@ export const EventSection: React.FC<EventSectionProps> = ({
                   </div>
                 )}
 
-                {/* Tombol CTA Google Maps */}
-                <a
-                  href={mapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3.5 inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl gold-gradient-btn text-[#1B0609] font-sans font-bold text-xs uppercase tracking-widest shadow-md hover:brightness-105 transition-all cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[16px]">
-                    near_me
-                  </span>
-                  <span>Petunjuk Lokasi (Google Maps)</span>
-                </a>
+                {/* Tombol Aksi: Google Maps & Simpan ke Google Calendar */}
+                <div className="mt-3.5 flex flex-col gap-2 w-full">
+                  <a
+                    href={mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl gold-gradient-btn text-[#1B0609] font-sans font-bold text-xs uppercase tracking-widest shadow-md hover:brightness-105 transition-all cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">
+                      near_me
+                    </span>
+                    <span>Petunjuk Lokasi (Google Maps)</span>
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={() => openGoogleCalendar(data, ev)}
+                    className="inline-flex items-center justify-center gap-1.5 w-full py-2 px-4 rounded-xl border border-[#D4AF37]/35 bg-[#1B0609]/60 hover:bg-[#1B0609] text-[#F5E296] font-sans font-semibold text-xs tracking-wide transition-all active:scale-95 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[15px]">
+                      event_available
+                    </span>
+                    <span>Simpan ke Google Calendar</span>
+                  </button>
+                </div>
               </div>
             </div>
           );

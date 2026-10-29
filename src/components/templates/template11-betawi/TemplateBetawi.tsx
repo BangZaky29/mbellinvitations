@@ -1,6 +1,7 @@
 import React from 'react';
 import type { InvitationProps } from '../../../types/invitation';
 import { useTemplateState } from '../../../hooks/useTemplateState';
+import { openGoogleCalendar } from '../../../utils/calendarHelper';
 import { FloatingDock } from '../../common/FloatingDock';
 import { SleekToast } from '../../common/SleekToast';
 import { GalleryLightbox } from '../../common/GalleryLightbox';
@@ -79,32 +80,11 @@ export const TemplateBetawi: React.FC<InvitationProps> = ({
     ? Object.values(rawEvents)
     : [];
 
-  // Handle Google Calendar Save
+  // Handle Google Calendar Save (Universal Engine)
   const handleSaveToCalendar = () => {
-    const activeIdx =
-      data.countdown_target === 'resepsi' && eventsList.length > 1 ? 1 : 0;
-    const targetEvent = eventsList[activeIdx] || eventsList[0] || {};
-
-    const eventTitle =
-      targetEvent.title || targetEvent.name || 'Hajatan Besar Adat Betawi';
-    const title = encodeURIComponent(
-      `${eventTitle} — ${firstPerson.name} & ${secondPerson.name}`
-    );
-    const details = encodeURIComponent(
-      `Pernikahan & Hajatan Palang Pintu Adat Betawi ${data.groom?.full_name || data.groom?.name} & ${data.bride?.full_name || data.bride?.name}.`
-    );
-    const location = encodeURIComponent(
-      targetEvent.venue_name ||
-        targetEvent.location_name ||
-        targetEvent.venue_address ||
-        'The Grand Batavia Heritage Ballroom'
-    );
-    const dateFormatted = data.wedding_date_iso
-      ? data.wedding_date_iso.replace(/[-:]/g, '').split('+')[0]
-      : '20261219T080000';
-    const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateFormatted}/${dateFormatted}&details=${details}&location=${location}`;
-    window.open(googleCalUrl, '_blank');
-    showToast('Membuka Google Calendar', 'info');
+    openGoogleCalendar(data, undefined, () => {
+      showToast('Membuka Google Calendar', 'info');
+    });
   };
 
   const recipientName = data.guest_name || 'Bapak/Ibu/Saudara/i';
