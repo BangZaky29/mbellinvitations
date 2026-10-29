@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 export interface VercelRequest {
     method?: string;
     body?: any;
@@ -26,12 +28,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     try {
         const body = req.body || {};
-
-        // Ambil pesan dan bersihkan
         const rawMessage = String(body.message || body.text || '').trim();
         const text = rawMessage.toLowerCase();
-
-        // Tentukan target balasan: Jika dari grup, balas ke grup tersebut. Jika dari personal, balas ke pengirim.
         const chatSender = String(body.sender || body.from || '');
         const isGroup = chatSender.includes('@g.us') || String(body.is_group || '').toLowerCase() === 'true';
         const targetDestination = isGroup ? chatSender : (body.device || chatSender);
@@ -40,7 +38,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(200).json({ status: false, reason: 'Empty message' });
         }
 
-        // Deteksi fleksibel: apakah pesan men-tag bot (@bangzaky29, @bangzaky, atau nomor bot 08988761937 / 628988761937)
         const isTagged =
             text.includes('bangzaky') ||
             text.includes('628988761937') ||
@@ -54,7 +51,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(200).json({ status: true, ignored: true, reason: 'Not tagged or keyword not found' });
         }
 
-        // Ambil data statistik live dari Supabase RPC
         const { data: stats, error } = await supabase.rpc('get_mbell_bot_stats');
         if (error || !stats) {
             throw new Error(error?.message || 'Gagal mengambil statistik dari database');
@@ -66,7 +62,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         let replyMessage = '';
 
-        // 1. Jika ditanya soal Total Login / User
         if (askLogin && !askSlug) {
             replyMessage =
                 `📊 *LAPORAN USER & LOGIN MBELL*\n` +
@@ -79,9 +74,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 `• *Waktu:* ${stats.last_login_time}\n` +
                 `━━━━━━━━━━━━━━━━━━━━\n` +
                 `_Diperbarui: ${stats.checked_at}_`;
-        }
-        // 2. Jika ditanya soal Slug / Link Undangan Aktif
-        else if (askSlug && !askLogin) {
+        } else if (askSlug && !askLogin) {
             replyMessage =
                 `🔗 *LAPORAN SLUG UNDANGAN MBELL*\n` +
                 `━━━━━━━━━━━━━━━━━━━━\n` +
@@ -92,9 +85,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 `🌐 *Domain:* https://mbellinvitations.vercel.app\n` +
                 `━━━━━━━━━━━━━━━━━━━━\n` +
                 `_Diperbarui: ${stats.checked_at}_`;
-        }
-        // 3. Jika ditanya soal Transaksi / Omset
-        else if (askOmset) {
+        } else if (askOmset) {
             const formattedRevenue = Number(stats.total_revenue || 0).toLocaleString('id-ID');
             replyMessage =
                 `💰 *LAPORAN TRANSAKSI MBELL*\n` +
@@ -103,9 +94,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 `💵 *Total Pemasukan:* Rp ${formattedRevenue}\n` +
                 `━━━━━━━━━━━━━━━━━━━━\n` +
                 `_Diperbarui: ${stats.checked_at}_`;
-        }
-        // 4. Ringkasan Umum jika mengetik keyword umum
-        else {
+        } else {
             const formattedRevenue = Number(stats.total_revenue || 0).toLocaleString('id-ID');
             replyMessage =
                 `🤖 *REKAP LIVE MBELL INVITATIONS*\n` +
@@ -118,7 +107,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 `💡 _Tips: Ketik *@bangzaky29 total login*, *@bangzaky29 slug aktif*, atau *@bangzaky29 omset*._`;
         }
 
-        // Kirim balasan melalui API Fonnte
         const fonnteRes = await fetch('https://api.fonnte.com/send', {
             method: 'POST',
             headers: {
