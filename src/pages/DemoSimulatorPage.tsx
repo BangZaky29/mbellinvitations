@@ -9,6 +9,9 @@ import { TemplateSundaSiger } from '../components/templates/TemplateSundaSiger';
 import { TemplateMinangBaralek } from '../components/templates/Template7Minang';
 import { TemplateBatakToba } from '../components/templates/Template8Batak';
 import { TemplateBetawi } from '../components/templates/Template11Betawi';
+import { TemplateBugis } from '../components/templates/Template10Bugis';
+import { TemplateBali } from '../components/templates/Template11Bali';
+import { TemplatePalembang } from '../components/templates/Template12Palembang';
 import {
   MOCK_MODERN_DATA,
   MOCK_MODERN_THEME,
@@ -37,6 +40,15 @@ import {
   MOCK_BETAWI_DATA,
   MOCK_BETAWI_THEME,
   MOCK_BETAWI_WISHES,
+  MOCK_BUGIS_DATA,
+  MOCK_BUGIS_THEME,
+  MOCK_BUGIS_WISHES,
+  MOCK_BALI_DATA,
+  MOCK_BALI_THEME,
+  MOCK_BALI_WISHES,
+  MOCK_PALEMBANG_DATA,
+  MOCK_PALEMBANG_THEME,
+  MOCK_PALEMBANG_WISHES,
 } from '../data/mockInvitation';
 
 const TEMPLATE_LIST = [
@@ -48,7 +60,10 @@ const TEMPLATE_LIST = [
   { id: 'template6', num: '6', name: 'Adat Sunda Siger', short: 'Sunda', accentColor: '#C5A059' },
   { id: 'template7', num: '7', name: 'Adat Minang Baralek Gadang', short: 'Minang', accentColor: '#D4AF37' },
   { id: 'template8', num: '8', name: 'Adat Batak Toba', short: 'Batak', accentColor: '#C8A253' },
+  { id: 'template10', num: '10', name: 'Adat Bugis Makassar Royal', short: 'Bugis', accentColor: '#F2CA50' },
   { id: 'template11', num: '11', name: 'Adat Betawi Palang Pintu', short: 'Betawi', accentColor: '#FED65B' },
+  { id: 'template12', num: '12', name: 'Adat Bali Royal Pawiwahan', short: 'Bali', accentColor: '#D4AF37' },
+  { id: 'template13', num: '13', name: 'Adat Palembang Sriwijaya', short: 'Palembang', accentColor: '#FFD57A' },
 ];
 
 export const DemoSimulatorPage: React.FC = () => {
@@ -281,12 +296,45 @@ export const DemoSimulatorPage: React.FC = () => {
           />
         )}
 
+        {selectedTemplate === 'template10' && (
+          <TemplateBugis
+            invitationId="demo-invitation-010"
+            data={MOCK_BUGIS_DATA}
+            theme={MOCK_BUGIS_THEME}
+            wishes={MOCK_BUGIS_WISHES}
+            isCoverOpen={isCoverOpen}
+            isPreview={isPreview}
+          />
+        )}
+
         {selectedTemplate === 'template11' && (
           <TemplateBetawi
             invitationId="demo-invitation-011"
             data={MOCK_BETAWI_DATA}
             theme={MOCK_BETAWI_THEME}
             wishes={MOCK_BETAWI_WISHES}
+            isCoverOpen={isCoverOpen}
+            isPreview={isPreview}
+          />
+        )}
+
+        {selectedTemplate === 'template12' && (
+          <TemplateBali
+            invitationId="demo-invitation-012"
+            data={MOCK_BALI_DATA}
+            theme={MOCK_BALI_THEME}
+            wishes={MOCK_BALI_WISHES}
+            isCoverOpen={isCoverOpen}
+            isPreview={isPreview}
+          />
+        )}
+
+        {selectedTemplate === 'template13' && (
+          <TemplatePalembang
+            invitationId="demo-invitation-013"
+            data={MOCK_PALEMBANG_DATA}
+            theme={MOCK_PALEMBANG_THEME}
+            wishes={MOCK_PALEMBANG_WISHES}
             isCoverOpen={isCoverOpen}
             isPreview={isPreview}
           />

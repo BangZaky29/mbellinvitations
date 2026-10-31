@@ -10,6 +10,9 @@ import { TemplateSundaSiger } from '../components/templates/TemplateSundaSiger';
 import { TemplateMinangBaralek } from '../components/templates/Template7Minang';
 import { TemplateBatakToba } from '../components/templates/Template8Batak';
 import { TemplateBetawi } from '../components/templates/Template11Betawi';
+import { TemplateBugis } from '../components/templates/Template10Bugis';
+import { TemplateBali } from '../components/templates/Template11Bali';
+import { TemplatePalembang } from '../components/templates/Template12Palembang';
 import { DraftNoticeScreen } from '../components/common/DraftNoticeScreen';
 import { isTemplateUnlocked, TEMPLATE_ID_TO_THEME } from './dashboard/constants/themeMapping';
 
@@ -25,7 +28,10 @@ export const PublicInvitationPage: React.FC = () => {
   let requestedTheme: string | null = null;
   if (rawThemeParam) {
     const clean = rawThemeParam.toLowerCase().replace(/^template[-_]?/i, '').trim();
-    if (clean === '11' || clean === '9' || clean === 'betawi') requestedTheme = 'betawi';
+    if (clean === '13' || clean === '12_palembang' || clean === 'palembang') requestedTheme = 'palembang';
+    else if (clean === '11' || clean === '9' || clean === 'betawi') requestedTheme = 'betawi';
+    else if (clean === '12' || clean === '11_bali' || clean === 'bali') requestedTheme = 'bali';
+    else if (clean === '10' || clean === 'bugis') requestedTheme = 'bugis';
     else if (clean === '8' || clean === 'batak') requestedTheme = 'batak';
     else if (clean === '7' || clean === 'minang') requestedTheme = 'minang';
     else if (clean === '6' || clean === 'sunda') requestedTheme = 'sunda';
@@ -116,9 +122,12 @@ export const PublicInvitationPage: React.FC = () => {
     requestedTheme ||
     invitationData?.theme_id ||
     TEMPLATE_ID_TO_THEME[templateId] ||
-    (templateId === 'template11' || templateId === 'template9' ? 'betawi' : templateId === 'template8' ? 'batak' : templateId === 'template7' ? 'minang' : templateId === 'template6' ? 'sunda' : 'modern');
+    (templateId === 'template13' || templateId === 'template12_palembang' ? 'palembang' : templateId === 'template12' || templateId === 'template11_bali' ? 'bali' : templateId === 'template11' || templateId === 'template9' ? 'betawi' : templateId === 'template10' ? 'bugis' : templateId === 'template8' ? 'batak' : templateId === 'template7' ? 'minang' : templateId === 'template6' ? 'sunda' : 'modern');
 
   const isBetawi = activeTheme === 'betawi';
+  const isBugis = activeTheme === 'bugis';
+  const isBali = activeTheme === 'bali';
+  const isPalembang = activeTheme === 'palembang';
   const isBatak = activeTheme === 'batak';
   const isMinang = activeTheme === 'minang';
   const isSunda = activeTheme === 'sunda';
@@ -126,7 +135,7 @@ export const PublicInvitationPage: React.FC = () => {
   const isRustic = activeTheme === 'rustic';
   const isIslami = activeTheme === 'islami';
   const isLuxury = activeTheme === 'luxury';
-  const isModern = !isBetawi && !isBatak && !isMinang && !isSunda && !isJawa && !isRustic && !isIslami && !isLuxury;
+  const isModern = !isBetawi && !isBugis && !isBali && !isPalembang && !isBatak && !isMinang && !isSunda && !isJawa && !isRustic && !isIslami && !isLuxury;
 
   return (
     <div id="invitation-root" data-public-invitation="true" className="relative w-full min-h-screen no-scrollbar">
@@ -240,6 +249,39 @@ export const PublicInvitationPage: React.FC = () => {
 
       {isBetawi && (
         <TemplateBetawi
+          invitationId={slug}
+          data={invitationData}
+          theme={themeConfig}
+          wishes={wishes}
+          onSubmitWish={onSubmitWish}
+          onSubmitRsvp={onSubmitRsvp}
+        />
+      )}
+
+      {isBugis && (
+        <TemplateBugis
+          invitationId={slug}
+          data={invitationData}
+          theme={themeConfig}
+          wishes={wishes}
+          onSubmitWish={onSubmitWish}
+          onSubmitRsvp={onSubmitRsvp}
+        />
+      )}
+
+      {isBali && (
+        <TemplateBali
+          invitationId={slug}
+          data={invitationData}
+          theme={themeConfig}
+          wishes={wishes}
+          onSubmitWish={onSubmitWish}
+          onSubmitRsvp={onSubmitRsvp}
+        />
+      )}
+
+      {isPalembang && (
+        <TemplatePalembang
           invitationId={slug}
           data={invitationData}
           theme={themeConfig}

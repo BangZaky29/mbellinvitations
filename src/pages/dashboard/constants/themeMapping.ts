@@ -9,6 +9,9 @@ import {
   MOCK_MINANG_THEME,
   MOCK_BATAK_THEME,
   MOCK_BETAWI_THEME,
+  MOCK_BUGIS_THEME,
+  MOCK_BALI_THEME,
+  MOCK_PALEMBANG_THEME,
 } from '../../../data/mockInvitation';
 import { getDynamicPriceInfo } from '../../../services/templateCatalogService';
 
@@ -23,6 +26,9 @@ export const THEME_TO_TEMPLATE_ID: Record<string, string> = {
   minang: 'template7',
   batak: 'template8',
   betawi: 'template11',
+  bugis: 'template10',
+  bali: 'template12',
+  palembang: 'template13',
   template1: 'template1',
   template2: 'template2',
   template3: 'template3',
@@ -31,15 +37,20 @@ export const THEME_TO_TEMPLATE_ID: Record<string, string> = {
   template6: 'template6',
   template7: 'template7',
   template8: 'template8',
+  template10: 'template10',
   template11: 'template11',
   template9: 'template11',
+  template12: 'template12',
+  template11_bali: 'template12',
+  template13: 'template13',
+  template12_palembang: 'template13',
 };
 
 /**
  * Daftar tema eksklusif resmi yang tersedia di Wedding Studio
  */
-export const CANONICAL_THEMES = ['sunda', 'minang', 'batak', 'betawi', 'jawa', 'islami', 'modern', 'rustic', 'luxury'] as const;
-export const TOTAL_EXCLUSIVE_THEMES = CANONICAL_THEMES.length; // 9 Tema Eksklusif
+export const CANONICAL_THEMES = ['sunda', 'minang', 'batak', 'betawi', 'bugis', 'bali', 'palembang', 'jawa', 'islami', 'modern', 'rustic', 'luxury'] as const;
+export const TOTAL_EXCLUSIVE_THEMES = CANONICAL_THEMES.length; // 12 Tema Eksklusif
 
 // ID template yang sah terdaftar di master table public.templates Supabase (mencegah error 409 FK violation)
 export const KNOWN_DB_TEMPLATE_IDS = new Set([
@@ -51,14 +62,25 @@ export const KNOWN_DB_TEMPLATE_IDS = new Set([
   'template6',
   'template7',
   'template8',
+  'template10',
   'template11',
   'template9',
+  'template12',
+  'template13',
 ]);
 
 /**
  * Nama-nama display resmi untuk setiap template undangan
  */
 export const THEME_NAMES: Record<string, string> = {
+  palembang: 'Adat Palembang Sriwijaya',
+  template13: 'Adat Palembang Sriwijaya',
+  template12_palembang: 'Adat Palembang Sriwijaya',
+  bali: 'Adat Bali Royal Pawiwahan',
+  template12: 'Adat Bali Royal Pawiwahan',
+  template11_bali: 'Adat Bali Royal Pawiwahan',
+  bugis: 'Adat Bugis Makassar Royal',
+  template10: 'Adat Bugis Makassar Royal',
   sunda: 'Adat Sunda Siger',
   template6: 'Adat Sunda Siger',
   minang: 'Adat Minang Baralek Gadang',
@@ -88,6 +110,54 @@ export interface ThemeMetaInfo {
 }
 
 export const THEME_META: Record<string, ThemeMetaInfo> = {
+  palembang: {
+    name: 'Adat Palembang Sriwijaya',
+    tag: 'Aesan Gede & Kemegahan Songket Lepus',
+    icon: 'crown',
+    accentColor: '#FFD57A',
+  },
+  template13: {
+    name: 'Adat Palembang Sriwijaya',
+    tag: 'Aesan Gede & Kemegahan Songket Lepus',
+    icon: 'crown',
+    accentColor: '#FFD57A',
+  },
+  template12_palembang: {
+    name: 'Adat Palembang Sriwijaya',
+    tag: 'Aesan Gede & Kemegahan Songket Lepus',
+    icon: 'crown',
+    accentColor: '#FFD57A',
+  },
+  bali: {
+    name: 'Adat Bali Royal Pawiwahan',
+    tag: 'Pawiwahan Ageng & Wastra Endek Bali',
+    icon: 'temple_hindu',
+    accentColor: '#D4AF37',
+  },
+  template12: {
+    name: 'Adat Bali Royal Pawiwahan',
+    tag: 'Pawiwahan Ageng & Wastra Endek Bali',
+    icon: 'temple_hindu',
+    accentColor: '#D4AF37',
+  },
+  template11_bali: {
+    name: 'Adat Bali Royal Pawiwahan',
+    tag: 'Pawiwahan Ageng & Wastra Endek Bali',
+    icon: 'temple_hindu',
+    accentColor: '#D4AF37',
+  },
+  bugis: {
+    name: 'Adat Bugis Makassar Royal',
+    tag: 'Tudang Bottung & Baju Bodo Tokko',
+    icon: 'crown',
+    accentColor: '#F2CA50',
+  },
+  template10: {
+    name: 'Adat Bugis Makassar Royal',
+    tag: 'Tudang Bottung & Baju Bodo Tokko',
+    icon: 'crown',
+    accentColor: '#F2CA50',
+  },
   sunda: {
     name: 'Adat Sunda Siger',
     tag: 'Tradisi Parahyangan & Ronce Melati',
@@ -241,8 +311,13 @@ export const TEMPLATE_ID_TO_THEME: Record<string, string> = {
   template6: 'sunda',
   template7: 'minang',
   template8: 'batak',
+  template10: 'bugis',
   template11: 'betawi',
   template9: 'betawi',
+  template12: 'bali',
+  template11_bali: 'bali',
+  template13: 'palembang',
+  template12_palembang: 'palembang',
   modern: 'modern',
   rustic: 'rustic',
   jawa: 'jawa',
@@ -252,6 +327,9 @@ export const TEMPLATE_ID_TO_THEME: Record<string, string> = {
   minang: 'minang',
   batak: 'batak',
   betawi: 'betawi',
+  bugis: 'bugis',
+  bali: 'bali',
+  palembang: 'palembang',
 };
 
 export const DEFAULT_THEME_CONFIGS: Record<string, ThemeConfig> = {
@@ -274,6 +352,14 @@ export const DEFAULT_THEME_CONFIGS: Record<string, ThemeConfig> = {
   betawi: MOCK_BETAWI_THEME,
   template11: MOCK_BETAWI_THEME,
   template9: MOCK_BETAWI_THEME,
+  bugis: MOCK_BUGIS_THEME,
+  template10: MOCK_BUGIS_THEME,
+  bali: MOCK_BALI_THEME,
+  template12: MOCK_BALI_THEME,
+  template11_bali: MOCK_BALI_THEME,
+  palembang: MOCK_PALEMBANG_THEME,
+  template13: MOCK_PALEMBANG_THEME,
+  template12_palembang: MOCK_PALEMBANG_THEME,
 };
 
 // Demo keywords untuk deteksi apakah form masih memakai data bawaan template
@@ -377,6 +463,78 @@ export const TEMPLATE_PRICING: Record<string, TemplatePriceInfo> = {
     categoryLabel: 'Adat Nusantara',
   },
   template9: {
+    price: 79000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 79.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 79rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  bugis: {
+    price: 79000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 79.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 79rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  template10: {
+    price: 79000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 79.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 79rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  bali: {
+    price: 79000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 79.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 79rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  template12: {
+    price: 79000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 79.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 79rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  template11_bali: {
+    price: 79000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 79.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 79rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  palembang: {
+    price: 79000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 79.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 79rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  template13: {
+    price: 79000,
+    originalPrice: 99000,
+    priceDisplay: 'Rp 79.000',
+    originalPriceDisplay: 'Rp 99.000',
+    badgePrice: 'Rp 79rb',
+    category: 'adat',
+    categoryLabel: 'Adat Nusantara',
+  },
+  template12_palembang: {
     price: 79000,
     originalPrice: 99000,
     priceDisplay: 'Rp 79.000',

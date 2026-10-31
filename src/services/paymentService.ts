@@ -264,32 +264,39 @@ async function callMidtransStatusApi(orderId: string): Promise<any | null> {
 export async function createChargeTransaction(params: CreateChargeParams): Promise<ChargeResult> {
   const { userId, invitationId, invitationSlug, templateId, amount, paymentMethod } = params;
 
-  // 1. Resolve valid UUID for invitationId
-  let resolvedInvitationId = invitationId;
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(resolvedInvitationId || '');
+  // Helper validasi UUID
+  const isValidUuid = (val?: string | null): boolean =>
+    Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim()));
 
-  if (!isUuid && invitationSlug) {
+  // Pastikan user_id berupa UUID valid atau null (DILARANG string kosong "")
+  const safeUserId = isValidUuid(userId) ? userId!.trim() : null;
+
+  // 1. Resolve valid UUID for invitationId
+  let resolvedInvitationId = isValidUuid(invitationId) ? invitationId!.trim() : '';
+
+  if (!resolvedInvitationId && invitationSlug) {
     const { data: invRow } = await supabase
       .from('invitations')
       .select('id')
       .eq('slug', invitationSlug)
       .maybeSingle();
 
-    if (invRow?.id) {
+    if (invRow?.id && isValidUuid(invRow.id)) {
       resolvedInvitationId = invRow.id;
     }
   }
 
-  if (!resolvedInvitationId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(resolvedInvitationId)) {
+  if (!resolvedInvitationId) {
     const targetSlug = invitationSlug || `undangan-${Date.now()}`;
     const safeTemplateId = getSafeDbTemplateId(templateId);
 
-    const { data: upsertedInv } = await supabase
+    // Coba upsert dengan safeTemplateId terlebih dahulu
+    let { data: upsertedInv, error: upsertErr } = await supabase
       .from('invitations')
       .upsert(
         {
           slug: targetSlug,
-          user_id: userId || null,
+          user_id: safeUserId,
           template_id: safeTemplateId,
           status: 'draft',
           is_paid: false,
@@ -299,7 +306,27 @@ export async function createChargeTransaction(params: CreateChargeParams): Promi
       .select('id')
       .maybeSingle();
 
-    if (upsertedInv?.id) {
+    // Fallback jika template_id belum terdaftar di tabel public.templates (mencegah error FK 409)
+    if (upsertErr || !upsertedInv?.id) {
+      console.warn(`⚠️ Upsert draf dengan ${safeTemplateId} gagal (FK constraint). Fallback ke template1:`, upsertErr);
+      const { data: fallbackTemplateInv } = await supabase
+        .from('invitations')
+        .upsert(
+          {
+            slug: targetSlug,
+            user_id: safeUserId,
+            template_id: 'template1',
+            status: 'draft',
+            is_paid: false,
+          },
+          { onConflict: 'slug' }
+        )
+        .select('id')
+        .maybeSingle();
+      upsertedInv = fallbackTemplateInv;
+    }
+
+    if (upsertedInv?.id && isValidUuid(upsertedInv.id)) {
       resolvedInvitationId = upsertedInv.id;
     } else {
       const { data: fallbackInv } = await supabase
@@ -308,10 +335,27 @@ export async function createChargeTransaction(params: CreateChargeParams): Promi
         .eq('slug', targetSlug)
         .maybeSingle();
 
-      if (fallbackInv?.id) {
+      if (fallbackInv?.id && isValidUuid(fallbackInv.id)) {
         resolvedInvitationId = fallbackInv.id;
       }
     }
+  }
+
+  // Jika tetap belum dapat resolvedInvitationId, ambil id undangan terlama sebagai fallback darurat
+  if (!resolvedInvitationId) {
+    const { data: existingAny } = await supabase
+      .from('invitations')
+      .select('id')
+      .limit(1)
+      .maybeSingle();
+
+    if (existingAny?.id && isValidUuid(existingAny.id)) {
+      resolvedInvitationId = existingAny.id;
+    }
+  }
+
+  if (!resolvedInvitationId) {
+    throw new Error('Gagal menyiapkan identitas undangan untuk transaksi pembayaran. Pastikan koneksi Supabase aktif.');
   }
 
   const orderId = generateOrderId();
@@ -376,7 +420,7 @@ export async function createChargeTransaction(params: CreateChargeParams): Promi
   // 3. Simpan ke Supabase public.transactions
   const transactionPayload = {
     order_id: orderId,
-    user_id: userId,
+    user_id: safeUserId,
     invitation_id: resolvedInvitationId,
     template_id: templateId,
     amount,

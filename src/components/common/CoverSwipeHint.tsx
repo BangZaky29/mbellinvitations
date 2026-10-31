@@ -1,7 +1,7 @@
 import React from 'react';
 
 export interface CoverSwipeHintProps {
-  variant?: 'light' | 'dark' | 'gold' | 'rustic' | 'sunda' | 'jawa' | 'auto';
+  variant?: 'light' | 'dark' | 'gold' | 'rustic' | 'sunda' | 'jawa' | 'bali' | 'palembang' | 'auto';
   className?: string;
   text?: string;
   isOpen?: boolean;
@@ -21,7 +21,10 @@ export const CoverSwipeHint: React.FC<CoverSwipeHintProps> = ({
   let textColor = 'text-white/85';
   let iconColor = 'text-white/95';
 
-  if (variant === 'gold' || variant === 'jawa' || variant === 'sunda') {
+  if (variant === 'light' || variant === 'bali') {
+    textColor = 'text-black font-semibold';
+    iconColor = 'text-black';
+  } else if (variant === 'gold' || variant === 'jawa' || variant === 'sunda' || variant === 'palembang') {
     textColor = 'text-[#ffe082]/90';
     iconColor = 'text-[#f3d068]';
   } else if (variant === 'rustic') {

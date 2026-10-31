@@ -10,6 +10,9 @@ import {
   MOCK_MINANG_THEME,
   MOCK_BATAK_THEME,
   MOCK_BETAWI_THEME,
+  MOCK_BUGIS_THEME,
+  MOCK_BALI_THEME,
+  MOCK_PALEMBANG_THEME,
   MOCK_THEME_DATA_MAP,
   MOCK_THEME_CONFIG_MAP,
 } from '../../../data/mockInvitation';
@@ -26,6 +29,14 @@ export const DEFAULT_THEMES: Record<string, ThemeConfig> = {
   betawi: MOCK_BETAWI_THEME,
   template11: MOCK_BETAWI_THEME,
   template9: MOCK_BETAWI_THEME,
+  bugis: MOCK_BUGIS_THEME,
+  template10: MOCK_BUGIS_THEME,
+  bali: MOCK_BALI_THEME,
+  template12: MOCK_BALI_THEME,
+  template11_bali: MOCK_BALI_THEME,
+  palembang: MOCK_PALEMBANG_THEME,
+  template13: MOCK_PALEMBANG_THEME,
+  template12_palembang: MOCK_PALEMBANG_THEME,
 };
 
 export const THEME_ID_MAP: Record<string, string> = {
@@ -37,8 +48,13 @@ export const THEME_ID_MAP: Record<string, string> = {
   template6: 'sunda',
   template7: 'minang',
   template8: 'batak',
+  template10: 'bugis',
   template11: 'betawi',
   template9: 'betawi',
+  template12: 'bali',
+  template11_bali: 'bali',
+  template13: 'palembang',
+  template12_palembang: 'palembang',
   modern: 'modern',
   rustic: 'rustic',
   jawa: 'jawa',
@@ -48,6 +64,9 @@ export const THEME_ID_MAP: Record<string, string> = {
   minang: 'minang',
   batak: 'batak',
   betawi: 'betawi',
+  bugis: 'bugis',
+  bali: 'bali',
+  palembang: 'palembang',
 };
 
 export function resolveNormalizedThemeId(themeId?: string): string {

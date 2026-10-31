@@ -9,6 +9,9 @@ import { TemplateSundaSiger } from '../templates/TemplateSundaSiger';
 import { TemplateMinangBaralek } from '../templates/Template7Minang';
 import { TemplateBatakToba } from '../templates/Template8Batak';
 import { TemplateBetawi } from '../templates/Template11Betawi';
+import { TemplateBugis } from '../templates/Template10Bugis';
+import { TemplateBali } from '../templates/Template11Bali';
+import { TemplatePalembang } from '../templates/Template12Palembang';
 import { PreviewToolbar } from './phone-preview/PreviewToolbar';
 import { PhoneFrame } from './phone-preview/PhoneFrame';
 import {
@@ -166,6 +169,17 @@ export const PhoneMockupPreview: React.FC<PhoneMockupPreviewProps> = ({
       case 'template11':
       case 'template9':
         return <TemplateBetawi {...props} />;
+      case 'bugis':
+      case 'template10':
+        return <TemplateBugis {...props} />;
+      case 'bali':
+      case 'template12':
+      case 'template11_bali':
+        return <TemplateBali {...props} />;
+      case 'palembang':
+      case 'template13':
+      case 'template12_palembang':
+        return <TemplatePalembang {...props} />;
       default:
         return <Template1Modern {...props} />;
     }

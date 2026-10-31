@@ -55,6 +55,24 @@ export {
   MOCK_BETAWI_WISHES,
 } from './mock/betawiData';
 
+export {
+  MOCK_BUGIS_DATA,
+  MOCK_BUGIS_THEME,
+  MOCK_BUGIS_WISHES,
+} from './mock/bugisData';
+
+export {
+  MOCK_BALI_DATA,
+  MOCK_BALI_THEME,
+  MOCK_BALI_WISHES,
+} from './mock/baliData';
+
+export {
+  MOCK_PALEMBANG_DATA,
+  MOCK_PALEMBANG_THEME,
+  MOCK_PALEMBANG_WISHES,
+} from './mock/palembangData';
+
 import {
   MOCK_INVITATION_DATA,
   MOCK_THEME_CONFIG,
@@ -100,6 +118,21 @@ import {
   MOCK_BETAWI_THEME,
   MOCK_BETAWI_WISHES,
 } from './mock/betawiData';
+import {
+  MOCK_BUGIS_DATA,
+  MOCK_BUGIS_THEME,
+  MOCK_BUGIS_WISHES,
+} from './mock/bugisData';
+import {
+  MOCK_BALI_DATA,
+  MOCK_BALI_THEME,
+  MOCK_BALI_WISHES,
+} from './mock/baliData';
+import {
+  MOCK_PALEMBANG_DATA,
+  MOCK_PALEMBANG_THEME,
+  MOCK_PALEMBANG_WISHES,
+} from './mock/palembangData';
 
 // Aliases for modern
 export const MOCK_MODERN_DATA = MOCK_INVITATION_DATA;
@@ -129,6 +162,14 @@ export const MOCK_THEME_DATA_MAP: Record<string, InvitationData> = {
   betawi: MOCK_BETAWI_DATA,
   template11: MOCK_BETAWI_DATA,
   template9: MOCK_BETAWI_DATA,
+  bugis: MOCK_BUGIS_DATA,
+  template10: MOCK_BUGIS_DATA,
+  bali: MOCK_BALI_DATA,
+  template12: MOCK_BALI_DATA,
+  template11_bali: MOCK_BALI_DATA,
+  palembang: MOCK_PALEMBANG_DATA,
+  template13: MOCK_PALEMBANG_DATA,
+  template12_palembang: MOCK_PALEMBANG_DATA,
 };
 
 export const MOCK_THEME_CONFIG_MAP: Record<string, ThemeConfig> = {
@@ -150,7 +191,15 @@ export const MOCK_THEME_CONFIG_MAP: Record<string, ThemeConfig> = {
   template8: MOCK_BATAK_THEME,
   betawi: MOCK_BETAWI_THEME,
   template11: MOCK_BETAWI_THEME,
-  template9: MOCK_BETAWI_THEME,
+  template9: MOCK_BETAWI_DATA ? MOCK_BETAWI_THEME : MOCK_BETAWI_THEME,
+  bugis: MOCK_BUGIS_THEME,
+  template10: MOCK_BUGIS_THEME,
+  bali: MOCK_BALI_THEME,
+  template12: MOCK_BALI_THEME,
+  template11_bali: MOCK_BALI_THEME,
+  palembang: MOCK_PALEMBANG_THEME,
+  template13: MOCK_PALEMBANG_THEME,
+  template12_palembang: MOCK_PALEMBANG_THEME,
 };
 
 export const MOCK_THEME_WISHES_MAP: Record<string, WishItem[]> = {
@@ -173,4 +222,12 @@ export const MOCK_THEME_WISHES_MAP: Record<string, WishItem[]> = {
   betawi: MOCK_BETAWI_WISHES,
   template11: MOCK_BETAWI_WISHES,
   template9: MOCK_BETAWI_WISHES,
+  bugis: MOCK_BUGIS_WISHES,
+  template10: MOCK_BUGIS_WISHES,
+  bali: MOCK_BALI_WISHES,
+  template12: MOCK_BALI_WISHES,
+  template11_bali: MOCK_BALI_WISHES,
+  palembang: MOCK_PALEMBANG_WISHES,
+  template13: MOCK_PALEMBANG_WISHES,
+  template12_palembang: MOCK_PALEMBANG_WISHES,
 };

@@ -9,7 +9,10 @@ export type LiveStreamVariant =
   | 'sunda'
   | 'minang'
   | 'batak'
-  | 'betawi';
+  | 'betawi'
+  | 'bugis'
+  | 'bali'
+  | 'palembang';
 
 interface LiveStreamBannerProps {
   url?: string;
@@ -177,6 +180,42 @@ export const LiveStreamBanner: React.FC<LiveStreamBannerProps> = ({
       button: 'bg-[#FED65B] hover:bg-[#FFE088] text-[#410403] font-bold shadow-md',
       defaultTitle: 'Siaran Langsung Hajatan Betawi',
       defaultSubtitle: 'Saksikan momen sakral akad & walimah secara daring',
+      defaultBtn: 'Tonton Siaran',
+    },
+    bugis: {
+      card: 'bg-[#052519] border border-[#F2CA50]/40 text-[#C8EAD8] shadow-xl',
+      iconBox: 'bg-[#F2CA50]/15 border border-[#F2CA50]/40 text-[#F2CA50]',
+      iconText: 'text-[#F2CA50]',
+      platformBadge: 'bg-[#F2CA50]/20 text-[#FFE088] border-[#F2CA50]/30',
+      title: 'text-[#C8EAD8] font-serif',
+      subtitle: 'text-[#D0C5AF]/85',
+      button: 'bg-[#F2CA50] hover:bg-[#FFE088] text-[#00170E] font-bold shadow-md',
+      defaultTitle: 'Siaran Langsung Tudang Bottung',
+      defaultSubtitle: 'Saksikan perhelatan agung adat Bugis-Makassar secara daring',
+      defaultBtn: 'Tonton Siaran',
+    },
+    bali: {
+      card: 'bg-[#411710] border border-[#D4AF37]/45 text-[#FFF9EF] shadow-xl',
+      iconBox: 'bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#FED65B]',
+      iconText: 'text-[#FED65B]',
+      platformBadge: 'bg-[#D4AF37]/20 text-[#FFE088] border-[#D4AF37]/30',
+      title: 'text-[#FFF9EF] font-serif',
+      subtitle: 'text-[#F3EDE4]/85',
+      button: 'bg-gradient-to-r from-[#D4AF37] to-[#FED65B] hover:brightness-105 text-[#411710] font-bold shadow-md',
+      defaultTitle: 'Pawiwahan Ageng Live Streaming',
+      defaultSubtitle: 'Saksikan prosesi sakral Dharma Yadnya Pawiwahan secara daring',
+      defaultBtn: 'Tonton Siaran',
+    },
+    palembang: {
+      card: 'bg-[#4A0E12] border border-[#FFD57A]/40 text-[#FDF9F2] shadow-xl',
+      iconBox: 'bg-[#FFD57A]/20 border border-[#FFD57A]/40 text-[#FFD57A]',
+      iconText: 'text-[#FFD57A]',
+      platformBadge: 'bg-[#FFD57A]/20 text-[#FFD57A] border-[#FFD57A]/30',
+      title: 'text-[#FDF9F2] font-serif',
+      subtitle: 'text-[#F1EDE6]/85',
+      button: 'bg-gradient-to-r from-[#EAC168] to-[#FFD57A] hover:brightness-105 text-[#2A0003] font-bold shadow-md',
+      defaultTitle: 'Siaran Langsung Prosesi Munggah & Akad',
+      defaultSubtitle: 'Saksikan sakralnya prosesi adat Palembang Darussalam secara daring',
       defaultBtn: 'Tonton Siaran',
     },
   };

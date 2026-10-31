@@ -18,6 +18,18 @@ export const PreviewToolbar: React.FC<PreviewToolbarProps> = ({
   setDeviceMode,
   onRefresh,
 }) => {
+  const handleCloseToCover = () => {
+    setIsCoverOpen(false);
+    setTimeout(() => {
+      const scrollables = document.querySelectorAll(
+        '[data-phone-scroll="true"], #phone-screen-scroll-container, [data-phone-preview="true"] .overflow-y-auto'
+      );
+      scrollables.forEach((s) => {
+        s.scrollTop = 0;
+      });
+    }, 40);
+  };
+
   const handleOpenContent = () => {
     setIsCoverOpen(true);
     setTimeout(() => {
@@ -64,7 +76,7 @@ export const PreviewToolbar: React.FC<PreviewToolbarProps> = ({
         >
           <button
             type="button"
-            onClick={() => setIsCoverOpen(false)}
+            onClick={handleCloseToCover}
             className={`px-2 sm:px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer flex items-center justify-center leading-none ${
               !isCoverOpen
                 ? onClose

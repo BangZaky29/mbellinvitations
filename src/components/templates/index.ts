@@ -8,3 +8,6 @@ export { TemplateSundaSiger } from './TemplateSundaSiger';
 export { TemplateMinangBaralek } from './Template7Minang';
 export { TemplateBatakToba } from './Template8Batak';
 export { TemplateBetawi } from './Template11Betawi';
+export { TemplateBugis } from './Template10Bugis';
+export { TemplateBali } from './Template11Bali';
+export { TemplatePalembang } from './Template12Palembang';
