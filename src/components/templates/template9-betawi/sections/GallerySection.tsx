@@ -1,9 +1,11 @@
 import React from 'react';
-import type { InvitationData } from '../../../../types/invitation';
+import type { InvitationData, ThemeConfig } from '../../../../types/invitation';
 import { BetawiBatikWatermark } from '../components';
+import { UniversalGalleryView } from '../../../common/gallery';
 
 interface GallerySectionProps {
   data: InvitationData;
+  theme?: ThemeConfig;
   isPreview?: boolean;
   setSelectedImage: (url: string | null) => void;
   showAllGallery?: boolean;
@@ -12,9 +14,8 @@ interface GallerySectionProps {
 
 export const GallerySection: React.FC<GallerySectionProps> = ({
   data,
+  theme,
   setSelectedImage,
-  showAllGallery = false,
-  setShowAllGallery,
 }) => {
   const fallbackPhotos = [
     'https://lh3.googleusercontent.com/aida-public/AB6AXuC38c0z_VRFW7pK5iEY8U1GecNyYvslcile2i98NOilLin6v5K2-EdEA-pw0lc5Ii-4Umtr-A2OHq10oR7AA91GmtqiLjbZdP5_M8cSzYDScBUa_6FPB3o222cYlN1FPrCxJ9yQzTbNhDErUc9P0RZ0PQjwaFOx8fa-KNvfb0o5Qj6Oy-E_2ONKQziS5NG2HznKRidJwLqFcdNwRhVHoqYJmRHb-35Ba81FILaNF79pktib-mMovGrI',
@@ -29,7 +30,8 @@ export const GallerySection: React.FC<GallerySectionProps> = ({
       ? rawPhotos
       : fallbackPhotos;
 
-  const displayPhotos = showAllGallery ? photos : photos.slice(0, 4);
+  const effectiveTheme = theme || (data as any).theme_config;
+  const currentStyle = data.gallery_style || effectiveTheme?.gallery_style || 'bento-grid';
 
   return (
     <section className="relative w-full bg-[#FCF9F3] text-[#1C1C18] px-4 pt-4 pb-8 flex flex-col items-center overflow-hidden">
@@ -49,49 +51,22 @@ export const GallerySection: React.FC<GallerySectionProps> = ({
         </p>
       </div>
 
-      {/* Asymmetric 2x2 Bento Grid */}
-      <div className="w-full max-w-[360px] grid grid-cols-2 gap-2 rounded-2xl overflow-hidden p-1.5 bg-[#F0EEE8] border border-[#E5E2DC]">
-        {displayPhotos.map((photoUrl, idx) => (
-          <div
-            key={idx}
-            role="button"
-            tabIndex={0}
-            onClick={() => setSelectedImage(photoUrl)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                setSelectedImage(photoUrl);
-              }
-            }}
-            className="h-44 rounded-xl overflow-hidden shadow-xs cursor-pointer group relative bg-[#410403]/10"
-          >
-            <img
-              alt={`Galeri Prewedding Betawi ${idx + 1}`}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              src={photoUrl}
-            />
-            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <span className="material-symbols-outlined text-white text-2xl drop-shadow-md">
-                zoom_in
-              </span>
-            </div>
-          </div>
-        ))}
+      {/* Universal Gallery View Engine */}
+      <div className="relative z-10 w-full">
+        <UniversalGalleryView
+          photos={photos}
+          style={currentStyle}
+          onSelectImage={(url) => setSelectedImage(url)}
+          themeAccent={{
+            primaryColor: '#410403',
+            goldAccent: '#735C00',
+            badgeBg: '#410403',
+            badgeText: '#FCF9F3',
+            cardBg: '#FCF9F3',
+            borderColor: '#735C00',
+          }}
+        />
       </div>
-
-      {/* Toggle View All Button if > 4 photos */}
-      {photos.length > 4 && setShowAllGallery && (
-        <button
-          type="button"
-          onClick={() => setShowAllGallery(!showAllGallery)}
-          className="mt-4 px-5 py-2 rounded-full bg-white text-[#410403] font-sans text-xs font-bold uppercase tracking-wider border border-[#E5E2DC] shadow-xs hover:border-[#FED65B] active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
-        >
-          <span className="material-symbols-outlined text-[16px]">
-            {showAllGallery ? 'expand_less' : 'photo_library'}
-          </span>
-          <span>{showAllGallery ? 'Tutup Galeri' : `Lihat Semua Foto (${photos.length})`}</span>
-        </button>
-      )}
     </section>
   );
 };

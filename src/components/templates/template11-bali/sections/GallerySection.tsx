@@ -4,6 +4,7 @@ import {
   CandiBentarDivider,
   BaliPatraWatermark,
 } from '../components';
+import { UniversalGalleryView } from '../../../common/gallery';
 
 interface GallerySectionProps {
   data: InvitationData;
@@ -31,7 +32,7 @@ export const GallerySection: React.FC<GallerySectionProps> = ({
   if (!isGalleryVisible || photos.length === 0) return null;
 
   return (
-    <section className="relative w-full bg-[#FFF9EF] text-[#1D1B16] px-4 py-8 flex flex-col items-center overflow-hidden">
+    <section className="relative w-full shrink-0 bg-[#FFF9EF] text-[#1D1B16] px-4 py-8 flex flex-col items-center overflow-hidden">
       {/* Patra Sari Watermark */}
       <BaliPatraWatermark opacityClass="opacity-[0.04]" />
 
@@ -50,100 +51,22 @@ export const GallerySection: React.FC<GallerySectionProps> = ({
           <CandiBentarDivider compact className="mt-2" />
         </div>
 
-        {/* Bento Grid Photo Layout (from Template11_Bali.html) */}
-        <div className="w-full grid grid-cols-2 gap-2.5">
-          {/* Photo 1: Wide Panoramic (col-span-2 aspect-[16/10]) */}
-          {photos[0] && (
-            <div
-              onClick={() => onSelectImage(photos[0])}
-              className="col-span-2 aspect-[16/10] rounded-xl overflow-hidden shadow-md bg-[#F3EDE4] border border-[#D4AF37]/35 cursor-pointer group relative"
-            >
-              <img
-                src={photos[0]}
-                alt="Galeri Pernikahan Bali 1"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-black/15 group-hover:bg-transparent transition-colors" />
-              <div className="absolute bottom-2 right-2 p-1 rounded-full bg-[#FFF9EF]/80 backdrop-blur-sm text-[#411710] shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="material-symbols-outlined text-sm">zoom_in</span>
-              </div>
-            </div>
-          )}
-
-          {/* Photo 2: Square (aspect-square) */}
-          {photos[1] && (
-            <div
-              onClick={() => onSelectImage(photos[1])}
-              className="aspect-square rounded-xl overflow-hidden shadow-sm bg-[#F3EDE4] border border-[#D4AF37]/35 cursor-pointer group relative"
-            >
-              <img
-                src={photos[1]}
-                alt="Galeri Pernikahan Bali 2"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-black/15 group-hover:bg-transparent transition-colors" />
-              <div className="absolute bottom-2 right-2 p-1 rounded-full bg-[#FFF9EF]/80 backdrop-blur-sm text-[#411710] shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="material-symbols-outlined text-sm">zoom_in</span>
-              </div>
-            </div>
-          )}
-
-          {/* Photo 3: Square (aspect-square) */}
-          {photos[2] && (
-            <div
-              onClick={() => onSelectImage(photos[2])}
-              className="aspect-square rounded-xl overflow-hidden shadow-sm bg-[#F3EDE4] border border-[#D4AF37]/35 cursor-pointer group relative"
-            >
-              <img
-                src={photos[2]}
-                alt="Galeri Pernikahan Bali 3"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-black/15 group-hover:bg-transparent transition-colors" />
-              <div className="absolute bottom-2 right-2 p-1 rounded-full bg-[#FFF9EF]/80 backdrop-blur-sm text-[#411710] shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="material-symbols-outlined text-sm">zoom_in</span>
-              </div>
-            </div>
-          )}
-
-          {/* Photo 4: Landscape Sanctuary View (col-span-2 aspect-[21/9]) */}
-          {photos[3] && (
-            <div
-              onClick={() => onSelectImage(photos[3])}
-              className="col-span-2 aspect-[21/9] rounded-xl overflow-hidden shadow-sm bg-[#F3EDE4] border border-[#D4AF37]/35 cursor-pointer group relative"
-            >
-              <img
-                src={photos[3]}
-                alt="Galeri Pernikahan Bali 4"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-black/15 group-hover:bg-transparent transition-colors" />
-              <div className="absolute bottom-2 right-2 p-1 rounded-full bg-[#FFF9EF]/80 backdrop-blur-sm text-[#411710] shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="material-symbols-outlined text-sm">zoom_in</span>
-              </div>
-            </div>
-          )}
-
-          {/* Additional Photos beyond 4 */}
-          {photos.slice(4).map((imgUrl, i) => (
-            <div
-              key={`more-${i}`}
-              onClick={() => onSelectImage(imgUrl)}
-              className="aspect-square rounded-xl overflow-hidden shadow-sm bg-[#F3EDE4] border border-[#D4AF37]/35 cursor-pointer group relative"
-            >
-              <img
-                src={imgUrl}
-                alt={`Galeri Pernikahan Bali ${i + 5}`}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-black/15 group-hover:bg-transparent transition-colors" />
-              <div className="absolute bottom-2 right-2 p-1 rounded-full bg-[#FFF9EF]/80 backdrop-blur-sm text-[#411710] shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="material-symbols-outlined text-sm">zoom_in</span>
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* Universal Reusable Gallery View Engine */}
+        <UniversalGalleryView
+          photos={photos}
+          style={data.gallery_style || effectiveTheme?.gallery_style || 'bento-grid'}
+          onSelectImage={(url) => onSelectImage(url)}
+          themeAccent={{
+            primaryColor: '#735C00',
+            goldAccent: '#D4AF37',
+            badgeBg: 'rgba(65, 23, 16, 0.85)',
+            badgeText: '#D4AF37',
+            cardBg: '#F3EDE4',
+            borderColor: 'rgba(212, 175, 55, 0.4)',
+          }}
+        />
       </div>
     </section>
   );
 };
+

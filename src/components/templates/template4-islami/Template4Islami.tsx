@@ -293,6 +293,15 @@ export const Template4Islami: React.FC<InvitationProps> = ({
           imageUrl={lightboxImg}
           onClose={() => setLightboxImg(null)}
           isPreview={isPreview}
+          photos={data.gallery || []}
+          currentIndex={
+            lightboxImg && data.gallery ? data.gallery.indexOf(lightboxImg) : 0
+          }
+          onIndexChange={(newIdx) => {
+            if (data.gallery && data.gallery[newIdx]) {
+              setLightboxImg(data.gallery[newIdx]);
+            }
+          }}
         />
       </div>
     </div>

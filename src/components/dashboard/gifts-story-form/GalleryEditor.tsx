@@ -1,19 +1,100 @@
 import React, { useRef, useState } from 'react';
+import type { GalleryStyleType } from '../../../types/invitation';
 import { convertImageToWebP } from '../../../utils/imageOptimizer';
 import { registerStagedBlob, unregisterStagedBlob } from '../../../lib/supabase/storageService';
 
+export interface GalleryStyleOption {
+  id: GalleryStyleType;
+  label: string;
+  desc: string;
+  icon: string;
+}
+
+export const GALLERY_STYLE_OPTIONS: GalleryStyleOption[] = [
+  {
+    id: 'bento-grid',
+    label: 'Bento Grid',
+    desc: 'Asimetris editorial majalah',
+    icon: 'dashboard',
+  },
+  {
+    id: 'carousel-slider',
+    label: 'Slide Geser',
+    desc: 'Fokus 1 foto usap kiri/kanan',
+    icon: 'view_carousel',
+  },
+  {
+    id: 'masonry-waterfall',
+    label: 'Masonry',
+    desc: '2 kolom dinamis ala Pinterest',
+    icon: 'auto_awesome_mosaic',
+  },
+  {
+    id: 'polaroid-stack',
+    label: 'Polaroid',
+    desc: 'Tumpukan kartu foto romantis',
+    icon: 'style',
+  },
+  {
+    id: 'filmstrip-scroll',
+    label: 'Filmstrip',
+    desc: 'Rol film 35mm sinematik',
+    icon: 'movie',
+  },
+  {
+    id: 'arch-cathedral',
+    label: 'Kubah Royal',
+    desc: 'Bingkai lengkung adat & istana',
+    icon: 'architecture',
+  },
+  {
+    id: 'coverflow-3d',
+    label: '3D Coverflow',
+    desc: 'Panggung perspektif 3D mewah',
+    icon: '3d_rotation',
+  },
+  {
+    id: 'featured-thumbnails',
+    label: 'Fokus & Thumb',
+    desc: 'Layar utama & baris pratinjau',
+    icon: 'dock_to_bottom',
+  },
+  {
+    id: 'dual-marquee',
+    label: 'Pita Mengalir',
+    desc: '2 baris gerak otomatis sinematik',
+    icon: 'sync_alt',
+  },
+  {
+    id: 'accordion-Variable',
+    label: 'Tirai Interaktif',
+    desc: 'Panel ekspansi sentuh modern',
+    icon: 'view_week',
+  },
+  {
+    id: 'magazine-zigzag',
+    label: 'Editorial Zigzag',
+    desc: 'Tata letak majalah bernomor',
+    icon: 'format_list_numbered',
+  },
+];
+
 interface GalleryEditorProps {
   gallery: string[];
+  galleryStyle?: GalleryStyleType;
   templateSlug?: string;
   userId?: string | null;
   userEmail?: string | null;
   userTemplateId?: string | null;
   onGalleryChange?: (gallery: string[]) => void;
+  onGalleryStyleChange?: (style: GalleryStyleType) => void;
 }
 
 export const GalleryEditor: React.FC<GalleryEditorProps> = ({
   gallery = [],
+  galleryStyle = 'bento-grid',
   onGalleryChange,
+  onGalleryStyleChange,
 }) => {
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
   const safeGallery = Array.isArray(gallery) ? gallery : [];
@@ -146,6 +227,66 @@ export const GalleryEditor: React.FC<GalleryEditorProps> = ({
               </>
             )}
           </button>
+        </div>
+      </div>
+
+      {/* Pilihan Gaya Tata Letak Galeri (Berlaku untuk Semua Template) */}
+      <div className="bg-stone-50/80 rounded-2xl p-3.5 sm:p-4 border border-stone-200/80 space-y-2.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+          <label className="text-xs font-bold text-stone-800 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[17px] text-amber-600">auto_fix_high</span>
+            <span>Pilih Gaya Tampilan Galeri:</span>
+          </label>
+          <span className="text-[11px] text-stone-500 font-medium">
+            Tersinkronisasi otomatis ke semua template
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
+          {GALLERY_STYLE_OPTIONS.map((item) => {
+            const isSelected = (galleryStyle || 'bento-grid') === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onGalleryStyleChange?.(item.id)}
+                className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all duration-200 cursor-pointer ${
+                  isSelected
+                    ? 'border-stone-900 bg-stone-900 text-white shadow-md ring-2 ring-stone-900/10 scale-[1.02]'
+                    : 'border-stone-200 bg-white hover:bg-stone-100/90 text-stone-700 hover:border-stone-300'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full mb-2">
+                  <span
+                    className={`material-symbols-outlined text-[20px] ${
+                      isSelected ? 'text-amber-400' : 'text-stone-700'
+                    }`}
+                  >
+                    {item.icon}
+                  </span>
+                  {isSelected && (
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  )}
+                </div>
+                <div>
+                  <p
+                    className={`text-xs font-bold leading-tight ${
+                      isSelected ? 'text-white' : 'text-stone-900'
+                    }`}
+                  >
+                    {item.label}
+                  </p>
+                  <p
+                    className={`text-[10px] mt-0.5 leading-tight ${
+                      isSelected ? 'text-stone-300' : 'text-stone-500'
+                    }`}
+                  >
+                    {item.desc}
+                  </p>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 

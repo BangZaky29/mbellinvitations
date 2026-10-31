@@ -178,6 +178,7 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
               {isSectionActive('gallery') && data.gallery && data.gallery.length > 0 && (
                 <GallerySection
                   data={data}
+                  theme={theme}
                   isPreview={isPreview}
                   setSelectedImage={setSelectedImage}
                   showAllGallery={showAllGallery}
@@ -191,6 +192,15 @@ export const TemplateSundaSiger: React.FC<InvitationProps> = ({
                 imageUrl={selectedImage}
                 onClose={() => setSelectedImage(null)}
                 isPreview={isPreview}
+                photos={data.gallery || []}
+                currentIndex={
+                  selectedImage && data.gallery ? data.gallery.indexOf(selectedImage) : 0
+                }
+                onIndexChange={(newIdx) => {
+                  if (data.gallery && data.gallery[newIdx]) {
+                    setSelectedImage(data.gallery[newIdx]);
+                  }
+                }}
               />
 
               {/* INTERACTIVE RSVP & VIP CARD */}

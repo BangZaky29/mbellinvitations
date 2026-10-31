@@ -1,6 +1,7 @@
 import React from 'react';
 import type { InvitationData, ThemeConfig } from '../../../../types/invitation';
 import { PalembangSongketWatermark } from '../components';
+import { UniversalGalleryView } from '../../../common/gallery';
 
 interface GallerySectionProps {
   data: InvitationData;
@@ -48,79 +49,23 @@ export const GallerySection: React.FC<GallerySectionProps> = ({
           </span>
         </div>
 
-        {/* Bento Grid (2x2 Asymmetric) */}
-        <div className="grid grid-cols-2 gap-2.5">
-          {/* Card 1: Large Left Card */}
-          {photos[0] && (
-            <div
-              onClick={() => onSelectImage(photos[0])}
-              className="relative rounded-2xl overflow-hidden shadow-md aspect-[3/4] bg-[#F7F3EC] border border-[#FFD57A]/40 cursor-pointer group"
-            >
-              <img
-                src={photos[0]}
-                alt="Foto Prewedding Palembang"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#2A0003]/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="absolute bottom-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-[#2A0003]/80 backdrop-blur text-[#FFD57A] text-[10px] font-sans font-bold border border-[#FFD57A]/40">
-                Aesan Gede
-              </div>
-            </div>
-          )}
-
-          {/* Right Column Stack */}
-          <div className="flex flex-col gap-2.5">
-            {photos[1] && (
-              <div
-                onClick={() => onSelectImage(photos[1])}
-                className="relative rounded-2xl overflow-hidden shadow-md aspect-square bg-[#F7F3EC] border border-[#FFD57A]/40 cursor-pointer group"
-              >
-                <img
-                  src={photos[1]}
-                  alt="Foto Prewedding Palembang"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-            )}
-            {photos[2] && (
-              <div
-                onClick={() => onSelectImage(photos[2])}
-                className="relative rounded-2xl overflow-hidden shadow-md aspect-square bg-[#F7F3EC] border border-[#FFD57A]/40 cursor-pointer group"
-              >
-                <img
-                  src={photos[2]}
-                  alt="Foto Prewedding Palembang"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Card 4: Full Width Span Ballroom / Pelaminan */}
-          {photos[3] && (
-            <div
-              onClick={() => onSelectImage(photos[3])}
-              className="col-span-2 relative rounded-2xl overflow-hidden shadow-md aspect-[16/9] bg-[#F7F3EC] border border-[#FFD57A]/40 cursor-pointer group"
-            >
-              <img
-                src={photos[3]}
-                alt="Pelaminan Sriwijaya"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#2A0003]/80 via-transparent to-transparent" />
-              <div className="absolute bottom-3 left-3 text-[#FDF9F2]">
-                <span className="font-sans text-[10px] uppercase text-[#FFD57A] tracking-wider font-bold block">
-                  Pelaminan Agung
-                </span>
-                <p className="font-serif text-sm sm:text-base font-semibold leading-tight">
-                  Ukiran Lakuer Palembang
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Universal Reusable Gallery View Engine */}
+        <UniversalGalleryView
+          photos={photos}
+          style={data.gallery_style || effectiveTheme?.gallery_style || 'bento-grid'}
+          onSelectImage={(url) => onSelectImage(url)}
+          themeAccent={{
+            primaryColor: '#4A0E12',
+            goldAccent: '#FFD57A',
+            badgeBg: 'rgba(42, 0, 3, 0.85)',
+            badgeText: '#FFD57A',
+            cardBg: '#F7F3EC',
+            borderColor: 'rgba(255, 213, 122, 0.45)',
+          }}
+        />
       </div>
     </section>
   );
 };
+
 

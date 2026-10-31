@@ -1,8 +1,10 @@
 import React from 'react';
-import type { InvitationData } from '../../../../types/invitation';
+import type { InvitationData, ThemeConfig } from '../../../../types/invitation';
+import { UniversalGalleryView } from '../../../common/gallery';
 
 interface GallerySectionProps {
   data: InvitationData;
+  theme?: ThemeConfig;
   isPreview?: boolean;
   setSelectedImage: (img: string | null) => void;
   showAllGallery?: boolean;
@@ -11,9 +13,8 @@ interface GallerySectionProps {
 
 export const GallerySection: React.FC<GallerySectionProps> = ({
   data,
+  theme,
   setSelectedImage,
-  showAllGallery = false,
-  setShowAllGallery,
 }) => {
   const defaultImages = [
     'https://lh3.googleusercontent.com/aida-public/AB6AXuCSaBmrSBPc6JBKfMGqLIwMcxmJRsHH9qVZk8tBz0UbaTiqr__0cHe8qR7wa7pIidP8_8Og6HU73yBrOcZrSmoR0VOzFQbGjcAul7SLH3jLgnI3x7rrgaoHvaFdDgPWvWh-qvNSEonSJkhF0b6eLzJhN8v8BtpscySxZyQIK0FiwUhAhT03f0hmkC2Qs4L0mvbWQTNDyHGHXOByJ1ZMOP4CT3YnyDEde8G5oelkyODSd9uKn2rKVdGU',
@@ -22,13 +23,14 @@ export const GallerySection: React.FC<GallerySectionProps> = ({
     'https://lh3.googleusercontent.com/aida-public/AB6AXuBIltz_sSVgMheSBVwKp8eUtJ0_E5tV0ivr7sMS6-0fvaXgi5Enclfx2bItNCS_oNsVT42pirSpMPy4OBG9-GcJ_HUPvXS4FaKr6o8BLhf8rzoYJW0d6u0ngeo3QhVn0WJu68ApTsdiLYOieKGMskaVi8_BTax2UiPqBpgXrbuxAzME-2fcjEWVYHB4N84m31JKYLhy2FlXL1ua40kwaXjGrC8SihSxzSkuIZCSvgyRzlVTrw3N2zPv',
   ];
 
-  const galleryList =
+  const photos =
     data.gallery && data.gallery.length > 0 ? data.gallery : defaultImages;
 
-  const displayedList = showAllGallery ? galleryList : galleryList.slice(0, 4);
+  const effectiveTheme = theme || (data as any).theme_config;
+  const currentStyle = data.gallery_style || effectiveTheme?.gallery_style || 'bento-grid';
 
   return (
-    <section className="relative w-full px-4 py-8 flex flex-col items-center bg-[#19120E] text-[#FAF6EE]">
+    <section className="relative w-full px-4 py-8 flex flex-col items-center bg-[#19120E] text-[#FAF6EE] overflow-hidden">
       {/* Title */}
       <div className="flex items-center gap-2 mb-1.5 text-[#EAC16E]">
         <span className="material-symbols-outlined text-[18px]">photo_camera</span>
@@ -41,42 +43,22 @@ export const GallerySection: React.FC<GallerySectionProps> = ({
         Our Royal Moments
       </h2>
 
-      {/* Asymmetric 2x2 Bento Photo Mosaic */}
-      <div className="w-full max-w-[360px] grid grid-cols-2 gap-2.5">
-        {displayedList.map((imgUrl, idx) => (
-          <div
-            key={idx}
-            onClick={() => setSelectedImage(imgUrl)}
-            className={`relative rounded-xl overflow-hidden shadow-md cursor-pointer group border border-[#EAC16E]/20 ${
-              idx % 4 < 2 ? 'aspect-[3/4.2]' : 'aspect-square'
-            }`}
-          >
-            <img
-              src={imgUrl}
-              alt={`Galeri Foto ${idx + 1}`}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          </div>
-        ))}
-      </div>
-
-      {/* Button Expand if > 4 images */}
-      {galleryList.length > 4 && setShowAllGallery && (
-        <button
-          type="button"
-          onClick={() => setShowAllGallery(!showAllGallery)}
-          className="mt-4 px-4 py-2 rounded-xl bg-[#261E1A] text-[#EAC16E] border border-[#EAC16E]/30 font-sans text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 hover:bg-[#312824] transition-all active:scale-95 cursor-pointer shadow-sm"
-        >
-          <span className="material-symbols-outlined text-[16px]">
-            {showAllGallery ? 'expand_less' : 'expand_more'}
-          </span>
-          <span>
-            {showAllGallery
-              ? 'Tampilkan Lebih Sedikit'
-              : `Lihat Semua Foto (${galleryList.length})`}
-          </span>
-        </button>
-      )}
+      {/* Universal Gallery View Engine */}
+      <UniversalGalleryView
+        photos={photos}
+        style={currentStyle}
+        onSelectImage={(url) => setSelectedImage(url)}
+        themeAccent={{
+          primaryColor: '#7A121D',
+          goldAccent: '#EAC16E',
+          badgeBg: '#19120E',
+          badgeText: '#EAC16E',
+          cardBg: '#211812',
+          borderColor: '#EAC16E',
+        }}
+      />
     </section>
   );
 };
+
+export default GallerySection;

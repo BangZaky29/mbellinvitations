@@ -184,10 +184,11 @@ export const TemplateBatakToba: React.FC<InvitationProps> = ({
                 />
               )}
 
-              {/* PHOTO GALLERY (BENTO MEMORIES SHOWCASE) */}
+              {/* PHOTO GALLERY (UNIVERSAL GALLERY SHOWCASE) */}
               {isSectionActive('gallery') && (
                 <GallerySection
                   data={data}
+                  theme={theme}
                   isPreview={isPreview}
                   setSelectedImage={setSelectedImage}
                   showAllGallery={showAllGallery}
@@ -236,6 +237,15 @@ export const TemplateBatakToba: React.FC<InvitationProps> = ({
           imageUrl={selectedImage}
           onClose={() => setSelectedImage(null)}
           isPreview={isPreview}
+          photos={data.gallery || []}
+          currentIndex={
+            selectedImage && data.gallery ? data.gallery.indexOf(selectedImage) : 0
+          }
+          onIndexChange={(newIdx) => {
+            if (data.gallery && data.gallery[newIdx]) {
+              setSelectedImage(data.gallery[newIdx]);
+            }
+          }}
         />
 
         {/* 4. CIRCULAR FLOATING AUDIO BUBBLE */}

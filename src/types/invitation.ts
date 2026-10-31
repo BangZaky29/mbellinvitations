@@ -135,6 +135,7 @@ export interface InvitationData {
 
   // --- Gallery ---
   gallery: string[];
+  gallery_style?: GalleryStyleType;
 
   // --- Gift ---
   banks?: BankAccount[];
@@ -171,11 +172,25 @@ export const DEFAULT_ANIMATION_CONFIG: AnimationConfig = {
   reduced_motion: false,
 };
 
+export type GalleryStyleType =
+  | 'carousel-slider'
+  | 'bento-grid'
+  | 'masonry-waterfall'
+  | 'polaroid-stack'
+  | 'filmstrip-scroll'
+  | 'arch-cathedral'
+  | 'coverflow-3d'
+  | 'featured-thumbnails'
+  | 'dual-marquee'
+  | 'accordion-Variable'
+  | 'magazine-zigzag';
+
 export interface ThemeConfig {
   primary_color: string;
   music_url: string;
   music_title?: string;
   active_sections: string[];
+  gallery_style?: GalleryStyleType;
   // Convenience toggles (derived from active_sections but explicit for clarity)
   show_quote?: boolean;
   show_dresscode?: boolean;

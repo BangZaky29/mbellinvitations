@@ -278,6 +278,7 @@ export const TemplatePalembang: React.FC<InvitationProps> = ({
         <GalleryLightbox
           isOpen={Boolean(selectedImage)}
           imageUrl={selectedImage}
+          photos={data.gallery || []}
           onClose={() => setSelectedImage(null)}
           isPreview={isPreview}
         />

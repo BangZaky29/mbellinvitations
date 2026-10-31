@@ -1,27 +1,31 @@
 import React from 'react';
-import type { LoveStoryMilestone } from '../../types/invitation';
+import type { LoveStoryMilestone, GalleryStyleType } from '../../types/invitation';
 import { GalleryEditor } from './gifts-story-form/GalleryEditor';
 import { LoveStoryEditor } from './gifts-story-form/LoveStoryEditor';
 
 interface GalleryStoryFormCardProps {
   gallery?: string[];
+  galleryStyle?: GalleryStyleType;
   loveStory?: LoveStoryMilestone[];
   templateSlug?: string;
   userId?: string | null;
   userEmail?: string | null;
   userTemplateId?: string | null;
   onGalleryChange?: (gallery: string[]) => void;
+  onGalleryStyleChange?: (style: GalleryStyleType) => void;
   onLoveStoryChange: (story: LoveStoryMilestone[]) => void;
 }
 
 export const GalleryStoryFormCard: React.FC<GalleryStoryFormCardProps> = ({
   gallery = [],
+  galleryStyle = 'bento-grid',
   loveStory = [],
   templateSlug,
   userId,
   userEmail,
   userTemplateId,
   onGalleryChange,
+  onGalleryStyleChange,
   onLoveStoryChange,
 }) => {
   return (
@@ -47,11 +51,13 @@ export const GalleryStoryFormCard: React.FC<GalleryStoryFormCardProps> = ({
         {/* 1. Gallery Section */}
         <GalleryEditor
           gallery={gallery}
+          galleryStyle={galleryStyle}
           templateSlug={templateSlug}
           userId={userId}
           userEmail={userEmail}
           userTemplateId={userTemplateId}
           onGalleryChange={onGalleryChange}
+          onGalleryStyleChange={onGalleryStyleChange}
         />
 
         <div className="border-t border-stone-100 my-4" />

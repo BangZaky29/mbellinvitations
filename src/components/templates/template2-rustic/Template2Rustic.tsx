@@ -266,6 +266,15 @@ export const Template2Rustic: React.FC<InvitationProps> = ({
           imageUrl={selectedImage}
           onClose={() => setSelectedImage(null)}
           isPreview={isPreview}
+          photos={data.gallery || []}
+          currentIndex={
+            selectedImage && data.gallery ? data.gallery.indexOf(selectedImage) : 0
+          }
+          onIndexChange={(newIdx) => {
+            if (data.gallery && data.gallery[newIdx]) {
+              setSelectedImage(data.gallery[newIdx]);
+            }
+          }}
         />
       </div>
     </div>

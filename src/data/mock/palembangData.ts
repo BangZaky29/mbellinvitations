@@ -147,10 +147,12 @@ export const MOCK_PALEMBANG_DATA: InvitationData = {
   streaming_url: 'https://youtube.com/live',
   livestream_url: 'https://youtube.com/live',
   guest_name: 'Bapak Raden H. Zainal Abidin',
+  gallery_style: 'bento-grid',
 };
 
 export const MOCK_PALEMBANG_THEME: ThemeConfig = {
   primary_color: '#4A0E12',
+  gallery_style: 'bento-grid',
   music_url:
     'https://assets.mixkit.co/music/preview/mixkit-serene-view-443.mp3',
   music_title: 'Gending Sriwijaya • Iringan Tabuh Agung',

@@ -114,7 +114,14 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
             </DraggableCoverSheet>
 
             {/* ========================================== */}
-            {/* SECTION 2: HERO & COUNTDOWN                */}
+            {/* 2. INNER INVITATION CONTENT (Tersedia setelah sampul dibuka) */}
+            {/* ========================================== */}
+            <div
+              className={`flex flex-col w-full ${
+                !isOpen ? 'pointer-events-none select-none max-h-screen overflow-hidden' : ''
+              }`}
+            >
+              {/* SECTION 2: HERO & COUNTDOWN                */}
             {/* ========================================== */}
             {isSectionActive('hero') && (
               <HeroSection
@@ -237,7 +244,8 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
               renderBrandFooter={renderBrandFooter}
             />
           </div>
-        </main>
+        </div>
+      </main>
 
         {/* FLOATING AUDIO CONTROLLER BUBBLE */}
         <FloatingDock isPreview={isPreview}>
@@ -268,6 +276,15 @@ export const Template3Jawa: React.FC<InvitationProps> = ({
           imageUrl={selectedImage}
           onClose={() => setSelectedImage(null)}
           isPreview={isPreview}
+          photos={data.gallery || []}
+          currentIndex={
+            selectedImage && data.gallery ? data.gallery.indexOf(selectedImage) : 0
+          }
+          onIndexChange={(newIdx) => {
+            if (data.gallery && data.gallery[newIdx]) {
+              setSelectedImage(data.gallery[newIdx]);
+            }
+          }}
         />
       </div>
     </div>

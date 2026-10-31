@@ -155,12 +155,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       </div>
 
       {/* Ambient Audio Pill Indicator */}
-      <div className="relative z-10 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#F3EDE4] border border-[#D4AF37]/30 shadow-sm mb-8">
-        <span className="material-symbols-outlined text-[#735C00] text-sm animate-pulse">graphic_eq</span>
-        <span className="font-sans text-[10.5px] text-[#1D1B16] font-semibold tracking-wide">
-          {effectiveTheme?.music_title || 'Gamelan Semar Pegulingan • Laras Pelog'}
-        </span>
-      </div>
 
       {/* CALENDAR & LIVE COUNTDOWN WIDGET CARD */}
       <div className="relative z-10 w-full max-w-[360px] bg-[#FFF9EF]/95 border border-[#D4AF37]/40 rounded-2xl p-5 shadow-lg flex flex-col items-center text-center overflow-hidden">

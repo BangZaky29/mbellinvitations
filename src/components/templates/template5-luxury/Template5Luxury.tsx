@@ -163,6 +163,7 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
               {/* SECTION 6: PHOTO GALLERY */}
               <GallerySection
                 data={data}
+                theme={theme}
                 selectedImage={lightboxImg}
                 setSelectedImage={setLightboxImg}
                 showAllGallery={showAllGallery}
@@ -230,6 +231,15 @@ export const Template5Luxury: React.FC<InvitationProps> = ({
           imageUrl={lightboxImg}
           onClose={() => setLightboxImg(null)}
           isPreview={isPreview}
+          photos={data.gallery || []}
+          currentIndex={
+            lightboxImg && data.gallery ? data.gallery.indexOf(lightboxImg) : 0
+          }
+          onIndexChange={(newIdx) => {
+            if (data.gallery && data.gallery[newIdx]) {
+              setLightboxImg(data.gallery[newIdx]);
+            }
+          }}
         />
       </div>
     </div>

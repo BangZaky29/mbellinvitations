@@ -277,8 +277,16 @@ export const EditorStepContent: React.FC<EditorStepContentProps> = ({
           templateSlug={formData.theme_id || formData.template_id || 'template_1'}
           loveStory={formData.love_story || []}
           gallery={formData.gallery || []}
+          galleryStyle={formData.gallery_style || themeConfig.gallery_style || 'bento-grid'}
           onLoveStoryChange={(love_story) => setFormData({ ...formData, love_story })}
           onGalleryChange={(gallery) => setFormData({ ...formData, gallery })}
+          onGalleryStyleChange={(gallery_style) =>
+            setFormData({
+              ...formData,
+              gallery_style,
+              theme_config: { ...themeConfig, gallery_style },
+            })
+          }
         />
       )}
 

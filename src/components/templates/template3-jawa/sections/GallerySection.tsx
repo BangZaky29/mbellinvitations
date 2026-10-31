@@ -1,14 +1,30 @@
 import React from 'react';
 import type { GallerySectionProps } from '../../types';
+import { UniversalGalleryView } from '../../../common/gallery';
 
 export const GallerySection: React.FC<GallerySectionProps> = ({
   data,
+  theme,
   setSelectedImage,
-  showAllGallery,
-  setShowAllGallery,
 }) => {
+  const defaultPhotos = [
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuBtF6SNDAVw9PclpW__UCoK15JCOnrUxa3SpSh8tBeieO6elVHnbQ7e9j4UQNFXESREMjKbEOTbz7BDOIihhTa69cTeslvSLhrtzlSJ6RaSFTXNyJ0UpGPIih2lpOnWTwiSbJsLS-JQXhctz9klyf2VrBJHbW5MowOrZxZKYL8YYJ3uf66M_5CFU-AGPjLd3b2TcoGQxUMhzQuvtCxYYUx6T6pfxlVvqxMtVxdLLn07tHvyeEK6zTwI',
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuCGrqlEISAaXnaxC2OTt1Rs-fzAx-5B57Ssv_OKzplO-BAGhl8WCSHbBDbdaoJrjCq6t11wBKMYHMAila2ihhV5v3zS4hd6Qq92nd6Bb8WgEku6dp02eFYENb6SaTWQeLv994deQMzJFUVSXHRRL3WJM3ewGSvXkSK9jikUlORkBmO46Rm8LmJNryAVoHasjuR4sG9yemDH9g8eMryx-h5M1P0de6vSJWHWQ0uAx6g2kuiQW-Ww5hUG',
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuCOK4k8V-u1F0I39kBfKzKuqsS3hX5xzBB1ZQIaZtuKkLiM57QueHRPeDqNcBAOlSovVw3af4pGRGseZ9dpvyKZMFGCtoZXvyu-fFPXRcJgyFlEB0fsLcGkdbrLE8lT1tFSO6taV8zgAEW4lX26UKi3G-o0ag2aBFslBtUwSH0tSa8amYuwBngGK6vJxVRkaXksnGGBfw6TkTdaMDzxYL0D2oAQwkmvU7DLEJHZPjtd8WbDunJZkaKw',
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuA2V-3uY62r_SVy7ntONZGPcZ-X70hgkAukqYUKDon2fXZ8v2Rp8KDV-dusTyLjL74C-j-T8P5s0bLa8gIS5LAw2OSRdD4TNmymLSJmnGHEouujgheTkFZg0yQpjZNCWE8eU6VXLyLc0ggcfYF-ajdg8wo-bYDZA3RSW_eQDi-DYdid3D2hM6JgqJukQulVCk5o9fYiRwq3lhguGOJqphsVkLYju7_q8MkKVdPLL1eizZpgZvRsiLyN',
+  ];
+
+  const photos =
+    data.gallery && data.gallery.length > 0 ? data.gallery : defaultPhotos;
+
+  const effectiveTheme = theme || (data as any).theme_config;
+  const currentStyle = data.gallery_style || effectiveTheme?.gallery_style || 'bento-grid';
+
   return (
-    <section id="galeri" className="relative w-full bg-surface px-margin py-space-xl flex flex-col items-center">
+    <section
+      id="galeri"
+      className="relative w-full shrink-0 bg-[#1a110d] text-[#FAF6F0] px-4 py-8 flex flex-col items-center overflow-visible"
+    >
       <div className="text-center mb-6">
         <span className="font-label-md text-label-md uppercase tracking-widest text-secondary block mb-1">
           Rerenggan Potret
@@ -21,41 +37,24 @@ export const GallerySection: React.FC<GallerySectionProps> = ({
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 w-full mb-3">
-        {(showAllGallery ? data.gallery : data.gallery.slice(0, 4)).map((imgUrl, idx) => (
-          <div
-            key={idx}
-            onClick={() => setSelectedImage(imgUrl)}
-            className="rounded-xl overflow-hidden aspect-[3/4] bg-surface-container shadow-md group cursor-pointer"
-          >
-            <img
-              src={imgUrl}
-              alt={`Galeri ${idx + 1}`}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-          </div>
-        ))}
+      {/* Universal Gallery View Engine */}
+      <div className="w-full max-w-[390px]">
+        <UniversalGalleryView
+          photos={photos}
+          style={currentStyle}
+          onSelectImage={(url) => setSelectedImage(url)}
+          themeAccent={{
+            primaryColor: '#f2ca50',
+            goldAccent: '#C89D47',
+            badgeBg: '#271e18',
+            badgeText: '#f1dfd6',
+            cardBg: '#211611',
+            borderColor: '#C89D47',
+          }}
+        />
       </div>
-
-      {/* Tombol Lihat Selengkapnya jika foto > 4 */}
-      {data.gallery.length > 4 && (
-        <div className="text-center mt-2 mb-4 w-full">
-          <button
-            type="button"
-            onClick={() => setShowAllGallery((prev) => !prev)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-surface-container text-primary border border-primary/30 font-label-md text-label-md font-semibold hover:bg-primary hover:text-on-primary transition-all shadow-md active:scale-95 cursor-pointer"
-          >
-            <span>
-              {showAllGallery
-                ? 'Tutup Rerenggan Potret'
-                : `Lihat Selengkapnya (${data.gallery.length - 4} Foto)`}
-            </span>
-            <span className="material-symbols-outlined text-[18px]">
-              {showAllGallery ? 'expand_less' : 'expand_more'}
-            </span>
-          </button>
-        </div>
-      )}
     </section>
   );
 };
+
+export default GallerySection;
