@@ -238,47 +238,53 @@ export const GalleryLightbox: React.FC<GalleryLightboxProps> = ({
         </button>
       </div>
 
-      {/* Center Image Container with Floating Chevron Arrows */}
+      {/* Center Image Container with Bottom Floating Chevron Dock */}
       <div
         className="relative max-w-xs sm:max-w-md md:max-w-xl w-full max-h-[82%] flex items-center justify-center cursor-default"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Previous Button */}
-        {total > 1 && (
-          <button
-            type="button"
-            onClick={handlePrev}
-            onTouchStart={(e) => e.stopPropagation()}
-            onTouchEnd={(e) => e.stopPropagation()}
-            aria-label="Foto Sebelumnya"
-            className="absolute left-1 sm:-left-12 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/75 hover:bg-black/95 active:scale-90 text-white flex items-center justify-center transition-all cursor-pointer shadow-xl backdrop-blur-md border border-white/25 z-30"
-            title="Foto Sebelumnya (Panah Kiri)"
-          >
-            <span className="material-symbols-outlined text-lg">chevron_left</span>
-          </button>
-        )}
+        <div className="relative inline-flex items-center justify-center max-w-full max-h-[68vh] sm:max-h-[76vh] rounded-2xl overflow-hidden shadow-2xl border border-white/15">
+          <img
+            key={activePhoto}
+            src={activePhoto}
+            alt={`Foto Galeri ${activeIndex + 1} Diperbesar`}
+            className="max-h-[68vh] sm:max-h-[76vh] w-auto max-w-full object-contain animate-in zoom-in-95 duration-200 select-none"
+          />
 
-        <img
-          key={activePhoto}
-          src={activePhoto}
-          alt={`Foto Galeri ${activeIndex + 1} Diperbesar`}
-          className="max-h-[68vh] sm:max-h-[76vh] w-auto max-w-full object-contain rounded-2xl shadow-2xl border border-white/15 animate-in zoom-in-95 duration-200"
-        />
+          {/* Floating Navigation Pill inside the bottom of the photo (Berdekatan Berdampingan) */}
+          {total > 1 && (
+            <div
+              className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 p-1 rounded-full bg-black/65 backdrop-blur-md border border-white/20 shadow-xl z-30 pointer-events-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={handlePrev}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
+                aria-label="Foto Sebelumnya"
+                className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/30 active:scale-90 text-white flex items-center justify-center transition-all cursor-pointer shadow-xs"
+                title="Foto Sebelumnya (Panah Kiri)"
+              >
+                <span className="material-symbols-outlined text-lg">chevron_left</span>
+              </button>
 
-        {/* Next Button */}
-        {total > 1 && (
-          <button
-            type="button"
-            onClick={handleNext}
-            onTouchStart={(e) => e.stopPropagation()}
-            onTouchEnd={(e) => e.stopPropagation()}
-            aria-label="Foto Selanjutnya"
-            className="absolute right-1 sm:-right-12 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/75 hover:bg-black/95 active:scale-90 text-white flex items-center justify-center transition-all cursor-pointer shadow-xl backdrop-blur-md border border-white/25 z-30"
-            title="Foto Selanjutnya (Panah Kanan)"
-          >
-            <span className="material-symbols-outlined text-lg">chevron_right</span>
-          </button>
-        )}
+              <div className="w-px h-3.5 bg-white/25" />
+
+              <button
+                type="button"
+                onClick={handleNext}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
+                aria-label="Foto Selanjutnya"
+                className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/30 active:scale-90 text-white flex items-center justify-center transition-all cursor-pointer shadow-xs"
+                title="Foto Selanjutnya (Panah Kanan)"
+              >
+                <span className="material-symbols-outlined text-lg">chevron_right</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Bottom Swipe Hint on Mobile */}

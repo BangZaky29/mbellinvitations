@@ -4,6 +4,7 @@ import { LiveStreamBanner } from '../../../common/LiveStreamBanner';
 import {
   RumahLimasDivider,
   PalembangSongketWatermark,
+  PalembangCornerFiligree,
 } from '../components';
 
 interface HeroSectionProps {
@@ -41,6 +42,26 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
   const groomName = data.groom.name;
   const brideName = data.bride.name;
+
+  // Dynamic Calendar Calculation based on wedding date
+  const weddingDateStr = data.wedding_date_iso || data.wedding_date_display || '2026-11-14';
+  const parsedDate = new Date(weddingDateStr);
+  const isValidDate = !isNaN(parsedDate.getTime());
+
+  const targetYear = isValidDate ? parsedDate.getFullYear() : 2026;
+  const targetMonthIdx = isValidDate ? parsedDate.getMonth() : 10; // 10 = November
+  const targetDay = isValidDate ? parsedDate.getDate() : 14;
+
+  const monthNames = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+  ];
+  const targetMonthName = monthNames[targetMonthIdx] || 'November';
+
+  const firstDayOfWeek = new Date(targetYear, targetMonthIdx, 1).getDay(); // 0 = Minggu
+  const daysInMonth = new Date(targetYear, targetMonthIdx + 1, 0).getDate();
+  const emptyDays = Array.from({ length: firstDayOfWeek }, (_, i) => i);
+  const monthDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   return (
     <section className="relative w-full shrink-0 bg-[#4A0E12] text-[#FDF9F2] overflow-hidden px-4 pt-10 pb-8 flex flex-col items-center">
@@ -124,8 +145,66 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           />
         )}
 
+        {/* ========================================================= */}
+        {/* CARD KALENDER PERNIKAHAN (BERADA DI ATAS HITUNG MUNDUR)   */}
+        {/* ========================================================= */}
+        <div className="w-full mt-6 bg-[#FDF9F2] text-[#2A0003] rounded-2xl p-5 sm:p-6 shadow-xl border border-[#FFD57A]/60 relative overflow-hidden text-center">
+          {/* Palembang Corner Filigree */}
+          <PalembangCornerFiligree position="top-left" className="absolute top-1.5 left-1.5 w-5 h-5 opacity-40" color="#785A05" />
+          <PalembangCornerFiligree position="top-right" className="absolute top-1.5 right-1.5 w-5 h-5 opacity-40" color="#785A05" />
+
+          {/* Header Card Kalender */}
+          <div className="flex items-center justify-between mb-4 px-2 pb-2.5 border-b border-[#785A05]/15">
+            <div className="text-left">
+              <span className="font-sans text-[10px] text-[#785A05] tracking-[0.2em] uppercase font-bold block">
+                Kalender Kebahagiaan
+              </span>
+              <h4 className="font-serif text-lg sm:text-xl font-bold text-[#4A0E12] leading-tight">
+                {targetMonthName} {targetYear}
+              </h4>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-[#F7F3EC] flex items-center justify-center text-[#785A05] border border-[#FFD57A]/50 shadow-xs">
+              <span className="material-symbols-outlined text-[18px]">event</span>
+            </div>
+          </div>
+
+          {/* Grid Header Nama Hari (Dengan padding horizontal agar tidak mepet ke tepi kartu) */}
+          <div className="grid grid-cols-7 gap-1 text-center font-sans text-[10px] sm:text-[11px] text-[#785A05] mb-2 font-bold uppercase px-1.5">
+            <span className="text-[#A01A24]">Min</span>
+            <span>Sen</span>
+            <span>Sel</span>
+            <span>Rab</span>
+            <span>Kam</span>
+            <span>Jum</span>
+            <span className="text-[#4A0E12]">Sab</span>
+          </div>
+
+          {/* Grid Tanggal Hari (Dengan jarak margin dan padding lega) */}
+          <div className="grid grid-cols-7 gap-1 text-center font-sans text-xs text-[#2A0003] px-1.5">
+            {emptyDays.map((_, i) => (
+              <span key={`empty-${i}`} className="py-1 text-transparent select-none">
+                •
+              </span>
+            ))}
+            {monthDays.map((d) => {
+              const isMatch = d === targetDay;
+              return (
+                <div key={`day-${d}`} className="relative py-0.5 flex items-center justify-center">
+                  {isMatch ? (
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#4A0E12] rounded-full flex items-center justify-center shadow-md ring-2 ring-[#FFD57A] text-[#FFD57A] font-bold">
+                      <span>{d}</span>
+                    </div>
+                  ) : (
+                    <span className="py-1 text-[#422D24] font-medium">{d}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Countdown Timer (4 Deep Crimson Tiles) */}
-        <div className="w-full mt-6">
+        <div className="w-full mt-5">
           <span className="font-sans text-[10px] text-[#FFD57A] uppercase tracking-[0.2em] block mb-2 font-semibold">
             Hitung Mundur Hari Bahagia
           </span>
