@@ -123,48 +123,6 @@ export const GiftSection: React.FC<GiftSectionProps> = ({
             </div>
           )}
         </div>
-
-        {/* Digital VIP Guest Pass (Exclusive Palembang Feature) */}
-        <div className="w-full bg-gradient-to-br from-[#FFD57A] via-[#EAC168] to-[#785A05] p-0.5 rounded-2xl shadow-xl">
-          <div className="bg-[#2A0003] rounded-[14px] p-5 text-[#FDF9F2] flex flex-col items-center text-center">
-            <div className="flex items-center gap-1.5 text-[#FFD57A] font-sans text-[10px] uppercase tracking-widest mb-1 font-bold">
-              <span className="material-symbols-outlined text-[16px]">verified</span>
-              <span>Digital VIP Invitation Pass</span>
-            </div>
-            <h4 className="font-serif text-base sm:text-lg font-bold text-[#FDF9F2] tracking-wide">
-              TAMU KEHORMATAN VIP
-            </h4>
-            <div className="w-12 h-px bg-[#FFD57A]/40 my-2" />
-            <p className="font-sans text-xs text-[#F1EDE6]/90">
-              Meja Reservasi Khusus:<br />
-              <strong className="text-[#FFD57A] font-serif text-sm tracking-wide">
-                MEJA RADEN ARYA • T-01
-              </strong>
-            </p>
-
-            {/* Mock Barcode Strip */}
-            <div className="bg-[#FFFFFF] text-[#1C1C18] px-4 py-2 rounded-lg mt-3 flex flex-col items-center w-full max-w-[220px] shadow-sm">
-              <div className="flex items-center justify-center gap-1 h-7 w-full overflow-hidden">
-                <span className="w-1 h-full bg-black" />
-                <span className="w-0.5 h-full bg-black" />
-                <span className="w-2 h-full bg-black" />
-                <span className="w-1.5 h-full bg-black" />
-                <span className="w-0.5 h-full bg-black" />
-                <span className="w-1 h-full bg-black" />
-                <span className="w-2.5 h-full bg-black" />
-                <span className="w-1 h-full bg-black" />
-                <span className="w-0.5 h-full bg-black" />
-                <span className="w-1.5 h-full bg-black" />
-                <span className="w-2 h-full bg-black" />
-                <span className="w-0.5 h-full bg-black" />
-                <span className="w-1 h-full bg-black" />
-              </div>
-              <span className="font-mono text-[9px] tracking-widest mt-1 text-stone-600 font-bold">
-                SWJ-2026-VIP-0089
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );

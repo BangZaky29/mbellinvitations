@@ -172,11 +172,16 @@ export function computeAuditTrail(
     registerChange('cover_image', 'Foto Sampul & Pasangan (Cover Hero)', 'media', bCover, cCover);
   }
 
-  // 8. GALERI FOTO
+  // 8. GALERI FOTO & GAYA TAMPILAN
   const bGallery = Array.isArray(bForm.gallery) ? bForm.gallery : [];
   const cGallery = Array.isArray(cForm.gallery) ? cForm.gallery : [];
   if (isDeepDifferent(bGallery, cGallery)) {
     registerChange('gallery', 'Koleksi Galeri Foto', 'media', `${bGallery.length} Foto`, `${cGallery.length} Foto`);
+  }
+  const bGalleryStyle = bForm.gallery_style || bTheme.gallery_style || 'bento-grid';
+  const cGalleryStyle = cForm.gallery_style || cTheme.gallery_style || 'bento-grid';
+  if (bGalleryStyle !== cGalleryStyle) {
+    registerChange('gallery_style', 'Gaya Tampilan Galeri Foto', 'media', bGalleryStyle, cGalleryStyle);
   }
 
   // 9. KUTIPAN / AYAT SUCI & DOA

@@ -288,6 +288,11 @@ export const TemplateBali: React.FC<InvitationProps> = ({
           isOpen={Boolean(selectedImage)}
           imageUrl={selectedImage}
           photos={data.gallery || []}
+          currentIndex={selectedImage && data.gallery ? data.gallery.indexOf(selectedImage) : 0}
+          onIndexChange={(newIdx) => {
+            const list = data.gallery || [];
+            if (list[newIdx]) setSelectedImage(list[newIdx]);
+          }}
           onClose={() => setSelectedImage(null)}
           isPreview={isPreview}
         />

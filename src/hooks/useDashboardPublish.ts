@@ -257,8 +257,11 @@ const handleConfirmSameTemplatePublish = async () => {
       }
     }
 
+    const resolvedGalleryStyle = cleanFormData.gallery_style || themeConfig.gallery_style || 'bento-grid';
+
     const updatedContent: InvitationData = {
       ...cleanFormData,
+      gallery_style: resolvedGalleryStyle,
       slug: targetSlug,
       status: 'published' as const,
       theme_id: currentThemeId as any,
@@ -270,6 +273,7 @@ const handleConfirmSameTemplatePublish = async () => {
 
     const updatedThemeConfig: ThemeConfig = {
       ...themeConfig,
+      gallery_style: resolvedGalleryStyle,
       music_url: resolvedMusicUrl,
     };
 
@@ -464,8 +468,11 @@ const handleConfirmPublish = async (paymentDetails?: { themeId?: string; payment
       }
     }
 
+    const resolvedGalleryStyle = cleanFormData.gallery_style || themeConfig.gallery_style || 'bento-grid';
+
     const publishedContent = {
       ...cleanFormData,
+      gallery_style: resolvedGalleryStyle,
       slug: targetSlug,
       theme_id: activeThemeId,
       status: 'published' as const,
@@ -480,6 +487,7 @@ const handleConfirmPublish = async (paymentDetails?: { themeId?: string; payment
 
     const updatedThemeConfig: ThemeConfig = {
       ...themeConfig,
+      gallery_style: resolvedGalleryStyle,
       music_url: resolvedMusicUrl,
     };
 

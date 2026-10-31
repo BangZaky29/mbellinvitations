@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { usePhoneDock } from '../../context/PhoneDockContext';
 
@@ -17,7 +17,7 @@ export interface GalleryLightboxProps {
  * Komponen modal foto pop-up universal untuk seluruh template undangan digital Mbell.
  * - Mengatasi masalah foto pop-up tertinggal di atas/dekat beranda saat di-scroll.
  * - Mendukung navigasi Next / Previous langsung di dalam modal (tanpa harus menutup modal):
- *   - Tombol floating panah kiri & kanan
+ *   - Tombol floating panah kiri & kanan (dengan touch & click propagation terisolasi)
  *   - Pintasan keyboard (ArrowLeft & ArrowRight)
  *   - Gestur sentuh usap jari (touch swipe) di mobile
  *   - Counter badge indikator "Foto X dari Y"
@@ -38,38 +38,120 @@ export const GalleryLightbox: React.FC<GalleryLightboxProps> = ({
   const dockContext = usePhoneDock();
   const [fallbackDockNode, setFallbackDockNode] = useState<HTMLElement | null>(null);
 
-  // Internal index state if controlledIndex is not passed
-  const safePhotos = Array.isArray(photos) && photos.length > 0 ? photos.filter(Boolean) : imageUrl ? [imageUrl] : [];
-  const initialIdx = controlledIndex !== undefined ? controlledIndex : imageUrl ? safePhotos.indexOf(imageUrl) : 0;
-  const [internalIndex, setInternalIndex] = useState(Math.max(0, initialIdx));
-
-  useEffect(() => {
-    if (controlledIndex !== undefined) {
-      setInternalIndex(controlledIndex);
-    } else if (imageUrl) {
-      const idx = safePhotos.indexOf(imageUrl);
-      if (idx !== -1) setInternalIndex(idx);
+  // Memoize safePhotos agar referensi array stabil dan tidak memicu render ulang berlebih
+  const safePhotos = useMemo(() => {
+    if (Array.isArray(photos) && photos.length > 0) {
+      return photos.filter(Boolean);
     }
-  }, [controlledIndex, imageUrl, safePhotos]);
+    if (imageUrl) return [imageUrl];
+    return [];
+  }, [photos, imageUrl]);
 
   const total = safePhotos.length;
-  const activePhoto = safePhotos[internalIndex] || imageUrl;
 
-  const handlePrev = useCallback(() => {
-    if (total <= 1) return;
-    const nextIdx = internalIndex > 0 ? internalIndex - 1 : total - 1;
-    setInternalIndex(nextIdx);
-    if (onIndexChange) onIndexChange(nextIdx);
-  }, [internalIndex, total, onIndexChange]);
+  // State index foto yang aktif di dalam modal
+  const [activeIndex, setActiveIndex] = useState<number>(0);
+  const wasOpenRef = useRef<boolean>(false);
+  const lastSyncedIndexRef = useRef<number | null>(null);
+  const lastSyncedImageRef = useRef<string | null>(null);
 
-  const handleNext = useCallback(() => {
-    if (total <= 1) return;
-    const nextIdx = internalIndex < total - 1 ? internalIndex + 1 : 0;
-    setInternalIndex(nextIdx);
-    if (onIndexChange) onIndexChange(nextIdx);
-  }, [internalIndex, total, onIndexChange]);
+  // Sinkronisasi index saat modal baru dibuka atau saat imageUrl/controlledIndex berubah dari parent
+  useEffect(() => {
+    if (!isOpen) {
+      wasOpenRef.current = false;
+      return;
+    }
 
-  // Touch Swipe tracking
+    const justOpened = !wasOpenRef.current;
+    wasOpenRef.current = true;
+
+    // Saat modal baru dibuka pertama kali
+    if (justOpened) {
+      let initialIdx = 0;
+      if (controlledIndex !== undefined && controlledIndex >= 0 && controlledIndex < safePhotos.length) {
+        initialIdx = controlledIndex;
+      } else if (imageUrl) {
+        const found = safePhotos.indexOf(imageUrl);
+        initialIdx = found !== -1 ? found : 0;
+      }
+      setActiveIndex(initialIdx);
+      lastSyncedIndexRef.current = initialIdx;
+      lastSyncedImageRef.current = safePhotos[initialIdx] || imageUrl || null;
+      return;
+    }
+
+    // Jika parent mengubah controlledIndex secara eksternal (berbeda dari sinkronisasi terakhir kita)
+    if (
+      controlledIndex !== undefined &&
+      controlledIndex >= 0 &&
+      controlledIndex < safePhotos.length &&
+      controlledIndex !== lastSyncedIndexRef.current
+    ) {
+      setActiveIndex(controlledIndex);
+      lastSyncedIndexRef.current = controlledIndex;
+      lastSyncedImageRef.current = safePhotos[controlledIndex] || null;
+      return;
+    }
+
+    // Jika parent mengubah imageUrl secara eksternal (berbeda dari sinkronisasi terakhir kita)
+    if (imageUrl && imageUrl !== lastSyncedImageRef.current) {
+      const idx = safePhotos.indexOf(imageUrl);
+      if (idx !== -1 && idx !== lastSyncedIndexRef.current) {
+        setActiveIndex(idx);
+        lastSyncedIndexRef.current = idx;
+      }
+      lastSyncedImageRef.current = imageUrl;
+    }
+  }, [isOpen, imageUrl, controlledIndex, safePhotos]);
+
+  // Foto yang aktif saat ini
+  const activePhoto = safePhotos[activeIndex] || imageUrl || '';
+
+  // Handler Navigasi Foto Sebelumnya (Prev)
+  const handlePrev = useCallback(
+    (e?: React.MouseEvent) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (safePhotos.length <= 1) return;
+
+      const nextIdx = (activeIndex - 1 + safePhotos.length) % safePhotos.length;
+      const nextUrl = safePhotos[nextIdx];
+      lastSyncedIndexRef.current = nextIdx;
+      lastSyncedImageRef.current = nextUrl;
+      setActiveIndex(nextIdx);
+
+      if (onIndexChange) {
+        onIndexChange(nextIdx);
+      }
+    },
+    [safePhotos, activeIndex, onIndexChange]
+  );
+
+  // Handler Navigasi Foto Selanjutnya (Next)
+  const handleNext = useCallback(
+    (e?: React.MouseEvent) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (safePhotos.length <= 1) return;
+
+      const nextIdx = (activeIndex + 1) % safePhotos.length;
+      const nextUrl = safePhotos[nextIdx];
+      lastSyncedIndexRef.current = nextIdx;
+      lastSyncedImageRef.current = nextUrl;
+      setActiveIndex(nextIdx);
+
+      if (onIndexChange) {
+        onIndexChange(nextIdx);
+      }
+    },
+    [safePhotos, activeIndex, onIndexChange]
+  );
+
+  // Touch Swipe tracking untuk geser swipe foto di layar sentuh
   const touchStartX = useRef<number | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -80,9 +162,9 @@ export const GalleryLightbox: React.FC<GalleryLightboxProps> = ({
     if (touchStartX.current === null) return;
     const deltaX = touchStartX.current - e.changedTouches[0].clientX;
     touchStartX.current = null;
-    if (deltaX > 45) {
+    if (deltaX > 40) {
       handleNext();
-    } else if (deltaX < -45) {
+    } else if (deltaX < -40) {
       handlePrev();
     }
   };
@@ -136,7 +218,7 @@ export const GalleryLightbox: React.FC<GalleryLightboxProps> = ({
       >
         {total > 1 ? (
           <span className="px-3 py-1 rounded-full bg-white/15 text-white text-[11px] font-sans font-semibold backdrop-blur-md border border-white/10 shadow-xs">
-            Foto {internalIndex + 1} dari {total}
+            Foto {activeIndex + 1} dari {total}
           </span>
         ) : (
           <div />
@@ -144,7 +226,10 @@ export const GalleryLightbox: React.FC<GalleryLightboxProps> = ({
 
         <button
           type="button"
-          onClick={onClose}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
           aria-label="Tutup Pratinjau Foto"
           className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/35 active:scale-95 text-white flex items-center justify-center transition-all cursor-pointer shadow-lg backdrop-blur-sm"
           title="Tutup Foto (Esc)"
@@ -163,8 +248,10 @@ export const GalleryLightbox: React.FC<GalleryLightboxProps> = ({
           <button
             type="button"
             onClick={handlePrev}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
             aria-label="Foto Sebelumnya"
-            className="absolute left-1 sm:-left-12 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/60 hover:bg-black/90 active:scale-90 text-white flex items-center justify-center transition-all cursor-pointer shadow-xl backdrop-blur-md border border-white/20 z-20"
+            className="absolute left-1 sm:-left-12 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/75 hover:bg-black/95 active:scale-90 text-white flex items-center justify-center transition-all cursor-pointer shadow-xl backdrop-blur-md border border-white/25 z-30"
             title="Foto Sebelumnya (Panah Kiri)"
           >
             <span className="material-symbols-outlined text-lg">chevron_left</span>
@@ -174,7 +261,7 @@ export const GalleryLightbox: React.FC<GalleryLightboxProps> = ({
         <img
           key={activePhoto}
           src={activePhoto}
-          alt={`Foto Galeri ${internalIndex + 1} Diperbesar`}
+          alt={`Foto Galeri ${activeIndex + 1} Diperbesar`}
           className="max-h-[68vh] sm:max-h-[76vh] w-auto max-w-full object-contain rounded-2xl shadow-2xl border border-white/15 animate-in zoom-in-95 duration-200"
         />
 
@@ -183,8 +270,10 @@ export const GalleryLightbox: React.FC<GalleryLightboxProps> = ({
           <button
             type="button"
             onClick={handleNext}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
             aria-label="Foto Selanjutnya"
-            className="absolute right-1 sm:-right-12 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/60 hover:bg-black/90 active:scale-90 text-white flex items-center justify-center transition-all cursor-pointer shadow-xl backdrop-blur-md border border-white/20 z-20"
+            className="absolute right-1 sm:-right-12 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/75 hover:bg-black/95 active:scale-90 text-white flex items-center justify-center transition-all cursor-pointer shadow-xl backdrop-blur-md border border-white/25 z-30"
             title="Foto Selanjutnya (Panah Kanan)"
           >
             <span className="material-symbols-outlined text-lg">chevron_right</span>

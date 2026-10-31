@@ -455,6 +455,16 @@ export function useDashboardSave({
       }));
     } else if (fieldKey === 'gallery') {
       setFormData((prev) => ({ ...prev, gallery: JSON.parse(JSON.stringify(baseForm.gallery || [])) }));
+    } else if (fieldKey === 'gallery_style') {
+      const revertedStyle = baseForm.gallery_style || baseTheme.gallery_style || 'bento-grid';
+      setFormData((prev) => ({
+        ...prev,
+        gallery_style: revertedStyle,
+        theme_config: prev.theme_config ? { ...prev.theme_config, gallery_style: revertedStyle } : undefined,
+      }));
+      if (setThemeConfig) {
+        setThemeConfig((prev) => ({ ...prev, gallery_style: revertedStyle }));
+      }
     } else if (fieldKey === 'quote') {
       setFormData((prev) => ({ ...prev, quote: baseForm.quote }));
     } else if (fieldKey === 'quote_source') {

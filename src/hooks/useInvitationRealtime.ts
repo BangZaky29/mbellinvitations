@@ -45,14 +45,24 @@ function getInitialRealtimeState(slug: string, guestParam?: string | null, codeP
             : effectiveTheme === 'sunda'
             ? 'template6'
             : (THEME_TO_TEMPLATE_ID[effectiveTheme] || parsed.templateId || 'template1');
+        const cachedStyle =
+          rawContent?.gallery_style ||
+          parsed.themeConfig?.gallery_style ||
+          parsed.theme_config?.gallery_style ||
+          'bento-grid';
+
         return {
           templateId: resolvedTplId,
           invitationData: {
             ...rawContent,
+            gallery_style: cachedStyle,
             guest_name: guestParam || rawContent.guest_name || 'Tamu Undangan',
             guest_code: codeParam || rawContent.guest_code || undefined,
           },
-          themeConfig: parsed.themeConfig || parsed.theme_config || MOCK_MODERN_THEME,
+          themeConfig: {
+            ...(parsed.themeConfig || parsed.theme_config || MOCK_MODERN_THEME),
+            gallery_style: cachedStyle,
+          },
           wishes: parsed.wishes || MOCK_MODERN_WISHES,
           invitationRecord: parsed.invitationRecord || null,
         };
@@ -161,9 +171,15 @@ export function useInvitationRealtime({
             inv.theme_config?.music_url ||
             '';
 
+          const resolvedGalleryStyle =
+            inv.content?.gallery_style ||
+            (inv.theme_config as any)?.gallery_style ||
+            'bento-grid';
+
           // Merge content with guest name & code serta status dan kepemilikan template
           const mergedData: InvitationData = {
             ...inv.content,
+            gallery_style: resolvedGalleryStyle,
             music_url: resolvedMusicUrl || inv.content?.music_url || '',
             status: inv.status || inv.content?.status || 'draft',
             unlocked_templates: inv.unlocked_templates || inv.content?.unlocked_templates || [],
@@ -182,6 +198,7 @@ export function useInvitationRealtime({
 
           const mergedTheme: ThemeConfig = {
             ...(inv.theme_config || MOCK_MODERN_THEME),
+            gallery_style: resolvedGalleryStyle,
             music_url: resolvedMusicUrl || inv.theme_config?.music_url || '',
             animation_config: resolvedAnim,
           };
@@ -314,9 +331,11 @@ export function useInvitationRealtime({
                 : (THEME_TO_TEMPLATE_ID[effectiveTheme] || updated.template_id || 'template1');
             setTemplateId(resolvedTemplateId);
             if (updated.content && typeof updated.content === 'object') {
+              const liveStyle = updated.content.gallery_style || (updated.theme_config as any)?.gallery_style;
               setInvitationData((prev) => ({
                 ...prev,
                 ...updated.content,
+                ...(liveStyle ? { gallery_style: liveStyle } : {}),
                 guest_name: activeGuestName || updated.content.guest_name || prev.guest_name,
                 guest_code: activeGuestCode || updated.content.guest_code || prev.guest_code,
               }));
@@ -325,7 +344,11 @@ export function useInvitationRealtime({
               const anim =
                 updated.theme_config?.animation_config ||
                 (updated as any).animation_config;
-              setThemeConfig(updated.theme_config);
+              const liveStyle = (updated.theme_config as any)?.gallery_style || updated.content?.gallery_style;
+              setThemeConfig({
+                ...updated.theme_config,
+                ...(liveStyle ? { gallery_style: liveStyle } : {}),
+              });
               if (anim) {
                 applyAnimationConfigStyles(anim);
               }

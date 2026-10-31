@@ -26,9 +26,10 @@ export const DualMarqueeView: React.FC<UniversalGalleryProps> = ({
   const gold = themeAccent.goldAccent || '#D4AF37';
   const border = themeAccent.borderColor || gold;
 
-  // Bagi foto menjadi 2 baris (ganjil & genap)
-  let row1 = photos.filter((_, i) => i % 2 === 0);
-  let row2 = photos.filter((_, i) => i % 2 === 1);
+  // Pasangkan setiap foto dengan index aslinya di array photos
+  const indexedPhotos = photos.map((url, index) => ({ url, index }));
+  let row1 = indexedPhotos.filter((_, i) => i % 2 === 0);
+  let row2 = indexedPhotos.filter((_, i) => i % 2 === 1);
 
   // Jika salah satu baris kosong (misal cuma ada 1 foto)
   if (row2.length === 0) {
@@ -36,7 +37,7 @@ export const DualMarqueeView: React.FC<UniversalGalleryProps> = ({
   }
 
   // Gandakan array agar loop seamless (minimal 4 item per baris)
-  const duplicateToMin = (arr: string[], minCount = 4) => {
+  const duplicateToMin = (arr: { url: string; index: number }[], minCount = 4) => {
     let result = [...arr];
     while (result.length < minCount) {
       result = [...result, ...arr];
@@ -85,33 +86,28 @@ export const DualMarqueeView: React.FC<UniversalGalleryProps> = ({
         <div
           className={`animate-marquee-left gap-2.5 ${isPaused ? 'marquee-paused' : ''}`}
         >
-          {streamRow1.map((url, i) => {
-            const originalIndex = photos.indexOf(url);
-            const actualIndex = originalIndex >= 0 ? originalIndex : 0;
-
-            return (
-              <div
-                key={`row1-${i}`}
-                onClick={() => onSelectImage(url, actualIndex)}
-                className="relative shrink-0 w-36 sm:w-40 aspect-[4/3] rounded-xl overflow-hidden cursor-pointer shadow-sm group hover:scale-[1.03] transition-transform duration-300"
-                style={{
-                  border: `1.5px solid ${border}66`,
-                }}
-              >
-                <img
-                  src={url}
-                  alt={captions[actualIndex] || `Foto Galeri ${actualIndex + 1}`}
-                  className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <span className="material-symbols-outlined text-white text-[20px] drop-shadow-md">
-                    zoom_in
-                  </span>
-                </div>
+          {streamRow1.map((item, i) => (
+            <div
+              key={`row1-${i}`}
+              onClick={() => onSelectImage(item.url, item.index)}
+              className="relative shrink-0 w-36 sm:w-40 aspect-[4/3] rounded-xl overflow-hidden cursor-pointer shadow-sm group hover:scale-[1.03] transition-transform duration-300"
+              style={{
+                border: `1.5px solid ${border}66`,
+              }}
+            >
+              <img
+                src={item.url}
+                alt={captions[item.index] || `Foto Galeri ${item.index + 1}`}
+                className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span className="material-symbols-outlined text-white text-[20px] drop-shadow-md">
+                  zoom_in
+                </span>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -120,33 +116,28 @@ export const DualMarqueeView: React.FC<UniversalGalleryProps> = ({
         <div
           className={`animate-marquee-right gap-2.5 ${isPaused ? 'marquee-paused' : ''}`}
         >
-          {streamRow2.map((url, i) => {
-            const originalIndex = photos.indexOf(url);
-            const actualIndex = originalIndex >= 0 ? originalIndex : 0;
-
-            return (
-              <div
-                key={`row2-${i}`}
-                onClick={() => onSelectImage(url, actualIndex)}
-                className="relative shrink-0 w-36 sm:w-40 aspect-[4/3] rounded-xl overflow-hidden cursor-pointer shadow-sm group hover:scale-[1.03] transition-transform duration-300"
-                style={{
-                  border: `1.5px solid ${border}66`,
-                }}
-              >
-                <img
-                  src={url}
-                  alt={captions[actualIndex] || `Foto Galeri ${actualIndex + 1}`}
-                  className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <span className="material-symbols-outlined text-white text-[20px] drop-shadow-md">
-                    zoom_in
-                  </span>
-                </div>
+          {streamRow2.map((item, i) => (
+            <div
+              key={`row2-${i}`}
+              onClick={() => onSelectImage(item.url, item.index)}
+              className="relative shrink-0 w-36 sm:w-40 aspect-[4/3] rounded-xl overflow-hidden cursor-pointer shadow-sm group hover:scale-[1.03] transition-transform duration-300"
+              style={{
+                border: `1.5px solid ${border}66`,
+              }}
+            >
+              <img
+                src={item.url}
+                alt={captions[item.index] || `Foto Galeri ${item.index + 1}`}
+                className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span className="material-symbols-outlined text-white text-[20px] drop-shadow-md">
+                  zoom_in
+                </span>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </div>
 
