@@ -60,37 +60,163 @@ export default async function handler(req: Request) {
       // Jika method POST ke /api/midtrans: Cek apakah ini Notifikasi Webhook dari Midtrans
       if (req.method === 'POST') {
         const bodyText = await req.text();
-        let isWebhookPayload = false;
+        let parsed: any = null;
         try {
-          const parsed = JSON.parse(bodyText);
-          if (parsed?.order_id && parsed?.transaction_status) {
-            isWebhookPayload = true;
-          }
+          parsed = JSON.parse(bodyText);
         } catch {
-          // not json
+          parsed = null;
         }
 
-        if (isWebhookPayload) {
-          console.log('📩 [Midtrans Webhook Relay] Relaying notification to Supabase Edge Function...');
+        if (parsed?.order_id && parsed?.transaction_status) {
+          console.log(`📩 [Midtrans Webhook] Processing notification for order: ${parsed.order_id}, status: ${parsed.transaction_status}`);
+
           const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://fsbvnkwxwvffghrdxnxr.supabase.co';
-          const webhookTarget = `${supabaseUrl}/functions/v1/midtrans-webhook`;
+          const supabaseKey =
+            process.env.VITE_SUPABASE_ANON_KEY ||
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzYnZua3d4d3ZmZmdocmR4bnhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0ODY1NTIsImV4cCI6MjA4NTA2MjU1Mn0.lT6ZSx9ZEwrLu-3olklSCr5cl_lq9xIcimFY8HBSKzg';
 
-          const relayRes = await fetch(webhookTarget, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: bodyText,
-          });
+          const {
+            order_id,
+            transaction_status,
+            fraud_status,
+            settlement_time,
+          } = parsed;
 
-          const relayData = await relayRes.text();
-          return new Response(relayData, {
-            status: relayRes.status,
-            headers: {
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*',
-            },
-          });
+          let paymentStatus = 'pending';
+          const isPaid =
+            transaction_status === 'settlement' ||
+            (transaction_status === 'capture' && fraud_status === 'accept');
+
+          if (isPaid) {
+            paymentStatus = 'settlement';
+          } else if (
+            transaction_status === 'cancel' ||
+            transaction_status === 'deny' ||
+            transaction_status === 'expire'
+          ) {
+            paymentStatus = transaction_status;
+          }
+
+          const nowIso = new Date().toISOString();
+          const paidAt = isPaid
+            ? settlement_time
+              ? new Date(settlement_time.replace(' ', 'T') + '+07:00').toISOString()
+              : nowIso
+            : null;
+
+          const sbHeaders = {
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation',
+          };
+
+          try {
+            // 1. Update public.transactions
+            const txRes = await fetch(
+              `${supabaseUrl}/rest/v1/transactions?order_id=eq.${encodeURIComponent(order_id)}`,
+              {
+                method: 'PATCH',
+                headers: sbHeaders,
+                body: JSON.stringify({
+                  payment_status: paymentStatus,
+                  paid_at: paidAt,
+                  updated_at: nowIso,
+                  midtrans_response: parsed,
+                }),
+              }
+            );
+
+            // 2. Jika lunas, update invitations & user_templates
+            if (isPaid && txRes.ok) {
+              const txRows = await txRes.json();
+              if (Array.isArray(txRows) && txRows.length > 0) {
+                const { invitation_id, template_id, user_id } = txRows[0];
+
+                if (invitation_id) {
+                  const invGet = await fetch(
+                    `${supabaseUrl}/rest/v1/invitations?id=eq.${encodeURIComponent(invitation_id)}&select=unlocked_templates`,
+                    { headers: sbHeaders }
+                  );
+                  let unlockedList: string[] = [];
+                  if (invGet.ok) {
+                    const invRows = await invGet.json();
+                    if (Array.isArray(invRows) && Array.isArray(invRows[0]?.unlocked_templates)) {
+                      unlockedList = invRows[0].unlocked_templates;
+                    }
+                  }
+                  const updatedUnlocked = Array.from(new Set([...unlockedList, template_id]));
+
+                  await fetch(
+                    `${supabaseUrl}/rest/v1/invitations?id=eq.${encodeURIComponent(invitation_id)}`,
+                    {
+                      method: 'PATCH',
+                      headers: sbHeaders,
+                      body: JSON.stringify({
+                        status: 'published',
+                        is_paid: true,
+                        paid_template_id: template_id,
+                        unlocked_templates: updatedUnlocked,
+                        paid_at: paidAt,
+                        updated_at: nowIso,
+                      }),
+                    }
+                  );
+                }
+
+                if (user_id) {
+                  const utGet = await fetch(
+                    `${supabaseUrl}/rest/v1/user_templates?user_id=eq.${encodeURIComponent(user_id)}&order=updated_at.desc&limit=1&select=id,unlocked_templates`,
+                    { headers: sbHeaders }
+                  );
+                  if (utGet.ok) {
+                    const utRows = await utGet.json();
+                    if (Array.isArray(utRows) && utRows.length > 0) {
+                      const utExisting = Array.isArray(utRows[0].unlocked_templates)
+                        ? utRows[0].unlocked_templates
+                        : [];
+                      const utUpdated = Array.from(new Set([...utExisting, template_id]));
+
+                      await fetch(
+                        `${supabaseUrl}/rest/v1/user_templates?id=eq.${encodeURIComponent(utRows[0].id)}`,
+                        {
+                          method: 'PATCH',
+                          headers: sbHeaders,
+                          body: JSON.stringify({
+                            status: 'published',
+                            is_paid: true,
+                            paid_template_id: template_id,
+                            unlocked_templates: utUpdated,
+                            paid_at: paidAt,
+                            updated_at: nowIso,
+                          }),
+                        }
+                      );
+                    }
+                  }
+                }
+              }
+            }
+          } catch (dbErr) {
+            console.error('Supabase webhook update error:', dbErr);
+          }
+
+          // Selalu balas HTTP 200 OK ke Midtrans agar tidak mengirim email error
+          return new Response(
+            JSON.stringify({
+              status: 'OK',
+              order_id,
+              transaction_status,
+              message: 'Notification received and processed successfully',
+            }),
+            {
+              status: 200,
+              headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+              },
+            }
+          );
         }
       }
     }
