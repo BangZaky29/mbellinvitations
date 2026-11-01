@@ -31,6 +31,10 @@
       "destination": "/api/preview?slug=$1"
     },
     {
+      "source": "/api/midtrans",
+      "destination": "/api/midtrans"
+    },
+    {
       "source": "/api/midtrans/(.*)",
       "destination": "/api/midtrans?path=$1"
     },
