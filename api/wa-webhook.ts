@@ -82,7 +82,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 `📝 *Slug Draft:* ${stats.draft_slugs} Link\n` +
                 `📦 *Total Semua Slug:* ${stats.total_invitations} Link\n\n` +
                 `📋 *Daftar Slug Terbaru:*\n${stats.slug_list}\n\n` +
-                `🌐 *Domain:* https://mbellinvitations.vercel.app\n` +
+                `🌐 *Domain:* https://mbellinvitations.my.id\n` +
                 `━━━━━━━━━━━━━━━━━━━━\n` +
                 `_Diperbarui: ${stats.checked_at}_`;
         } else if (askOmset) {

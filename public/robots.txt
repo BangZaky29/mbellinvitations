@@ -4,4 +4,4 @@ Allow: /dashboard
 Allow: /demo
 
 # Sitemap
-Sitemap: https://mbellinvitations.vercel.app/sitemap.xml
+Sitemap: https://mbellinvitations.my.id/sitemap.xml
