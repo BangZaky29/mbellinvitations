@@ -59,12 +59,18 @@ const INCLUDED_FEATURES = [
 ];
 
 /**
- * Konfigurasi Rekening Pembayaran Manual SeaBank & WhatsApp Admin
+ * Konfigurasi Rekening Pembayaran Manual (Transfer Bank) & WhatsApp Admin
  */
 export const MANUAL_PAYMENT_CONFIG = {
-  bankName: 'SeaBank',
-  accountNumber: import.meta.env.VITE_SEABANK_ACCOUNT_NUMBER || '901450913003',
-  accountName: import.meta.env.VITE_SEABANK_ACCOUNT_NAME || 'Bella Aprilian',
+  bankName: import.meta.env.VITE_MANUAL_BANK_NAME || 'BCA',
+  accountNumber:
+    import.meta.env.VITE_MANUAL_ACCOUNT_NUMBER ||
+    import.meta.env.VITE_SEABANK_ACCOUNT_NUMBER ||
+    '8705623461',
+  accountName:
+    import.meta.env.VITE_MANUAL_ACCOUNT_NAME ||
+    import.meta.env.VITE_SEABANK_ACCOUNT_NAME ||
+    'Zaky Aulia Qolbi',
   whatsappNumber: import.meta.env.VITE_ADMIN_WHATSAPP_NUMBER || '6288293473765',
 };
 
@@ -96,7 +102,7 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
   // ── UI State ──
   const [copiedVa, setCopiedVa] = useState(false);
   const [copiedAmount, setCopiedAmount] = useState(false);
-  const [copiedSeabank, setCopiedSeabank] = useState(false);
+  const [copiedBank, setCopiedBank] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
   const activeThemeId = themeId || 'modern';
@@ -474,7 +480,7 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs sm:text-sm font-bold text-stone-900 truncate">{opt.name}</p>
-                          <p className="text-[11px] text-stone-600 truncate">Verifikasi Otomatis via Transfer SeaBank</p>
+                          <p className="text-[11px] text-stone-600 truncate">Verifikasi Otomatis via Transfer {MANUAL_PAYMENT_CONFIG.bankName}</p>
                         </div>
                       </div>
                       <div className="w-5 h-5 rounded-full border border-amber-600 bg-amber-500 text-stone-950 flex items-center justify-center shrink-0">
@@ -491,7 +497,7 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                   </div>
                   <ol className="text-[11px] text-stone-600 space-y-1 list-decimal list-inside pl-0.5">
                     <li>Klik <strong>Buat Tagihan</strong> untuk menerbitkan Kode VA BCA resmi.</li>
-                    <li>Transfer pembayaran tepat sesuai nominal ke rekening <strong>SeaBank</strong>.</li>
+                    <li>Transfer pembayaran tepat sesuai nominal ke rekening <strong>{MANUAL_PAYMENT_CONFIG.bankName}</strong>.</li>
                     <li>Kirim bukti transfer &amp; salinan kode VA ke WhatsApp admin untuk verifikasi.</li>
                   </ol>
                 </div>
@@ -552,7 +558,7 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                 </div>
 
                 <h2 className="text-base sm:text-lg font-bold text-stone-900 tracking-tight">
-                  Transfer SeaBank &amp; Kode VA BCA
+                  Transfer {MANUAL_PAYMENT_CONFIG.bankName} &amp; Kode VA BCA
                 </h2>
 
                 {/* Countdown Timer */}
@@ -629,12 +635,12 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                 </div>
               )}
 
-              {/* ──── Virtual Account Card & SeaBank Manual Step Flow ──── */}
+              {/* ──── Virtual Account Card & Bank Manual Step Flow ──── */}
               {!isExpired && (() => {
                 const cleanWaPhone = MANUAL_PAYMENT_CONFIG.whatsappNumber.replace(/[^0-9]/g, '');
                 const formattedWaPhone = cleanWaPhone.startsWith('0') ? '62' + cleanWaPhone.slice(1) : cleanWaPhone;
                 const vaCode = chargeResult.vaNumber || chargeResult.billKey || '';
-                const waMessage = `Halo Admin Mbell Invitations, saya sudah melakukan transfer ke rekening SeaBank untuk aktivasi undangan:\n\n📋 Order ID: ${chargeResult.orderId}\n🏦 Kode VA BCA: ${vaCode}\n💍 Mempelai: ${coupleName}\n🎨 Template: ${templateName}\n💰 Nominal: ${formatRupiah(priceInfo.price)}\n💳 Bank Tujuan: SeaBank (${MANUAL_PAYMENT_CONFIG.accountNumber} a/n ${MANUAL_PAYMENT_CONFIG.accountName})\n\nBerikut saya lampirkan bukti transfernya. Mohon bantu verifikasi dan aktivasi undangan saya. Terima kasih!`;
+                const waMessage = `Halo Admin Mbell Invitations, saya sudah melakukan transfer ke rekening ${MANUAL_PAYMENT_CONFIG.bankName} untuk aktivasi undangan:\n\n📋 Order ID: ${chargeResult.orderId}\n🏦 Kode VA BCA: ${vaCode}\n💍 Mempelai: ${coupleName}\n🎨 Template: ${templateName}\n💰 Nominal: ${formatRupiah(priceInfo.price)}\n💳 Bank Tujuan: ${MANUAL_PAYMENT_CONFIG.bankName} (${MANUAL_PAYMENT_CONFIG.accountNumber} a/n ${MANUAL_PAYMENT_CONFIG.accountName})\n\nBerikut saya lampirkan bukti transfernya. Mohon bantu verifikasi dan aktivasi undangan saya. Terima kasih!`;
                 const waVerificationUrl = `https://wa.me/${formattedWaPhone}?text=${encodeURIComponent(waMessage)}`;
 
                 return (
@@ -646,11 +652,11 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                         <span>3 Langkah Mudah Pembayaran &amp; Aktivasi:</span>
                       </div>
                       <p className="text-[11px] text-amber-800 leading-relaxed">
-                        Sistem telah menerbitkan Kode VA BCA Anda. Silakan transfer pembayaran ke rekening SeaBank di bawah, lalu kirimkan bukti transfer beserta kode VA ke WhatsApp admin untuk verifikasi instan.
+                        Sistem telah menerbitkan Kode VA BCA Anda. Silakan transfer pembayaran ke rekening {MANUAL_PAYMENT_CONFIG.bankName} di bawah, lalu kirimkan bukti transfer beserta kode VA ke WhatsApp admin untuk verifikasi instan.
                       </p>
                     </div>
 
-                    {/* KARTU LANGKAH 1: REKENING SEABANK */}
+                    {/* KARTU LANGKAH 1: REKENING TUJUAN */}
                     <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-orange-50/60 via-white to-amber-50/40 border-2 border-orange-200 shadow-xs space-y-2.5">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
@@ -658,7 +664,7 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                             1
                           </span>
                           <h4 className="text-xs sm:text-sm font-bold text-stone-900">
-                            Transfer ke Rekening SeaBank
+                            Transfer ke Rekening {MANUAL_PAYMENT_CONFIG.bankName}
                           </h4>
                         </div>
                         <span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-800 text-[10px] font-bold">
@@ -666,10 +672,10 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                         </span>
                       </div>
 
-                      {/* Box Nomor Rekening SeaBank */}
+                      {/* Box Nomor Rekening */}
                       <div className="p-3 rounded-xl bg-white border border-orange-200 shadow-2xs">
                         <div className="flex items-center justify-between text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1">
-                          <span>Bank SeaBank Indonesia</span>
+                          <span>Bank {MANUAL_PAYMENT_CONFIG.bankName}</span>
                           <span className="text-stone-500">a/n {MANUAL_PAYMENT_CONFIG.accountName}</span>
                         </div>
                         <div className="flex items-center justify-between gap-2">
@@ -678,12 +684,12 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                           </span>
                           <button
                             type="button"
-                            onClick={() => copyToClipboard(MANUAL_PAYMENT_CONFIG.accountNumber, setCopiedSeabank)}
+                            onClick={() => copyToClipboard(MANUAL_PAYMENT_CONFIG.accountNumber, setCopiedBank)}
                             className="px-2.5 py-1 rounded-lg bg-orange-50 border border-orange-200 hover:bg-orange-100 text-orange-800 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
-                            title="Salin Nomor Rekening SeaBank"
+                            title={`Salin Nomor Rekening ${MANUAL_PAYMENT_CONFIG.bankName}`}
                           >
-                            <span className="material-symbols-outlined text-xs">{copiedSeabank ? 'check' : 'content_copy'}</span>
-                            <span>{copiedSeabank ? 'Tersalin!' : 'Salin Rekening'}</span>
+                            <span className="material-symbols-outlined text-xs">{copiedBank ? 'check' : 'content_copy'}</span>
+                            <span>{copiedBank ? 'Tersalin!' : 'Salin Rekening'}</span>
                           </button>
                         </div>
                       </div>
@@ -746,7 +752,7 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                           </button>
                         </div>
                         <p className="text-[10px] text-stone-500 mt-1.5 leading-relaxed">
-                          *Salin kode VA ini dan kirimkan ke WhatsApp admin bersama bukti transfer SeaBank untuk verifikasi aktivasi.
+                          *Salin kode VA ini dan kirimkan ke WhatsApp admin bersama bukti transfer {MANUAL_PAYMENT_CONFIG.bankName} untuk verifikasi aktivasi.
                         </p>
                       </div>
                     </div>
@@ -768,7 +774,7 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                       </div>
 
                       <p className="text-[11px] text-emerald-800 leading-relaxed">
-                        Setelah transfer ke SeaBank selesai, klik tombol di bawah untuk langsung mengirimkan bukti transfer dan Kode VA BCA ke admin via WhatsApp:
+                        Setelah transfer ke {MANUAL_PAYMENT_CONFIG.bankName} selesai, klik tombol di bawah untuk langsung mengirimkan bukti transfer dan Kode VA BCA ke admin via WhatsApp:
                       </p>
 
                       {/* Tombol WhatsApp Utama */}
