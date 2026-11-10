@@ -3,8 +3,17 @@
 // Reflect 1:1 dengan kolom tabel public.transactions di Supabase
 // ============================================================
 
-/** Metode pembayaran yang didukung Midtrans Core API */
-export type PaymentMethod = 'qris' | 'bca_va' | 'bni_va' | 'bri_va' | 'mandiri_va';
+/** Metode pembayaran yang didukung Midtrans Core API & Transfer Manual */
+export type PaymentMethod =
+  | 'bca_manual'
+  | 'gopay'
+  | 'bni_va'
+  | 'bri_va'
+  | 'mandiri_va'
+  | 'permata_va'
+  | 'cimb_va'
+  | 'bca_va'
+  | 'qris';
 
 /** Status pembayaran sesuai lifecycle Midtrans */
 export type PaymentStatus = 'pending' | 'settlement' | 'expire' | 'cancel' | 'deny';
@@ -59,9 +68,10 @@ export interface ChargeResult {
   orderId: string;
   paymentMethod: PaymentMethod;
   expiryTime: string;
-  // QRIS-specific
+  // QRIS / GoPay-specific
   qrCodeUrl?: string;
   qrString?: string;
+  deeplinkUrl?: string; // Buka langsung aplikasi GoPay / Gojek di HP
   // VA-specific
   vaNumber?: string;
   bankName?: string;
@@ -79,7 +89,8 @@ export interface PaymentOptionItem {
   badge: string;
   icon: string;
   description: string;
-  subLabel?: string;    // Sub-label tambahan (e.g. "Rekomendasi Instan")
+  subLabel?: string;
+  category: 'manual' | 'ewallet' | 'va';
 }
 
 /**
@@ -90,36 +101,59 @@ export function isMidtransSandbox(): boolean {
 }
 
 /**
- * Daftar opsi metode pembayaran yang ditampilkan di Step 1 Modal Checkout.
+ * Daftar opsi metode pembayaran resmi yang aktif di UI Checkout.
+ * Khusus metode yang aktif di Midtrans Production (GoPay + 5 Virtual Account: BNI, BRI, Mandiri, Permata, CIMB).
  */
 export const PAYMENT_METHOD_OPTIONS: PaymentOptionItem[] = [
+  // ── 1. E-WALLET INSTAN (Midtrans GoPay) ──
   {
-    id: 'qris',
-    name: 'QRIS (Semua E-Wallet & Mobile Banking)',
-    badge: 'Rekomendasi Instan',
-    icon: 'qr_code_scanner',
-    description: 'GoPay, OVO, DANA, ShopeePay, BCA Mobile, Livin\' Mandiri, BRImo',
-    subLabel: 'Bayar instan dari aplikasi manapun',
+    id: 'gopay',
+    name: 'GoPay / Gojek',
+    badge: 'Langsung Buka App',
+    icon: 'account_balance_wallet',
+    description: 'Buka otomatis aplikasi Gojek/GoPay di HP atau scan di desktop.',
+    category: 'ewallet',
   },
+
+  // ── 2. VIRTUAL ACCOUNT OTOMATIS (Midtrans 24 Jam) ──
   {
-    id: 'bca_va',
-    name: 'BCA Virtual Account',
-    badge: 'Verifikasi Otomatis',
+    id: 'bni_va',
+    name: 'BNI Virtual Account',
+    badge: 'Otomatis 24 Jam',
     icon: 'account_balance',
-    description: 'Transfer via m-BCA, KlikBCA, atau ATM BCA.',
-  },
-  {
-    id: 'mandiri_va',
-    name: 'Mandiri Virtual Account',
-    badge: 'Verifikasi Otomatis',
-    icon: 'credit_card',
-    description: 'Transfer via Livin\' by Mandiri atau ATM Mandiri.',
+    description: 'Transfer via BNI Mobile Banking, ATM BNI, atau ATM Bersama.',
+    category: 'va',
   },
   {
     id: 'bri_va',
-    name: 'BRI / BNI Virtual Account',
-    badge: 'Verifikasi Otomatis',
-    icon: 'account_balance_wallet',
-    description: 'Transfer via BRImo, BNI Mobile, atau ATM bersama.',
+    name: 'BRI Virtual Account (BRIVA)',
+    badge: 'Otomatis 24 Jam',
+    icon: 'account_balance',
+    description: 'Transfer via BRImo, ATM BRI, atau Agen BRILink.',
+    category: 'va',
+  },
+  {
+    id: 'mandiri_va',
+    name: 'Bank Mandiri (Bill Payment)',
+    badge: 'Otomatis 24 Jam',
+    icon: 'credit_card',
+    description: 'Bayar via Livin\' by Mandiri (Menu Bayar > Tagihan 70012) atau ATM Mandiri.',
+    category: 'va',
+  },
+  {
+    id: 'permata_va',
+    name: 'PermataBank Virtual Account',
+    badge: 'Otomatis 24 Jam',
+    icon: 'account_balance',
+    description: 'Transfer via PermataMobile X, ATM Permata, atau ATM Bersama.',
+    category: 'va',
+  },
+  {
+    id: 'cimb_va',
+    name: 'CIMB Niaga Virtual Account',
+    badge: 'Otomatis 24 Jam',
+    icon: 'account_balance',
+    description: 'Transfer via OCTO Mobile, OCTO Clicks, atau ATM CIMB Niaga.',
+    category: 'va',
   },
 ];

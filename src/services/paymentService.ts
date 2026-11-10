@@ -6,11 +6,12 @@
 
 import { supabase } from '../lib/supabaseClient';
 import { THEME_TO_TEMPLATE_ID, TEMPLATE_ID_TO_THEME, getSafeDbTemplateId } from '../pages/dashboard/constants/themeMapping';
-import type {
-  PaymentMethod,
-  CreateChargeParams,
-  ChargeResult,
-  TransactionRecord,
+import {
+  isMidtransSandbox,
+  type PaymentMethod,
+  type CreateChargeParams,
+  type ChargeResult,
+  type TransactionRecord,
 } from '../types/transaction';
 
 // =========================================================================
@@ -25,7 +26,12 @@ const MIDTRANS_SERVER_KEY =
  * Baik di mode dev (Vite proxy) maupun di mode produksi (Vercel Edge Proxy),
  * selalu gunakan '/api/midtrans' agar bebas CORS browser.
  */
+const MIDTRANS_PRODUCTION_URL = 'https://api.midtrans.com';
 const MIDTRANS_SANDBOX_URL = 'https://api.sandbox.midtrans.com';
+
+function getMidtransDirectUrl(): string {
+  return isMidtransSandbox() ? MIDTRANS_SANDBOX_URL : MIDTRANS_PRODUCTION_URL;
+}
 
 function getMidtransBaseUrl(): string {
   return '/api/midtrans';
@@ -67,10 +73,13 @@ function getSimulatedVaNumber(method: PaymentMethod): string {
   };
 
   switch (method) {
+    case 'bca_manual': return import.meta.env.VITE_MANUAL_ACCOUNT_NUMBER || '8705623461';
     case 'bca_va': return '8277081' + randomDigits(8);
     case 'bni_va': return '9881' + randomDigits(8);
     case 'bri_va': return '1269' + randomDigits(8);
     case 'mandiri_va': return '990' + randomDigits(8);
+    case 'permata_va': return '8528' + randomDigits(8);
+    case 'cimb_va': return '5919' + randomDigits(8);
     default: return randomDigits(12);
   }
 }
@@ -95,10 +104,14 @@ function generateQrCodeUrl(qrString: string): string {
  */
 function resolveBankName(method: PaymentMethod): string {
   switch (method) {
+    case 'bca_manual': return 'BCA';
     case 'bca_va': return 'BCA';
     case 'bni_va': return 'BNI';
     case 'bri_va': return 'BRI';
     case 'mandiri_va': return 'Mandiri';
+    case 'permata_va': return 'Permata';
+    case 'cimb_va': return 'CIMB Niaga';
+    case 'gopay': return 'GoPay';
     case 'qris': return 'QRIS';
     default: return 'Bank';
   }
@@ -147,14 +160,17 @@ async function callMidtransChargeApi(
   };
 
   switch (paymentMethod) {
+    case 'gopay':
+      basePayload.payment_type = 'gopay';
+      basePayload.gopay = {
+        enable_callback: true,
+        callback_url: 'https://mbellinvitations.my.id',
+      };
+      break;
+
     case 'qris':
       basePayload.payment_type = 'qris';
       basePayload.qris = { acquirer: 'gopay' };
-      break;
-
-    case 'bca_va':
-      basePayload.payment_type = 'bank_transfer';
-      basePayload.bank_transfer = { bank: 'bca' };
       break;
 
     case 'bni_va':
@@ -167,23 +183,35 @@ async function callMidtransChargeApi(
       basePayload.bank_transfer = { bank: 'bri' };
       break;
 
+    case 'permata_va':
+      basePayload.payment_type = 'bank_transfer';
+      basePayload.bank_transfer = { bank: 'permata' };
+      break;
+
+    case 'cimb_va':
+      basePayload.payment_type = 'bank_transfer';
+      basePayload.bank_transfer = { bank: 'cimb' };
+      break;
+
     case 'mandiri_va':
       basePayload.payment_type = 'echannel';
       basePayload.echannel = {
-        bill_info1: 'Aktivasi Template:',
+        bill_info1: 'Aktivasi Undangan',
         bill_info2: templateId || 'Mbell Undangan',
       };
       break;
 
+    case 'bca_va':
     default:
       basePayload.payment_type = 'bank_transfer';
       basePayload.bank_transfer = { bank: 'bca' };
+      break;
   }
 
-  // Coba URL proxy dulu (Vite dev), jika gagal coba direct Sandbox
+  // Coba URL proxy dulu (Vite dev), jika gagal coba direct Midtrans URL
   const endpoints = [
     `${getMidtransBaseUrl()}/v2/charge`,
-    `${MIDTRANS_SANDBOX_URL}/v2/charge`,
+    `${getMidtransDirectUrl()}/v2/charge`,
   ];
 
   for (const endpoint of endpoints) {
@@ -222,7 +250,7 @@ async function callMidtransStatusApi(orderId: string): Promise<any | null> {
   const authHeader = getMidtransAuthHeader();
   const endpoints = [
     `${getMidtransBaseUrl()}/v2/${orderId}/status`,
-    `${MIDTRANS_SANDBOX_URL}/v2/${orderId}/status`,
+    `${getMidtransDirectUrl()}/v2/${orderId}/status`,
   ];
 
   for (const endpoint of endpoints) {
@@ -361,17 +389,62 @@ export async function createChargeTransaction(params: CreateChargeParams): Promi
   const orderId = generateOrderId();
   const now = new Date();
 
-  // Expiry standar: QRIS = 15 menit, VA = 24 jam
-  const expiryMinutes = paymentMethod === 'qris' ? 15 : 24 * 60;
+  // Expiry standar: GoPay/QRIS = 15 menit, VA/Manual = 24 jam
+  const expiryMinutes = paymentMethod === 'qris' || paymentMethod === 'gopay' ? 15 : 24 * 60;
   let expiryTime = new Date(now.getTime() + expiryMinutes * 60 * 1000).toISOString();
 
-  // 2. TEMBAK LANGSUNG KE MIDTRANS SANDBOX CORE API
+  // ── CABANG KHUSUS: BCA TRANSFER MANUAL ──
+  // Tidak perlu menembak Midtrans API, langsung catat ke database Supabase
+  if (paymentMethod === 'bca_manual') {
+    const manualAccount = import.meta.env.VITE_MANUAL_ACCOUNT_NUMBER || '8705623461';
+    const manualBank = 'BCA';
+
+    const transactionPayload = {
+      order_id: orderId,
+      user_id: safeUserId,
+      invitation_id: resolvedInvitationId,
+      template_id: templateId,
+      amount,
+      payment_method: paymentMethod,
+      payment_status: 'pending',
+      va_number: manualAccount,
+      bank_name: manualBank,
+      qr_code_url: null,
+      qr_string: null,
+      bill_key: null,
+      biller_code: null,
+      expiry_time: expiryTime,
+      midtrans_response: {
+        type: 'manual_transfer',
+        bank: manualBank,
+        account_number: manualAccount,
+        account_name: 'Zaky Aulia Qolbi',
+      },
+    };
+
+    const { error: manualErr } = await supabase.from('transactions').insert(transactionPayload);
+    if (manualErr) {
+      console.error('❌ createChargeTransaction (BCA Manual) Supabase insert error:', manualErr);
+      throw new Error(`Gagal menyimpan tagihan pembayaran: ${manualErr.message}`);
+    }
+
+    return {
+      orderId,
+      paymentMethod: 'bca_manual',
+      expiryTime,
+      vaNumber: manualAccount,
+      bankName: manualBank,
+    };
+  }
+
+  // 2. TEMBAK LANGSUNG KE MIDTRANS CORE API (Production / Sandbox)
   const midtransRes = await callMidtransChargeApi(orderId, amount, paymentMethod, templateId);
 
   let vaNumber: string | null = null;
   let bankName: string | null = null;
   let qrCodeUrl: string | null = null;
   let qrString: string | null = null;
+  let deeplinkUrl: string | null = null;
   let billKey: string | null = null;
   let billerCode: string | null = null;
 
@@ -387,25 +460,35 @@ export async function createChargeTransaction(params: CreateChargeParams): Promi
 
     if (paymentMethod === 'qris') {
       qrString = midtransRes.qr_string || null;
-      // Midtrans menyediakan URL generate QR langsung di actions array
       const actionQr = midtransRes.actions?.find((a: any) => a.name === 'generate-qr-code')?.url;
       qrCodeUrl = actionQr || (qrString ? generateQrCodeUrl(qrString) : null);
+    } else if (paymentMethod === 'gopay') {
+      qrString = midtransRes.qr_string || null;
+      const actionQr = midtransRes.actions?.find((a: any) => a.name === 'generate-qr-code')?.url;
+      qrCodeUrl = actionQr || (qrString ? generateQrCodeUrl(qrString) : null);
+      deeplinkUrl = midtransRes.actions?.find((a: any) => a.name === 'deeplink-redirect')?.url || null;
+      bankName = 'GoPay';
     } else if (paymentMethod === 'mandiri_va') {
       billKey = midtransRes.bill_key || null;
       billerCode = midtransRes.biller_code || '70012';
       bankName = 'Mandiri';
       vaNumber = billKey;
     } else {
-      // BCA, BNI, BRI VA
-      vaNumber = midtransRes.va_numbers?.[0]?.va_number || null;
+      // BCA, BNI, BRI, Permata, CIMB VA
+      vaNumber = midtransRes.va_numbers?.[0]?.va_number || midtransRes.permata_va_number || null;
       bankName = (midtransRes.va_numbers?.[0]?.bank || resolveBankName(paymentMethod)).toUpperCase();
     }
   } else {
-    // ── Fallback Simulasi jika koneksi Midtrans gagal ──
+    // ── Fallback Simulasi jika koneksi Midtrans offline/terhalang ──
     console.warn('⚠️ Menggunakan data fallback simulasi untuk modal.');
     if (paymentMethod === 'qris') {
       qrString = getSimulatedQrString(orderId, amount);
       qrCodeUrl = generateQrCodeUrl(qrString);
+    } else if (paymentMethod === 'gopay') {
+      qrString = getSimulatedQrString(orderId, amount);
+      qrCodeUrl = generateQrCodeUrl(qrString);
+      deeplinkUrl = 'https://gojek.link';
+      bankName = 'GoPay';
     } else if (paymentMethod === 'mandiri_va') {
       billKey = getSimulatedVaNumber(paymentMethod);
       billerCode = '70012';
@@ -449,6 +532,7 @@ export async function createChargeTransaction(params: CreateChargeParams): Promi
     expiryTime,
     ...(qrCodeUrl ? { qrCodeUrl } : {}),
     ...(qrString ? { qrString } : {}),
+    ...(deeplinkUrl ? { deeplinkUrl } : {}),
     ...(vaNumber ? { vaNumber } : {}),
     ...(bankName ? { bankName } : {}),
     ...(billKey ? { billKey } : {}),

@@ -218,6 +218,22 @@ export default async function handler(req: Request) {
             }
           );
         }
+
+        // Jika request POST langsung ke /api/midtrans (misal uji coba notifikasi webhook dari dashboard Midtrans)
+        return new Response(
+          JSON.stringify({
+            status: 'OK',
+            service: 'mbell Midtrans Webhook Handler',
+            message: 'Webhook endpoint ready and listening',
+          }),
+          {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*',
+            },
+          }
+        );
       }
     }
 

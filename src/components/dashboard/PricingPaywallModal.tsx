@@ -90,7 +90,7 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
 }) => {
   // ── Progressive Step State ──
   const [step, setStep] = useState<CheckoutStep>('review_order');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('bca_va');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('gopay');
   const [chargeResult, setChargeResult] = useState<ChargeResult | null>(null);
   const [showAllFeatures, setShowAllFeatures] = useState(false);
 
@@ -101,8 +101,8 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
 
   // ── UI State ──
   const [copiedVa, setCopiedVa] = useState(false);
+  const [copiedBiller, setCopiedBiller] = useState(false);
   const [copiedAmount, setCopiedAmount] = useState(false);
-  const [copiedBank, setCopiedBank] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
   const activeThemeId = themeId || 'modern';
@@ -466,41 +466,79 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                 <span className="font-black text-amber-900 shrink-0">{priceInfo.priceDisplay}</span>
               </div>
 
-              {/* Payment Method Selector - Hanya BCA VA yang ditampilkan sementara */}
-              <div className="space-y-2">
-                {PAYMENT_METHOD_OPTIONS.filter((opt) => opt.id === 'bca_va').map((opt) => (
-                  <div
-                    key={opt.id}
-                    onClick={() => !isSubmitting && setPaymentMethod(opt.id)}
-                    className={`p-3 rounded-2xl border border-amber-500 bg-amber-50/70 ring-2 ring-amber-400/40 shadow-xs flex items-center justify-between gap-2.5 transition-all cursor-pointer ${isSubmitting ? 'opacity-60 pointer-events-none' : ''}`}
-                  >
+              {/* Payment Method Selector */}
+              <div className="max-h-[38vh] overflow-y-auto space-y-2 pr-1 -mr-1">
+                {PAYMENT_METHOD_OPTIONS.map((opt) => {
+                  const isSelected = paymentMethod === opt.id;
+                  return (
+                    <div
+                      key={opt.id}
+                      onClick={() => !isSubmitting && setPaymentMethod(opt.id)}
+                      className={`p-2.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-2.5 ${
+                        isSelected
+                          ? 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-400/40 shadow-xs'
+                          : 'border-stone-200 bg-white hover:bg-stone-50 hover:border-stone-300'
+                      } ${isSubmitting ? 'opacity-60 pointer-events-none' : ''}`}
+                    >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-amber-500 text-stone-950 font-bold">
-                          <span className="material-symbols-outlined text-[20px]">{opt.icon}</span>
+                        <div
+                          className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 font-bold ${
+                            isSelected
+                              ? 'bg-amber-500 text-stone-950'
+                              : 'bg-stone-100 text-stone-700'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[18px]">{opt.icon}</span>
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs sm:text-sm font-bold text-stone-900 truncate">{opt.name}</p>
-                          <p className="text-[11px] text-stone-600 truncate">Verifikasi Otomatis via Transfer {MANUAL_PAYMENT_CONFIG.bankName}</p>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="text-xs sm:text-sm font-bold text-stone-900 truncate">{opt.name}</p>
+                            <span
+                              className={`px-1.5 py-0.2 rounded-md text-[9px] font-bold ${
+                                opt.category === 'ewallet'
+                                  ? 'bg-sky-100 text-sky-800'
+                                  : 'bg-stone-100 text-stone-600'
+                              }`}
+                            >
+                              {opt.badge}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-stone-600 truncate">{opt.description}</p>
                         </div>
                       </div>
-                      <div className="w-5 h-5 rounded-full border border-amber-600 bg-amber-500 text-stone-950 flex items-center justify-center shrink-0">
+                      <div
+                        className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
+                          isSelected
+                            ? 'border-amber-600 bg-amber-500 text-stone-950'
+                            : 'border-stone-300 bg-transparent text-transparent'
+                        }`}
+                      >
                         <span className="material-symbols-outlined text-[13px] font-bold">check</span>
                       </div>
                     </div>
-                ))}
+                  );
+                })}
+              </div>
 
-                {/* Info Card Alur 3 Langkah Pembayaran */}
-                <div className="p-3 rounded-2xl bg-stone-50 border border-stone-200 text-xs text-stone-700 space-y-1.5">
-                  <div className="flex items-center gap-1.5 font-bold text-stone-900">
-                    <span className="material-symbols-outlined text-[17px] text-amber-600">info</span>
-                    <span>Alur Pembayaran &amp; Aktivasi:</span>
-                  </div>
-                  <ol className="text-[11px] text-stone-600 space-y-1 list-decimal list-inside pl-0.5">
-                    <li>Klik <strong>Buat Tagihan</strong> untuk menerbitkan Kode VA BCA resmi.</li>
-                    <li>Transfer pembayaran tepat sesuai nominal ke rekening <strong>{MANUAL_PAYMENT_CONFIG.bankName}</strong>.</li>
-                    <li>Kirim bukti transfer &amp; salinan kode VA ke WhatsApp admin untuk verifikasi.</li>
-                  </ol>
+              {/* Dynamic Guidance Card based on selected payment method */}
+              <div className="p-3 rounded-2xl bg-stone-50 border border-stone-200 text-xs text-stone-700 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-stone-900">
+                  <span className="material-symbols-outlined text-[17px] text-amber-600">info</span>
+                  <span>Petunjuk Pembayaran:</span>
                 </div>
+                {paymentMethod === 'gopay' ? (
+                  <p className="text-[11px] text-stone-600 leading-relaxed">
+                    Buka langsung aplikasi <strong>GoPay / Gojek</strong> di ponsel Anda atau scan kode di layar desktop. Transaksi terverifikasi otomatis seketika tanpa perlu konfirmasi manual.
+                  </p>
+                ) : paymentMethod === 'mandiri_va' ? (
+                  <p className="text-[11px] text-stone-600 leading-relaxed">
+                    Pembayaran melalui Livin' by Mandiri (Menu <strong>Bayar &gt; Midtrans / 70012</strong>) atau ATM Mandiri dengan memasukkan Kode Bayar resmi yang diterbitkan secara otomatis.
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-stone-600 leading-relaxed">
+                    Nomor Virtual Account resmi diterbitkan otomatis 24 jam. Dapat dibayar melalui Mobile Banking, Internet Banking, atau ATM bank terkait. Status pembayaran terkonfirmasi otomatis seketika!
+                  </p>
+                )}
               </div>
 
               {/* Compact Fee Summary */}
@@ -558,7 +596,10 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                 </div>
 
                 <h2 className="text-base sm:text-lg font-bold text-stone-900 tracking-tight">
-                  Transfer {MANUAL_PAYMENT_CONFIG.bankName} &amp; Kode VA BCA
+                  {chargeResult.paymentMethod === 'gopay' && 'Pembayaran Instan GoPay / Gojek'}
+                  {chargeResult.paymentMethod === 'mandiri_va' && 'Mandiri Bill Payment (E-Channel)'}
+                  {['bni_va', 'bri_va', 'permata_va', 'cimb_va'].includes(chargeResult.paymentMethod) &&
+                    `${chargeResult.bankName || 'Bank'} Virtual Account`}
                 </h2>
 
                 {/* Countdown Timer */}
@@ -598,199 +639,256 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                 )}
               </div>
 
-              {/* ──── QRIS Card (Compact) ──── */}
-              {paymentMethod === 'qris' && !isExpired && (
-                <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-b from-white to-stone-50 border-2 border-stone-200 shadow-sm text-center">
-                  {/* QR Code Image */}
-                  <div className="relative w-44 h-44 sm:w-48 sm:h-48 mx-auto bg-white rounded-xl border border-stone-200 p-2 shadow-inner mb-2.5">
-                    <img
-                      src={chargeResult.qrCodeUrl}
-                      alt={`QR Code ${chargeResult.orderId}`}
-                      className="w-full h-full object-contain"
-                      loading="eager"
-                    />
-                    <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-stone-900 text-white text-[9px] font-bold whitespace-nowrap shadow-sm">
-                      Mbell Invitations
-                    </div>
-                  </div>
-
-                  {/* Download QR Button */}
-                  <button
-                    type="button"
-                    onClick={handleDownloadQr}
-                    className="mt-2 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-[15px]">download</span>
-                    <span>Unduh Kode QR</span>
-                  </button>
-
-                  {/* Supported e-wallets */}
-                  <div className="mt-2.5 pt-2 border-t border-stone-200 flex items-center justify-center gap-1 flex-wrap">
-                    {['GoPay', 'OVO', 'DANA', 'ShopeePay', 'BCA Mobile', 'Livin\'', 'BRImo'].map((name) => (
-                      <span key={name} className="px-1.5 py-0.2 rounded-md bg-stone-100 text-[9px] font-semibold text-stone-500">
-                        {name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* ──── Virtual Account Card & Bank Manual Step Flow ──── */}
-              {!isExpired && (() => {
-                const cleanWaPhone = MANUAL_PAYMENT_CONFIG.whatsappNumber.replace(/[^0-9]/g, '');
-                const formattedWaPhone = cleanWaPhone.startsWith('0') ? '62' + cleanWaPhone.slice(1) : cleanWaPhone;
-                const vaCode = chargeResult.vaNumber || chargeResult.billKey || '';
-                const waMessage = `Halo Admin Mbell Invitations, saya sudah melakukan transfer ke rekening ${MANUAL_PAYMENT_CONFIG.bankName} untuk aktivasi undangan:\n\n📋 Order ID: ${chargeResult.orderId}\n🏦 Kode VA BCA: ${vaCode}\n💍 Mempelai: ${coupleName}\n🎨 Template: ${templateName}\n💰 Nominal: ${formatRupiah(priceInfo.price)}\n💳 Bank Tujuan: ${MANUAL_PAYMENT_CONFIG.bankName} (${MANUAL_PAYMENT_CONFIG.accountNumber} a/n ${MANUAL_PAYMENT_CONFIG.accountName})\n\nBerikut saya lampirkan bukti transfernya. Mohon bantu verifikasi dan aktivasi undangan saya. Terima kasih!`;
-                const waVerificationUrl = `https://wa.me/${formattedWaPhone}?text=${encodeURIComponent(waMessage)}`;
-
-                return (
-                  <div className="space-y-3">
-                    {/* Banner Alur 3 Langkah */}
-                    <div className="p-3 rounded-2xl bg-amber-50/80 border border-amber-300/80 text-xs text-amber-950 space-y-1">
-                      <div className="flex items-center gap-1.5 font-bold text-amber-900">
-                        <span className="material-symbols-outlined text-[18px] text-amber-600">verified_user</span>
-                        <span>3 Langkah Mudah Pembayaran &amp; Aktivasi:</span>
-                      </div>
-                      <p className="text-[11px] text-amber-800 leading-relaxed">
-                        Sistem telah menerbitkan Kode VA BCA Anda. Silakan transfer pembayaran ke rekening {MANUAL_PAYMENT_CONFIG.bankName} di bawah, lalu kirimkan bukti transfer beserta kode VA ke WhatsApp admin untuk verifikasi instan.
-                      </p>
-                    </div>
-
-                    {/* KARTU LANGKAH 1: REKENING TUJUAN */}
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-orange-50/60 via-white to-amber-50/40 border-2 border-orange-200 shadow-xs space-y-2.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-full bg-orange-600 text-white flex items-center justify-center text-[10px] font-black shrink-0">
-                            1
-                          </span>
-                          <h4 className="text-xs sm:text-sm font-bold text-stone-900">
-                            Transfer ke Rekening {MANUAL_PAYMENT_CONFIG.bankName}
-                          </h4>
+              {/* ═══════════════════════════════════════════════ */}
+              {/* KONTEN INSTRUKSI PEMBAYARAN SESUAI METODE      */}
+              {/* ═══════════════════════════════════════════════ */}
+              {!isExpired && (
+                <div className="space-y-3">
+                  {/* ──── METODE 1: GOPAY / GOJEK ──── */}
+                  {chargeResult.paymentMethod === 'gopay' && (
+                    <div className="space-y-3">
+                      {/* Deep Link Button (prioritas di HP) */}
+                      {chargeResult.deeplinkUrl && (
+                        <div className="p-3.5 rounded-2xl bg-sky-50 border-2 border-sky-300 text-center space-y-2">
+                          <p className="text-xs font-bold text-sky-950">
+                            Buka Aplikasi GoPay / Gojek di Ponsel Anda:
+                          </p>
+                          <a
+                            href={chargeResult.deeplinkUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-400 hover:to-sky-500 text-stone-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer no-underline text-center"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+                            <span>Buka Aplikasi GoPay</span>
+                          </a>
+                          <p className="text-[10px] text-sky-700">
+                            Setelah tombol ditekan, aplikasi Gojek/GoPay akan terbuka otomatis untuk konfirmasi PIN.
+                          </p>
                         </div>
-                        <span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-800 text-[10px] font-bold">
-                          Rekening Tujuan
+                      )}
+
+                      {/* QR Code Container (untuk Scan dari HP atau Layar Desktop) */}
+                      {chargeResult.qrCodeUrl && (
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-b from-white to-stone-50 border-2 border-stone-200 shadow-sm text-center">
+                          <p className="text-xs font-bold text-stone-800 mb-2">
+                            Atau Scan Kode dengan Aplikasi Gojek / GoPay:
+                          </p>
+                          <div className="relative w-44 h-44 sm:w-48 sm:h-48 mx-auto bg-white rounded-xl border border-stone-200 p-2 shadow-inner mb-2.5">
+                            <img
+                              src={chargeResult.qrCodeUrl}
+                              alt={`QR GoPay ${chargeResult.orderId}`}
+                              className="w-full h-full object-contain"
+                              loading="eager"
+                            />
+                            <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-stone-900 text-white text-[9px] font-bold whitespace-nowrap shadow-sm">
+                              GoPay / Gojek
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={handleDownloadQr}
+                            className="mt-1 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-[15px]">download</span>
+                            <span>Unduh Kode Pembayaran</span>
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Nominal Box */}
+                      <div className="p-3 rounded-xl bg-stone-50 border border-stone-200 flex items-center justify-between text-xs">
+                        <span className="text-stone-600 font-medium">Total Pembayaran:</span>
+                        <span className="text-base font-black text-stone-900 font-mono">
+                          {formatRupiah(priceInfo.price)}
                         </span>
                       </div>
 
-                      {/* Box Nomor Rekening */}
-                      <div className="p-3 rounded-xl bg-white border border-orange-200 shadow-2xs">
-                        <div className="flex items-center justify-between text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1">
-                          <span>Bank {MANUAL_PAYMENT_CONFIG.bankName}</span>
-                          <span className="text-stone-500">a/n {MANUAL_PAYMENT_CONFIG.accountName}</span>
+                      {/* Petunjuk GoPay Otomatis */}
+                      <div className="p-3 rounded-2xl bg-stone-50 border border-stone-200 text-[11px] text-stone-600 space-y-1">
+                        <p className="font-bold text-stone-900">Petunjuk Pembayaran GoPay:</p>
+                        <ol className="list-decimal list-inside space-y-0.5 pl-0.5">
+                          <li>Buka aplikasi Gojek/GoPay di ponsel atau scan kode di atas.</li>
+                          <li>Periksa nominal tagihan &amp; selesaikan pembayaran dengan PIN Anda.</li>
+                          <li>Status pembayaran terverifikasi otomatis seketika tanpa perlu konfirmasi manual.</li>
+                        </ol>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ──── METODE 2: MANDIRI BILL PAYMENT (E-CHANNEL) ──── */}
+                  {chargeResult.paymentMethod === 'mandiri_va' && (
+                    <div className="space-y-2.5">
+                      {/* Biller Code */}
+                      <div className="p-3 rounded-2xl bg-stone-50 border-2 border-stone-200 space-y-1">
+                        <div className="flex items-center justify-between text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                          <span>Kode Perusahaan (Biller Code)</span>
+                          <span className="text-amber-800 font-bold">Midtrans</span>
                         </div>
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-base sm:text-lg font-black text-stone-900 font-mono tracking-wider select-all">
-                            {MANUAL_PAYMENT_CONFIG.accountNumber}
+                          <span className="text-base sm:text-lg font-black text-stone-900 font-mono tracking-wider">
+                            {chargeResult.billerCode || '70012'}
                           </span>
                           <button
                             type="button"
-                            onClick={() => copyToClipboard(MANUAL_PAYMENT_CONFIG.accountNumber, setCopiedBank)}
-                            className="px-2.5 py-1 rounded-lg bg-orange-50 border border-orange-200 hover:bg-orange-100 text-orange-800 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
-                            title={`Salin Nomor Rekening ${MANUAL_PAYMENT_CONFIG.bankName}`}
+                            onClick={() => copyToClipboard(chargeResult.billerCode || '70012', setCopiedBiller)}
+                            className="px-2.5 py-1 rounded-lg bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
                           >
-                            <span className="material-symbols-outlined text-xs">{copiedBank ? 'check' : 'content_copy'}</span>
-                            <span>{copiedBank ? 'Tersalin!' : 'Salin Rekening'}</span>
+                            <span className="material-symbols-outlined text-xs">{copiedBiller ? 'check' : 'content_copy'}</span>
+                            <span>{copiedBiller ? 'Tersalin!' : 'Salin'}</span>
                           </button>
                         </div>
                       </div>
 
-                      {/* Box Nominal Transfer */}
-                      <div className="p-3 rounded-xl bg-orange-50/60 border border-orange-200/80">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-orange-900 block mb-0.5">
-                          Nominal Transfer (Harus Persis)
-                        </span>
+                      {/* Bill Key (Kode Bayar) */}
+                      <div className="p-3 rounded-2xl bg-white border-2 border-amber-300 shadow-xs space-y-1">
+                        <div className="flex items-center justify-between text-[10px] font-bold text-amber-900 uppercase tracking-wider">
+                          <span>Kode Pembayaran (Bill Key)</span>
+                          <span className="text-stone-400 font-mono">Order: {chargeResult.orderId}</span>
+                        </div>
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-base sm:text-lg font-black text-orange-950 font-mono">
+                          <span className="text-base sm:text-lg font-black text-amber-950 font-mono tracking-wider select-all">
+                            {chargeResult.billKey || chargeResult.vaNumber || ''}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(chargeResult.billKey || chargeResult.vaNumber || '', setCopiedVa)}
+                            className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+                          >
+                            <span className="material-symbols-outlined text-xs">{copiedVa ? 'check' : 'content_copy'}</span>
+                            <span>{copiedVa ? 'Tersalin!' : 'Salin Kode Bayar'}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Nominal */}
+                      <div className="p-3 rounded-xl bg-stone-50 border border-stone-200 flex items-center justify-between text-xs">
+                        <span className="text-stone-600 font-medium">Total Nominal:</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-base font-black text-stone-900 font-mono">
                             {formatRupiah(priceInfo.price)}
                           </span>
                           <button
                             type="button"
                             onClick={() => copyToClipboard(priceInfo.price.toString(), setCopiedAmount)}
-                            className="px-2.5 py-1 rounded-lg bg-white border border-orange-200 hover:bg-orange-50 text-orange-800 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+                            className="px-2 py-0.5 rounded-md bg-white border border-stone-200 text-stone-600 text-[11px] font-semibold"
                           >
-                            <span className="material-symbols-outlined text-xs">{copiedAmount ? 'check' : 'content_copy'}</span>
-                            <span>{copiedAmount ? 'Tersalin!' : 'Salin Nominal'}</span>
+                            {copiedAmount ? 'Tersalin' : 'Salin'}
                           </button>
                         </div>
                       </div>
-                    </div>
 
-                    {/* KARTU LANGKAH 2: KODE VA BCA DARI SISTEM */}
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-white border-2 border-stone-200 shadow-xs space-y-2.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-full bg-stone-900 text-white flex items-center justify-center text-[10px] font-black shrink-0">
-                            2
-                          </span>
-                          <h4 className="text-xs sm:text-sm font-bold text-stone-900">
-                            Salin Kode Virtual Account BCA
-                          </h4>
-                        </div>
-                        <span className="px-2 py-0.5 rounded-full bg-stone-100 text-stone-700 text-[10px] font-bold">
-                          ID Tagihan
-                        </span>
+                      {/* Petunjuk Livin' by Mandiri */}
+                      <div className="p-3 rounded-2xl bg-stone-50 border border-stone-200 text-[11px] text-stone-600 space-y-1">
+                        <p className="font-bold text-stone-900">Cara Bayar Livin' by Mandiri:</p>
+                        <ol className="list-decimal list-inside space-y-0.5 pl-0.5">
+                          <li>Buka aplikasi <strong>Livin' by Mandiri</strong> &gt; Pilih menu <strong>Bayar</strong>.</li>
+                          <li>Cari penyedia jasa <strong>Midtrans (70012)</strong>.</li>
+                          <li>Masukkan <strong>Kode Pembayaran</strong> di atas.</li>
+                          <li>Periksa nama tagihan dan selesaikan transaksi dengan PIN.</li>
+                        </ol>
                       </div>
+                    </div>
+                  )}
 
-                      {/* VA Number */}
-                      <div className="p-3 rounded-xl bg-stone-50 border border-stone-200">
-                        <div className="flex items-center justify-between text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1">
-                          <span>Nomor BCA Virtual Account</span>
-                          <span className="text-stone-400 font-mono">Order: {chargeResult.orderId}</span>
-                        </div>
+                  {/* ──── METODE 4: VIRTUAL ACCOUNT OTOMATIS (BNI, BRI, Permata, CIMB) ──── */}
+                  {['bni_va', 'bri_va', 'permata_va', 'cimb_va', 'bca_va'].includes(chargeResult.paymentMethod) && (
+                    <div className="space-y-2.5">
+                      {/* Virtual Account Card */}
+                      <div className="p-3.5 sm:p-4 rounded-2xl bg-white border-2 border-stone-200 shadow-xs space-y-2.5">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-base sm:text-lg font-black text-stone-900 font-mono tracking-wider select-all">
-                            {formatVaDisplay(vaCode)}
+                          <div className="flex items-center gap-2">
+                            <span className="w-5 h-5 rounded-full bg-stone-900 text-white flex items-center justify-center text-[10px] font-black shrink-0">
+                              ✓
+                            </span>
+                            <h4 className="text-xs sm:text-sm font-bold text-stone-900">
+                              Nomor Virtual Account {chargeResult.bankName || 'Bank'}
+                            </h4>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                            Otomatis 24 Jam
                           </span>
-                          <button
-                            type="button"
-                            onClick={() => copyToClipboard(vaCode, setCopiedVa)}
-                            className="px-2.5 py-1 rounded-lg bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
-                            title="Salin Nomor VA BCA"
-                          >
-                            <span className="material-symbols-outlined text-xs">{copiedVa ? 'check' : 'content_copy'}</span>
-                            <span>{copiedVa ? 'Tersalin!' : 'Salin Kode VA'}</span>
-                          </button>
                         </div>
-                        <p className="text-[10px] text-stone-500 mt-1.5 leading-relaxed">
-                          *Salin kode VA ini dan kirimkan ke WhatsApp admin bersama bukti transfer {MANUAL_PAYMENT_CONFIG.bankName} untuk verifikasi aktivasi.
-                        </p>
+
+                        <div className="p-3 rounded-xl bg-stone-50 border border-stone-200">
+                          <div className="flex items-center justify-between text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1">
+                            <span>Nomor VA Resmi</span>
+                            <span className="text-stone-400 font-mono">Order: {chargeResult.orderId}</span>
+                          </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-base sm:text-lg font-black text-stone-900 font-mono tracking-wider select-all">
+                              {formatVaDisplay(chargeResult.vaNumber || '')}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => copyToClipboard(chargeResult.vaNumber || '', setCopiedVa)}
+                              className="px-2.5 py-1 rounded-lg bg-white border border-stone-200 hover:bg-stone-100 text-stone-700 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+                            >
+                              <span className="material-symbols-outlined text-xs">{copiedVa ? 'check' : 'content_copy'}</span>
+                              <span>{copiedVa ? 'Tersalin!' : 'Salin Nomor VA'}</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Nominal */}
+                        <div className="p-3 rounded-xl bg-stone-50/80 border border-stone-200/80 flex items-center justify-between text-xs">
+                          <span className="text-stone-600 font-medium">Nominal Tagihan:</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-base font-black text-stone-900 font-mono">
+                              {formatRupiah(priceInfo.price)}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => copyToClipboard(priceInfo.price.toString(), setCopiedAmount)}
+                              className="px-2 py-0.5 rounded-md bg-white border border-stone-200 text-stone-600 text-[11px] font-semibold"
+                            >
+                              {copiedAmount ? 'Tersalin' : 'Salin'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Instruksi Singkat */}
+                      <div className="p-3 rounded-2xl bg-stone-50 border border-stone-200 text-[11px] text-stone-600 space-y-1">
+                        <p className="font-bold text-stone-900">Panduan Pembayaran Virtual Account:</p>
+                        <ol className="list-decimal list-inside space-y-0.5 pl-0.5">
+                          <li>Buka Mobile Banking, Internet Banking, atau ATM bank Anda.</li>
+                          <li>Pilih menu <strong>Transfer / Bayar &gt; Virtual Account</strong>.</li>
+                          <li>Masukkan nomor Virtual Account di atas.</li>
+                          <li>Konfirmasi rincian tagihan &amp; masukkan PIN Anda. Sistem otomatis memproses dalam hitungan detik!</li>
+                        </ol>
                       </div>
                     </div>
+                  )}
 
-                    {/* KARTU LANGKAH 3: KONFIRMASI KE WHATSAPP ADMIN */}
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-50/70 border-2 border-emerald-200 shadow-xs space-y-2.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-black shrink-0">
-                            3
-                          </span>
-                          <h4 className="text-xs sm:text-sm font-bold text-emerald-950">
-                            Kirim Bukti Pembayaran ke WhatsApp Admin
-                          </h4>
+                  {/* ──── METODE 5: QRIS (FALLBACK) ──── */}
+                  {chargeResult.paymentMethod === 'qris' && chargeResult.qrCodeUrl && (
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-b from-white to-stone-50 border-2 border-stone-200 shadow-sm text-center">
+                      <div className="relative w-44 h-44 sm:w-48 sm:h-48 mx-auto bg-white rounded-xl border border-stone-200 p-2 shadow-inner mb-2.5">
+                        <img
+                          src={chargeResult.qrCodeUrl}
+                          alt={`QR Code ${chargeResult.orderId}`}
+                          className="w-full h-full object-contain"
+                          loading="eager"
+                        />
+                        <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-stone-900 text-white text-[9px] font-bold whitespace-nowrap shadow-sm">
+                          Mbell Invitations
                         </div>
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                          Aktivasi Cepat
-                        </span>
                       </div>
 
-                      <p className="text-[11px] text-emerald-800 leading-relaxed">
-                        Setelah transfer ke {MANUAL_PAYMENT_CONFIG.bankName} selesai, klik tombol di bawah untuk langsung mengirimkan bukti transfer dan Kode VA BCA ke admin via WhatsApp:
-                      </p>
-
-                      {/* Tombol WhatsApp Utama */}
-                      <a
-                        href={waVerificationUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer no-underline text-center"
+                      <button
+                        type="button"
+                        onClick={handleDownloadQr}
+                        className="mt-2 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
                       >
-                        <span className="material-symbols-outlined text-[18px]">chat</span>
-                        <span>Kirim Bukti &amp; Kode VA ke WhatsApp</span>
-                      </a>
+                        <span className="material-symbols-outlined text-[15px]">download</span>
+                        <span>Unduh Kode QR</span>
+                      </button>
                     </div>
-                  </div>
-                );
-              })()}
+                  )}
+                </div>
+              )}
 
               {/* ──── Action Buttons Step 3 ──── */}
               <div className="space-y-2 pt-1">
