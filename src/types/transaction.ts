@@ -68,6 +68,9 @@ export interface ChargeResult {
   orderId: string;
   paymentMethod: PaymentMethod;
   expiryTime: string;
+  // Midtrans Snap (Official popup & redirect)
+  snapToken?: string;
+  snapRedirectUrl?: string;
   // QRIS / GoPay-specific
   qrCodeUrl?: string;
   qrString?: string;
