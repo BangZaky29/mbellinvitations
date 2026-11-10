@@ -7,7 +7,6 @@
 import { supabase } from '../lib/supabaseClient';
 import { THEME_TO_TEMPLATE_ID, TEMPLATE_ID_TO_THEME, getSafeDbTemplateId } from '../pages/dashboard/constants/themeMapping';
 import {
-  isMidtransSandbox,
   type PaymentMethod,
   type CreateChargeParams,
   type ChargeResult,
@@ -26,13 +25,6 @@ const MIDTRANS_SERVER_KEY =
  * Baik di mode dev (Vite proxy) maupun di mode produksi (Vercel Edge Proxy),
  * selalu gunakan '/api/midtrans' agar bebas CORS browser.
  */
-const MIDTRANS_PRODUCTION_URL = 'https://api.midtrans.com';
-const MIDTRANS_SANDBOX_URL = 'https://api.sandbox.midtrans.com';
-
-function getMidtransDirectUrl(): string {
-  return isMidtransSandbox() ? MIDTRANS_SANDBOX_URL : MIDTRANS_PRODUCTION_URL;
-}
-
 function getMidtransBaseUrl(): string {
   return '/api/midtrans';
 }
@@ -208,45 +200,40 @@ async function callMidtransChargeApi(
       break;
   }
 
-  // Coba URL proxy dulu (Vite dev), jika gagal coba direct Midtrans URL
-  const endpoints = [
-    `${getMidtransBaseUrl()}/v2/charge`,
-    `${getMidtransDirectUrl()}/v2/charge`,
-  ];
+  // Selalu gunakan endpoint proxy '/api/midtrans' agar bebas CORS browser
+  const endpoint = `${getMidtransBaseUrl()}/v2/charge`;
 
-  for (const endpoint of endpoints) {
-    try {
-      console.log(`📡 Calling Midtrans Core API: ${endpoint}`, basePayload);
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': authHeader,
-        },
-        body: JSON.stringify(basePayload),
-      });
+  try {
+    console.log(`📡 Calling Midtrans Core API: ${endpoint}`, basePayload);
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': authHeader,
+      },
+      body: JSON.stringify(basePayload),
+    });
 
-      if (res.ok) {
-        const data = await res.json();
-        // Cek status_code dari body JSON Midtrans (200 / 201 = sukses terbit)
-        if (data.status_code === '200' || data.status_code === '201') {
-          console.log('✅ Midtrans Core API Charge SUCCESS:', data);
-          return data as MidtransChargeResponse;
-        } else {
-          console.warn(`⚠️ Midtrans Charge returned business status ${data.status_code}:`, data);
-          if (data.status_code === '402') {
-            console.error('❌ Midtrans Error 402: Payment channel is not activated.');
-            console.error('👉 Pastikan proxy / server dev telah direstart agar mengarah ke Production (https://api.midtrans.com), bukan Sandbox.');
-          }
-        }
+    if (res.ok) {
+      const data = await res.json();
+      // Cek status_code dari body JSON Midtrans (200 / 201 = sukses terbit)
+      if (data.status_code === '200' || data.status_code === '201') {
+        console.log('✅ Midtrans Core API Charge SUCCESS:', data);
+        return data as MidtransChargeResponse;
       } else {
-        const errData = await res.json().catch(() => null);
-        console.warn(`⚠️ Midtrans Charge returned HTTP status ${res.status}:`, errData);
+        console.warn(`⚠️ Midtrans Charge returned business status ${data.status_code}:`, data);
+        if (data.status_code === '402') {
+          console.error('❌ Midtrans Error 402: Payment channel is not activated.');
+          console.error('👉 Pastikan proxy / server dev telah direstart agar mengarah ke Production (https://api.midtrans.com), bukan Sandbox.');
+        }
       }
-    } catch (err) {
-      console.warn(`⚠️ Fetch failed for ${endpoint}:`, err);
+    } else {
+      const errData = await res.json().catch(() => null);
+      console.warn(`⚠️ Midtrans Charge returned HTTP status ${res.status}:`, errData);
     }
+  } catch (err) {
+    console.warn(`⚠️ Fetch failed for ${endpoint}:`, err);
   }
 
   return null;
@@ -257,27 +244,22 @@ async function callMidtransChargeApi(
  */
 async function callMidtransStatusApi(orderId: string): Promise<any | null> {
   const authHeader = getMidtransAuthHeader();
-  const endpoints = [
-    `${getMidtransBaseUrl()}/v2/${orderId}/status`,
-    `${getMidtransDirectUrl()}/v2/${orderId}/status`,
-  ];
+  const endpoint = `${getMidtransBaseUrl()}/v2/${orderId}/status`;
 
-  for (const endpoint of endpoints) {
-    try {
-      const res = await fetch(endpoint, {
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': authHeader,
-        },
-      });
+  try {
+    const res = await fetch(endpoint, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': authHeader,
+      },
+    });
 
-      if (res.ok) {
-        const data = await res.json();
-        return data;
-      }
-    } catch (err) {
-      // ignore
+    if (res.ok) {
+      const data = await res.json();
+      return data;
     }
+  } catch (err) {
+    // ignore
   }
 
   return null;

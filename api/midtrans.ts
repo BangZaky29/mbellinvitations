@@ -29,9 +29,16 @@ export default async function handler(req: Request) {
       process.env.VITE_MIDTRANS_IS_SANDBOX === 'true' ||
       process.env.MIDTRANS_IS_SANDBOX === 'true';
 
-    const targetBase = isSandbox
+    let targetBase = isSandbox
       ? 'https://api.sandbox.midtrans.com'
       : 'https://api.midtrans.com';
+
+    // Jika request mengarah ke Snap API (/snap/v1/transactions)
+    if (path.startsWith('snap/')) {
+      targetBase = isSandbox
+        ? 'https://app.sandbox.midtrans.com'
+        : 'https://app.midtrans.com';
+    }
 
     // 2. Jika diakses langsung tanpa subpath (misal: buka di browser /api/midtrans)
     if (!path) {

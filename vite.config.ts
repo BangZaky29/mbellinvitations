@@ -28,6 +28,11 @@ export default defineConfig(({ mode }) => {
         'Permissions-Policy': 'compute-pressure=(self "https://www.youtube.com")',
       },
       proxy: {
+        '/api/midtrans/snap': {
+          target: isSandbox ? 'https://app.sandbox.midtrans.com' : 'https://app.midtrans.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/midtrans\/snap/, '/snap'),
+        },
         '/api/midtrans': {
           target: midtransTarget,
           changeOrigin: true,
