@@ -147,8 +147,6 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
     },
   });
 
-  if (!isOpen) return null;
-
   // ── Helpers ──
   const copyToClipboard = (text: string, setter: (v: boolean) => void) => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
@@ -281,6 +279,8 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
   // ═══════════════════════════════════════════════════════════
   // RENDER
   // ═══════════════════════════════════════════════════════════
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-fade-in overflow-y-auto">
       <div className="relative w-full max-w-lg bg-white rounded-3xl p-4 sm:p-6 shadow-2xl border border-stone-200 text-stone-900 my-auto max-h-[92vh] flex flex-col overflow-hidden">
