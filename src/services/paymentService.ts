@@ -268,8 +268,9 @@ export async function callMidtransSnapApi(
   };
 
   const selectedChannel = snapPaymentMap[paymentMethod];
-  const allActiveChannels = ['gopay', 'bni_va', 'bri_va', 'echannel', 'permata_va', 'cimb_va'];
-  const enabledPayments = selectedChannel
+  // 5 Virtual Account yang sudah terverifikasi aktif di Midtrans Production
+  const allActiveChannels = ['bni_va', 'bri_va', 'echannel', 'permata_va', 'cimb_va'];
+  const enabledPayments = selectedChannel && allActiveChannels.includes(selectedChannel)
     ? [selectedChannel, ...allActiveChannels.filter((c) => c !== selectedChannel)]
     : allActiveChannels;
 

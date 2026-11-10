@@ -91,7 +91,7 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
 }) => {
   // ── Progressive Step State ──
   const [step, setStep] = useState<CheckoutStep>('review_order');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('gopay');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('bni_va');
   const [chargeResult, setChargeResult] = useState<ChargeResult | null>(null);
   const [showAllFeatures, setShowAllFeatures] = useState(false);
 
@@ -571,11 +571,7 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                   <span className="material-symbols-outlined text-[17px] text-amber-600">info</span>
                   <span>Petunjuk Pembayaran:</span>
                 </div>
-                {paymentMethod === 'gopay' ? (
-                  <p className="text-[11px] text-stone-600 leading-relaxed">
-                    Buka langsung aplikasi <strong>GoPay / Gojek</strong> di ponsel Anda atau scan kode di layar desktop. Transaksi terverifikasi otomatis seketika tanpa perlu konfirmasi manual.
-                  </p>
-                ) : paymentMethod === 'mandiri_va' ? (
+                {paymentMethod === 'mandiri_va' ? (
                   <p className="text-[11px] text-stone-600 leading-relaxed">
                     Pembayaran melalui Livin' by Mandiri (Menu <strong>Bayar &gt; Midtrans / 70012</strong>) atau ATM Mandiri dengan memasukkan Kode Bayar resmi yang diterbitkan secara otomatis.
                   </p>
@@ -641,7 +637,6 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                 </div>
 
                 <h2 className="text-base sm:text-lg font-bold text-stone-900 tracking-tight">
-                  {chargeResult.paymentMethod === 'gopay' && 'Pembayaran Instan GoPay / Gojek'}
                   {chargeResult.paymentMethod === 'mandiri_va' && 'Mandiri Bill Payment (E-Channel)'}
                   {['bni_va', 'bri_va', 'permata_va', 'cimb_va'].includes(chargeResult.paymentMethod) &&
                     `${chargeResult.bankName || 'Bank'} Virtual Account`}
@@ -697,7 +692,7 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                         <h4 className="font-bold text-xs sm:text-sm">Jendela Pembayaran Resmi Midtrans</h4>
                       </div>
                       <p className="text-[11px] text-emerald-100 leading-tight">
-                        Selesaikan pembayaran dengan aman melalui QRIS GoPay asli atau Virtual Account resmi berizin Bank Indonesia:
+                        Selesaikan pembayaran dengan aman melalui Virtual Account resmi berizin Bank Indonesia:
                       </p>
                       <button
                         type="button"
@@ -705,7 +700,7 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                         className="w-full py-3 px-4 rounded-xl bg-white text-emerald-950 hover:bg-emerald-50 active:scale-95 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer"
                       >
                         <span className="material-symbols-outlined text-emerald-700 text-base">open_in_new</span>
-                        <span>Buka Jendela Bayar Midtrans</span>
+                        <span>Buka Jendela Bayar Virtual Account</span>
                       </button>
                       {chargeResult.snapRedirectUrl && (
                         <a
@@ -720,80 +715,7 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                     </div>
                   )}
 
-                  {/* ──── METODE 1: GOPAY / GOJEK ──── */}
-                  {chargeResult.paymentMethod === 'gopay' && (
-                    <div className="space-y-3">
-                      {/* Deep Link Button (prioritas di HP) */}
-                      {chargeResult.deeplinkUrl && (
-                        <div className="p-3.5 rounded-2xl bg-sky-50 border-2 border-sky-300 text-center space-y-2">
-                          <p className="text-xs font-bold text-sky-950">
-                            Buka Aplikasi GoPay / Gojek di Ponsel Anda:
-                          </p>
-                          <a
-                            href={chargeResult.deeplinkUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-400 hover:to-sky-500 text-stone-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer no-underline text-center"
-                          >
-                            <span className="material-symbols-outlined text-[20px]">account_balance_wallet</span>
-                            <span>Buka Aplikasi GoPay</span>
-                          </a>
-                          <p className="text-[10px] text-sky-700">
-                            Setelah tombol ditekan, aplikasi Gojek/GoPay akan terbuka otomatis untuk konfirmasi PIN.
-                          </p>
-                        </div>
-                      )}
-
-                      {/* QR Code Container (untuk Scan dari HP atau Layar Desktop) */}
-                      {chargeResult.qrCodeUrl && (
-                        <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-b from-white to-stone-50 border-2 border-stone-200 shadow-sm text-center">
-                          <p className="text-xs font-bold text-stone-800 mb-2">
-                            Atau Scan Kode dengan Aplikasi Gojek / GoPay:
-                          </p>
-                          <div className="relative w-44 h-44 sm:w-48 sm:h-48 mx-auto bg-white rounded-xl border border-stone-200 p-2 shadow-inner mb-2.5">
-                            <img
-                              src={chargeResult.qrCodeUrl}
-                              alt={`QR GoPay ${chargeResult.orderId}`}
-                              className="w-full h-full object-contain"
-                              loading="eager"
-                            />
-                            <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-stone-900 text-white text-[9px] font-bold whitespace-nowrap shadow-sm">
-                              GoPay / Gojek
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={handleDownloadQr}
-                            className="mt-1 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
-                          >
-                            <span className="material-symbols-outlined text-[15px]">download</span>
-                            <span>Unduh Kode Pembayaran</span>
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Nominal Box */}
-                      <div className="p-3 rounded-xl bg-stone-50 border border-stone-200 flex items-center justify-between text-xs">
-                        <span className="text-stone-600 font-medium">Total Pembayaran:</span>
-                        <span className="text-base font-black text-stone-900 font-mono">
-                          {formatRupiah(priceInfo.price)}
-                        </span>
-                      </div>
-
-                      {/* Petunjuk GoPay Otomatis */}
-                      <div className="p-3 rounded-2xl bg-stone-50 border border-stone-200 text-[11px] text-stone-600 space-y-1">
-                        <p className="font-bold text-stone-900">Petunjuk Pembayaran GoPay:</p>
-                        <ol className="list-decimal list-inside space-y-0.5 pl-0.5">
-                          <li>Buka aplikasi Gojek/GoPay di ponsel atau scan kode di atas.</li>
-                          <li>Periksa nominal tagihan &amp; selesaikan pembayaran dengan PIN Anda.</li>
-                          <li>Status pembayaran terverifikasi otomatis seketika tanpa perlu konfirmasi manual.</li>
-                        </ol>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ──── METODE 2: MANDIRI BILL PAYMENT (E-CHANNEL) ──── */}
+                  {/* ──── METODE 1: MANDIRI BILL PAYMENT (E-CHANNEL) ──── */}
                   {chargeResult.paymentMethod === 'mandiri_va' && (
                     <div className="space-y-2.5">
                       {/* Biller Code */}

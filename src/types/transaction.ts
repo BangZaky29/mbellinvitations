@@ -105,20 +105,10 @@ export function isMidtransSandbox(): boolean {
 
 /**
  * Daftar opsi metode pembayaran resmi yang aktif di UI Checkout.
- * Khusus metode yang aktif di Midtrans Production (GoPay + 5 Virtual Account: BNI, BRI, Mandiri, Permata, CIMB).
+ * Khusus 5 Virtual Account yang sudah aktif di Midtrans Production (BNI, BRI, Mandiri, Permata, CIMB).
  */
 export const PAYMENT_METHOD_OPTIONS: PaymentOptionItem[] = [
-  // ── 1. E-WALLET INSTAN (Midtrans GoPay) ──
-  {
-    id: 'gopay',
-    name: 'GoPay / Gojek',
-    badge: 'Langsung Buka App',
-    icon: 'account_balance_wallet',
-    description: 'Buka otomatis aplikasi Gojek/GoPay di HP atau scan di desktop.',
-    category: 'ewallet',
-  },
-
-  // ── 2. VIRTUAL ACCOUNT OTOMATIS (Midtrans 24 Jam) ──
+  // ── VIRTUAL ACCOUNT OTOMATIS (Midtrans 24 Jam) ──
   {
     id: 'bni_va',
     name: 'BNI Virtual Account',
