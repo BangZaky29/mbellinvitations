@@ -1,13 +1,25 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '')
-  const isSandbox = env.VITE_MIDTRANS_IS_SANDBOX !== 'false'
+  // Selalu muat .env dari direktori project fe ini sendiri
+  const env = {
+    ...loadEnv(mode, __dirname, ''),
+    ...loadEnv(mode, process.cwd(), ''),
+  }
+
+  // Hanya Sandbox jika VITE_MIDTRANS_IS_SANDBOX secara eksplisit bernilai 'true'
+  const isSandbox = env.VITE_MIDTRANS_IS_SANDBOX === 'true'
   const midtransTarget = isSandbox
     ? 'https://api.sandbox.midtrans.com'
     : 'https://api.midtrans.com'
+
+  console.log(`📡 [Vite Proxy] Midtrans Target: ${midtransTarget} (Sandbox: ${isSandbox})`)
 
   return {
     plugins: [react()],

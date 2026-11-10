@@ -229,11 +229,20 @@ async function callMidtransChargeApi(
 
       if (res.ok) {
         const data = await res.json();
-        console.log('✅ Midtrans Core API Charge SUCCESS:', data);
-        return data as MidtransChargeResponse;
+        // Cek status_code dari body JSON Midtrans (200 / 201 = sukses terbit)
+        if (data.status_code === '200' || data.status_code === '201') {
+          console.log('✅ Midtrans Core API Charge SUCCESS:', data);
+          return data as MidtransChargeResponse;
+        } else {
+          console.warn(`⚠️ Midtrans Charge returned business status ${data.status_code}:`, data);
+          if (data.status_code === '402') {
+            console.error('❌ Midtrans Error 402: Payment channel is not activated.');
+            console.error('👉 Pastikan proxy / server dev telah direstart agar mengarah ke Production (https://api.midtrans.com), bukan Sandbox.');
+          }
+        }
       } else {
         const errData = await res.json().catch(() => null);
-        console.warn(`⚠️ Midtrans Charge returned status ${res.status}:`, errData);
+        console.warn(`⚠️ Midtrans Charge returned HTTP status ${res.status}:`, errData);
       }
     } catch (err) {
       console.warn(`⚠️ Fetch failed for ${endpoint}:`, err);

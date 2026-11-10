@@ -24,10 +24,10 @@ export default async function handler(req: Request) {
     const rawPath = url.searchParams.get('path') || '';
     const path = rawPath.replace(/^\/+/, '').trim();
 
-    // Ambil preferensi Sandbox atau Production
+    // Ambil preferensi Sandbox atau Production (default: Production jika bernilai 'false' atau unset)
     const isSandbox =
-      process.env.VITE_MIDTRANS_IS_SANDBOX !== 'false' &&
-      process.env.MIDTRANS_IS_SANDBOX !== 'false';
+      process.env.VITE_MIDTRANS_IS_SANDBOX === 'true' ||
+      process.env.MIDTRANS_IS_SANDBOX === 'true';
 
     const targetBase = isSandbox
       ? 'https://api.sandbox.midtrans.com'
