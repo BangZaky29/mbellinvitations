@@ -17,7 +17,6 @@ import {
   createChargeTransaction,
   formatRupiah,
   formatVaDisplay,
-  loadSnapScript,
 } from '../../services/paymentService';
 import { usePaymentTransaction } from '../../hooks/usePaymentTransaction';
 import type {
@@ -192,13 +191,6 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
 
       // Mulai realtime listener + live countdown
       startListening(result.orderId, result.expiryTime);
-
-      // Jika ada Snap Token resmi, otomatis buka popup Midtrans Snap
-      if (result.snapToken) {
-        setTimeout(() => {
-          handleOpenSnap(result.snapToken);
-        }, 200);
-      }
     } catch (err: any) {
       console.error('❌ handleCreateCharge error:', err);
       alert('Gagal membuat tagihan pembayaran. Silakan coba lagi.');
@@ -207,43 +199,6 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
       submitLockRef.current = false;
     }
   };
-
-  // ═══════════════════════════════════════════════════════════
-  // Buka Jendela Pembayaran Midtrans Snap Resmi
-  // ═══════════════════════════════════════════════════════════
-  const handleOpenSnap = useCallback((tokenOverride?: string) => {
-    const token = tokenOverride || chargeResult?.snapToken;
-    if (!token) return;
-
-    loadSnapScript().then(() => {
-      const snapObj = (window as any).snap;
-      if (snapObj && typeof snapObj.pay === 'function') {
-        snapObj.pay(token, {
-          onSuccess: async (res: any) => {
-            console.log('✅ Snap payment success:', res);
-            await triggerConfirmPublish();
-            setStep('success');
-          },
-          onPending: (res: any) => {
-            console.log('⏳ Snap payment pending:', res);
-          },
-          onError: (err: any) => {
-            console.error('❌ Snap payment error:', err);
-          },
-          onClose: () => {
-            console.log('ℹ️ Snap popup closed by user');
-          },
-        });
-      } else if (chargeResult?.snapRedirectUrl) {
-        window.open(chargeResult.snapRedirectUrl, '_blank');
-      }
-    }).catch((e) => {
-      console.warn('Gagal memuat script Snap, fallback ke URL redirect:', e);
-      if (chargeResult?.snapRedirectUrl) {
-        window.open(chargeResult.snapRedirectUrl, '_blank');
-      }
-    });
-  }, [chargeResult, triggerConfirmPublish]);
 
   // ═══════════════════════════════════════════════════════════
   // STEP 3 ← Kembali ke Step 2 (Ganti Metode)
@@ -684,37 +639,6 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
               {/* ═══════════════════════════════════════════════ */}
               {!isExpired && (
                 <div className="space-y-3">
-                  {/* ──── BANNER MIDTRANS SNAP RESMI (POPUP BERIZIN BANK INDONESIA) ──── */}
-                  {chargeResult.snapToken && (
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-800 text-white shadow-md text-center space-y-2">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <span className="material-symbols-outlined text-lg text-emerald-200">verified_user</span>
-                        <h4 className="font-bold text-xs sm:text-sm">Jendela Pembayaran Resmi Midtrans</h4>
-                      </div>
-                      <p className="text-[11px] text-emerald-100 leading-tight">
-                        Selesaikan pembayaran dengan aman melalui Virtual Account resmi berizin Bank Indonesia:
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenSnap()}
-                        className="w-full py-3 px-4 rounded-xl bg-white text-emerald-950 hover:bg-emerald-50 active:scale-95 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer"
-                      >
-                        <span className="material-symbols-outlined text-emerald-700 text-base">open_in_new</span>
-                        <span>Buka Jendela Bayar Virtual Account</span>
-                      </button>
-                      {chargeResult.snapRedirectUrl && (
-                        <a
-                          href={chargeResult.snapRedirectUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[10px] text-emerald-100 hover:text-white underline inline-block"
-                        >
-                          Atau buka di Tab Baru ↗
-                        </a>
-                      )}
-                    </div>
-                  )}
-
                   {/* ──── METODE 1: MANDIRI BILL PAYMENT (E-CHANNEL) ──── */}
                   {chargeResult.paymentMethod === 'mandiri_va' && (
                     <div className="space-y-2.5">

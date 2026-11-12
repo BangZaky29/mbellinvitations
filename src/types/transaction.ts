@@ -68,19 +68,16 @@ export interface ChargeResult {
   orderId: string;
   paymentMethod: PaymentMethod;
   expiryTime: string;
-  // Midtrans Snap (Official popup & redirect)
-  snapToken?: string;
-  snapRedirectUrl?: string;
-  // QRIS / GoPay-specific
-  qrCodeUrl?: string;
-  qrString?: string;
-  deeplinkUrl?: string; // Buka langsung aplikasi GoPay / Gojek di HP
   // VA-specific
   vaNumber?: string;
   bankName?: string;
   // Mandiri Bill Payment (echannel)
   billKey?: string;
   billerCode?: string;
+  // QRIS / GoPay-specific (cadangan jika channel QR aktif di masa depan)
+  qrCodeUrl?: string;
+  qrString?: string;
+  deeplinkUrl?: string;
 }
 
 /**

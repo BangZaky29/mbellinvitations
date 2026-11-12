@@ -79,7 +79,7 @@ function getSimulatedVaNumber(method: PaymentMethod): string {
 /**
  * Generate QR string cadangan
  */
-function getSimulatedQrString(orderId: string, amount: number): string {
+export function getSimulatedQrString(orderId: string, amount: number): string {
   const paddedAmount = amount.toString().padStart(10, '0');
   return `00020101021226670016COM.NOBUBANK.WWW01189360050300000879140214${orderId}5303360540${paddedAmount}5802ID5917Mbell Invitations6007JAKARTA6304A1B2`;
 }
@@ -87,7 +87,7 @@ function getSimulatedQrString(orderId: string, amount: number): string {
 /**
  * Generate QR Code image URL dari QR string
  */
-function generateQrCodeUrl(qrString: string): string {
+export function generateQrCodeUrl(qrString: string): string {
   return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrString)}&format=png&margin=10`;
 }
 
@@ -237,122 +237,6 @@ async function callMidtransChargeApi(
   }
 
   return null;
-}
-
-/**
- * Panggil Midtrans SNAP API `/snap/v1/transactions`
- * Menghasilkan Snap Token dan Redirect URL resmi untuk pembayaran GoPay, VA, dll.
- */
-export async function callMidtransSnapApi(
-  orderId: string,
-  amount: number,
-  paymentMethod: PaymentMethod,
-  templateId: string,
-  customerName = 'Pelanggan Mbell',
-  customerEmail = 'customer@mbellinvitations.my.id'
-): Promise<{ token: string; redirect_url: string } | null> {
-  const authHeader = getMidtransAuthHeader();
-  const endpoint = `${getMidtransBaseUrl()}/snap/v1/transactions`;
-
-  // Pemetaan paymentMethod ke channel Midtrans Snap
-  const snapPaymentMap: Record<PaymentMethod, string> = {
-    gopay: 'gopay',
-    qris: 'qris',
-    bni_va: 'bni_va',
-    bri_va: 'bri_va',
-    mandiri_va: 'echannel',
-    permata_va: 'permata_va',
-    cimb_va: 'cimb_va',
-    bca_va: 'bca_va',
-    bca_manual: 'bca_va',
-  };
-
-  const selectedChannel = snapPaymentMap[paymentMethod];
-  // 5 Virtual Account yang sudah terverifikasi aktif di Midtrans Production
-  const allActiveChannels = ['bni_va', 'bri_va', 'echannel', 'permata_va', 'cimb_va'];
-  const enabledPayments = selectedChannel && allActiveChannels.includes(selectedChannel)
-    ? [selectedChannel, ...allActiveChannels.filter((c) => c !== selectedChannel)]
-    : allActiveChannels;
-
-  const snapPayload = {
-    transaction_details: {
-      order_id: orderId,
-      gross_amount: Math.round(amount),
-    },
-    item_details: [
-      {
-        id: templateId || 'undangan-digital',
-        price: Math.round(amount),
-        quantity: 1,
-        name: `Aktivasi Tema Undangan (${templateId})`,
-      },
-    ],
-    customer_details: {
-      first_name: customerName,
-      email: customerEmail,
-    },
-    enabled_payments: enabledPayments,
-  };
-
-  try {
-    console.log(`📡 Calling Midtrans Snap API: ${endpoint}`, snapPayload);
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': authHeader,
-      },
-      body: JSON.stringify(snapPayload),
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      console.log('✅ Midtrans Snap Token SUCCESS:', data);
-      return data;
-    } else {
-      const errText = await res.text();
-      console.warn(`⚠️ Midtrans Snap API failed (${res.status}):`, errText);
-    }
-  } catch (err) {
-    console.warn(`⚠️ Fetch failed for Snap ${endpoint}:`, err);
-  }
-
-  return null;
-}
-
-/**
- * Muat script resmi Midtrans Snap (snap.js) secara dinamis
- */
-export function loadSnapScript(clientKey?: string, isSandbox = false): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if ((window as any).snap) {
-      resolve();
-      return;
-    }
-    const existing = document.getElementById('midtrans-snap-script');
-    if (existing) {
-      const interval = setInterval(() => {
-        if ((window as any).snap) {
-          clearInterval(interval);
-          resolve();
-        }
-      }, 100);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.id = 'midtrans-snap-script';
-    script.src = isSandbox
-      ? 'https://app.sandbox.midtrans.com/snap/snap.js'
-      : 'https://app.midtrans.com/snap/snap.js';
-    const key = clientKey || import.meta.env.VITE_MIDTRANS_CLIENT_KEY || 'Mid-client-HIT0Kk6zzbntnb_3';
-    script.setAttribute('data-client-key', key);
-    script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Gagal memuat script Midtrans Snap.'));
-    document.head.appendChild(script);
-  });
 }
 
 /**
@@ -544,11 +428,9 @@ export async function createChargeTransaction(params: CreateChargeParams): Promi
     };
   }
 
-  // 2. TEMBAK LANGSUNG KE MIDTRANS CORE API (Production / Sandbox)
+  // 2. TEMBAK LANGSUNG KE MIDTRANS CORE API (/v2/charge)
   const midtransRes = await callMidtransChargeApi(orderId, amount, paymentMethod, templateId);
 
-  let snapToken: string | null = null;
-  let snapRedirectUrl: string | null = null;
   let vaNumber: string | null = null;
   let bankName: string | null = null;
   let qrCodeUrl: string | null = null;
@@ -558,7 +440,7 @@ export async function createChargeTransaction(params: CreateChargeParams): Promi
   let billerCode: string | null = null;
 
   if (midtransRes) {
-    // ── Midtrans Core API Berhasil Merespons ──
+    // ── Midtrans Core API Berhasil Merespons (200 / 201) ──
     if (midtransRes.expiry_time) {
       try {
         expiryTime = new Date(midtransRes.expiry_time.replace(' ', 'T') + '+07:00').toISOString();
@@ -567,61 +449,30 @@ export async function createChargeTransaction(params: CreateChargeParams): Promi
       }
     }
 
-    if (paymentMethod === 'qris') {
-      qrString = midtransRes.qr_string || null;
-      const actionQr = midtransRes.actions?.find((a: any) => a.name === 'generate-qr-code')?.url;
-      qrCodeUrl = actionQr || (qrString ? generateQrCodeUrl(qrString) : null);
-    } else if (paymentMethod === 'gopay') {
-      qrString = midtransRes.qr_string || null;
-      const actionQr = midtransRes.actions?.find((a: any) => a.name === 'generate-qr-code')?.url;
-      qrCodeUrl = actionQr || (qrString ? generateQrCodeUrl(qrString) : null);
-      deeplinkUrl = midtransRes.actions?.find((a: any) => a.name === 'deeplink-redirect')?.url || null;
-      bankName = 'GoPay';
-    } else if (paymentMethod === 'mandiri_va') {
+    if (paymentMethod === 'mandiri_va') {
       billKey = midtransRes.bill_key || null;
       billerCode = midtransRes.biller_code || '70012';
       bankName = 'Mandiri';
       vaNumber = billKey;
+    } else if (paymentMethod === 'permata_va') {
+      vaNumber = midtransRes.permata_va_number || midtransRes.va_numbers?.[0]?.va_number || null;
+      bankName = 'PERMATA';
     } else {
-      // BCA, BNI, BRI, Permata, CIMB VA
-      vaNumber = midtransRes.va_numbers?.[0]?.va_number || midtransRes.permata_va_number || null;
+      // BNI, BRI, CIMB VA
+      vaNumber = midtransRes.va_numbers?.[0]?.va_number || null;
       bankName = (midtransRes.va_numbers?.[0]?.bank || resolveBankName(paymentMethod)).toUpperCase();
     }
   } else {
-    // ── Midtrans Core API 402 / Tidak Aktif: Gunakan MIDTRANS SNAP RESMI ──
-    console.log('🔄 Memanggil Midtrans SNAP API untuk menerbitkan token resmi...');
-    const snapRes = await callMidtransSnapApi(orderId, amount, paymentMethod, templateId);
-    if (snapRes?.token) {
-      snapToken = snapRes.token;
-      snapRedirectUrl = snapRes.redirect_url;
-      console.log('✅ Midtrans Snap Token berhasil terbit:', snapToken);
-    }
-
-    if (snapToken) {
-      // Jika Snap Token berhasil terbit, serahkan pembayaran langsung ke Midtrans Snap resmi
-      if (paymentMethod === 'gopay') {
-        bankName = 'GoPay';
-      } else if (paymentMethod === 'mandiri_va') {
-        bankName = 'Mandiri';
-      } else {
-        bankName = resolveBankName(paymentMethod);
-      }
+    // ── Fallback Simulasi jika koneksi lokal offline total ──
+    console.warn('⚠️ Midtrans Core API tidak merespons, menggunakan data simulasi aman.');
+    if (paymentMethod === 'mandiri_va') {
+      billKey = getSimulatedVaNumber(paymentMethod);
+      billerCode = '70012';
+      bankName = 'Mandiri';
+      vaNumber = billKey;
     } else {
-      // Hanya jika koneksi Midtrans offline total, gunakan simulasi
-      if (paymentMethod === 'qris') {
-        qrString = getSimulatedQrString(orderId, amount);
-        qrCodeUrl = generateQrCodeUrl(qrString);
-      } else if (paymentMethod === 'mandiri_va') {
-        billKey = getSimulatedVaNumber(paymentMethod);
-        billerCode = '70012';
-        bankName = 'Mandiri';
-        vaNumber = billKey;
-      } else if (paymentMethod === 'gopay') {
-        bankName = 'GoPay';
-      } else {
-        vaNumber = getSimulatedVaNumber(paymentMethod);
-        bankName = resolveBankName(paymentMethod);
-      }
+      vaNumber = getSimulatedVaNumber(paymentMethod);
+      bankName = resolveBankName(paymentMethod);
     }
   }
 
@@ -642,9 +493,7 @@ export async function createChargeTransaction(params: CreateChargeParams): Promi
     biller_code: billerCode,
     expiry_time: expiryTime,
     midtrans_response: midtransRes || {
-      note: snapToken ? 'midtrans_snap_token' : 'fallback',
-      snap_token: snapToken,
-      snap_redirect_url: snapRedirectUrl,
+      note: 'simulated_fallback',
       order_id: orderId,
     },
   };
@@ -660,15 +509,13 @@ export async function createChargeTransaction(params: CreateChargeParams): Promi
     orderId,
     paymentMethod,
     expiryTime,
-    ...(snapToken ? { snapToken } : {}),
-    ...(snapRedirectUrl ? { snapRedirectUrl } : {}),
-    ...(qrCodeUrl ? { qrCodeUrl } : {}),
-    ...(qrString ? { qrString } : {}),
-    ...(deeplinkUrl ? { deeplinkUrl } : {}),
     ...(vaNumber ? { vaNumber } : {}),
     ...(bankName ? { bankName } : {}),
     ...(billKey ? { billKey } : {}),
     ...(billerCode ? { billerCode } : {}),
+    ...(qrCodeUrl ? { qrCodeUrl } : {}),
+    ...(qrString ? { qrString } : {}),
+    ...(deeplinkUrl ? { deeplinkUrl } : {}),
   };
 }
 
