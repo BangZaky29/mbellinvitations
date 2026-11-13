@@ -338,7 +338,11 @@ ${dbContext}`;
 
     // 4. Jika AI gagal atau tidak ada respons, gunakan Fallback Cerdas
     if (!replyMessage) {
-      const { data: stats } = await supabase.rpc('get_mbell_bot_stats').catch(() => ({ data: null }));
+      let stats = null;
+      try {
+        const { data } = await supabase.rpc('get_mbell_bot_stats');
+        stats = data;
+      } catch {}
       replyMessage = getDeterministicFallbackResponse(userQuery, stats);
     }
 
