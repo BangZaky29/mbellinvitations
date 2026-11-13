@@ -6,7 +6,7 @@
 // Step 4: Sukses & Tautan Undangan Resmi Aktif
 // ============================================================
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   getTemplateDisplayName,
   getTemplateMeta,
@@ -19,12 +19,12 @@ import {
   formatVaDisplay,
 } from '../../services/paymentService';
 import { usePaymentTransaction } from '../../hooks/usePaymentTransaction';
+import { usePaymentChannels } from '../../hooks/usePaymentChannels';
 import type {
   PaymentMethod,
   CheckoutStep,
   ChargeResult,
 } from '../../types/transaction';
-import { PAYMENT_METHOD_OPTIONS } from '../../types/transaction';
 
 // =========================================================================
 // PROPS & CONSTANTS
@@ -93,6 +93,19 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('bni_va');
   const [chargeResult, setChargeResult] = useState<ChargeResult | null>(null);
   const [showAllFeatures, setShowAllFeatures] = useState(false);
+
+  // ── Remote Config Payment Channels (Supabase Realtime Sync) ──
+  const { channels: activePaymentChannels } = usePaymentChannels();
+
+  // Sinkronisasi paymentMethod jika metode yang dipilih tidak aktif di database
+  useEffect(() => {
+    if (activePaymentChannels.length > 0) {
+      const exists = activePaymentChannels.some((c) => c.id === paymentMethod);
+      if (!exists) {
+        setPaymentMethod(activePaymentChannels[0].id);
+      }
+    }
+  }, [activePaymentChannels, paymentMethod]);
 
   // ── Anti Double-Click Protection & Race-Condition Guards ──
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -466,9 +479,9 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                 <span className="font-black text-amber-900 shrink-0">{priceInfo.priceDisplay}</span>
               </div>
 
-              {/* Payment Method Selector */}
+              {/* Payment Method Selector (Remote Config dari Supabase Realtime) */}
               <div className="max-h-[38vh] overflow-y-auto space-y-2 pr-1 -mr-1">
-                {PAYMENT_METHOD_OPTIONS.map((opt) => {
+                {activePaymentChannels.map((opt) => {
                   const isSelected = paymentMethod === opt.id;
                   return (
                     <div
@@ -529,6 +542,18 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                 {paymentMethod === 'mandiri_va' ? (
                   <p className="text-[11px] text-stone-600 leading-relaxed">
                     Pembayaran melalui Livin' by Mandiri (Menu <strong>Bayar &gt; Midtrans / 70012</strong>) atau ATM Mandiri dengan memasukkan Kode Bayar resmi yang diterbitkan secara otomatis.
+                  </p>
+                ) : paymentMethod === 'bsi_va' ? (
+                  <p className="text-[11px] text-stone-600 leading-relaxed">
+                    Pembayaran melalui <strong>BSI Mobile</strong> (Menu <strong>Bayar &gt; Rekening Maya / Virtual Account</strong>) atau ATM BSI dengan nomor Virtual Account resmi 24 jam. Terverifikasi seketika!
+                  </p>
+                ) : paymentMethod === 'qris' || paymentMethod === 'gopay' ? (
+                  <p className="text-[11px] text-stone-600 leading-relaxed">
+                    Scan kode QRIS menggunakan GoPay, OVO, DANA, ShopeePay, BCA Mobile, atau aplikasi e-wallet / banking apa pun yang berstandar QRIS nasional.
+                  </p>
+                ) : paymentMethod === 'akulaku' ? (
+                  <p className="text-[11px] text-stone-600 leading-relaxed">
+                    Selesaikan transaksi dengan limit kredit Akulaku PayLater Anda. Verifikasi instan tanpa kartu kredit.
                   </p>
                 ) : (
                   <p className="text-[11px] text-stone-600 leading-relaxed">
@@ -593,7 +618,10 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
 
                 <h2 className="text-base sm:text-lg font-bold text-stone-900 tracking-tight">
                   {chargeResult.paymentMethod === 'mandiri_va' && 'Mandiri Bill Payment (E-Channel)'}
-                  {['bni_va', 'bri_va', 'permata_va', 'cimb_va'].includes(chargeResult.paymentMethod) &&
+                  {chargeResult.paymentMethod === 'qris' && 'QRIS Dinamis (GoPay / Semua E-Wallet)'}
+                  {chargeResult.paymentMethod === 'gopay' && 'Pembayaran Instan GoPay'}
+                  {chargeResult.paymentMethod === 'akulaku' && 'Akulaku PayLater'}
+                  {['bni_va', 'bri_va', 'bsi_va', 'permata_va', 'cimb_va', 'danamon_va', 'seabank_va', 'bca_va'].includes(chargeResult.paymentMethod) &&
                     `${chargeResult.bankName || 'Bank'} Virtual Account`}
                 </h2>
 
@@ -714,8 +742,8 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                     </div>
                   )}
 
-                  {/* ──── METODE 4: VIRTUAL ACCOUNT OTOMATIS (BNI, BRI, Permata, CIMB) ──── */}
-                  {['bni_va', 'bri_va', 'permata_va', 'cimb_va', 'bca_va'].includes(chargeResult.paymentMethod) && (
+                  {/* ──── METODE 4: VIRTUAL ACCOUNT OTOMATIS (BSI, BNI, BRI, Permata, CIMB, Danamon, SeaBank) ──── */}
+                  {['bni_va', 'bri_va', 'bsi_va', 'permata_va', 'cimb_va', 'danamon_va', 'seabank_va', 'bca_va'].includes(chargeResult.paymentMethod) && (
                     <div className="space-y-2.5">
                       {/* Virtual Account Card */}
                       <div className="p-3.5 sm:p-4 rounded-2xl bg-white border-2 border-stone-200 shadow-xs space-y-2.5">
@@ -771,42 +799,105 @@ export const PricingPaywallModal: React.FC<PricingPaywallModalProps> = ({
                         </div>
                       </div>
 
-                      {/* Instruksi Singkat */}
+                      {/* Panduan Pembayaran Khusus Bank */}
                       <div className="p-3 rounded-2xl bg-stone-50 border border-stone-200 text-[11px] text-stone-600 space-y-1">
-                        <p className="font-bold text-stone-900">Panduan Pembayaran Virtual Account:</p>
-                        <ol className="list-decimal list-inside space-y-0.5 pl-0.5">
-                          <li>Buka Mobile Banking, Internet Banking, atau ATM bank Anda.</li>
-                          <li>Pilih menu <strong>Transfer / Bayar &gt; Virtual Account</strong>.</li>
-                          <li>Masukkan nomor Virtual Account di atas.</li>
-                          <li>Konfirmasi rincian tagihan &amp; masukkan PIN Anda. Sistem otomatis memproses dalam hitungan detik!</li>
-                        </ol>
+                        <p className="font-bold text-stone-900">
+                          Panduan Pembayaran Virtual Account {chargeResult.bankName || 'Bank'}:
+                        </p>
+                        {chargeResult.paymentMethod === 'bsi_va' ? (
+                          <ol className="list-decimal list-inside space-y-0.5 pl-0.5">
+                            <li>Buka aplikasi <strong>BSI Mobile</strong> &gt; Pilih menu <strong>Bayar</strong>.</li>
+                            <li>Pilih <strong>Rekening Maya / Virtual Account</strong>.</li>
+                            <li>Masukkan nomor <strong>Virtual Account BSI</strong> di atas.</li>
+                            <li>Periksa nominal tagihan &amp; masukkan PIN Anda. Konfirmasi otomatis seketika!</li>
+                          </ol>
+                        ) : chargeResult.paymentMethod === 'bri_va' ? (
+                          <ol className="list-decimal list-inside space-y-0.5 pl-0.5">
+                            <li>Buka aplikasi <strong>BRImo</strong> &gt; Pilih menu <strong>BRIVA</strong>.</li>
+                            <li>Pilih <strong>Tambah Transaksi Baru</strong> &gt; Masukkan nomor <strong>BRIVA</strong> di atas.</li>
+                            <li>Konfirmasi rincian tagihan &amp; masukkan PIN BRImo Anda. Selesai!</li>
+                          </ol>
+                        ) : chargeResult.paymentMethod === 'bni_va' ? (
+                          <ol className="list-decimal list-inside space-y-0.5 pl-0.5">
+                            <li>Buka aplikasi <strong>BNI Mobile Banking</strong> &gt; Pilih menu <strong>Pembayaran &gt; Virtual Account Billing</strong>.</li>
+                            <li>Pilih <strong>Input Baru</strong> &gt; Masukkan nomor <strong>VA BNI</strong> di atas.</li>
+                            <li>Periksa nominal tagihan &amp; masukkan Password Transaksi Anda. Selesai!</li>
+                          </ol>
+                        ) : (
+                          <ol className="list-decimal list-inside space-y-0.5 pl-0.5">
+                            <li>Buka Mobile Banking, Internet Banking, atau ATM bank Anda.</li>
+                            <li>Pilih menu <strong>Transfer / Bayar &gt; Virtual Account</strong>.</li>
+                            <li>Masukkan nomor Virtual Account di atas.</li>
+                            <li>Konfirmasi rincian tagihan &amp; selesaikan pembayaran dengan PIN Anda. Sistem otomatis memproses dalam hitungan detik!</li>
+                          </ol>
+                        )}
                       </div>
                     </div>
                   )}
 
-                  {/* ──── METODE 5: QRIS (FALLBACK) ──── */}
-                  {chargeResult.paymentMethod === 'qris' && chargeResult.qrCodeUrl && (
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-b from-white to-stone-50 border-2 border-stone-200 shadow-sm text-center">
-                      <div className="relative w-44 h-44 sm:w-48 sm:h-48 mx-auto bg-white rounded-xl border border-stone-200 p-2 shadow-inner mb-2.5">
-                        <img
-                          src={chargeResult.qrCodeUrl}
-                          alt={`QR Code ${chargeResult.orderId}`}
-                          className="w-full h-full object-contain"
-                          loading="eager"
-                        />
-                        <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-stone-900 text-white text-[9px] font-bold whitespace-nowrap shadow-sm">
-                          Mbell Invitations
+                  {/* ──── METODE 5: QRIS & GOPAY ──── */}
+                  {(chargeResult.paymentMethod === 'qris' || chargeResult.paymentMethod === 'gopay') && (
+                    <div className="space-y-3">
+                      {chargeResult.deeplinkUrl && (
+                        <div className="p-3.5 rounded-2xl bg-sky-50 border border-sky-200 text-center space-y-2">
+                          <p className="text-xs font-bold text-sky-950">Buka Aplikasi GoPay / E-Wallet di Ponsel Anda:</p>
+                          <a
+                            href={chargeResult.deeplinkUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs sm:text-sm shadow-sm transition-all"
+                          >
+                            <span className="material-symbols-outlined text-sm">open_in_new</span>
+                            <span>Buka Aplikasi GoPay</span>
+                          </a>
                         </div>
-                      </div>
+                      )}
 
-                      <button
-                        type="button"
-                        onClick={handleDownloadQr}
-                        className="mt-2 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
-                      >
-                        <span className="material-symbols-outlined text-[15px]">download</span>
-                        <span>Unduh Kode QR</span>
-                      </button>
+                      {chargeResult.qrCodeUrl && (
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-b from-white to-stone-50 border-2 border-stone-200 shadow-sm text-center">
+                          <p className="text-xs font-bold text-stone-800 mb-2">Scan Kode QRIS dengan GoPay / Semua E-Wallet:</p>
+                          <div className="relative w-44 h-44 sm:w-48 sm:h-48 mx-auto bg-white rounded-xl border border-stone-200 p-2 shadow-inner mb-2.5">
+                            <img
+                              src={chargeResult.qrCodeUrl}
+                              alt={`QR Code ${chargeResult.orderId}`}
+                              className="w-full h-full object-contain"
+                              loading="eager"
+                            />
+                            <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-stone-900 text-white text-[9px] font-bold whitespace-nowrap shadow-sm">
+                              Mbell Invitations
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={handleDownloadQr}
+                            className="mt-2 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-[15px]">download</span>
+                            <span>Unduh Kode QR</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ──── METODE 6: AKULAKU / PAYLATER ──── */}
+                  {chargeResult.paymentMethod === 'akulaku' && (
+                    <div className="p-4 rounded-2xl bg-white border-2 border-stone-200 text-center space-y-3">
+                      <p className="text-xs font-bold text-stone-900">Selesaikan Pembayaran Akulaku PayLater</p>
+                      {chargeResult.deeplinkUrl ? (
+                        <a
+                          href={chargeResult.deeplinkUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs sm:text-sm shadow-sm transition-all"
+                        >
+                          <span className="material-symbols-outlined text-sm">open_in_new</span>
+                          <span>Lanjut ke Akulaku</span>
+                        </a>
+                      ) : (
+                        <p className="text-xs text-stone-500">Tautan pembayaran sedang disiapkan...</p>
+                      )}
                     </div>
                   )}
                 </div>

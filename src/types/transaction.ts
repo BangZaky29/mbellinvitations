@@ -9,9 +9,13 @@ export type PaymentMethod =
   | 'gopay'
   | 'bni_va'
   | 'bri_va'
+  | 'bsi_va'
   | 'mandiri_va'
   | 'permata_va'
   | 'cimb_va'
+  | 'seabank_va'
+  | 'danamon_va'
+  | 'akulaku'
   | 'bca_va'
   | 'qris';
 
@@ -81,7 +85,7 @@ export interface ChargeResult {
 }
 
 /**
- * Opsi metode pembayaran untuk UI selector di Step 1.
+ * Opsi metode pembayaran untuk UI selector di Step 1/Step 2.
  */
 export interface PaymentOptionItem {
   id: PaymentMethod;
@@ -90,7 +94,21 @@ export interface PaymentOptionItem {
   icon: string;
   description: string;
   subLabel?: string;
-  category: 'manual' | 'ewallet' | 'va';
+  category: 'manual' | 'ewallet' | 'va' | 'paylater';
+}
+
+/**
+ * Record Remote Config dari tabel public.payment_channels di Supabase.
+ */
+export interface PaymentChannelRecord {
+  id: PaymentMethod;
+  name: string;
+  category: 'manual' | 'ewallet' | 'va' | 'paylater';
+  badge: string;
+  icon: string;
+  description: string;
+  is_active: boolean;
+  sort_order: number;
 }
 
 /**
@@ -101,8 +119,8 @@ export function isMidtransSandbox(): boolean {
 }
 
 /**
- * Daftar opsi metode pembayaran resmi yang aktif di UI Checkout.
- * Khusus 5 Virtual Account yang sudah aktif di Midtrans Production (BNI, BRI, Mandiri, Permata, CIMB).
+ * Daftar opsi metode pembayaran resmi cadangan (Offline Fallback).
+ * Termasuk BSI VA yang baru diaktifkan.
  */
 export const PAYMENT_METHOD_OPTIONS: PaymentOptionItem[] = [
   // ── VIRTUAL ACCOUNT OTOMATIS (Midtrans 24 Jam) ──
@@ -120,6 +138,14 @@ export const PAYMENT_METHOD_OPTIONS: PaymentOptionItem[] = [
     badge: 'Otomatis 24 Jam',
     icon: 'account_balance',
     description: 'Transfer via BRImo, ATM BRI, atau Agen BRILink.',
+    category: 'va',
+  },
+  {
+    id: 'bsi_va',
+    name: 'BSI Virtual Account',
+    badge: 'Otomatis 24 Jam',
+    icon: 'account_balance',
+    description: 'Transfer via BSI Mobile (Menu Rekening Maya/VA) atau ATM BSI.',
     category: 'va',
   },
   {

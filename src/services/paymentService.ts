@@ -69,9 +69,12 @@ function getSimulatedVaNumber(method: PaymentMethod): string {
     case 'bca_va': return '8277081' + randomDigits(8);
     case 'bni_va': return '9881' + randomDigits(8);
     case 'bri_va': return '1269' + randomDigits(8);
+    case 'bsi_va': return '900' + randomDigits(9);
     case 'mandiri_va': return '990' + randomDigits(8);
     case 'permata_va': return '8528' + randomDigits(8);
     case 'cimb_va': return '5919' + randomDigits(8);
+    case 'danamon_va': return '8922' + randomDigits(8);
+    case 'seabank_va': return '7829' + randomDigits(8);
     default: return randomDigits(12);
   }
 }
@@ -100,9 +103,13 @@ function resolveBankName(method: PaymentMethod): string {
     case 'bca_va': return 'BCA';
     case 'bni_va': return 'BNI';
     case 'bri_va': return 'BRI';
+    case 'bsi_va': return 'BSI';
     case 'mandiri_va': return 'Mandiri';
     case 'permata_va': return 'Permata';
     case 'cimb_va': return 'CIMB Niaga';
+    case 'danamon_va': return 'Danamon';
+    case 'seabank_va': return 'SeaBank';
+    case 'akulaku': return 'Akulaku';
     case 'gopay': return 'GoPay';
     case 'qris': return 'QRIS';
     default: return 'Bank';
@@ -173,6 +180,25 @@ async function callMidtransChargeApi(
     case 'bri_va':
       basePayload.payment_type = 'bank_transfer';
       basePayload.bank_transfer = { bank: 'bri' };
+      break;
+
+    case 'bsi_va':
+      basePayload.payment_type = 'bank_transfer';
+      basePayload.bank_transfer = { bank: 'bsi' };
+      break;
+
+    case 'danamon_va':
+      basePayload.payment_type = 'bank_transfer';
+      basePayload.bank_transfer = { bank: 'danamon' };
+      break;
+
+    case 'seabank_va':
+      basePayload.payment_type = 'bank_transfer';
+      basePayload.bank_transfer = { bank: 'other' };
+      break;
+
+    case 'akulaku':
+      basePayload.payment_type = 'akulaku';
       break;
 
     case 'permata_va':
@@ -457,8 +483,21 @@ export async function createChargeTransaction(params: CreateChargeParams): Promi
     } else if (paymentMethod === 'permata_va') {
       vaNumber = midtransRes.permata_va_number || midtransRes.va_numbers?.[0]?.va_number || null;
       bankName = 'PERMATA';
+    } else if (paymentMethod === 'qris' || paymentMethod === 'gopay') {
+      const qrAction = midtransRes.actions?.find((a: any) => a.name === 'generate-qr-code');
+      const deeplinkAction = midtransRes.actions?.find((a: any) => a.name === 'deeplink-redirect');
+      qrCodeUrl = qrAction?.url || midtransRes.qr_code_url || null;
+      qrString = midtransRes.qr_string || null;
+      deeplinkUrl = deeplinkAction?.url || null;
+      if (!qrCodeUrl && qrString) {
+        qrCodeUrl = generateQrCodeUrl(qrString);
+      }
+      bankName = paymentMethod === 'gopay' ? 'GoPay' : 'QRIS';
+    } else if (paymentMethod === 'akulaku') {
+      deeplinkUrl = midtransRes.redirect_url || null;
+      bankName = 'Akulaku';
     } else {
-      // BNI, BRI, CIMB VA
+      // BNI, BRI, BSI, CIMB, Danamon, SeaBank VA
       vaNumber = midtransRes.va_numbers?.[0]?.va_number || null;
       bankName = (midtransRes.va_numbers?.[0]?.bank || resolveBankName(paymentMethod)).toUpperCase();
     }
@@ -470,6 +509,13 @@ export async function createChargeTransaction(params: CreateChargeParams): Promi
       billerCode = '70012';
       bankName = 'Mandiri';
       vaNumber = billKey;
+    } else if (paymentMethod === 'qris' || paymentMethod === 'gopay') {
+      qrString = getSimulatedQrString(orderId, amount);
+      qrCodeUrl = generateQrCodeUrl(qrString);
+      bankName = paymentMethod === 'gopay' ? 'GoPay' : 'QRIS';
+    } else if (paymentMethod === 'akulaku') {
+      deeplinkUrl = 'https://mbellinvitations.my.id';
+      bankName = 'Akulaku';
     } else {
       vaNumber = getSimulatedVaNumber(paymentMethod);
       bankName = resolveBankName(paymentMethod);
