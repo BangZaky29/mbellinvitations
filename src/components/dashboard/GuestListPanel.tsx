@@ -298,12 +298,16 @@ export const GuestListPanel: React.FC<GuestListPanelProps> = ({
         </div>
       </div>
 
-      {/* ACCORDION: TEMPLATE PESAN WHATSAPP */}
+      {/* ACCORDION: TEMPLATE PESAN WHATSAPP & AI GENERATOR */}
       <WaTemplateEditorModal
         isOpen={wa.showTemplateEditor}
         waTemplate={wa.waTemplate}
         onChangeTemplate={wa.setWaTemplate}
         onSaveTemplate={wa.handleSaveTemplate}
+        useAiForWa={wa.useAiForWa}
+        onToggleUseAi={wa.toggleUseAi}
+        lastUsedModel={wa.lastUsedModel}
+        onGenerateAiPreview={wa.generateAiPreview}
       />
 
       {/* METRIK STATISTIK */}

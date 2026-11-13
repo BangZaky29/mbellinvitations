@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react';
 import type { GuestItem } from '../components/dashboard/guest-list/types';
 import { DEFAULT_WA_TEMPLATE } from '../components/dashboard/guest-list/constants';
 import { getInvitationFullUrl } from '../utils/urlHelper';
+import {
+  generateWaInvitationMessage,
+  invalidateAiWaCache,
+  type GeminiModelName,
+} from '../services/geminiWaService';
 
 interface UseWaBlastOptions {
   invitationSlug?: string;
@@ -18,6 +23,7 @@ export function useWaBlast({
 }: UseWaBlastOptions) {
   const sentStorageKey = `mbell_sent_guests_${invitationSlug}`;
   const templateStorageKey = `mbell_wa_template_${invitationSlug}`;
+  const aiToggleStorageKey = `mbell_use_ai_wa_${invitationSlug}`;
 
   // WA Blast Tracker & Sent States (Disimpan di localStorage per slug)
   const [sentGuestIds, setSentGuestIds] = useState<Set<string>>(() => {
@@ -29,7 +35,7 @@ export function useWaBlast({
     }
   });
 
-  // Template Pesan WA Kustom
+  // Template Pesan WA Kustom (Fallback manual)
   const [waTemplate, setWaTemplate] = useState<string>(() => {
     try {
       return localStorage.getItem(templateStorageKey) || DEFAULT_WA_TEMPLATE;
@@ -38,6 +44,18 @@ export function useWaBlast({
     }
   });
 
+  // Mode AI Google Studio (Default aktif)
+  const [useAiForWa, setUseAiForWa] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem(aiToggleStorageKey);
+      return saved !== null ? saved === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const [isGeneratingAi, setIsGeneratingAi] = useState<boolean>(false);
+  const [lastUsedModel, setLastUsedModel] = useState<GeminiModelName | 'default_template' | null>(null);
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
 
   // Simpan sent IDs ke localStorage saat berubah
@@ -56,10 +74,14 @@ export function useWaBlast({
       setSentGuestIds(saved ? new Set(JSON.parse(saved)) : new Set());
       const savedTpl = localStorage.getItem(templateStorageKey);
       setWaTemplate(savedTpl || DEFAULT_WA_TEMPLATE);
+      const savedAi = localStorage.getItem(aiToggleStorageKey);
+      if (savedAi !== null) {
+        setUseAiForWa(savedAi === 'true');
+      }
     } catch {
       // Ignored
     }
-  }, [sentStorageKey, templateStorageKey]);
+  }, [sentStorageKey, templateStorageKey, aiToggleStorageKey]);
 
   // Simpan WA Template ke localStorage saat berubah
   const handleSaveTemplate = (newTemplate: string) => {
@@ -70,6 +92,20 @@ export function useWaBlast({
       // Ignored
     }
     showToast('💾 Template pesan WhatsApp berhasil disimpan!');
+  };
+
+  const toggleUseAi = (enabled: boolean) => {
+    setUseAiForWa(enabled);
+    try {
+      localStorage.setItem(aiToggleStorageKey, String(enabled));
+    } catch {
+      // Ignored
+    }
+    showToast(
+      enabled
+        ? '🤖 Mode AI Generator WhatsApp (Google Studio) Aktif!'
+        : '📝 Mode Template Manual WhatsApp Aktif!'
+    );
   };
 
   const getPersonalLink = (name: string, code: string) => {
@@ -119,12 +155,44 @@ export function useWaBlast({
     showToast(`📋 Link unik untuk "${guest.name}" tersalin! Ditandai: Sudah Dikirim ✔️`);
   };
 
-  const handleSendWhatsApp = async (guest: GuestItem) => {
+  /**
+   * Kirim pesan WhatsApp:
+   * Menggunakan AI Generator (Waterfall Switching) jika useAiForWa aktif.
+   * Otomatis fallback ke template manual jika seluruh model AI terkena limit kuota.
+   */
+  const handleSendWhatsApp = async (guest: GuestItem, forceRegenerate = false) => {
     const link = getPersonalLink(guest.name, guest.guest_code);
-    const message = waTemplate
-      .replace(/{nama_tamu}/g, guest.name)
-      .replace(/{nama_mempelai}/g, coupleNames)
-      .replace(/{link_undangan}/g, link);
+    let message = '';
+    let usedModel: GeminiModelName | 'default_template' = 'default_template';
+
+    if (useAiForWa) {
+      setIsGeneratingAi(true);
+      try {
+        const aiResult = await generateWaInvitationMessage({
+          guestName: guest.name,
+          coupleNames,
+          invitationUrl: link,
+          guestCode: guest.guest_code,
+          forceRegenerate,
+        });
+        message = aiResult.text;
+        usedModel = aiResult.usedModel;
+        setLastUsedModel(aiResult.usedModel);
+      } catch (err) {
+        console.warn('⚠️ Gagal generate pesan AI, beralih ke template manual:', err);
+        message = waTemplate
+          .replace(/{nama_tamu}/g, guest.name)
+          .replace(/{nama_mempelai}/g, coupleNames)
+          .replace(/{link_undangan}/g, link);
+      } finally {
+        setIsGeneratingAi(false);
+      }
+    } else {
+      message = waTemplate
+        .replace(/{nama_tamu}/g, guest.name)
+        .replace(/{nama_mempelai}/g, coupleNames)
+        .replace(/{link_undangan}/g, link);
+    }
 
     await markAsSent(guest.id);
 
@@ -135,7 +203,31 @@ export function useWaBlast({
       : `https://wa.me/?text=${encodedMsg}`;
 
     window.open(waUrl, '_blank');
-    showToast(`💬 Membuka WhatsApp untuk "${guest.name}"... Ditandai: Sudah Dikirim ✔️`);
+
+    if (usedModel !== 'default_template') {
+      showToast(`🤖 Pesan AI (${usedModel}) siap! Membuka WhatsApp untuk "${guest.name}" ✔️`);
+    } else {
+      showToast(`💬 Membuka WhatsApp untuk "${guest.name}"... Ditandai: Sudah Dikirim ✔️`);
+    }
+  };
+
+  /**
+   * Generate teks pratinjau AI untuk modal preview
+   */
+  const generateAiPreview = async (guestName: string, forceRegenerate = true): Promise<string> => {
+    const link = getPersonalLink(guestName, 'DEMO123');
+    if (forceRegenerate) {
+      invalidateAiWaCache(link, guestName, 'DEMO123');
+    }
+    const result = await generateWaInvitationMessage({
+      guestName,
+      coupleNames,
+      invitationUrl: link,
+      guestCode: 'DEMO123',
+      forceRegenerate,
+    });
+    setLastUsedModel(result.usedModel);
+    return result.text;
   };
 
   return {
@@ -146,11 +238,16 @@ export function useWaBlast({
     setWaTemplate,
     showTemplateEditor,
     setShowTemplateEditor,
+    useAiForWa,
+    toggleUseAi,
+    isGeneratingAi,
+    lastUsedModel,
     handleSaveTemplate,
     getPersonalLink,
     markAsSent,
     toggleSentStatus,
     handleCopyPersonalLink,
     handleSendWhatsApp,
+    generateAiPreview,
   };
 }

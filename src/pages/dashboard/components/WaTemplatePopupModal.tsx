@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DEFAULT_WA_TEMPLATE } from '../../../components/dashboard/guest-list/constants';
 import { getInvitationFullUrl } from '../../../utils/urlHelper';
+import {
+  generateWaInvitationMessage,
+  type GeminiModelName,
+} from '../../../services/geminiWaService';
 
 export interface WaTemplatePopupModalProps {
   isOpen: boolean;
@@ -41,6 +45,8 @@ export const WaTemplatePopupModal: React.FC<WaTemplatePopupModalProps> = ({
 
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
   const [copied, setCopied] = useState(false);
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [aiModelUsed, setAiModelUsed] = useState<GeminiModelName | 'default_template' | null>(null);
 
   // Re-sync when modal opens or slug changes
   useEffect(() => {
@@ -85,6 +91,28 @@ export const WaTemplatePopupModal: React.FC<WaTemplatePopupModalProps> = ({
 
   const handleResetToDefault = () => {
     setCurrentText(DEFAULT_WA_TEMPLATE);
+    setAiModelUsed(null);
+  };
+
+  const handleGenerateAi = async () => {
+    setIsGeneratingAi(true);
+    try {
+      const res = await generateWaInvitationMessage({
+        guestName: targetGuestName.trim() || 'Tamu Terhormat',
+        coupleNames,
+        invitationUrl: personalizedUrl,
+        forceRegenerate: true,
+      });
+      setCurrentText(res.text);
+      setAiModelUsed(res.usedModel);
+      if (onCopySuccess) {
+        onCopySuccess(`Teks pesan berhasil disusun dengan ${res.usedModel}!`);
+      }
+    } catch (e) {
+      console.warn('AI error:', e);
+    } finally {
+      setIsGeneratingAi(false);
+    }
   };
 
   const handleSave = () => {
@@ -257,16 +285,48 @@ export const WaTemplatePopupModal: React.FC<WaTemplatePopupModalProps> = ({
           </div>
 
           {activeTab === 'edit' && (
-            <button
-              type="button"
-              onClick={handleResetToDefault}
-              className="text-[11px] font-semibold text-emerald-600 hover:text-emerald-800 hover:underline cursor-pointer shrink-0"
-              title="Kembalikan format teks ke kata-kata bawaan sistem"
-            >
-              Reset ke Standar
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleGenerateAi}
+                disabled={isGeneratingAi}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+                title="Susun teks sapaan personal otomatis dengan Google Gemini AI"
+              >
+                {isGeneratingAi ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>AI Menyusun...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-[13px]">auto_fix_high</span>
+                    <span>🪄 Buat dengan AI</span>
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={handleResetToDefault}
+                className="text-[11px] font-semibold text-stone-500 hover:text-stone-800 hover:underline cursor-pointer shrink-0"
+                title="Kembalikan format teks ke kata-kata bawaan sistem"
+              >
+                Reset
+              </button>
+            </div>
           )}
         </div>
+
+        {/* Model Waterfall Status Badge */}
+        {aiModelUsed && activeTab === 'edit' && (
+          <div className="flex items-center justify-between px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-[10px] text-emerald-800">
+            <span className="flex items-center gap-1">
+              <span className="material-symbols-outlined text-[12px] text-emerald-600">bolt</span>
+              <span>Digenerate dengan: <strong className="font-mono">{aiModelUsed}</strong></span>
+            </span>
+            <span className="text-emerald-700 font-semibold">Waterfall Active ✔️</span>
+          </div>
+        )}
 
         {activeTab === 'edit' ? (
           <div className="space-y-2">
